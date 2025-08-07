@@ -357,25 +357,25 @@ WoWok Protocol empowers collaboration across an ecosystem of super individuals�
 ## WoWok Object
 WoWok abstracts collaboration into composable on-chain objects. Each object clearly defines its role, functionalities, and interactions, enabling secure, verifiable, and efficient decentralized collaboration.
 
-- [Demand](###demand) — Personalized demand expressions with optional incentives. 
+- ([Demand](###demand)) — Personalized demand expressions with optional incentives. 
 
-- [Service](###service) — Supply definitions with immutable commitments and terms. 
+- ([Service](###service)) — Supply definitions with immutable commitments and terms. 
 
-- [Guard](###guard) — Data verification for current/future states and conditional settlements. 
+- ([Guard](###guard)) — Data verification for current/future states and conditional settlements. 
 
-- [Repository](###Repository) — Referenceable, cross-organizational data registries. 
+- ([Repository](###Repository)) — Referenceable, cross-organizational data registries. 
 
-- [Machine](###Machine) — Orchestration of progress pacing and quality toward market fit. 
+- ([Machine](###Machine)) — Orchestration of progress pacing and quality toward market fit. 
 
-- [Progress](###Progress) — Event/milestone objects; can trigger chained workflows.
+- ([Progress](###Progress)) — Event/milestone objects; can trigger chained workflows.
 
-- [Treasury](###Treasury) — Funds custody, allocation, and programmable payouts.
+- ([Treasury](###Treasury)) — Funds custody, allocation, and programmable payouts.
 
-- [Permission](###Permission) — Fine-grained access/ownership control over entities and objects.
+- ([Permission](###Permission)) — Fine-grained access/ownership control over entities and objects.
 
-- [Personal](###Personal) — User/agent profile and preferences for personalization.
+- ([Personal](###Personal)) — User/agent profile and preferences for personalization.
 
-- [Arbitration](###Arbitration) — Dispute handling and resolution pathways.
+- ([Arbitration](###Arbitration)) — Dispute handling and resolution pathways.
 
 ### Demand
 #### Definition:
