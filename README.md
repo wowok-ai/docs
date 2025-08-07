@@ -337,47 +337,45 @@ Composed of on‑chain protocols and data, real‑world oracles, open‑source S
 
 WoWok Protocol fosters innovation by supporting novel business models and collaborative services. Through its core modules, users can:
 
-- Express personalized demands paired with conditional incentives to stimulate precise market responses ([Demand](#demand)).
-- Publish supply offerings with a single click, embedding immutable commitments for service milestones and transaction terms ([Service](#service)).
-- Execute transactions at designated milestones through verifiable proof of existing and anticipated on-chain data ([Guard](#guard)).
+- Express personalized demands paired with conditional incentives to stimulate precise market responses ([Demand](###Demand)).
+- Publish supply offerings with a single click, embedding immutable commitments for service milestones and transaction terms ([Service](###Service)).
+- Execute transactions at designated milestones through verifiable proof of existing and anticipated on-chain data ([Guard](###Guard)).
 - Seamlessly combine multiple available services, unlocking endless possibilities for composability and innovation.
 
 ### Collaboration
 
 WoWok Protocol empowers collaboration across an ecosystem of super individuals—whether human or AI-driven—to achieve their collective objectives.
 
-- Super individuals can define and publish data to open-chain repositories, enabling cross-organizational referencing, resource sharing, and significantly reduced collaboration friction ([Repository](#repository)).
-- Service progress can be dynamically orchestrated to meet evolving market demands, ensuring controlled collaboration pacing, consistent quality, and sustainable supply satisfaction ([Machine](#machine)).
-- Suppliers can seamlessly integrate their offerings into interconnected service networks via dynamic linking mechanisms, rapidly adapting to diverse and shifting customer requirements ([Service](#service)).
-- The completion of one progress milestone can automatically trigger subsequent milestones, facilitating fluid, cross-organizational, and cross-service workflows to fulfill comprehensive customer needs ([Progress](#progress)).
-- Treasury management supports flexible allocation and governance of funds within complex collaborative workflows, enabling rapid adaptation to changing business conditions ([Treasury](#treasury)).
+- Super individuals can define and publish data to open-chain repositories, enabling cross-organizational referencing, resource sharing, and significantly reduced collaboration friction ([Repository](###Repository)).
+- Service progress can be dynamically orchestrated to meet evolving market demands, ensuring controlled collaboration pacing, consistent quality, and sustainable supply satisfaction ([Machine](###Machine)).
+- Suppliers can seamlessly integrate their offerings into interconnected service networks via dynamic linking mechanisms, rapidly adapting to diverse and shifting customer requirements ([Service](###Service)).
+- The completion of one progress milestone can automatically trigger subsequent milestones, facilitating fluid, cross-organizational, and cross-service workflows to fulfill comprehensive customer needs ([Progress](###Progress)).
+- Treasury management supports flexible allocation and governance of funds within complex collaborative workflows, enabling rapid adaptation to changing business conditions ([Treasury](###Treasury)).
 - WoWok Protocol leverages AI-tagged data, designed for efficient recognition and interpretation by intelligent agents, enhancing precision in personalized demand-supply matching.
 
 
 ## WoWok Object
 WoWok abstracts collaboration into composable on-chain objects. Each object clearly defines its role, functionalities, and interactions, enabling secure, verifiable, and efficient decentralized collaboration.
 
-- Demand — Personalized demand expressions with optional incentives.
+- [Demand](###demand) — Personalized demand expressions with optional incentives. 
 
-- Service — Supply definitions with immutable commitments and terms.
+- [Service](###service) — Supply definitions with immutable commitments and terms. 
 
-- Guard — Data verification for current/future states and conditional settlements.
+- [Guard](###guard) — Data verification for current/future states and conditional settlements. 
 
-- Repository — Referenceable, cross-organizational data registries.
+- [Repository](###Repository) — Referenceable, cross-organizational data registries. 
 
-- Machine — Orchestration of progress pacing and quality toward market fit.
+- [Machine](###Machine) — Orchestration of progress pacing and quality toward market fit. 
 
-- Progress — Event/milestone objects; can trigger chained workflows.
+- [Progress](###Progress) — Event/milestone objects; can trigger chained workflows.
 
-- Treasury — Funds custody, allocation, and programmable payouts.
+- [Treasury](###Treasury) — Funds custody, allocation, and programmable payouts.
 
-- Permission — Fine-grained access/ownership control over entities and objects.
+- [Permission](###Permission) — Fine-grained access/ownership control over entities and objects.
 
-- Personal — User/agent profile and preferences for personalization.
+- [Personal](###Personal) — User/agent profile and preferences for personalization.
 
-- Query — Structured retrieval over on-/off-chain data and repositories.
-
-- Arbitration — Dispute handling and resolution pathways.
+- [Arbitration](###Arbitration) — Dispute handling and resolution pathways.
 
 ### Demand
 #### Definition:
@@ -395,7 +393,7 @@ Traveler's needs launch:
 
 Tom wanted to experience the Great Migration in Africa and was looking for a relaxing safari with accommodation close to nature and a guide who could provide knowledge of the wildlife and natural environment.
 
-#### Key Features（核心特性）:
+#### Key Features:
 
 - Bounty-based reward system 
 - Service presentation and selection 
@@ -408,10 +406,6 @@ Structured supply offerings with programmable terms, integrated payment and refu
 
 #### Functionality
 Enables providers to publish services with customizable pricing, dynamic inventory, Guard-based purchase eligibility, and Machine-powered workflow management. Withdrawal and refund actions are executed automatically when predefined completion or exception conditions are met.
-
-以下是你提供的 **“Customized Kenya Wildlife Safari”** 用例的优化版本，融合了你补充的 Service Use Cases 内容，使场景更丰富、更具层次感，并突出了 WoWok 服务对象的组合性、可审计性与 AI 适配潜力：
-
----
 
 #### Use Case — Customized Kenya Wildlife Safari
 
@@ -836,110 +830,3 @@ In another example, Tom shares the service with two friends and invites one to s
 * **Integration with Services** — Discount application logic is embedded in Order generation
 
 Discounts in WoWok are not just promotional tags—they are programmable value units that can be governed, verified, and distributed with the same precision as payments or permissions.
-
-
-Wowok / Grantor（信任授权）
-Definition（定义）:
-Protocol-owned objects for trust granting, transferring, and conditional guarding within the ecosystem.
-协议拥有的信任授予、转移和生态系统内条件保护对象。
-
-Functionality（功能）:
-Manages the protocol's trust infrastructure, enabling trust relationships, credential verification, and ecosystem-wide reputation management through grantors and grantees.
-管理协议的信任基础设施，通过授权者和被授权者实现信任关系、凭据验证和生态系统范围的声誉管理。
-
-Use Cases（场景示例）:
-
-Professional certification and credential verification.
-
-企业间信任关系的链上管理。
-
-(示例) 旅游行业中旅行社资质的信任传递。
-
-Key Features（核心特性）:
-
-Trust relationship management 信任关系管理
-
-Credential verification system 凭据验证系统
-
-Ecosystem-wide reputation 生态系统范围声誉
-
-Reward（奖励机制）
-Definition（定义）:
-Conditional reward distribution system providing incentives based on Guard-verified achievements.
-基于Guard验证成就提供激励的条件化奖励分发系统。
-
-Functionality（功能）:
-Manages reward pools with time-limited claiming windows, Guard-based eligibility criteria, and configurable repeat claim policies, enabling flexible incentive mechanisms for various scenarios.
-管理具有时间限制认领窗口、基于Guard的资格标准和可配置重复认领政策的奖励池，为各种场景提供灵活的激励机制。
-
-Use Cases（场景示例）:
-
-Airdrops with conditional eligibility requirements.
-
-任务完成奖励的自动化分发。
-
-(示例) 社区贡献者的阶梯式奖励系统。
-
-Key Features（核心特性）:
-
-Guard-based eligibility verification 基于Guard的资格验证
-
-Time-limited claiming windows 时间限制的认领窗口
-
-Configurable repeat claims 可配置的重复认领
-
-Sponsor tracking 赞助商跟踪
-
-Vote（投票治理）
-Definition（定义）:
-Collective decision-making infrastructure with weighted voting, multiple choice support, and deadline management.
-具有权重投票、多选支持和截止时间管理的集体决策基础设施。
-
-Functionality（功能）:
-Facilitates transparent voting processes with Guard-based voter qualifications, configurable voting weights, multiple choice options, and lockable parameters for immutable governance decisions.
-通过基于Guard的选民资格、可配置投票权重、多选项和可锁定参数，促进透明的投票过程，实现不可变的治理决策。
-
-Use Cases（场景示例）:
-
-DAO governance voting with weighted participation.
-
-社区提案的多选投票决策。
-
-(示例) 项目资金分配的透明化投票。
-
-Key Features（核心特性）:
-
-Weighted voting system 权重投票系统
-
-Multiple choice support 多选支持
-
-Guard-based voter qualification 基于Guard的选民资格
-
-Lockable governance parameters 可锁定的治理参数
-
-Payment（支付系统）
-Definition（定义）:
-Advanced payment infrastructure supporting streaming payments, escrow, and conditional releases.
-支持流式支付、托管和条件释放的高级支付基础设施。
-
-Functionality（功能）:
-Enables sophisticated payment mechanisms including time-based streaming, milestone-based releases, multi-party escrow, and Guard-conditional payment triggers for complex financial arrangements.
-通过基于时间的流式支付、基于里程碑的释放、多方托管和Guard条件支付触发器，实现复杂金融安排的精密支付机制。
-
-Use Cases（场景示例）:
-
-Salary streaming for continuous payment distribution.
-
-项目里程碑的条件化资金释放。
-
-(示例) 多方合作项目的托管支付管理。
-
-Key Features（核心特性）:
-
-Streaming payment support 流式支付支持
-
-Milestone-based releases 基于里程碑的释放
-
-Multi-party escrow 多方托管
-
-Guard-conditional triggers Guard条件触发器
