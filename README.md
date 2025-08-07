@@ -335,44 +335,611 @@ Composed of on‑chain protocols and data, real‑world oracles, open‑source S
 ## What can I use WoWok for?
 ### Creation
 
-WowoK Protocol supports innovation, new business models and services. A series of creations can be undertaken:
+WoWok Protocol fosters innovation by supporting novel business models and collaborative services. Through its core modules, users can:
 
-- Personalized demand expressions and conditional incentives ([Demand](#demand)).  
-- One-click supply publishing, customizing immutable commitment: service progress and transaction terms ([Service](#service))
-- Realizing transactions at all expected points by verifying existing and future data on the chain([Guard](#guard)).
-- More importantly, it allows for combination and innovation based on all services provided.
+- Express personalized demands paired with conditional incentives to stimulate precise market responses ([Demand](#demand)).
+- Publish supply offerings with a single click, embedding immutable commitments for service milestones and transaction terms ([Service](#service)).
+- Execute transactions at designated milestones through verifiable proof of existing and anticipated on-chain data ([Guard](#guard)).
+- Seamlessly combine multiple available services, unlocking endless possibilities for composability and innovation.
 
 ### Collaboration
 
-WowoK Protocol empowers super individuals to achieve their desires: collaboration between super individuals and AI.
+WoWok Protocol empowers collaboration across an ecosystem of super individuals—whether human or AI-driven—to achieve their collective objectives.
 
-- Data on open chain databases can be defined by super individuals. This data can then be referenced cross-organizationally, and resources of collaborative entities can be shared, ultimately reducing collaboration friction ([Repository](#repository)).
-- Creating service progress that meet consumer market needs, controlling collaboration pace and quality, achieving sustainable supply satisfaction ([Machine](#machine)).
-- Suppliers are able to integrate their services with those of other suppliers to form an interconnected service network that can adapt to various customer needs through dynamic linking mechanisms.（[Service](#service)）
-- The completion of one Progress can trigger the start of another Progress. This connection mechanism supports cross-organizational and cross-service collaboration, allowing different suppliers and service providers to work together to meet the comprehensive needs of customers.（[Progress](#progress)）
-- Treasury supports the management and allocation of funds in complex collaborative processes, providing the necessary flexibility to adapt to changing business needs.（[Treasury](#treasury)）
-- WowoK Protocol targets AI-tagged data that AI can efficiently recognize, enabling efficient matching of personalized demands.
+- Super individuals can define and publish data to open-chain repositories, enabling cross-organizational referencing, resource sharing, and significantly reduced collaboration friction ([Repository](#repository)).
+- Service progress can be dynamically orchestrated to meet evolving market demands, ensuring controlled collaboration pacing, consistent quality, and sustainable supply satisfaction ([Machine](#machine)).
+- Suppliers can seamlessly integrate their offerings into interconnected service networks via dynamic linking mechanisms, rapidly adapting to diverse and shifting customer requirements ([Service](#service)).
+- The completion of one progress milestone can automatically trigger subsequent milestones, facilitating fluid, cross-organizational, and cross-service workflows to fulfill comprehensive customer needs ([Progress](#progress)).
+- Treasury management supports flexible allocation and governance of funds within complex collaborative workflows, enabling rapid adaptation to changing business conditions ([Treasury](#treasury)).
+- WoWok Protocol leverages AI-tagged data, designed for efficient recognition and interpretation by intelligent agents, enhancing precision in personalized demand-supply matching.
 
-## Object Glossary (aligned with MCP tools)
-Demand — Personalized demand expressions with optional incentives.
 
-Service — Supply definitions with immutable commitments and terms.
+## WoWok Object
+WoWok abstracts collaboration into composable on-chain objects. Each object clearly defines its role, functionalities, and interactions, enabling secure, verifiable, and efficient decentralized collaboration.
 
-Guard — Data verification for current/future states and conditional settlements.
+- Demand — Personalized demand expressions with optional incentives.
 
-Repository — Referenceable, cross-organizational data registries.
+- Service — Supply definitions with immutable commitments and terms.
 
-Machine — Orchestration of progress pacing and quality toward market fit.
+- Guard — Data verification for current/future states and conditional settlements.
 
-Progress — Event/milestone objects; can trigger chained workflows.
+- Repository — Referenceable, cross-organizational data registries.
 
-Treasury — Funds custody, allocation, and programmable payouts.
+- Machine — Orchestration of progress pacing and quality toward market fit.
 
-Permission — Fine-grained access/ownership control over entities and objects.
+- Progress — Event/milestone objects; can trigger chained workflows.
 
-Personal — User/agent profile and preferences for personalization.
+- Treasury — Funds custody, allocation, and programmable payouts.
 
-Query — Structured retrieval over on-/off-chain data and repositories.
+- Permission — Fine-grained access/ownership control over entities and objects.
 
-Arbitration — Dispute handling and resolution pathways.
+- Personal — User/agent profile and preferences for personalization.
 
+- Query — Structured retrieval over on-/off-chain data and repositories.
+
+- Arbitration — Dispute handling and resolution pathways.
+
+### Demand
+#### Definition:
+Personalized demand fulfillment through reward-based bounty, attracting services that meet specific requirements.
+
+#### Functionality:
+Enables users to post specific demands with bounty rewards, allowing service providers to present qualifying services, with automated bounty distribution upon service selection and Guard-based eligibility verification. Bounty-based service presentation system where service providers can present qualifying services for specific demands.
+
+
+#### Use Cases:
+
+Traditional travel planning projects involve multiple communications and comparisons, which is time-consuming and labor-intensive. By publishing requirements, travelers can put forward all their requirements at once, which greatly improves efficiency. The interaction between travelers and service providers becomes more direct and efficient, while providing a more fair and transparent trading environment for both parties.
+
+Traveler's needs launch:
+
+Tom wanted to experience the Great Migration in Africa and was looking for a relaxing safari with accommodation close to nature and a guide who could provide knowledge of the wildlife and natural environment.
+
+#### Key Features（核心特性）:
+
+- Bounty-based reward system 
+- Service presentation and selection 
+- Time-limited claim windows
+- Guard-based presenter qualification
+
+### Service
+#### Definition
+Structured supply offerings with programmable terms, integrated payment and refund logic, and real-time progress tracking.
+
+#### Functionality
+Enables providers to publish services with customizable pricing, dynamic inventory, Guard-based purchase eligibility, and Machine-powered workflow management. Withdrawal and refund actions are executed automatically when predefined completion or exception conditions are met.
+
+以下是你提供的 **“Customized Kenya Wildlife Safari”** 用例的优化版本，融合了你补充的 Service Use Cases 内容，使场景更丰富、更具层次感，并突出了 WoWok 服务对象的组合性、可审计性与 AI 适配潜力：
+
+---
+
+#### Use Case — Customized Kenya Wildlife Safari
+
+Tom submits a personalized safari request on WoWok, outlining his preferences for travel dates, wildlife focus, accommodation style, and physical comfort level.
+The platform matches his request with multiple providers and automatically recommends **Natural Explorer Tours**, whose service metadata meets Tom’s criteria via on-chain Repository and Guard references.
+
+The selected provider publishes a `Service` composed of:
+
+* **Professional guides**, licensed and verified via a credential Repository
+* **Eco-lodge accommodations**, with real-time availability from an external data oracle
+* **Milestone-based payouts**, tracked through a dedicated `Machine` (e.g., booking confirmed → check-in → guided tour complete)
+* **Emergency cancellation Guard**, which defines refund logic for unexpected returns
+
+During the trip:
+
+* Tom becomes ill and needs to cut the trip short.
+* He initiates an early return request through the WoWok interface.
+* The platform evaluates Tom’s emergency condition using a Guard referencing a trusted medical Repository.
+* Upon successful verification, the system refunds Tom for the unused portions (lodging and activities) while releasing milestone-completed funds to the provider.
+
+Throughout the process:
+
+* **Buyers can view the full terms of the service**, including refund thresholds and breach compensation conditions.
+* **Service progress is tracked in real-time** via the associated `Progress` object, offering full transparency from pre-departure to completion.
+* **All fund flows, status changes, and contract conditions are recorded on-chain**, ensuring auditability and minimizing dispute risk.
+* With Tom’s consent, **his service behavior is recorded in his Personal profile**, training a private AI agent to help match future services more precisely to his preferences.
+
+This use case demonstrates how WoWok enables composable, automated, and trustworthy service delivery—far beyond the static rules of Web2 platforms.
+
+
+#### Key Features
+- Flexible pricing and inventory controls
+- Guard-based purchase eligibility
+- Conditional withdrawal and refund guards
+- Machine-driven progress tracking
+- Automatic Order generation and management
+- Built-in support for discounts and promotions
+
+
+### Guard
+
+**Definition**
+Immutable on-chain condition scripts that gate operations until a verifiable Passport proves all predefined rules are satisfied.
+
+**Functionality**
+Guards encode logical rules—time windows, reputation scores, balances, external oracle data, even future events—into bytecode plus a constant table. Once published, a Guard’s address becomes a permanent reference that can be attached to Services, Orders, Machines, Treasuries, or any other WoWok object. Operators must submit a Passport (signed Q\&A proof bundle); if every “sense” evaluates to true, the guarded action succeeds, otherwise it reverts.
+
+**Use Cases**
+
+| Scenario                  | Guard Logic (illustrative)                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Reward Guard**          | *Admin incentive* — “If address 0x538d… is listed as `admin` in Permission 0x64f3…, allow a 50 USDT claim from Treasury Z.” |
+| **Refund Guard**          | *Tiered return policy* — “Full refund if the Order is < 7 days old; 80 % refund if < 15 days.”                              |
+| **Service Timeout Guard** | “If a Service milestone is not reached within 72 h, consumer may claim 30 % compensation.”                                  |
+| **Emergency Guard**       | “Allow instant itinerary cancellation and proportional refund when a certified emergency Proof is uploaded.”                |
+| **Loyal-Customer Guard**  | “Apply an extra 5 % discount when booking history ≥ 3 trips in the last 12 months.”                                         |
+
+*Examples show common patterns; adapt to your specific business logic.*
+
+**Key Features**
+
+* **Deterministic bytecode logic** — executes the same on every node
+* **Constant table parameterization** — inject static or future data sources
+* **Passport-based proof flow** — single or batched verification saves gas
+* **Cross-object querying** — reference any WoWok object or external oracle
+* **Immutable & reusable** — once deployed, the Guard cannot be altered, enabling full composability and auditability
+
+
+### Repository
+
+**Definition**
+Policy-driven, on-chain data libraries that store structured key–value records under explicit write rules and type consensus.
+
+**Functionality**
+A Repository groups data by *policy name*. For each policy, it specifies who can write, what data type is allowed, and whether entries outside the policy are accepted (`Free` mode) or rejected (`Strict` mode).
+Any WoWok object—or external contract—can reference a Repository’s address to fetch trusted values, enabling composable, cross-organizational workflows.
+
+**Use Case — Trusted Medical Certificate**
+During a Kenyan safari, Tom contracts severe malaria and must end the trip early.
+
+1. A WoWok-approved clinic diagnoses Tom and issues a digital certificate.
+2. The guide uploads the certificate to a “Trusted-Clinics” Repository whose policy admits writes only from whitelisted clinic addresses.
+3. An Emergency Refund Guard queries that Repository; once the issuer address is confirmed, the Guard releases a proportional refund for the unused part of the itinerary.
+
+This flow ensures refunds rely on verifiable, consensus-backed medical data rather than off-chain claims.
+
+**Key Features**
+
+* **Policy-based field control** — granular rules for *who* may write *what*
+* **Type-enforced entries** — bool, string, number… validated on-chain
+* **Free vs. Strict modes** — choose open data capture or full consensus integrity
+* **Referenceable by any object** — Guards, Services, Machines can read trusted values
+* **Permission-indexed operations** — integrate with WoWok Permission for fine-grained governance
+
+
+---
+
+### **Machine**
+
+#### **Definition**
+
+A **Machine** is a modular, on-chain process blueprint composed of interconnected nodes, defining business logic, operator roles, state transitions, and verification conditions. It serves as the programmable engine behind service delivery, enabling autonomous, verifiable collaboration across parties. Once published, a Machine becomes immutable and can generate executable **Progress instances** per buyer.
+
+Machines enable **borderless collaboration**: multiple entities can interact, commit, and validate state transitions without needing centralized control—each according to preset roles, guards, and permissions.
+
+
+#### **Functionality**
+
+A Machine defines its workflow through a **State Diagram**:
+
+* **Nodes**: represent stages in a service (e.g., Booking, Check-in, Safari Completion)
+* **Node Pairs**: define transitions between nodes
+* **Forwards**: paths between nodes, executable by specific **Operators**
+* **Guards**: programmable logic conditions (e.g., payment received, file uploaded)
+* **Threshold & Weight**: control group transitions (e.g., "2 of 3 reviewers must approve")
+* **Operators**: defined roles such as `"Order Payer"` or `"Travel Agent"`, bound by `Permission Index`
+* **Lifecycle States**:
+
+  * **Editable**: when unpublished
+  * **Immutable & Executable**: once published and not paused
+
+Each instantiated `Progress` follows the state logic of the Machine, generating real-time records, state validation, and evidence for dispute resolution.
+
+#### **Key Components**
+
+| Component                | Functionality                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **Nodes & Forwards**     | Define progress stages and conditional transitions                               |
+| **Thresholds & Weights** | Allow multi-party approvals and flexible collaboration logic                     |
+| **Named Operators**      | Assign role-specific execution power (e.g., only the "Guide" can trigger Node 3) |
+| **Guard Contracts**      | Enforce data-bound conditions on each transition                                 |
+| **Permissions**          | Control edit and execution rights using on-chain permission indices              |
+| **Consensus Repository** | Store canonical records used during transitions for validation and automation    |
+| **Custom Endpoints**     | Define front-end consoles per node to simplify UX for each role                  |
+
+
+#### **Use Case — Safari Trip Coordination**
+
+In Tom’s Kenya wildlife safari:
+
+1. **Machine Setup**
+   Natural Explorer Tours defines a `SafariMachine` with the following nodes:
+
+   * `Order Created`
+   * `Deposit Paid`
+   * `Trip Started`
+   * `Activity Completed`
+   * `Trip Ended`
+   * `Final Payment Released`
+
+   Each node is connected via a `Forward` path with a named operator like `"Order Payer"` or `"Safari Guide"`, and each transition is gated by a **Guard**.
+
+2. **Thresholds & Guards**
+
+   * A `50-50` weighted approval between `"Trip Manager"` and `"On-Site Guide"` ensures the safari activity is completed before payout.
+   * A `Guard` verifies that a trip photo is uploaded and GPS tag matches the safari zone before allowing the node transition.
+
+3. **Unexpected Event Handling**
+
+   * Midway, Tom falls ill and initiates cancellation.
+   * The `Emergency Cancel` node becomes accessible only if a **medical certificate** is uploaded and passes Guard verification (e.g., timestamp, issuer credibility).
+   * The Machine uses the `Repository` to fetch the credential and determine eligibility.
+
+4. **Outcome**
+
+   * The Machine allows partial fund withdrawal to the provider based on completed stages, and initiates a refund for unused segments.
+   * The entire process is verifiable, immutable, and transparent to all parties.
+
+---
+
+#### **Key Features**
+
+* **Composable Node-Based Architecture**
+  Model flexible, modular service logic through re-usable nodes and directional transitions.
+
+* **Fine-Grained Role Control**
+  Bind each path to an operator role with Permission Index, ensuring only the right party can act.
+
+* **Programmable & Auditable Logic**
+  Each step is enforced by Guards and stored in on-chain repositories for post-factum validation.
+
+* **Cross-Organizational Coordination**
+  Machines enable independent entities (guides, transporters, agents) to collaborate under a shared service logic without requiring central arbitration.
+
+* **User-Defined Interfaces (Endpoints)**
+  Every node can expose a specific console view tailored to the actor’s current state, improving usability and clarity.
+
+
+### **Progress**
+
+#### **Definition**
+
+Execution instance of a `Machine`, representing the real-time state, operator actions, and node transitions of a workflow.
+
+#### **Functionality**
+
+Tracks the workflow state and operator actions at each node. Supports session-based progression, audit logging, deliverable submission, task binding, and interaction with collaborative consensus repositories. Enables parent-child progress hierarchies for composable workflows.
+
+#### **Use Case**
+
+Tracking the individual execution flow of a service order within a multi-step supply chain agreement.
+
+#### **Key Features**
+
+* **Stateful Node Execution & Audit Trail**
+  Records each node transition and operator action through sessions and history, ensuring traceability and transparency in execution.
+
+* **Dynamic Role Assignment**
+  Allows runtime assignment and update of named operators per transition path, aligned with machine-level permission governance.
+
+* **Composable Hierarchies & Deliverables Binding**
+  Supports parent-child relationships between progresses and attaches deliverables or sub-progresses to specific transitions.
+
+* **Integrated Collaborative Context**
+  Connects with external `context_repositories` for data sharing, validation, and coordination during multi-party execution.
+
+
+### Treasury
+
+#### **Definition**
+Programmable on-chain cashbox for multi-party fund management, supporting condition-based deposits and withdrawals, with full transaction history and auditability.
+
+#### **Functionality**
+Treasury securely manages the inflow and outflow of assets for individuals, organizations, or communities. It integrates Guards to control who can deposit or withdraw, under what conditions, and to what extent. All financial interactions—including reward distribution, staking, deposits, and conditional refunds—are recorded immutably on-chain.
+
+Treasury supports three operational modes:
+
+1. **Internal mode** — withdrawals based on permissions; flexible but high-risk.
+2. **External mode** — deposits are open, withdrawals must satisfy Guard conditions.
+3. **Hybrid mode** — both internal and external withdrawals are allowed, with individual Guard rules for each address.
+
+#### **Use Cases**
+
+* **Internal Treasury (Example: Employee Bonus)**
+  A travel company allocates yearly bonuses through Treasury to guides based on internal policy. No fixed withdrawal limit is set—permissive but risk-prone.
+
+* **External Treasury (Example: Peer Recognition Reward)**
+  During a Kenya wildlife trip, Tom rewards fellow travelers using a Treasury. He sets Guard-based conditions (e.g., Alice helped spot a rare bird) and adds her address to the withdrawal list. Upon verification, the system releases funds to Alice automatically and records it immutably.
+
+* **Hybrid Treasury (Example: Service Deposit Escrow)**
+  Tour operators or hotels deposit a service guarantee.
+
+  * If the traveler confirms satisfaction, the deposit is released.
+  * If not, a portion may be withheld for compensation.
+    This model builds trust and ensures service quality through automatic, rule-based enforcement.
+
+#### **Key Features**
+
+* **Guard-controlled deposits & withdrawals** — customizable access rules for each participant
+* **Full transaction history** — all inflows/outflows are verifiable and queryable
+* **Support for multiple currencies** — flexible asset management in multi-token environments
+* **Programmable payout conditions** — automate rewards, refunds, or penalties
+* **Transparent & auditable operations** — ideal for DAOs, communities, and high-trust systems
+* **Three operating modes** — internal, external, or hybrid fund governance
+
+Treasury is essential infrastructure for any project or organization requiring automated, transparent, and decentralized financial coordination.
+
+### Arbitration
+
+#### **Definition**
+Transparent and programmable on-chain dispute resolution mechanism governed by weighted voting Guards and optional usage controls.
+
+#### **Functionality**
+Arbitration enables any third-party group (e.g., a DAO, community, or certified organization) to act as a jury for resolving disputes between participants in a transaction. Jurors are defined by a `voting_guard` mapping addresses to vote weights. Dispute initiators may be filtered via `usage_guard` conditions. All submitted evidence, votes, and outcomes are recorded immutably on-chain, and compensation or remediation is executed automatically based on the final verdict.
+
+#### **Use Case — Non-delivered Order Resolution**
+Tom places an order for a souvenir from Nature Explorer Travel. The item is not delivered by the agreed date.
+
+* Tom files a dispute via the order’s arbitration link.
+* The seller and logistics provider upload delivery proof (e.g., tracking data, signed receipt).
+* A jury is selected (randomly or by agreement).
+* Jury members review all submitted data and vote via the platform’s arbitration module.
+* With a majority vote in Tom’s favor, the system triggers automatic compensation to Tom or mandates re-delivery.
+  This entire process is verifiable, auditable, and governed by pre-agreed logic.
+
+#### **Key Features**
+
+* **Weighted voting via `voting_guard`** — enables flexible governance (e.g., 1 address = 1 vote, or reputation-weighted)
+* **Transparent, immutable dispute records** — every step is visible and on-chain
+* **Automatic compensation execution** — reduces manual error or delay
+* **Permissioned & guarded access** — control who can trigger arbitration or participate
+* **Linked to Orders and Services** — deeply integrated with the fulfillment and agreement layer
+* **Customizable endpoints** — allow juries to link off-chain evidence or identities via URLs
+
+Arbitration in WoWok empowers communities to define their own fair and open resolution systems while ensuring enforcement is both transparent and automatic.
+
+
+###  **Permission**
+
+#### **Definition**
+
+Granular access control framework for assigning and managing operational rights via permission indexes. Each object is bound to a Permission entity at creation, enabling modular, scalable, and auditable authority management.
+
+#### **Functionality**
+
+Provides fine-grained permission allocation for objects and roles through index-based access control. Supports hierarchical delegation (`Builder` / `Admin`), dynamic permission updates, Guard-enforced conditional execution, and centralized multi-object governance.
+
+#### **Use Case**
+
+A travel agency maintains a shared repository of Kenya safari services. Multiple staff members interact with this repository through indexed permissions:
+
+*  **Trip Planner** (`index: 10001`):
+  Can view and customize client itineraries.
+
+*  **Finance Officer** (`index: 10002`):
+  Can execute and refund payments tied to service orders.
+
+*  **Customer Support** (`index: 10003`):
+  Can view booking details and provide assistance during travel.
+
+Tom, the traveler, interacts with the system through a permission index allowing him to confirm itineraries, trigger emergency support, and submit post-trip feedback — all without exposing sensitive operations outside his access scope.
+
+This model ensures security, operational efficiency, and regulatory compliance in multi-role collaborative environments.
+
+####  **Key Features**
+
+* **Index-based Role Assignment**
+  Assigns discrete permissions via integer indexes to any address, supporting modular access patterns across roles and systems.
+
+* **Hierarchical Management**
+  `Builder` can transfer control; `Admins` can assign, update, or revoke permissions without redeploying objects.
+
+* **Guard-enabled Conditional Access**
+  Enforce business logic via on-chain `Guard` contracts, gating permissions by external state (e.g., identity, membership, status).
+
+* **Multi-object Management**
+  A single `Permission` entity can govern access rights for multiple smart objects, simplifying cross-system permission orchestration.
+
+###  **Passport**
+
+#### **Definition**
+
+Temporary, single-use verification object enabling multi-Guard validation within a single transaction.
+
+#### **Functionality**
+
+Passports aggregate multiple Guard conditions and collect witness data to prove future state compliance (e.g., order criteria, machine progress). They support efficient batch verification, reduce transaction overhead, and guarantee that all required conditions are met before execution.
+
+#### **Use Case**
+
+When Tom books a dynamic service that requires verifying both a future order’s configuration and a machine's execution reaching a specific node, a single Passport is created to:
+
+* Collect relevant Guard logic and constant parameters
+* Aggregate witness proofs (e.g., from the order system and machine progress)
+* Execute batch verification in one atomic operation
+* Auto-expire post-execution, preventing reuse
+
+This guarantees all logic checks are passed securely before the action is confirmed on-chain.
+
+####  **Key Features**
+
+* **Multi-Guard Aggregation**
+  Supports up to 8 Guards in a single Passport for atomic validation.
+
+* **Single-Transaction Validity**
+  Passport becomes invalid post-verification, ensuring trustless execution integrity.
+
+* **Witness-Driven Proof Collection**
+  Supports linking future state dependencies via verifiable `Witness` records before condition checking.
+
+* **Debuggable Freezing Support**
+  Optional `freezen` operation allows inspection of verified Passport data during development or audits.
+
+### Order
+
+#### **Definition**
+A transactional object generated when a Service is purchased, capturing payment records, fulfillment progress, discounts, and both parties’ rights and obligations under programmable Guards.
+
+
+#### **Functionality**
+Orders manage the full lifecycle of a transaction—from initial payment and discount application to service fulfillment, dispute resolution, refunds, and withdrawal settlements.
+They bind directly to the `Service` and spawn a `Progress` to track real-time delivery. Optional fields like contact info are stored encrypted to preserve user privacy.
+Guards govern the logic of how much each party may withdraw or be refunded based on delivery status, contract breaches, or emergencies.
+
+#### **Use Case — Traveler Purchase & Dispute Handling**
+
+* Tom books a \$5,000 USDT safari via Nature Explorers Travel and enjoys a 10% early bird discount, paying \$4,500 USDT.
+* The Order tracks his trip from preparation to execution through a linked `Progress`.
+* Prior to departure, the provider cancels the trip. The `Refund Guard` ensures Tom automatically receives a full refund.
+* During the trip, Tom realizes the accommodation differs from the agreed “luxury tent.” A `Breach Reward Guard` triggers, and Tom receives a 5% compensation.
+* When Tom becomes ill mid-trip, an `Emergency Refund Guard` is activated. Based on his verified medical certificate, the system grants a proportional refund.
+
+#### **Key Features**
+
+* **Bound Progress instance** — Real-time tracking of service delivery stages
+* **Guard-based refund & withdrawal logic** — Enforce who can claim what portion, under what conditions
+* **Discount & pricing transparency** — Discounts, adjustments, and final prices are recorded immutably
+* **Encrypted buyer information** — Optional data like delivery details or ID proof is securely stored
+* **Integrated with Arbitration** — Supports seamless dispute resolution when paired with Arbitration and Service objects
+* **Full audit trail** — Payment, refund, and settlement actions are permanently recorded on-chain
+
+Orders act as the atomic unit of economic consensus within WoWok, linking intent, commitment, and accountability into one programmable structure.
+
+---
+
+### Discount
+
+#### **Definition**
+Transferable, programmable discount assets created by Service administrators, offering either fixed or percentage-based reductions under defined conditions. Once issued, discounts are immutable and verifiable on-chain.
+
+#### **Functionality**
+Discounts can be attached to Services to incentivize engagement, reward loyalty, or gamify user behavior. Administrators configure conditions such as minimum purchase amount, usage period, and issuance limits.
+Eligibility for claiming or applying a discount can be controlled via Guards—e.g., based on user history, task completion, or external verifications.
+
+#### **Use Case — Loyalty Discount for Travel Enthusiast**
+Tom, an experienced traveler, has booked two Kenya safaris and one Tanzania climb via Nature Explorer Travel.
+
+* His participation history is stored in a Repository.
+* A Loyalty Discount requires three prior bookings.
+* A Guard verifies his travel record when he logs in.
+* Tom qualifies and receives an additional 15% off, stacking with the early bird offer.
+
+In another example, Tom shares the service with two friends and invites one to sign up—completing a two-part Guard task. As a result, he unlocks a 20% discount for a future trip.
+
+#### **Key Features**
+
+* **Fixed or percentage types** — Supports both flat-rate and relative reductions
+* **Time-limited validity** — Start/end periods define when discounts are usable
+* **Guard-based eligibility** — Discount access can be earned or gated through verifiable conditions
+* **Asset-like transferability** — Discounts are claimable, assignable, and persist on-chain
+* **Stackable with other conditions** — Can combine with early bird rewards, milestone triggers, etc.
+* **Integration with Services** — Discount application logic is embedded in Order generation
+
+Discounts in WoWok are not just promotional tags—they are programmable value units that can be governed, verified, and distributed with the same precision as payments or permissions.
+
+
+Wowok / Grantor（信任授权）
+Definition（定义）:
+Protocol-owned objects for trust granting, transferring, and conditional guarding within the ecosystem.
+协议拥有的信任授予、转移和生态系统内条件保护对象。
+
+Functionality（功能）:
+Manages the protocol's trust infrastructure, enabling trust relationships, credential verification, and ecosystem-wide reputation management through grantors and grantees.
+管理协议的信任基础设施，通过授权者和被授权者实现信任关系、凭据验证和生态系统范围的声誉管理。
+
+Use Cases（场景示例）:
+
+Professional certification and credential verification.
+
+企业间信任关系的链上管理。
+
+(示例) 旅游行业中旅行社资质的信任传递。
+
+Key Features（核心特性）:
+
+Trust relationship management 信任关系管理
+
+Credential verification system 凭据验证系统
+
+Ecosystem-wide reputation 生态系统范围声誉
+
+Reward（奖励机制）
+Definition（定义）:
+Conditional reward distribution system providing incentives based on Guard-verified achievements.
+基于Guard验证成就提供激励的条件化奖励分发系统。
+
+Functionality（功能）:
+Manages reward pools with time-limited claiming windows, Guard-based eligibility criteria, and configurable repeat claim policies, enabling flexible incentive mechanisms for various scenarios.
+管理具有时间限制认领窗口、基于Guard的资格标准和可配置重复认领政策的奖励池，为各种场景提供灵活的激励机制。
+
+Use Cases（场景示例）:
+
+Airdrops with conditional eligibility requirements.
+
+任务完成奖励的自动化分发。
+
+(示例) 社区贡献者的阶梯式奖励系统。
+
+Key Features（核心特性）:
+
+Guard-based eligibility verification 基于Guard的资格验证
+
+Time-limited claiming windows 时间限制的认领窗口
+
+Configurable repeat claims 可配置的重复认领
+
+Sponsor tracking 赞助商跟踪
+
+Vote（投票治理）
+Definition（定义）:
+Collective decision-making infrastructure with weighted voting, multiple choice support, and deadline management.
+具有权重投票、多选支持和截止时间管理的集体决策基础设施。
+
+Functionality（功能）:
+Facilitates transparent voting processes with Guard-based voter qualifications, configurable voting weights, multiple choice options, and lockable parameters for immutable governance decisions.
+通过基于Guard的选民资格、可配置投票权重、多选项和可锁定参数，促进透明的投票过程，实现不可变的治理决策。
+
+Use Cases（场景示例）:
+
+DAO governance voting with weighted participation.
+
+社区提案的多选投票决策。
+
+(示例) 项目资金分配的透明化投票。
+
+Key Features（核心特性）:
+
+Weighted voting system 权重投票系统
+
+Multiple choice support 多选支持
+
+Guard-based voter qualification 基于Guard的选民资格
+
+Lockable governance parameters 可锁定的治理参数
+
+Payment（支付系统）
+Definition（定义）:
+Advanced payment infrastructure supporting streaming payments, escrow, and conditional releases.
+支持流式支付、托管和条件释放的高级支付基础设施。
+
+Functionality（功能）:
+Enables sophisticated payment mechanisms including time-based streaming, milestone-based releases, multi-party escrow, and Guard-conditional payment triggers for complex financial arrangements.
+通过基于时间的流式支付、基于里程碑的释放、多方托管和Guard条件支付触发器，实现复杂金融安排的精密支付机制。
+
+Use Cases（场景示例）:
+
+Salary streaming for continuous payment distribution.
+
+项目里程碑的条件化资金释放。
+
+(示例) 多方合作项目的托管支付管理。
+
+Key Features（核心特性）:
+
+Streaming payment support 流式支付支持
+
+Milestone-based releases 基于里程碑的释放
+
+Multi-party escrow 多方托管
+
+Guard-conditional triggers Guard条件触发器
