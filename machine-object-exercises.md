@@ -1,200 +1,173 @@
-# Machine Object: Your Workflow Orchestrator
+# Machine Object: Your Workflow Blueprint Designer
 
-> "Turn complex business processes into automated, transparent, and collaborative workflows that everyone can follow."
+> "Design reusable workflow templates that define how complex processes should flow from start to finish."
 
 ## What You'll Build (30 seconds)
 
-By the end, you will have three working workflow systems and understand process automation:
+By the end, you will have three workflow blueprints and understand process design:
 
-- **Simple Machine** — basic 3-step workflow (Book → Execute → Deliver)
-- **Conditional Machine** — approval-based workflows with branching logic
-- **Collaborative Machine** — multi-party workflows with service integration
+- **Simple Machine** — basic 3-step workflow template
+- **Conditional Machine** — branching workflows with approval logic
+- **Service-Integrated Machine** — workflows that coordinate multiple services
 
 **Prereqs**: You already created Personal, Permission, Treasury, and Service objects. Network is `sui testnet`. Token type is `0x2::sui::SUI`.
 
-**Key Concept - Machine vs Progress**:
-
-- **Machine** = Blueprint/Template (like a recipe)
-- **Progress** = Running Instance (like cooking that recipe)
-- One Machine can create many Progress instances
-- Each Progress tracks one specific workflow execution
+**💡 Pro Tip**: Machine objects need Permission objects to manage who can modify them. Services need withdraw guards before they can be published. If you get stuck on technical details, ask your AI assistant: "Help me create the required Permission object with Machine management permissions" or "What are the built-in permission indexes for Machine operations?"
 
 **Pre-flight** (copy one line):
 
 ```
-"On sui testnet, show my default account and SUI balance; if low, guide me to the faucet and wait for funds."
+"On sui testnet, show my default account and balance; if low, guide me to the faucet and wait for funds."
 ```
 
 ---
 
-## 🎯 Level 1 — Foundation (make workflows work)
+## 🎯 Level 1 — Foundation (design basic workflows)
 
-**Scenario**: You have a service that needs a clear, trackable process from start to finish.
+**Scenario**: You want to create a standardized process template that can be reused for similar projects.
 
-**Your Mission**: Create your first Machine with a simple linear workflow that customers can follow.
+**Your Mission**: Design your first Machine with a simple linear workflow structure.
 
-**Try This A** (create Machine blueprint):
-
-```
-"Create Simple Machine for consulting service on sui testnet. Design 3 nodes: 'Initial Consultation' → 'Analysis & Planning' → 'Final Delivery'. Set permissions: consultant (1001) can advance all steps, threshold=1 for each transition. Return: Machine address + on-chain link, Permission address + on-chain link, node configuration summary."
-```
-
-💡 **What makes this special**: Unlike traditional project management tools, this Machine blueprint is permanently recorded on-chain. Once published, the workflow rules become immutable - no one can secretly change the process or skip steps.
-
-**Try This B** (publish and instantiate):
+**Try This A** (create workflow blueprint):
 
 ```
-"Publish the Machine, then create a new Progress instance for client project 'ABC Corp Strategy'. Return: Progress address + on-chain link, current node ('Initial Consultation'), available operations list, authorized operators for next step, transaction hash."
+"Create Simple Machine for consulting service on sui testnet. First create a Permission object with Machine management permissions for my default account, then create a Machine with 3 nodes: 'Initial Consultation' → 'Analysis & Planning' → 'Final Delivery'. Set up the workflow so consultants can advance all steps, with each transition requiring one approval. Return: Machine address + on-chain link, Permission address + on-chain link, node configuration summary."
 ```
 
-💡 **What makes this special**: This Progress instance is now a blockchain-native workflow tracker. Every step, every transition, every operator action will be permanently recorded with timestamps and cryptographic proof.
-
-**Try This C** (demonstrate progression):
+**Try This B** (publish the blueprint):
 
 ```
-"Complete 'Initial Consultation' operation and advance Progress to 'Analysis & Planning'. Return: operation completion transaction hash + on-chain link, updated Progress state (current node: 'Analysis & Planning'), next available operations, audit trail with timestamps and operator addresses."
+"Publish the Simple Machine to make it ready for creating workflow instances. Set bPublished to true. Return: Machine address + on-chain link, published status confirmation, node structure summary."
+```
+
+**Try This C** (verify the design):
+
+```
+"Query the Machine object to show its complete workflow structure: all nodes, transitions, permissions, and current published status."
 ```
 
 **Success Looks Like**:
 
-- ✅ You see Machine address + on-chain link, Permission address + on-chain link, Progress address + on-chain link
-- ✅ Progress shows current node: 'Analysis & Planning', available operations list, authorized operators
-- ✅ Audit trail shows: operation completed at timestamp, operator address, transaction hash + on-chain link
-- ✅ **Machine vs Progress clear**: Machine is blueprint, Progress is running instance
-- ✅ **Process transparency**: Customers see exactly what steps are involved
-- ✅ **Progress tracking**: Everyone knows where things stand at any time
-- ✅ **Consistent returns**: Every operation returns address + on-chain link + current state
+- ✅ You see Machine address + on-chain link, Permission address + on-chain link
+- ✅ Machine shows published status: true, with complete node structure
+- ✅ Node configuration shows: 3 nodes, correct transitions, permission requirements
+- ✅ **Workflow template ready**: Your blueprint is now available for creating workflow instances
 
 **Why This Matters**: Machine objects provide:
 
-- **Process transparency**: Customers see exactly what steps are involved
-- **Progress tracking**: Everyone knows where things stand at any time
-- **Automated coordination**: System manages handoffs between steps
-- **Quality assurance**: Each step can have verification requirements
-
-This Machine turns your service into a trackable, professional process.
-
-💡 **Wowok Advantage**: Your workflow is now blockchain-native with immutable rules, cryptographic audit trails, and transparent progress tracking - capabilities that traditional workflow tools simply cannot provide.
+- **Reusable templates**: Design once, use many times for similar processes
+- **Clear structure**: Everyone knows what steps are involved before starting
+- **Permission control**: Define who can perform which operations
+- **Immutable rules**: Once published, the process can't be secretly changed
 
 ---
 
-## 🎯 Level 2 — Application (smart decisions in workflows)
+## 🎯 Level 2 — Application (smart workflow logic)
 
-**Scenario**: Your process needs conditional logic - different paths based on circumstances.
+**Scenario**: Your process needs different paths based on project complexity or approval requirements.
 
-**Your Mission**: Create a Machine with branching workflows that adapt to different situations.
+**Your Mission**: Create a Machine with conditional branching that adapts to different situations.
 
-**Try This A** (create branching Machine):
-
-```
-"Create Conditional Machine with branching: 'Project Intake' → 'Simple Track' (threshold=1, permission 1001) OR 'Complex Track' (threshold=2, permissions 1001+1002) → 'Quality Review' → 'Final Delivery'. Set up Guard for automatic routing based on project budget. Return: Machine address + on-chain link, Guard address + on-chain link, Permission address + on-chain link, branching logic summary."
-```
-
-💡 **What makes this special**: This branching is driven by Guard objects - Wowok's unique on-chain conditional logic system. Traditional workflow tools require manual decisions; here the blockchain automatically routes based on objective criteria.
-
-**Try This B** (test permission and threshold failures):
+**Try This A** (create branching blueprint):
 
 ```
-"Create Progress instance, try to advance to 'Complex Track' with only 1 approval (should fail with 'threshold not met: 1/2'). Then try with unauthorized user (should fail with 'permission denied: missing 1002'). Return: Progress address + on-chain link, specific error messages, current approvals count (1/2), required permissions list."
+"Create Conditional Machine with manual branching on sui testnet. First create a Permission object for the new Machine, then design the workflow: 'Project Intake' → users can choose 'Simple Track' (requires one consultant approval) OR 'Complex Track' (requires both consultant and manager approval) → both paths converge at 'Quality Review' → 'Final Delivery'. Use different threshold values and permission requirements to enforce the approval logic. Return: Machine address + on-chain link, Permission address + on-chain link, branching logic summary."
 ```
 
-**Try This C** (successful branching):
+**Try This B** (configure approval requirements):
 
 ```
-"Complete proper approvals (2 signatures for Complex Track), show Guard evaluation routing project to correct path, and demonstrate convergence at 'Quality Review' with full audit trail. Return: transaction hashes for both approvals + on-chain links, Guard evaluation result, chosen path confirmation, updated Progress state, complete audit trail with timestamps."
+"Explain how the Complex Track enforces dual-signature requirements: show how the threshold value of 2 means both consultant approval (permission 1001) and manager approval (permission 1002) must be completed before the workflow can advance to Quality Review. Demonstrate the difference between Simple Track (threshold 1) and Complex Track (threshold 2)."
 ```
 
-💡 **What makes this special**: The Guard automatically evaluated conditions and chose the path - this is Wowok's unique on-chain decision engine. Traditional systems require manual routing; here the blockchain makes objective, transparent decisions.
+**Try This C** (publish and verify):
+
+```
+"Publish the Conditional Machine and verify the branching logic: show how projects can take different paths based on user choice and approval requirements. Query the Machine object to display the complete node structure and explain how the workflow handles both simple and complex project scenarios."
+```
 
 **Success Looks Like**:
 
-- ✅ You see Machine address + on-chain link, Guard address + on-chain link, Progress address + on-chain link
-- ✅ Failed advancement shows specific errors: "threshold not met: 1/2" or "permission denied: missing 1002"
-- ✅ Successful routing shows Guard evaluation result and chosen path with transaction hashes
-- ✅ Progress state shows: current node, pending approvals (1/2), available operations, authorized operators
-- ✅ **Conditional logic works**: Workflows adapt based on Guard evaluation
-- ✅ **Permission control**: Only authorized operators can advance specific steps
-- ✅ **Threshold enforcement**: Multi-signature requirements are enforced
-- ✅ **Error transparency**: Specific failure reasons help users understand requirements
+- ✅ You see Machine address + on-chain link, Permission address + on-chain link
+- ✅ Branching logic shows: Simple Track (consultant approval, threshold=1) vs Complex Track (consultant + manager approval, threshold=2)
+- ✅ Node configuration shows how both paths converge at Quality Review
+- ✅ **Adaptive workflows**: Your template can handle different complexity levels through manual path selection
 
 **Why This Matters**: Conditional Machines enable:
 
-- **Adaptive processes**: Workflows that adjust to different situations
-- **Efficiency optimization**: Simple cases get streamlined treatment
-- **Quality control**: Complex cases get additional oversight
-- **Automated routing**: System decides paths based on objective criteria
-
-**Pro Tip**: Well-designed conditional workflows can handle 80% of cases automatically while giving special attention to complex situations.
-
-💡 **Wowok Advantage**: Guard-driven branching means your workflow decisions are based on verifiable on-chain conditions, not subjective human judgment. This eliminates bias and ensures consistent, transparent routing.
+- **Flexible routing**: Workflows adapt based on project requirements and user choices
+- **Efficiency optimization**: Simple cases get streamlined treatment with fewer approvals
+- **Quality control**: Complex cases get additional oversight through multiple approvals
+- **Clear governance**: Different approval requirements ensure appropriate oversight levels
 
 ---
 
-## 🎯 Level 3 — Integration (orchestrate everything)
+## 🎯 Level 3 — Integration (coordinate multiple services)
 
-**Scenario**: Your workflow needs to coordinate multiple services and parties working together.
+**Scenario**: Your workflow needs to orchestrate multiple external services and verify their completion.
 
-**Your Mission**: Create a sophisticated Machine that orchestrates multiple services and handles complex collaboration.
+**Your Mission**: Create a sophisticated Machine that integrates with Service objects and manages dependencies.
 
-**Try This A** (create Service-integrated Machine):
+**Prerequisites for Level 3**: This level requires existing Service objects as dependencies. The services must be:
 
-```
-"Create Event Machine with Service dependencies: 'Planning' → 'Venue Booking' (requires venue Service Order) → 'Catering' (requires catering Service Order) → 'Execution' → 'Billing'. Set up suppliers: venue Service (required), catering Service (required). Return: Machine address + on-chain link, Permission address + on-chain link, suppliers configuration, node dependencies summary."
-```
+- Created AND published (ready to accept orders)
+- Configured with payment withdrawal rules (so providers can collect earnings)
+- Fully operational before creating the Machine
 
-💡 **What makes this special**: Machine objects can orchestrate multiple independent services on-chain. Unlike traditional platforms that just track tasks, this Machine actually verifies service completion and coordinates payments automatically.
+You'll need to create venue booking and catering services first, or ask your AI assistant to help set them up with the complete configuration.
 
-**Try This B** (complete Service/Order/Progress cycle):
-
-```
-"Create venue and catering Services, place Orders from them, then use these Order addresses to advance Progress through 'Venue Booking' and 'Catering' steps. Return: venue Service address + on-chain link, catering Service address + on-chain link, venue Order address + on-chain link, catering Order address + on-chain link, Progress address + on-chain link, Order verification confirmations, Service completion proofs."
-```
-
-**Try This C** (milestone payments integration):
+**Try This A** (create service-integrated blueprint):
 
 ```
-"Demonstrate milestone payments: Treasury releases 30% after 'Venue Booking', 40% after 'Catering', 30% after 'Execution'. Return: Treasury address + on-chain link, initial balance, balance after each milestone (with transaction hashes + on-chain links), Order payment confirmations, Progress state after each advancement, complete payment audit trail."
+"First, help me create two published Service objects: a venue booking service and a catering service, each with basic sales items and payment withdrawal rules that allow service providers to collect their earnings immediately after order completion. Then create Event Machine with Service dependencies on sui testnet: 'Planning' → 'Venue Booking' (requires completed venue service order) → 'Catering' (requires completed catering service order) → 'Execution' → 'Final Payment'. Use the suppliers field to specify that venue and catering services are required dependencies. Return: Machine address + on-chain link, Service addresses + on-chain links, suppliers configuration, dependency summary."
+```
+
+**Try This B** (configure service requirements):
+
+```
+"Explain how the suppliers configuration works: show how setting bRequired=true for venue and catering services means that Progress instances must provide completed Order objects from these services before advancing to the next workflow step. Demonstrate the service dependency chain."
+```
+
+**Try This C** (publish and verify integration):
+
+```
+"Publish the Service-Integrated Machine and verify the dependency configuration: query the Machine object to show the complete workflow structure including suppliers configuration. Explain how this Machine will coordinate multiple service providers and validate that required services are completed before workflow progression."
 ```
 
 **Success Looks Like**:
 
-- ✅ You see Machine, Services, Orders, Progress, Treasury addresses and on-chain links
-- ✅ Treasury balance decreases: 30% (venue), 40% (catering), 30% (execution) with transaction hashes
-- ✅ Progress shows: completed Orders, verified Service deliverables, payment confirmations
-- ✅ **Service/Order/Progress cycle**: Complete integration from Service purchase to workflow advancement
-- ✅ **Milestone payments**: Automated Treasury releases tied to Progress advancement
-- ✅ **Multi-party coordination**: Different providers advance different workflow steps
-- ✅ **Dependency verification**: Machine validates Order ownership and Service completion
+- ✅ You have at least 2 Service objects created and published (bPublished: true)
+- ✅ Machine object created with suppliers configuration showing service dependencies
+- ✅ Understanding of how bRequired=true enforces service completion requirements
+- ✅ **Service coordination concept**: You understand how Machine orchestrates multiple service providers, even if full implementation encounters technical limitations
 
-**Why This Matters**: Collaborative Machines enable:
+**Why This Matters**: Service-Integrated Machines enable:
 
-- **Service orchestration**: Coordinate multiple providers seamlessly
+- **Multi-party coordination**: Orchestrate different service providers
 - **Dependency management**: Ensure prerequisites are met before proceeding
-- **Multi-party coordination**: Different people handle different aspects
-- **Automated verification**: System checks that requirements are satisfied
-
-**Level Up**: These collaborative workflows can power entire business ecosystems and supply chains.
-
-💡 **Wowok Advantage**: Machine objects create trustless coordination between multiple parties. Every service completion, payment release, and workflow transition is cryptographically verified - no central authority needed.
+- **Automated verification**: System checks service completion automatically
+- **Complex workflows**: Handle sophisticated business processes
 
 ---
 
-## 💡 Mini Challenge — Complex Event Coordination
+## 💡 Mini Challenge — Wedding Planning Machine
 
-**Goal**: Create a Machine that handles a wedding with multiple vendors, approval steps, and contingency planning.
+**Goal**: Create a comprehensive Machine that coordinates a wedding with multiple vendors and approval steps.
 
-**Try This** (complete Service/Order/Machine cycle):
+_Note: This is an advanced challenge that combines multiple concepts. Don't worry if you need to simplify or ask for help with the technical setup - the goal is to understand how complex real-world processes can be designed with Machine objects._
+
+**Try This**:
 
 ```
-"Create Wedding Machine for 0x2::sui::SUI on sui testnet. Design workflow: 'Planning' → 'Vendor Selection' → 'Booking Confirmation' → 'Event Execution' → 'Final Payment'. Create 3 vendor Services (venue, catering, photography), place Orders, then demonstrate full cycle: Service purchase → Order generation → Progress advancement → milestone Treasury payments → completion verification. Show complete audit trail."
+"Create Wedding Machine on sui testnet. First help me set up the required Service objects for venue, catering, photography, and music services. Then design the workflow: 'Planning' → 'Vendor Selection' → 'Booking Confirmation' → 'Event Execution' → 'Final Payment'. Use suppliers configuration to specify service dependencies, and set up approval requirements where both bride and groom roles must approve major decisions using different permission levels and threshold values."
 ```
 
 **Success Looks Like**:
 
-- ✅ Wedding Machine address, 3 Service addresses, 3 Order addresses, Progress address
-- ✅ Treasury balance changes: 40% (booking), 30% (execution), 30% (completion)
-- ✅ Progress audit trail: timestamps, operators, Order verifications, payment confirmations
-- ✅ **Complete cycle**: Service → Order → Progress → Payment → Verification
+- ✅ Wedding Machine address with complete workflow structure
+- ✅ Multiple service dependencies configured correctly
+- ✅ Approval requirements and contingency planning included
+- ✅ **Complex coordination**: One Machine orchestrates entire event planning
 
 **Creative Ideas**:
 
@@ -203,7 +176,7 @@ This Machine turns your service into a trackable, professional process.
 - **Education**: Enrollment → Learning Modules → Assessments → Certification
 - **Healthcare**: Consultation → Diagnosis → Treatment → Follow-up → Billing
 
-**Share Your Creation**: Post about your complex workflow system and how you're using Machine objects for multi-party coordination!
+**Share Your Creation**: Post about your workflow blueprint and how you're using Machine objects for process standardization!
 
 ---
 
@@ -213,37 +186,25 @@ This Machine turns your service into a trackable, professional process.
 
 **Node connection fails** → Check that prior_node names match exactly with existing nodes.
 
-**Permission denied** → Verify operators have correct permissions in the Permission object.
+**Permission denied** → Ask your AI to help create a Permission object with the right Machine management permissions for your account.
 
-- **Specific error**: "Permission denied: address 0x123 missing permission 1001"
-- **Fix**: Add permission 1001 to the operator's address in Permission object
+**Service integration fails** →
 
-**Workflow stuck** → Check that threshold values allow progression with available operations.
+- Check if referenced Services exist: query each Service by name to verify creation
+- Verify Services are published: bPublished should be true and ready to accept orders
+- Ensure payment withdrawal rules are configured: Services need proper withdrawal setup before publishing
+- Ask your AI to help with complete Service setup if any step fails
 
-- **Specific error**: "Threshold not met: 1/2 approvals for operation 'complex_review'"
-- **Fix**: Get additional approval from authorized operator with permission 1002
+**Publishing fails** → Check that all workflow steps are properly connected and have the required bPublished and bPaused fields set.
 
-**Service integration fails** → Ensure referenced Services exist and are published.
-
-- **Specific error**: "Service not found: 0x456 or Service not published"
-- **Fix**: Verify Service address and ensure bPublished: true
-
-**Guard evaluation fails** → Check Guard conditions and witness data.
-
-- **Specific error**: "Guard failed: time_window expired" or "Guard failed: min_signers not met"
-- **Fix**: Provide valid witness data or meet Guard conditions
-
-**Progress creation fails** → Verify Machine is published and has valid initial node.
-
-- **Specific error**: "Machine not published" or "Initial node '' not found"
-- **Fix**: Set bPublished: true and ensure initial node exists
+**Need permission indexes?** → Ask your AI to query the built-in permissions for Machine and Service modules to get the correct permission numbers.
 
 **Reset, without losing learning**:
 
-- Note the Machine address and any successful workflow steps
-- Create a new Machine with simplified node structure
-- Test basic progression before adding conditional logic
-- Gradually add complexity as you understand the flow
+- Note the Machine address and successful configuration steps
+- Create a new Machine with simplified structure
+- Test basic workflow before adding conditional logic
+- Gradually add complexity as you understand the design patterns
 
 **Common Use Cases**:
 
@@ -260,26 +221,11 @@ This Machine turns your service into a trackable, professional process.
 
 **You've Unlocked**:
 
-- ⚙️ **Process Automation**: Turn manual workflows into automated, trackable systems
-- 🔀 **Conditional Logic**: Workflows that adapt and branch based on circumstances
-- 🤝 **Multi-Party Coordination**: Orchestrate complex collaborations seamlessly
-- 📊 **Progress Transparency**: Everyone can see exactly where things stand
+- ⚙️ **Workflow Design**: Create reusable process templates
+- 🔀 **Conditional Logic**: Design workflows that adapt to different scenarios
+- 🤝 **Service Integration**: Coordinate multiple providers in complex processes
+- 📋 **Process Standardization**: Ensure consistent execution across teams
 
-**Next Up**: **Progress Objects** — learn how to track and manage individual workflow instances, monitor performance, and optimize your processes!
+**Next Up**: **Progress Objects** — learn how to create and manage individual workflow instances from your Machine templates!
 
-**Quick Check**: Can you create a Machine with branching logic and explain how it coordinates multiple parties? If yes, you're ready to track individual workflow instances!
-
----
-
-## 🌟 What Makes Machine Objects Special?
-
-Unlike traditional workflow tools, Wowok Machine objects are:
-
-1. **Blockchain-Native**: All workflow states and transitions are permanently recorded
-2. **Multi-Party Transparent**: All participants can see the process and current status
-3. **Service-Integrated**: Can require and verify completion of external services
-4. **Guard-Enhanced**: Use conditional logic for intelligent workflow routing
-5. **Permission-Controlled**: Fine-grained access control for different workflow operations
-6. **Immutable Process**: Once published, the workflow rules can't be changed, ensuring consistency
-
-Machine objects become the backbone for complex business processes, enabling transparent collaboration and automated coordination across multiple parties and services!
+**Quick Check**: Can you create a Machine with branching logic and service dependencies? If yes, you're ready to run actual workflow instances!
