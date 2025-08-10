@@ -100,7 +100,7 @@ By the end, you will have three business storefronts and understand digital comm
 - ✅ You see Service address + on-chain link with professional tier structure
 - ✅ Customer information requirements are properly configured and enforced
 - ✅ Order creation captures required company details as specified
-- ✅ **Professional pricing**: Higher-value services (200-1000 SUI) reflect expertise level
+- ✅ **Professional pricing**: Higher-value services (0.02-0.07 SUI) reflect expertise level
 - ✅ **Customer data collection**: Orders contain required business information
 - ✅ **Service differentiation**: Clear value proposition across different service tiers
 
@@ -136,7 +136,7 @@ You'll need to create a workflow Machine first, or ask your AI assistant to help
 **Try This B** (test workflow purchase):
 
 ```
-"Test ordering the Complex Project (5000 SUI). Show Order creation, Treasury balance changes, and Progress object generation for workflow tracking. Return: Order address + on-chain link, Progress address + on-chain link, Treasury balance before/after, workflow status."
+"Test ordering the Complex Project (0.05 SUI). Show Order creation, Treasury balance changes, and Progress object generation for workflow tracking. Return: Order address + on-chain link, Progress address + on-chain link, Treasury balance before/after, workflow status."
 ```
 
 **Try This C** (verify workflow integration):
@@ -163,17 +163,39 @@ You'll need to create a workflow Machine first, or ask your AI assistant to help
 
 ---
 
-## 💡 Mini Challenge: Multi-Service Photography Package
+## 💡 Mini Challenge: Cross-Service Photography Ecosystem
 
-**Creative Exercise**: Design a comprehensive photography service ecosystem that demonstrates Service composition and cross-service integration.
+**Creative Exercise**: Design a comprehensive photography service ecosystem that demonstrates true cross-service integration through Machine workflows and supplier dependencies.
 
 **Try This** (as service provider):
 
 ```
-"Create photography ecosystem with four Services: Portrait (100 SUI, 50 slots), Wedding (2000 SUI, 10 slots), Editing (50 SUI, 100 slots), Equipment Rental (30 SUI/day, 20 items). Build cross-service integration by machine based on them and return all Service addresses, Treasury addresses, and on-chain links."
+"Create photography ecosystem with cross-service integration:
+1) Four base Services: Portrait (0.1-0.2 SUI, 50+ slots), Wedding (2-5 SUI, 10+ slots), Editing (0.05-0.15 SUI, 100+ slots), Equipment Rental (0.02-0.1 SUI/day, 20+ items)
+2) Create Machine workflows showing service dependencies:
+   - Wedding workflow: Equipment Preparation (requires Equipment Rental) → Wedding Shooting → Post Processing (requires Editing Service) → Final Delivery
+   - Portrait workflow: Preparation (optional Equipment Rental) → Portrait Session → Post Production (optional Editing Service) → Delivery
+3) Demonstrate both required and optional supplier integrations
+4) Return all Service addresses, Machine addresses, Treasury addresses, and on-chain links with workflow integration summary"
 ```
 
-**Share Your Creation**: Post about your photography business ecosystem and how you're using Service objects to create comprehensive offerings!
+**Learning Focus**: This challenge teaches you how to:
+
+- Create **service supply chains** using Machine workflows with `suppliers` configuration
+- Configure **required vs optional suppliers** in workflow nodes (`bRequired: true/false`)
+- Design **flexible service combinations** for different customer needs and budgets
+- Implement **automated cross-service coordination** where one service automatically orders from another
+- Build **complex business ecosystems** where services work together seamlessly
+
+**Success Looks Like**:
+
+- ✅ **Base Services**: Four independent services with test-friendly pricing
+- ✅ **Machine Integration**: Two workflow machines showing different integration patterns
+- ✅ **Required Suppliers**: Wedding workflow automatically orders equipment and editing
+- ✅ **Optional Suppliers**: Portrait workflow offers flexible service combinations
+- ✅ **Complete Ecosystem**: Services that work together to deliver comprehensive solutions
+
+**Share Your Creation**: Post about your integrated photography business ecosystem and how Machine workflows enable seamless service collaboration!
 
 ---
 
