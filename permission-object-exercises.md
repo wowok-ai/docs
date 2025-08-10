@@ -1,129 +1,225 @@
-# Permission Object: Dynamic Access Control That Adapts
+# Permission Object: Your Access Control Foundation
 
-> "Not just 'who can access what' - it's intelligent role management that evolves with your collaborations"
+> "Define who can do what in your digital spaces - the security system that powers all your other Wowok objects"
 
 ## What You'll Build (30 seconds)
 
-You'll create a **dynamic permission system** that goes beyond simple access control. This isn't just setting passwords or user roles - it's creating intelligent access management that can adapt to changing collaboration needs, integrate with other objects, and even make conditional decisions based on context.
+By the end, you will have three permission systems and understand access control management:
+
+- **Basic Permission** — simple role-based access for team projects
+- **Business Permission** — custom permissions for specific business operations
+- **Ecosystem Permission** — unified access control across multiple objects
+
+**Prereqs**: You already created Personal objects. Network is `sui testnet`. Token type is `0x2::sui::SUI`.
+
+**💡 Pro Tip**: Permission objects are the foundation for almost all other Wowok objects. Every Treasury, Service, Repository, and Machine needs a Permission object to control who can manage them. If you get stuck, ask your AI assistant: "Help me create a Permission object with the right permissions for Treasury management" or "What built-in permission indexes do I need for Service operations?"
+
+**Pre-flight** (copy one line):
+
+```
+"On sui testnet, show my default account and balance; if low, guide me to the faucet and wait for funds."
+```
 
 ---
 
-## 🎯 Level 1: Foundation - Smart Access Control
+## 🎯 Level 1 — Foundation (create basic access control)
 
-**The Challenge**: Traditional permission systems are rigid - you're either "admin" or "user". What if permissions could be more nuanced and intelligent?
+**Scenario**: You want to control who can manage your team's digital resources and projects.
 
-**Your Mission**: Create a Permission object that establishes flexible, role-based access control for your digital spaces.
+**Your Mission**: Create your first Permission object with clear admin and team member roles.
 
-**Try This**:
+**Try This A** (create team permission system):
 
 ```
-"Help me create a Permission object for managing my creative projects. I want to set myself as the admin with full control, and create a 'collaborator' role that can edit content but not manage finances. Make this flexible so I can easily add new people and adjust their roles as projects evolve."
+"Create a Permission object for my team project on sui testnet. I need to set myself as admin with full management rights. I also want to add team member roles that can handle Treasury deposits but not withdrawals or admin functions. Please find the correct Treasury permission indexes and create the Permission object with these roles."
 ```
+
+**Try This B** (test permission assignment):
+
+```
+"Add a team member to my Permission object with Treasury deposit permissions but not withdrawal permissions. Use test address 0x1234567890abcdef1234567890abcdef12345678 for demonstration. Show me how different people now have different access levels."
+```
+
+**Try This C** (verify access control):
+
+```
+"Query my Permission object to show all admin addresses, team member addresses, and their assigned permissions. Explain how this Permission object can control access to Treasury and other Wowok objects."
+```
+
+**💡 If you get stuck**: Ask your AI "What are the built-in permission indexes for Treasury operations?" or "Help me troubleshoot Permission object creation errors."
 
 **Success Looks Like**:
 
-- ✅ You have a Permission object with multiple defined roles
-- ✅ You can assign different permission levels to different addresses
-- ✅ You understand how this creates structured but flexible access control
-- ✅ You see how this is more sophisticated than simple "admin/user" systems
+- ✅ You see Permission address + on-chain link
+- ✅ Permission object shows admin and team member roles clearly defined
+- ✅ Multiple addresses assigned with different Treasury permission levels
+- ✅ **Access control foundation ready**: Your Permission object can now control other objects
 
-**Why This Matters**: Unlike traditional access control, Wowok Permission objects are:
+**Why This Matters**: Permission objects provide:
 
-- **Granular**: Define exactly what each role can and cannot do
-- **Dynamic**: Easily modify permissions as collaborations evolve
-- **Reusable**: One Permission object can control multiple other objects
-- **Auditable**: All permission changes are recorded on-chain
+- **Clear roles**: Everyone knows what they can and cannot do
+- **Flexible assignment**: Easy to add/remove people and change their roles
+- **Reusable control**: One Permission object can manage multiple other objects
+- **Transparent governance**: All permission changes are recorded on-chain
 
 ---
 
-## 🎯 Level 2: Feature Showcase - Conditional & Context-Aware Permissions
+## 🎯 Level 2 — Application (custom business permissions)
 
-**The Challenge**: Sometimes permissions should depend on context - maybe someone can approve small expenses but not large ones, or can edit during work hours but not weekends.
+**Scenario**: You're running a consulting business and need specific permissions for different business operations beyond the standard Wowok permissions.
 
-**Your Mission**: Experience the power of conditional permissions that adapt based on circumstances.
+**Your Mission**: Create custom permissions that match your specific business needs and understand how they work with built-in permissions.
 
-**Try This**:
+**Try This A** (create custom business permissions):
 
 ```
-"Enhance my Permission object with conditional access controls. Create a 'project manager' role that can approve expenses up to $500, but needs admin approval for larger amounts. Also add a 'contributor' role that can submit work but only during project active periods. Show me how permissions can be smart and context-aware."
+"Create a Permission object for my consulting business on sui testnet. I need custom permissions for: client management, project delivery, and financial oversight. Set these up as custom permissions starting from index 1001. Then assign different team members different combinations of these business permissions."
 ```
+
+**Try This B** (combine built-in and custom permissions):
+
+```
+"I want to combine my custom business permissions with Treasury permissions. Give my project manager project delivery permissions plus Treasury deposit rights, but not withdrawal rights. Give my accountant financial oversight permissions plus Treasury withdrawal rights. Create these specialized business roles."
+```
+
+**Try This C** (test business permission structure):
+
+```
+"Query my Permission object to show all custom permissions, built-in permissions, and how different team members have different permission combinations. Show me how this creates a flexible business governance system."
+```
+
+**💡 If you get stuck**: Ask your AI "How do I create custom permissions starting from index 1000?" or "Help me combine custom and built-in permissions for business roles."
 
 **Success Looks Like**:
 
-- ✅ You have permissions that change based on conditions (amount, time, status)
-- ✅ You understand how Guards can enhance permission logic
-- ✅ You see how permissions can be intelligent, not just binary
-- ✅ You experience the flexibility of programmable access control
+- ✅ You see Permission address + on-chain link with custom business permissions
+- ✅ Custom permissions (1000+) working alongside built-in permissions (700+)
+- ✅ Different team members with specialized business role combinations
+- ✅ **Business governance established**: Permission system tailored to your specific business needs
 
-**Pro Tip**: This conditional permission system means you can create sophisticated governance structures that adapt to real-world complexity!
+**Why This Matters**: Custom business permissions enable:
+
+- **Tailored access control**: Permissions that match your exact business operations
+- **Professional roles**: Specialized access for different business functions
+- **Flexible combinations**: Mix custom and built-in permissions as needed
+- **Scalable business structure**: Foundation for growing business operations
 
 ---
 
-## 🎯 Level 3: Integration - Permissions That Power Entire Ecosystems
+## 🎯 Level 3 — Integration (unified ecosystem control)
 
-**The Challenge**: Your permission system should seamlessly control access across all your Wowok objects - treasuries, services, repositories, and more.
+**Scenario**: You want one Permission system to control access across multiple Wowok objects - Treasury, Repository, Service, and Machine - creating a unified business ecosystem.
 
-**Your Mission**: Create an integrated permission ecosystem where one Permission object becomes the access control foundation for multiple other objects.
+**Your Mission**: Create an integrated permission system that coordinates access control across multiple object types.
 
-**Try This**:
+**Try This A** (create integrated ecosystem):
 
 ```
-"Now I want to create a Treasury object that uses my Permission system for access control. Set it up so that 'admin' role can withdraw any amount, 'project manager' can withdraw up to $500, and 'contributor' can only view balances. Then show me how I can add new team members and they automatically get appropriate access to both the Permission system and the Treasury. This should demonstrate how permissions scale across multiple objects."
+"Create an integrated business ecosystem on sui testnet using my existing Permission object. Create Treasury, Repository, and Service objects that all use this Permission for access control. Set up roles so admin can manage everything, project manager can handle Treasury deposits and Repository data, and team members can only read Repository data."
 ```
+
+**Try This B** (test cross-object control):
+
+```
+"Test my integrated access control system. Show how the same Permission object controls multiple resources: admin withdrawing from Treasury and modifying Repository, project manager depositing to Treasury and reading Repository, team member only querying Repository data. Demonstrate how one permission change affects access across all objects."
+```
+
+**Try This C** (verify ecosystem control):
+
+```
+"Query all my objects (Permission, Treasury, Repository, Service) to show how they're connected. Show me the Permission object roles, Treasury access rules, Repository data access, and Service management permissions. Explain how this creates unified governance across all resources."
+```
+
+**💡 If you get stuck**: Ask your AI "How do I connect multiple objects to the same Permission system?" or "Help me troubleshoot multi-object permission integration."
 
 **Success Looks Like**:
 
-- ✅ Your Permission object controls access to multiple other objects
-- ✅ Adding new team members automatically grants appropriate access everywhere
-- ✅ You see how permissions create consistent access control across your entire ecosystem
-- ✅ You understand how this scales to complex multi-object collaborations
+- ✅ You see Permission address + on-chain link, Treasury address + on-chain link, Repository address + on-chain link, Service address + on-chain link
+- ✅ One Permission object controlling access to multiple different object types
+- ✅ Consistent access rules across Treasury, Repository, and Service
+- ✅ **Unified ecosystem governance**: Single permission system managing entire business infrastructure
 
-**Level Up**: You've just experienced the power of centralized permission management! One Permission object can now control access to unlimited other objects, making collaboration management incredibly efficient.
+**Why This Matters**: Integrated Permission systems enable:
+
+- **Centralized control**: One permission system manages access to all business resources
+- **Consistent governance**: Same roles and rules apply across all object types
+- **Efficient management**: Add a person once, they get appropriate access everywhere
+- **Scalable architecture**: Foundation for complex multi-object business operations
 
 ---
 
-## 💡 Mini Challenge: Design a DAO Governance System
+## 💡 Mini Challenge — Community DAO Governance
 
-**Creative Exercise**: Many communities need sophisticated governance. Design a Permission system for a small DAO (Decentralized Autonomous Organization) with different member types, voting rights, and proposal powers.
+**Goal**: Create a comprehensive governance system for a community organization with multiple member types and clear decision-making structure.
 
 **Try This**:
 
 ```
-"Help me design a Permission system for a creative collective DAO. We need: founding members (full governance), active contributors (can propose and vote), community members (can vote only), and observers (view only). Each role should have different powers for treasury access, proposal creation, and decision-making. Make it sophisticated but manageable."
+"Create a Community DAO Permission system on sui testnet with four governance levels: founding members with full control, active contributors who can manage Treasury deposits and proposals, community members who can access Repository and vote, and observers with read-only access. Then create Treasury and Repository objects using this Permission system to show how DAO governance controls community resources."
 ```
 
-**Share Your Creation**: Post your DAO governance design and explain how different roles interact!
+**💡 If you get stuck**: Ask your AI "Help me design a DAO governance structure with multiple member tiers" or "How do I create hierarchical permissions for community governance?"
+
+**Success Looks Like**:
+
+- ✅ Community DAO Permission system with 4-tier governance structure
+- ✅ Treasury and Repository objects controlled by the same Permission system
+- ✅ Clear hierarchy: founding members > contributors > community members > observers
+- ✅ **Complete DAO infrastructure**: Governance system ready for community decision-making
+
+**Creative Ideas**:
+
+- **Professional organization**: Different certification levels with corresponding permissions
+- **Investment club**: Member tiers based on contribution levels and experience
+- **Open source project**: Maintainer, contributor, and user permission levels
+- **Community fund**: Transparent governance for shared resources and decision-making
+
+**Share Your Creation**: Post about your DAO governance system and how you're using Permission objects for community management!
 
 ---
 
-## 🔧 Troubleshooting
+## 🔧 Troubleshooting (friendly and fast)
 
-**Common Issues**:
+**Schema error** → Create a minimal Permission first; add roles and complexity step by step.
 
-**If permission assignments aren't working**:
+**Permission assignment fails** → Check that you have admin rights to modify the Permission object and that addresses are valid.
 
-- Verify the addresses you're assigning permissions to are correct
-- Check that you have admin rights to modify the Permission object
-- Make sure the permission indexes you're using are valid (1000+ for custom permissions)
+**Permission indexes unclear** → Ask your AI: "What are the built-in permission indexes for Treasury/Service/Repository operations?" Custom permissions start from 1000+.
 
-**If conditional permissions seem confusing**:
+**Integration with other objects fails** →
 
-- Start with simple role-based permissions first
-- Add conditions gradually once you understand the basics
-- Remember: you can always simplify and rebuild
+- **Most common**: Other objects need to be configured to use your Permission object during creation
+- Verify that permission indexes match between objects (same numbers for same operations)
+- Check that all objects are on the same network (sui testnet)
+- **Ask your AI**: "Help me create a Treasury/Service/Repository that uses my existing Permission object"
 
-**If integration with other objects fails**:
+**Custom permissions not working** →
 
-- Ensure the other objects are configured to use your Permission object
-- Check that the permission indexes match between objects
-- Verify that all objects are on the same network
+- Ensure custom permission indexes are 1000 or higher
+- Check that custom permissions are properly added to the Permission object before assigning to addresses
+- **Ask your AI**: "Help me troubleshoot custom permission creation and assignment"
 
-**Alternative Approaches**:
+**Multi-object control issues** →
 
-- **Simpler version**: "Create basic admin/member permissions for a small team"
-- **Different focus**: "Design permissions for a family shared fund"
+- Create objects one at a time and verify Permission integration for each
+- Ensure Permission object exists and is properly configured before creating dependent objects
+- **Ask your AI**: "Walk me through connecting multiple objects to the same Permission system step by step"
 
-**Need help?**: The community has lots of examples of creative permission structures!
+**Reset, without losing learning**:
+
+- Note the Permission address and successful role configurations
+- Create a new Permission with simpler structure (admin + member only)
+- Test basic role assignment before adding complex hierarchies
+- Gradually add complexity as you understand the permission patterns
+
+**Common Use Cases**:
+
+- **Project teams**: Admin, manager, member, observer roles for collaborative work
+- **Business operations**: Owner, manager, employee, customer access levels
+- **Community organizations**: Founder, contributor, member, visitor permission tiers
+- **Family/personal**: Parent, child, trusted friend access for shared resources
+
+**Need help?**: The community has great examples of Permission patterns for different organizational structures!
 
 ---
 
@@ -131,14 +227,14 @@ You'll create a **dynamic permission system** that goes beyond simple access con
 
 **You've Unlocked**:
 
-- 🔐 **Intelligent Access Control**: Permissions that adapt to context and conditions
-- 👥 **Scalable Team Management**: Easy to add/remove people and adjust their roles
-- 🏗️ **Multi-Object Governance**: One permission system controlling multiple objects
-- ⚖️ **Sophisticated Governance**: Foundation for complex organizational structures
+- 🔐 **Access Control Foundation**: Create clear roles and permissions for any project
+- 👥 **Team Management**: Organize people with appropriate access levels
+- 🏗️ **Multi-Object Governance**: One permission system controlling multiple resources
+- ⚖️ **Scalable Organization**: Structure that grows from small teams to large communities
 
-**Next Up**: **Treasury Management** - Learn how to create programmable money flows with automated distributions. Your Permission object will control who can access and manage funds!
+**Next Up**: **Treasury Objects** — learn how to create programmable money management with your Permission objects controlling who can access and manage funds!
 
-**Quick Check**: Can you add a new team member and grant them specific permissions? Can you explain how your Permission object could control multiple other objects? If yes, you're ready for financial management!
+**Quick Check**: Can you create a Permission object with multiple roles? Can you explain how your Permission object controls access to other objects? If yes, you're ready to manage shared funds!
 
 ---
 
@@ -146,10 +242,10 @@ You'll create a **dynamic permission system** that goes beyond simple access con
 
 Unlike traditional access control systems, Wowok Permission objects are:
 
-1. **Programmable**: Permissions can include complex conditional logic
-2. **Composable**: One Permission object can control unlimited other objects
-3. **Auditable**: All permission changes are permanently recorded
-4. **Flexible**: Easy to modify roles and access levels as needs change
-5. **Integrated**: Designed to work seamlessly with all other Wowok objects
+1. **Multi-Object Control**: One Permission object can manage access to unlimited other objects
+2. **Flexible Roles**: Easy to add, remove, and modify roles as needs change
+3. **Transparent Governance**: All permission changes are permanently recorded on-chain
+4. **Built-in Integration**: Designed to work seamlessly with all other Wowok objects
+5. **Scalable Structure**: Works for everything from personal projects to large organizations
 
-This sophisticated permission system becomes the foundation for everything from small team collaborations to complex organizational governance!
+Permission objects become the governance foundation for collaborative projects, community organizations, and complex business operations!
