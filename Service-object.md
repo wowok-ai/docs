@@ -2,6 +2,53 @@
 
 > "Turn your skills into purchasable offerings with transparent pricing, automated payments, and built-in customer protection."
 
+## Overview
+
+### Definition
+
+Structured supply offerings with programmable terms, integrated payment and refund logic, and real-time progress tracking.
+
+### Functionality
+
+Enables providers to publish services with customizable pricing, dynamic inventory, Guard-based purchase eligibility, and Machine-powered workflow management. Withdrawal and refund actions are executed automatically when predefined completion or exception conditions are met.
+
+### Use Case — Customized Kenya Wildlife Safari
+
+Tom submits a personalized safari request on WoWok, outlining his preferences for travel dates, wildlife focus, accommodation style, and physical comfort level.
+The platform matches his request with multiple providers and automatically recommends **Natural Explorer Tours**, whose service metadata meets Tom's criteria via on-chain Repository and Guard references.
+
+The selected provider publishes a `Service` composed of:
+
+- **Professional guides**, licensed and verified via a credential Repository
+- **Eco-lodge accommodations**, with real-time availability from an external data oracle
+- **Milestone-based payouts**, tracked through a dedicated `Machine` (e.g., booking confirmed → check-in → guided tour complete)
+- **Emergency cancellation Guard**, which defines refund logic for unexpected returns
+
+During the trip:
+
+- Tom becomes ill and needs to cut the trip short.
+- He initiates an early return request through the WoWok interface.
+- The platform evaluates Tom's emergency condition using a Guard referencing a trusted medical Repository.
+- Upon successful verification, the system refunds Tom for the unused portions (lodging and activities) while releasing milestone-completed funds to the provider.
+
+Throughout the process:
+
+- **Buyers can view the full terms of the service**, including refund thresholds and breach compensation conditions.
+- **Service progress is tracked in real-time** via the associated `Progress` object, offering full transparency from pre-departure to completion.
+- **All fund flows, status changes, and contract conditions are recorded on-chain**, ensuring auditability and minimizing dispute risk.
+- With Tom's consent, **his service behavior is recorded in his Personal profile**, training a private AI agent to help match future services more precisely to his preferences.
+
+This use case demonstrates how WoWok enables composable, automated, and trustworthy service delivery—far beyond the static rules of Web2 platforms.
+
+### Key Features
+
+- Flexible pricing and inventory controls
+- Guard-based purchase eligibility
+- Conditional withdrawal and refund guards
+- Machine-driven progress tracking
+- Automatic Order generation and management
+- Built-in support for discounts and promotions
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three business storefronts and understand digital commerce:

@@ -2,6 +2,36 @@
 
 > "Create intelligent rules that automatically verify conditions before allowing operations - the brain behind automated decision-making"
 
+## Overview
+
+### Definition
+
+Immutable on-chain condition scripts that gate operations until a verifiable Passport proves all predefined rules are satisfied.
+
+### Functionality
+
+Guards encode logical rules—time windows, reputation scores, balances, external oracle data, even future events—into bytecode plus a constant table. Once published, a Guard's address becomes a permanent reference that can be attached to Services, Orders, Machines, Treasuries, or any other WoWok object. Operators must submit a Passport (signed Q&A proof bundle); if every "sense" evaluates to true, the guarded action succeeds, otherwise it reverts.
+
+### Use Cases
+
+| Scenario                  | Guard Logic (illustrative)                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Reward Guard**          | _Admin incentive_ — "If address 0x538d… is listed as `admin` in Permission 0x64f3…, allow a 50 USDT claim from Treasury Z." |
+| **Refund Guard**          | _Tiered return policy_ — "Full refund if the Order is < 7 days old; 80 % refund if < 15 days."                              |
+| **Service Timeout Guard** | "If a Service milestone is not reached within 72 h, consumer may claim 30 % compensation."                                  |
+| **Emergency Guard**       | "Allow instant itinerary cancellation and proportional refund when a certified emergency Proof is uploaded."                |
+| **Loyal-Customer Guard**  | "Apply an extra 5 % discount when booking history ≥ 3 trips in the last 12 months."                                         |
+
+_Examples show common patterns; adapt to your specific business logic._
+
+### Key Features
+
+- **Deterministic bytecode logic** — executes the same on every node
+- **Constant table parameterization** — inject static or future data sources
+- **Passport-based proof flow** — single or batched verification saves gas
+- **Cross-object querying** — reference any WoWok object or external oracle
+- **Immutable & reusable** — once deployed, the Guard cannot be altered, enabling full composability and auditability
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three guard systems and understand intelligent verification:

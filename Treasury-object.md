@@ -2,6 +2,48 @@
 
 > "Money with manners. You set the rules; the contract enforces them."
 
+## Overview
+
+### Definition
+
+Programmable on-chain cashbox for multi-party fund management, supporting condition-based deposits and withdrawals, with full transaction history and auditability.
+
+### Functionality
+
+Treasury securely manages the inflow and outflow of assets for individuals, organizations, or communities. It integrates Guards to control who can deposit or withdraw, under what conditions, and to what extent. All financial interactions—including reward distribution, staking, deposits, and conditional refunds—are recorded immutably on-chain.
+
+Treasury supports three operational modes:
+
+1. **Internal mode** — withdrawals based on permissions; flexible but high-risk.
+2. **External mode** — deposits are open, withdrawals must satisfy Guard conditions.
+3. **Hybrid mode** — both internal and external withdrawals are allowed, with individual Guard rules for each address.
+
+### Use Cases
+
+- **Internal Treasury (Example: Employee Bonus)**
+  A travel company allocates yearly bonuses through Treasury to guides based on internal policy. No fixed withdrawal limit is set—permissive but risk-prone.
+
+- **External Treasury (Example: Peer Recognition Reward)**
+  During a Kenya wildlife trip, Tom rewards fellow travelers using a Treasury. He sets Guard-based conditions (e.g., Alice helped spot a rare bird) and adds her address to the withdrawal list. Upon verification, the system releases funds to Alice automatically and records it immutably.
+
+- **Hybrid Treasury (Example: Service Deposit Escrow)**
+  Tour operators or hotels deposit a service guarantee.
+
+  - If the traveler confirms satisfaction, the deposit is released.
+  - If not, a portion may be withheld for compensation.
+    This model builds trust and ensures service quality through automatic, rule-based enforcement.
+
+### Key Features
+
+- **Guard-controlled deposits & withdrawals** — customizable access rules for each participant
+- **Full transaction history** — all inflows/outflows are verifiable and queryable
+- **Support for multiple currencies** — flexible asset management in multi-token environments
+- **Programmable payout conditions** — automate rewards, refunds, or penalties
+- **Transparent & auditable operations** — ideal for DAOs, communities, and high-trust systems
+- **Three operating modes** — internal, external, or hybrid fund governance
+
+Treasury is essential infrastructure for any project or organization requiring automated, transparent, and decentralized financial coordination.
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three working treasuries and understand automated fund management:

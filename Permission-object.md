@@ -2,6 +2,47 @@
 
 > "Define who can do what in your digital spaces - the security system that powers all your other Wowok objects"
 
+## Overview
+
+### Definition
+
+Granular access control framework for assigning and managing operational rights via permission indexes. Each object is bound to a Permission entity at creation, enabling modular, scalable, and auditable authority management.
+
+### Functionality
+
+Provides fine-grained permission allocation for objects and roles through index-based access control. Supports hierarchical delegation (`Builder` / `Admin`), dynamic permission updates, Guard-enforced conditional execution, and centralized multi-object governance.
+
+### Use Case
+
+A travel agency maintains a shared repository of Kenya safari services. Multiple staff members interact with this repository through indexed permissions:
+
+- **Trip Planner** (`index: 10001`):
+  Can view and customize client itineraries.
+
+- **Finance Officer** (`index: 10002`):
+  Can execute and refund payments tied to service orders.
+
+- **Customer Support** (`index: 10003`):
+  Can view booking details and provide assistance during travel.
+
+Tom, the traveler, interacts with the system through a permission index allowing him to confirm itineraries, trigger emergency support, and submit post-trip feedback — all without exposing sensitive operations outside his access scope.
+
+This model ensures security, operational efficiency, and regulatory compliance in multi-role collaborative environments.
+
+### Key Features
+
+- **Index-based Role Assignment**
+  Assigns discrete permissions via integer indexes to any address, supporting modular access patterns across roles and systems.
+
+- **Hierarchical Management**
+  `Builder` can transfer control; `Admins` can assign, update, or revoke permissions without redeploying objects.
+
+- **Guard-enabled Conditional Access**
+  Enforce business logic via on-chain `Guard` contracts, gating permissions by external state (e.g., identity, membership, status).
+
+- **Multi-object Management**
+  A single `Permission` entity can govern access rights for multiple smart objects, simplifying cross-system permission orchestration.
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three permission systems and understand access control management:

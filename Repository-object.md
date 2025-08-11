@@ -2,6 +2,35 @@
 
 > "Create organized information storage that multiple people can contribute to and reference - like a smart address book or community database that lives on the blockchain"
 
+## Overview
+
+### Definition
+
+Policy-driven, on-chain data libraries that store structured key–value records under explicit write rules and type consensus.
+
+### Functionality
+
+A Repository groups data by _policy name_. For each policy, it specifies who can write, what data type is allowed, and whether entries outside the policy are accepted (`Free` mode) or rejected (`Strict` mode).
+Any WoWok object—or external contract—can reference a Repository's address to fetch trusted values, enabling composable, cross-organizational workflows.
+
+### Use Case — Trusted Medical Certificate
+
+During a Kenyan safari, Tom contracts severe malaria and must end the trip early.
+
+1. A WoWok-approved clinic diagnoses Tom and issues a digital certificate.
+2. The guide uploads the certificate to a "Trusted-Clinics" Repository whose policy admits writes only from whitelisted clinic addresses.
+3. An Emergency Refund Guard queries that Repository; once the issuer address is confirmed, the Guard releases a proportional refund for the unused part of the itinerary.
+
+This flow ensures refunds rely on verifiable, consensus-backed medical data rather than off-chain claims.
+
+### Key Features
+
+- **Policy-based field control** — granular rules for _who_ may write _what_
+- **Type-enforced entries** — bool, string, number… validated on-chain
+- **Free vs. Strict modes** — choose open data capture or full consensus integrity
+- **Referenceable by any object** — Guards, Services, Machines can read trusted values
+- **Permission-indexed operations** — integrate with WoWok Permission for fine-grained governance
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three information systems and understand collaborative data management:

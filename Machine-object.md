@@ -2,6 +2,92 @@
 
 > "Design reusable workflow templates that define how complex processes should flow from start to finish."
 
+## Overview
+
+### Definition
+
+A **Machine** is a modular, on-chain process blueprint composed of interconnected nodes, defining business logic, operator roles, state transitions, and verification conditions. It serves as the programmable engine behind service delivery, enabling autonomous, verifiable collaboration across parties. Once published, a Machine becomes immutable and can generate executable **Progress instances** per buyer.
+
+Machines enable **borderless collaboration**: multiple entities can interact, commit, and validate state transitions without needing centralized control—each according to preset roles, guards, and permissions.
+
+### Functionality
+
+A Machine defines its workflow through a **State Diagram**:
+
+- **Nodes**: represent stages in a service (e.g., Booking, Check-in, Safari Completion)
+- **Node Pairs**: define transitions between nodes
+- **Forwards**: paths between nodes, executable by specific **Operators**
+- **Guards**: programmable logic conditions (e.g., payment received, file uploaded)
+- **Threshold & Weight**: control group transitions (e.g., "2 of 3 reviewers must approve")
+- **Operators**: defined roles such as `"Order Payer"` or `"Travel Agent"`, bound by `Permission Index`
+- **Lifecycle States**:
+
+  - **Editable**: when unpublished
+  - **Immutable & Executable**: once published and not paused
+
+Each instantiated `Progress` follows the state logic of the Machine, generating real-time records, state validation, and evidence for dispute resolution.
+
+### Key Components
+
+| Component                | Functionality                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **Nodes & Forwards**     | Define progress stages and conditional transitions                               |
+| **Thresholds & Weights** | Allow multi-party approvals and flexible collaboration logic                     |
+| **Named Operators**      | Assign role-specific execution power (e.g., only the "Guide" can trigger Node 3) |
+| **Guard Contracts**      | Enforce data-bound conditions on each transition                                 |
+| **Permissions**          | Control edit and execution rights using on-chain permission indices              |
+| **Consensus Repository** | Store canonical records used during transitions for validation and automation    |
+| **Custom Endpoints**     | Define front-end consoles per node to simplify UX for each role                  |
+
+### Use Case — Safari Trip Coordination
+
+In Tom's Kenya wildlife safari:
+
+1. **Machine Setup**
+   Natural Explorer Tours defines a `SafariMachine` with the following nodes:
+
+   - `Order Created`
+   - `Deposit Paid`
+   - `Trip Started`
+   - `Activity Completed`
+   - `Trip Ended`
+   - `Final Payment Released`
+
+   Each node is connected via a `Forward` path with a named operator like `"Order Payer"` or `"Safari Guide"`, and each transition is gated by a **Guard**.
+
+2. **Thresholds & Guards**
+
+   - A `50-50` weighted approval between `"Trip Manager"` and `"On-Site Guide"` ensures the safari activity is completed before payout.
+   - A `Guard` verifies that a trip photo is uploaded and GPS tag matches the safari zone before allowing the node transition.
+
+3. **Unexpected Event Handling**
+
+   - Midway, Tom falls ill and initiates cancellation.
+   - The `Emergency Cancel` node becomes accessible only if a **medical certificate** is uploaded and passes Guard verification (e.g., timestamp, issuer credibility).
+   - The Machine uses the `Repository` to fetch the credential and determine eligibility.
+
+4. **Outcome**
+
+   - The Machine allows partial fund withdrawal to the provider based on completed stages, and initiates a refund for unused segments.
+   - The entire process is verifiable, immutable, and transparent to all parties.
+
+### Key Features
+
+- **Composable Node-Based Architecture**
+  Model flexible, modular service logic through re-usable nodes and directional transitions.
+
+- **Fine-Grained Role Control**
+  Bind each path to an operator role with Permission Index, ensuring only the right party can act.
+
+- **Programmable & Auditable Logic**
+  Each step is enforced by Guards and stored in on-chain repositories for post-factum validation.
+
+- **Cross-Organizational Coordination**
+  Machines enable independent entities (guides, transporters, agents) to collaborate under a shared service logic without requiring central arbitration.
+
+- **User-Defined Interfaces (Endpoints)**
+  Every node can expose a specific console view tailored to the actor's current state, improving usability and clarity.
+
 ## What You'll Build (30 seconds)
 
 By the end, you will have three workflow blueprints and understand process design:

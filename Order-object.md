@@ -2,6 +2,37 @@
 
 > "When customers purchase services, Orders record everything and coordinate the entire transaction lifecycle."
 
+## Overview
+
+### Definition
+
+A transactional object generated when a Service is purchased, capturing payment records, fulfillment progress, discounts, and both parties' rights and obligations under programmable Guards.
+
+### Functionality
+
+Orders manage the full lifecycle of a transaction—from initial payment and discount application to service fulfillment, dispute resolution, refunds, and withdrawal settlements.
+They bind directly to the `Service` and spawn a `Progress` to track real-time delivery. Optional fields like contact info are stored encrypted to preserve user privacy.
+Guards govern the logic of how much each party may withdraw or be refunded based on delivery status, contract breaches, or emergencies.
+
+### Use Case — Traveler Purchase & Dispute Handling
+
+- Tom books a $5,000 USDT safari via Nature Explorers Travel and enjoys a 10% early bird discount, paying $4,500 USDT.
+- The Order tracks his trip from preparation to execution through a linked `Progress`.
+- Prior to departure, the provider cancels the trip. The `Refund Guard` ensures Tom automatically receives a full refund.
+- During the trip, Tom realizes the accommodation differs from the agreed "luxury tent." A `Breach Reward Guard` triggers, and Tom receives a 5% compensation.
+- When Tom becomes ill mid-trip, an `Emergency Refund Guard` is activated. Based on his verified medical certificate, the system grants a proportional refund.
+
+### Key Features
+
+- **Bound Progress instance** — Real-time tracking of service delivery stages
+- **Guard-based refund & withdrawal logic** — Enforce who can claim what portion, under what conditions
+- **Discount & pricing transparency** — Discounts, adjustments, and final prices are recorded immutably
+- **Encrypted buyer information** — Optional data like delivery details or ID proof is securely stored
+- **Integrated with Arbitration** — Supports seamless dispute resolution when paired with Arbitration and Service objects
+- **Full audit trail** — Payment, refund, and settlement actions are permanently recorded on-chain
+
+Orders act as the atomic unit of economic consensus within WoWok, linking intent, commitment, and accountability into one programmable structure.
+
 ## What You'll Build (30 seconds)
 
 By the end, you will understand Order basics:
