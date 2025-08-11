@@ -286,7 +286,7 @@ Each object includes:
 
 ### Object Directory
 
-- ([Demand](#demand)) — Personalized demand expressions with optional incentives.
+- ([Demand](./Demand-object.md)) — Personalized demand expressions with optional incentives.
 
 - ([Service](./Service-object.md)) — Supply definitions with immutable commitments and terms.
 
@@ -296,7 +296,7 @@ Each object includes:
 
 - ([Machine](./Machine-object.md)) — Orchestration of progress pacing and quality toward market fit.
 
-- ([Progress](#progress)) — Event/milestone objects; can trigger chained workflows.
+- ([Progress](./Progress-object.md)) — Event/milestone objects; can trigger chained workflows.
 
 - ([Treasury](./Treasury-object.md)) — Funds custody, allocation, and programmable payouts.
 
