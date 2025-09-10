@@ -27,13 +27,12 @@ For immediate implementation, create objects in this order:
 
 ---
 
-## Reusable Business Infrastructure
-
-What you build here makes your next project faster. Building pizza delivery? Clone your services, tell AI "change flowers to pizza." Want recurring payments? Clone your Guards and Treasuries, tell AI "make this monthly subscriptions." Need team delivery instead of solo? Clone your Machine, tell AI "add three delivery people." Each service you create becomes a starting point you control and modify.
 
 ## Flower Delivery: Errand's Promise in Action
 
-Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise. She describes her need once: "White roses for Emma's birthday, delivered with something personal – she loves watercolor art." The system identifies several providers in Emma's area with flower delivery experience. But knowing Emma's passion for hand-painted artwork and Jake's background in sketching custom gift cards, it narrows to Jake – someone whose $3 premium for watercolor-style illustrations perfectly matches what would make Emma's day special. (Create the objects in JSON order step by step, and you will have a runnable errand system.)
+Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise. She describes her need once: "White roses for Emma's birthday, delivered with something personal – she loves watercolor art." The system identifies several providers in Emma's area with flower delivery experience. But knowing Emma's passion for hand-painted artwork and Jake's background in sketching custom gift cards, it narrows to Jake – someone whose $3 premium for watercolor-style illustrations perfectly matches what would make Emma's day special.
+
+> 🗒️**Note**：What you build here makes your next project faster. Building pizza delivery? Clone your services, tell AI "change flowers to pizza." Want recurring payments? Clone your Guards and Treasuries, tell AI "make this monthly subscriptions." Need team delivery instead of solo? Clone your Machine, tell AI "add three delivery people." Each service you create becomes a starting point you control and modify.
 
 ### Permission Setup for Flower Delivery
 
