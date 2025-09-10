@@ -29,7 +29,7 @@ For immediate implementation, create objects in this order:
 
 ## Reusable Business Infrastructure
 
-The components you build for Jake's flower delivery become reusable business infrastructure. His Permission system can manage multiple services, the Repository design works for any communication-heavy business, and the Machine workflow adapts to different delivery scenarios. Each successful implementation creates proven patterns that other providers can reference and build upon.
+What you build here makes your next project faster. Building pizza delivery? Clone your services, tell AI "change flowers to pizza." Want recurring payments? Clone your Guards and Treasuries, tell AI "make this monthly subscriptions." Need team delivery instead of solo? Clone your Machine, tell AI "add three delivery people." Each service you create becomes a starting point you control and modify.
 
 ## Flower Delivery: Errand's Promise in Action
 
@@ -99,6 +99,10 @@ Jake needs unified control over his delivery business operations. We create a de
   }
 }
 ```
+Result should look like:
+![img_v3_02pu_1e473d37-2433-49ad-a1f0-ec8346d87b8g](https://github.com/user-attachments/assets/f90614d7-193b-44f0-b0fe-fd6675d17b6c)
+![img_v3_02pu_7ce3c7d3-8480-45db-9c4b-53b0b3a47a6g](https://github.com/user-attachments/assets/eabefeee-0e1d-483a-b9b2-251f3c3e8044)
+
 
 ### 🔧 Technical Breakdown: Permission Object
 
@@ -182,6 +186,8 @@ Repository stores all communication beyond the standard workflow - photos, messa
   }
 }
 ```
+Result should look like:
+![img_v3_02q0_ef8e6df9-64a1-43c3-8fa8-d4b57afbc93g](https://github.com/user-attachments/assets/f9acddf9-98fe-4562-bcb2-61511f65de13)
 
 ### 🔧 Technical Breakdown: Repository Object
 
@@ -287,6 +293,8 @@ Guards function as programmable verification conditions that automatically check
   }
 }
 ```
+Result should looks like:
+![img_v3_02pu_ea454ca5-3127-4657-a483-641da718decg](https://github.com/user-attachments/assets/7bf01ac7-6db3-4c20-bb78-537ec98a055e)
 
 **Universal Withdrawal Guard:**
 - **Purpose**: Defines when delivery person can withdraw earnings from Order
@@ -347,6 +355,8 @@ Guards function as programmable verification conditions that automatically check
   }
 }
 ```
+Result should look like:
+![img_v3_02pu_b047c66f-5810-45f4-a039-ccddf67ffc9g](https://github.com/user-attachments/assets/3e9502fc-1fac-4b5b-8601-542a45690669)
 
 **Universal Refund Guard:**
 - **Purpose**: Defines when buyer can get money back from Order
@@ -405,6 +415,8 @@ Guards function as programmable verification conditions that automatically check
   }
 }
 ```
+Result should look like:
+![img_v3_02pu_032b250c-acb8-422d-a71f-cce010a1666g](https://github.com/user-attachments/assets/b7b5ba79-b4a8-45b4-858b-71229374cab4)
 
 **Time Protection Guard:**
 - **Purpose**: After 3 hours, Jake can confirm delivery completion alone (prevents buyers forgetting to confirm while allowing sufficient negotiation time)
@@ -482,6 +494,8 @@ Since Machine workflow depends on Extra Fee Service for price upgrades, create t
   }
 }
 ```
+Result should look like:
+![img_v3_02pu_f0496eb1-454f-4315-98a8-45fb5810283g](https://github.com/user-attachments/assets/abf5dcf9-69af-4a50-bb34-9693ed57bc12)
 
 ### 🔧 Technical Breakdown: Extra Fee Service
 
@@ -759,6 +773,11 @@ Machine defines the workflow as nodes of responsibility. Each forward creates on
   }
 }
 ```
+Schematic Diagram:
+![img_v3_02q0_fed93457-9ed6-4f25-b82c-d180e707afbg](https://github.com/user-attachments/assets/1bd69957-5913-4307-a301-39ed44afd861)
+
+Result should look like:
+<img width="1378" height="1179" alt="image" src="https://github.com/user-attachments/assets/99e770a2-0e02-40d7-a7a2-4d0da8426b29" />
 
 ### 🔧 Technical Breakdown: Machine Object
 
@@ -870,6 +889,9 @@ The Main Service combines all previous components into a customer-facing offerin
   }
 }
 ```
+Result should look like:
+![img_v3_02pu_4163c0fe-1a31-4063-8894-8b30e8a3608g](https://github.com/user-attachments/assets/3b38f0f5-7a8c-45e7-a16d-6adb64515843)
+![img_v3_02pu_3238f4d0-d025-4fb2-938f-7117cde3666g](https://github.com/user-attachments/assets/6366828a-170e-440f-97c7-81b86fbd30d3)
 
 ### 🔧 Technical Breakdown: Main Service
 
