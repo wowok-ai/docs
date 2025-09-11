@@ -1,6 +1,6 @@
 # Repository Object: Your Shared Information Hub
 
-> "Create organized information storage that multiple entities(Human or AI) can contribute to and reference"
+> "Create organized information storage that multiple entities(Human, AI and Device) can contribute to and reference"
 
 **MCP Tool**: `mcp_wowok_repository_repository_operations`
 
