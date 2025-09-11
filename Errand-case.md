@@ -1,4 +1,4 @@
-### What is
+### Errand
 
 Errand is a local network that finds the right person for any errand. You post what you need, Supplier posts what they can offer and AI matches each quest with the right services. Each completed deal makes the next one smoother , smarter, and more tailored to you.
 

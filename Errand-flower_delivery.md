@@ -29,7 +29,8 @@ For immediate implementation, create objects in this order:
 
 ## Reusable Business Infrastructure
 
-The components you build for Jake's flower delivery become reusable business infrastructure. His Permission system can manage multiple services, the Repository design works for any communication-heavy business, and the Machine workflow adapts to different delivery scenarios. Each successful implementation creates proven patterns that other providers can reference and build upon.
+Reusable Business Infrastructure
+What you build here becomes reusable infrastructure with full on-chain ownership and control. Each successful implementation accelerates the next - the same Machine can serve multiple different services, the same Guard rules apply across similar payment scenarios. Need a new business? Clone existing objects, adjust workflow details or payment methods, republish. Every object you create reduces the work for everything that follows.
 
 ## Flower Delivery: Errand's Promise in Action
 
@@ -106,7 +107,7 @@ Jake needs unified control over his delivery business operations. We create a de
 - Creates a Permission object giving Jake comprehensive administrative control over his delivery business
 - Provides all necessary permissions for creating and managing services, repositories, workflows, and business operations
 - Establishes the foundation that all other objects will reference for access control
-- Defines custom permission 1001 for Repository write access
+- Defines custom permission ** 1001 ** for Repository write access
 - Grants Repository write permissions to both buyer (Sarah) and delivery provider (Jake)
 
 **Key Parameters:**
@@ -908,3 +909,6 @@ This creates a network where proven business logic spreads, successful providers
 ---
 
 *For advanced design patterns and engineering best practices, see our companion guide: "Wowok Engineering Patterns for Service Design"*
+
+截图。
+中文版。
