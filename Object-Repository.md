@@ -203,6 +203,11 @@ Repository is a policy-driven, on-chain database enabling structured information
   }
 }
 ```
+Example:
+From this policy setting:
+![img_v3_02q1_5d1f60fc-d36c-4010-975e-0dc5ae8a049g](https://github.com/user-attachments/assets/0d4111f3-01cf-409a-be15-552ec1891eed)
+To:
+![img_v3_02q1_6b104634-e89e-4d02-bc71-614a0cc6607g](https://github.com/user-attachments/assets/4545d6c0-88a6-4b1b-94cc-676b9b1ba795)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -456,6 +461,8 @@ Link repositories for:
   }
 }
 ```
+Result should look like:
+![img_v3_02q1_525eb735-3a79-4468-a892-eb67b4e4979g](https://github.com/user-attachments/assets/449c6c01-0642-4157-9601-53d92c890293)
 
 ### Add Communication Data
 ```json
@@ -488,6 +495,9 @@ Link repositories for:
   }
 }
 ```
+Result should look like:
+![img_v3_02q1_5d1f60fc-d36c-4010-975e-0dc5ae8a049g](https://github.com/user-attachments/assets/3c973ca1-f175-4806-b384-0a65b4fdb705)
+![img_v3_02q1_c8363c47-d730-498b-9554-51dd41d8078g](https://github.com/user-attachments/assets/5ec7a552-a676-4037-909f-86a8c334d991)
 
 ### Guard-Protected Repository
 ```json
@@ -516,6 +526,9 @@ Link repositories for:
   }
 }
 ```
+Result should look like:
+<img width="1878" height="815" alt="image" src="https://github.com/user-attachments/assets/cc2efb5b-a6f3-4078-8c47-57d9a80a7ec7" />
+
 
 **Key Features**: This example demonstrates layered security with Repository-level Guard (`time_access_guard`) controlling when anyone can access the Repository, plus Field-level Guard (`approval_guard`) requiring additional approval for the specific confidential data field. The high permission requirement (2000) restricts write access to senior users, while private metadata (`onChain: false`) keeps the Repository name and tags off the public blockchain.
 
