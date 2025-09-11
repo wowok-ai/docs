@@ -22,15 +22,6 @@
 | Connect with Guards/Services | [Integration Patterns](#integration-patterns) |
 | See working examples | [Complete Examples](#complete-examples) |
 
-### Parameter Quick Lookup
-| Parameter | Section | Required | Purpose |
-|-----------|---------|----------|---------|
-| `account`, `object` | [Account & Object](#1-account--object-identification) | Yes | Basic creation |
-| `mode`, `description` | [Basic Configuration](#2-basic-configuration) | Partial | Behavior control |
-| `policy` | [Policy Management](#4-policy-management) | Strict mode only | Field definitions |
-| `data` operations | [Data Operations](#3-data-operations) | As needed | Add/remove data |
-| `reference`, `witness` | [Advanced Features](#5-advanced-features) | Optional | Complex integration |
-
 ---
 
 ## Overview
@@ -39,28 +30,20 @@
 Repository is a policy-driven, on-chain database enabling structured information storage with configurable access controls. Repository data is permanently stored on blockchain and can be queried by other Wowok objects for verification and automation.
 
 ### Core Capabilities
-- **Data Storage**: Store typed data (text, numbers, addresses, arrays, booleans)
+- **Data Storage**: Store typed data (text, number, address, boolean, array)
 - **Access Control**: Field-level permissions and Guard integration  
 - **Cross-Object Integration**: Other Wowok objects can query Repository data
 - **Policy Management**: Define and modify data structure rules
 
 **Example**: Errand delivery service uses Repository for communication records (messages, photos, locations) with automated verification by other objects.
-
+ [→ Complete Errand Flower Delivery Implementation](./Errand-flower_delivery.md)
 ---
 
 ## Core Parameters
 
 ### 1. Account & Object Identification
 
-#### Global Required Structure
-```json
-{
-  "account": "signer_account_name_or_address",
-  "data": {
-    // All Repository configuration here
-  }
-}
-```
+**Note**: All Repository operations require an `account` parameter to specify the transaction signer. If not specified, the current active account is used by default.
 
 #### Object Reference (Existing)
 ```json
@@ -104,11 +87,11 @@ Repository is a policy-driven, on-chain database enabling structured information
 }
 ```
 
-| Parameter | Options | Description | When to Use |
-|-----------|---------|-------------|-------------|
-| `description` | string | Human-readable purpose | Always recommended |
-| `guard` | string/null | Additional access verification | Sensitive data |
-| `mode` | 0 or 1 | **0**: Free (any data) <br>**1**: Strict (policy only) | **Free**: Prototyping<br>**Strict**: Team collaboration |
+| Parameter | Options | Description | Default | When to Use |
+|-----------|---------|-------------|---------|-------------|
+| `description` | string | Human-readable purpose | None | Always recommended |
+| `guard` | string/null | Additional access verification | null | Sensitive data |
+| `mode` | 0 or 1 | **0**: Free (any data) <br>**1**: Strict (policy only) | **0 (Free)** | **Free**: Prototyping<br>**Strict**: Team collaboration |
 
 **Mode Selection Guidance:**
 - **Free Mode (0)**: Use when you need flexibility to add any data fields without planning ahead. Good for personal notes, experimentation, or rapidly changing requirements.
@@ -209,7 +192,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 | `key` | string | Required | Unique field identifier |
 | `description` | string | Required | Field purpose explanation |
 | `dataType` | 200-206 | Required | Data type enforcement |
-| `permissionIndex` | number ≥1000 | Optional | Custom permission requirement |
+| `permissionIndex` | number ≥1000 | Optional | Custom permission requirement（讲清楚|
 | `guard` | string | Optional | Additional field verification |
 
 #### Policy Operations
@@ -223,22 +206,38 @@ Repository is a policy-driven, on-chain database enabling structured information
 
 **Policy Field Planning:**
 - **Simple fields**: Use basic data types (string/number) without permissions for general team access
-- **Restricted fields**: Add custom permissions (≥1000) when only certain team members should write
-- **Sensitive fields**: Add Guard verification when additional proof is required beyond permissions
+- **Permission-controlled fields**: Add custom permissions (≥1000) for role-based access control
+- **Guard-only fields**: Add Guard verification without permission requirements for condition-based access
+- **Double-protected fields**: Combine both custom permissions AND Guard verification for maximum security
+
+**Field Access Control Combinations:**
+1. **No Protection**: Field accessible to anyone with basic Repository access
+2. **Permission Only**: `"permissionIndex": 1001` - User must have specific permission in Permission object
+3. **Permission + Embedded Guard**: Permission itself has Guard requirements - user must pass Guard to get permission, then use permission to access field
+4. **Guard Only**: `"guard": "field_guard"` - Direct Guard verification for field access, no permission needed
+5. **Permission + Field Guard**: Both permission requirement AND separate field-level Guard verification
 
 💡 **AI Prompt Tip**: "Design Repository field structure for [data type] with [access requirements] and [validation needs]."
 
 #### Data vs Policy Best Practices
 
-**When to Set Policy First:**
-- Mode 1 (Strict): Policy MUST be defined before data operations
-- Team collaboration with structured fields
-- Formal projects requiring data validation
+**Policy Rules Apply to Both Modes:**
+- If Policy is defined for a field, data operations MUST follow the Policy rules (dataType, permissions, etc.) regardless of mode
+- Policy defines the "contract" for how data should be structured and accessed
 
-**When to Add Data Directly:**
-- Mode 0 (Free): Data can be added without pre-defined policy
-- Rapid prototyping and experimentation
-- Simple personal data storage
+**Mode Differences:**
+- **Mode 0 (Free)**: Can add data to fields without pre-defined Policy, OR follow existing Policy rules if Policy exists
+- **Mode 1 (Strict)**: Can ONLY add data to fields that have pre-defined Policy
+
+**When to Set Policy:**
+- Define field structure and access controls before team collaboration
+- Enforce data consistency and validation rules
+- Set custom permissions or Guard verification for sensitive fields
+
+**When to Add Data Without Policy (Free Mode Only):**
+- Rapid prototyping with unknown data structure
+- Personal experimentation and flexible data storage
+- Simple data collection before formalizing structure
 
 **Policy Migration Pattern:**
 1. **Start Free**: "Help me create a Repository in free mode for [project type] experimentation"
@@ -251,7 +250,7 @@ This migration approach allows you to prototype quickly without predefined struc
 
 **AI Prompt Template:**
 ```
-"I have a Repository in free mode with [describe your data]. Please design policies for strict mode that cover these data types: [list field names and data types you've been using]. I need [describe access requirements]. Show me the complete policy configuration and explain each field's purpose. I'll confirm before implementing."
+"I have a Repository in free mode with [describe your data]. Please design policies for strict mode that cover these data types: [list field names and data types you've been using]. I need [describe access requirements]. Show me the complete policy configuration and explain each field's purpose. Don't execute the operation yet, just show me the configuration first."
 ```
 
 ---
@@ -332,17 +331,38 @@ A Witness is **real-time data that doesn't exist on the blockchain** and must be
 | `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes` | ❌ | Auto-filled by system |
 | **`witness`** | **✅** | **User proof value (only field to modify)** |
 
+**Witness Logic Mechanism:**
+
+The Witness system works through **predictable type derivation**:
+1. **Guard defines verification need**: "Verify user owns this Order"
+2. **System derives witness type**: Since it's about Order ownership, witness type = 34 (Order address)  
+3. **User provides witness value**: Actual Order address they claim to own
+4. **Guard verifies**: Checks if the provided Order address is actually owned by the user
+
+**Type Derivation Examples:**
+- Guard needs "Arb's Order verification" → Type 34 → User provides specific Order address
+- Guard needs "Progress's Machine verification" → Type 33 → User provides specific Machine address  
+- Guard needs "Service relationship proof" → Type 32/38 → User provides specific Service address
+
 **Witness Examples:**
 - **Mood verification**: "happy" (your current emotional state when making a decision)
 - **Dynamic code**: "AUTH2024" (a temporary verification code sent to your phone)
 - **Real-time preference**: "urgent" (your current priority level for this specific request)
 - **Private assessment**: "8.5" (your confidential rating that shouldn't be stored on-chain)
+- **Object relationship**: "0x123abc..." (specific address proving your relationship to an object)
 
-**Common Witness Types:**
+**Complete Witness Types:**
 | Code | Description | Example Use |
 |------|-------------|-------------|
-| **35** | Arbitration context | Current dispute resolution preference |
-| 30-38 | Dynamic session data | Real-time operation context or temporary states |
+| **30** | Progress's Order address | Order address associated with Progress object |
+| **31** | Order's Machine address | Machine address associated with Order object |
+| **32** | Order's Service address | Service address associated with Order object |
+| **33** | Progress's Machine address | Machine address associated with Progress object |
+| **34** | Arb's Order address | Order address under arbitration dispute |
+| **35** | Arb's Arbitration address | Arbitration object handling the dispute |
+| **36** | Arb's Progress address | Progress address related to arbitration |
+| **37** | Arb's Machine address | Machine address related to arbitration |
+| **38** | Arb's Service address | Service address related to arbitration |
 
 ---
 
@@ -365,7 +385,7 @@ A Witness is **real-time data that doesn't exist on the blockchain** and must be
 #### Simple Address
 ```json
 {
-  "address": 123456789
+  "address": 202509102100
 }
 ```
 Use integers for time-based addresses (like timestamps) or when you have numeric identifiers that need to be converted to blockchain addresses.
@@ -387,8 +407,10 @@ Use named addresses when you've saved addresses locally with human-readable name
 
 ### Cross-Object References
 **Repository → Service**: Service objects can query customer preferences, delivery addresses, or purchase history stored in Repository to customize offerings and automate order processing.
-**Repository → Guard**: Guard objects can verify Repository data (like completion status, approval records, or verification timestamps) as conditions for payment releases or workflow progression.  
-**Repository → Machine**: Machine workflows can update Repository data during progress (status updates, deliverable confirmations, or communication logs) and query Repository for decision-making.
+
+**Repository → Guard**: Guard objects can verify Repository data (like completion status, approval records, or verification timestamps) as conditions for payment releases or workflow progression. For example, checking weather data stored in Repository to determine if outdoor service delivery should proceed.
+
+**Repository → Machine**: Machine can reference Repository for unified data management. Machine workflow execution data is stored in Progress objects, while Repository provides optional centralized data storage for Machine instances. For example, a Machine can bind to a Repository with "message" field, allowing flexible real-time updates to shared communication data across all Progress instances of that Machine.
 
 ### Guard Integration
 Repository can be protected by Guards requiring:
@@ -568,25 +590,3 @@ Result should look like:
 
 ---
 
-## Appendix: Complete Wowok Protocol Types
-
-*For reference when Repository needs to integrate with other Wowok objects:*
-
-| Code | Type | Code | Type |
-|------|------|------|------|
-| 100 | Bool | 111 | Option\<Address\> |
-| 101 | Address | 112 | Option\<Bool\> |
-| 102 | U8 | 113 | Option\<U8\> |
-| 103 | U64 | 114 | Option\<U64\> |
-| 104 | Vec\<U8\> | 115 | Option\<U128\> |
-| 105 | U128 | 116 | Option\<U256\> |
-| 106 | Vec\<Address\> | 117 | Option\<String\> |
-| 107 | Vec\<Bool\> | 118 | Option\<Vec\<U8\>\> |
-| 108 | Vec\<Vec\<U8\>\> | 119 | Vec\<U256\> |
-| 109 | Vec\<U64\> | 120 | String |
-| 110 | Vec\<U128\> | 121 | Vec\<String\> |
-|  |  | 122 | U256 |
-
----
-
-**Related Documentation**: [→ Complete Errand Flower Delivery Implementation](./Errand-flower_delivery.md)
