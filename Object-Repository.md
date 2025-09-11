@@ -203,13 +203,6 @@ Repository is a policy-driven, on-chain database enabling structured information
   }
 }
 ```
-Example:
-From this policy setting:
-<img width="1823" height="455" alt="image" src="https://github.com/user-attachments/assets/bc14d598-0c46-41de-a6fa-5c90035946ba" />
-
-To:
-<img width="1780" height="562" alt="image" src="https://github.com/user-attachments/assets/f02a4614-0474-4a6a-807e-968ff5dacac5" />
-
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
