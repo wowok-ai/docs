@@ -38,19 +38,22 @@ Demand is a blockchain object that enables posting service requests with attache
 - **Guard Integration**: Apply verification rules for recommendation filtering
 - **Permission Control**: Manage operation access through Permission objects
 
-### Core Technical Constraints
-> **Critical**: Bounty pool is additive-only (cannot reduce funds once added)
-> **Critical**: Time expiry is mandatory (prevents permanent fund locking)
-> **Critical**: Single winner model (entire pool goes to one recommender)
-> **Critical**: Refund only available after expiry AND no reward distributed
+### Key Technical Constraints
+**Key Technical Constraints**:
+- Bounty pool is additive-only (cannot reduce funds once added)
+- Single winner model (entire pool goes to one recommender)
+- Refund only available after expiry AND no reward distributed
+- No time expiry = no refund option (funds stay locked)
 
 ### Core Operations
-1. **Create**: Initialize Demand object with token type and permissions
-2. **Configure**: Set description, location, and optional verification rules
-3. **Fund**: Add rewards to bounty pool (additive only, cannot reduce)
-4. **Accept**: Receive service recommendations from providers
-5. **Distribute**: Execute reward payment to selected service recommender
-6. **Refund**: Reclaim unused rewards after expiration (if no selection made)
+1. **Create**: Initialize Demand object with [token type and permissions](#1-account--object-identification)
+2. **Configure**: Set [description, location](#2-basic-configuration), and optional [verification rules](#6-guard-integration)
+3. **Fund**: Add rewards to [bounty pool](#3-bounty-operations) (additive only, cannot reduce)
+4. **Accept**: Receive [service recommendations](#5-service-recommendations) from providers
+5. **Distribute**: Execute [reward payment](#3-bounty-operations) to selected service recommender
+6. **Refund**: Reclaim unused rewards after [expiration](#4-time-configuration) (if no selection made)
+
+**Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. **Setting expiration time (`time_expire`) is strongly recommended to enable refund operations if no suitable service is found.**
 
 **Example Usage**: Post "Logo design needed" request with 1000 SUI reward → Receive 5 service recommendations → Select best match → Reward automatically transfers to recommender
 
@@ -62,7 +65,7 @@ Demand is a blockchain object that enables posting service requests with attache
 
 ### 1. Account & Object Identification
 
-> **Note**: All operations require `account` parameter to specify transaction signer. If omitted, current active account is used.
+**Note**: All operations require `account` parameter to specify transaction signer. If omitted, current active account is used.
 
 #### Object Reference (Existing)
 ```json
@@ -94,10 +97,10 @@ Demand is a blockchain object that enables posting service requests with attache
 | `onChain` | boolean | Optional | Metadata blockchain visibility |
 | `useAddressIfNameExist` | boolean | Optional | Name conflict resolution |
 
-> **Technical Note**: `type_parameter` must match the actual token type you'll add to bounty pool. Common formats:
-> - SUI tokens: `"0x2::coin::Coin<0x2::sui::SUI>"`
-> - Custom tokens: `"0x2::coin::Coin<0xABC123::token::TOKEN>"`
-> - NFTs: `"0xDEF456::nft::NFTType"`
+**Technical Note**: `type_parameter` must match the actual token type you'll add to bounty pool. Common formats:
+- SUI tokens: `"0x2::coin::Coin<0x2::sui::SUI>"`
+- Custom tokens: `"0x2::coin::Coin<0xABC123::token::TOKEN>"`
+- NFTs: `"0xDEF456::nft::NFTType"`
 
 ---
 
@@ -114,6 +117,14 @@ Demand is a blockchain object that enables posting service requests with attache
 |-----------|------|-------------|
 | `description` | string | Detailed service requirements, qualifications, deliverables |
 | `location` | string | Location specification or "remote" |
+
+**Example: Small Bakery Website Request**
+```json
+{
+  "description": "I'm starting a small bakery and really need a simple website where customers can see our daily menu and maybe order online. Nothing fancy, just something that feels warm and shows off our homemade bread. I've seen some bakery sites I like but honestly have no idea how to make one myself. Would love to work with someone who gets what small local businesses need, not just another corporate template. Budget is tight but this could really help us grow.",
+  "location": "Local preferred (Portland area) but open to remote if you understand small business"
+}
+```
 
 ---
 
@@ -143,7 +154,12 @@ Demand is a blockchain object that enables posting service requests with attache
 }
 ```
 
-#### Distribute Reward to Selected Service
+**Reward Tips**: 
+- Standard rate: 10-20% of expected service cost
+- High competition: 20-30% to attract quality recommendations  
+- Specialized skills: 30%+ for rare expertise
+
+#### Distribute Reward to Selected Service Recommender
 ```json
 {
   "bounty": {
@@ -152,6 +168,8 @@ Demand is a blockchain object that enables posting service requests with attache
   }
 }
 ```
+
+**Why Service Address**: The reward goes to whoever recommended this specific Service object. If the service owner recommended their own service, they get the reward. If a third party recommended it, the third party gets the reward.
 
 #### Reclaim Unused Rewards
 ```json
@@ -162,15 +180,15 @@ Demand is a blockchain object that enables posting service requests with attache
 }
 ```
 
-| Operation | Purpose | Availability | Requirements |
-|-----------|---------|--------------|--------------|
+| Operation | Purpose | When Available | Requirements |
+|-----------|---------|----------------|--------------|
 | `add` | Increase reward pool | Before expiry | Sufficient account balance |
 | `reward` | Pay selected service recommender | Before expiry | Valid recommendation exists |
 | `refund` | Reclaim unused funds | After expiry + no rewards distributed | Demand owner permissions |
 
-> **Technical Constraint**: Bounty pool is additive-only. Cannot reduce or withdraw funds except through reward/refund operations.
+**Technical Constraint**: Bounty pool is additive-only. Cannot reduce or withdraw funds except through reward/refund operations.
 
-> **Technical Note**: `reward` operation transfers entire bounty pool to the account that recommended the selected service. Only one service can receive rewards per Demand.
+**Technical Note**: `reward` operation transfers entire bounty pool to the account that recommended the selected service. Only one service can receive rewards per Demand.
 
 ---
 
@@ -202,7 +220,7 @@ Demand is a blockchain object that enables posting service requests with attache
 | `minutes` | number | For duration | Minutes from current time |
 | `time` | number | For time | Unix timestamp |
 
-> **Technical Requirement**: Time expiry is mandatory. Without expiry setting, funds remain permanently locked in Demand object.
+**Best Practice**: Set time expiry to enable refunds. No expiry = no way to get unused funds back.
 
 ---
 
@@ -213,7 +231,9 @@ Demand is a blockchain object that enables posting service requests with attache
 {
   "present": {
     "service": "service_object_address_or_name",
+    // service: "sarah_localweb_studio"
     "recommend_words": "Recommendation explanation and value proposition"
+    // recommend_words: "I know exactly the right bakery website designer! Sarah from LocalWeb Studio has built 5+ bakery sites in Portland and really understands the cozy, artisanal feel you want. Her work for Sunrise Bakery increased their online orders by 200%. She's affordable and local too."
   }
 }
 ```
@@ -221,9 +241,9 @@ Demand is a blockchain object that enables posting service requests with attache
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `service` | string | Required | Service object address or name |
-| `recommend_words` | string | Optional | Recommendation justification |
+| `recommend_words` | string | Optional (default: "") | Recommendation justification |
 
-> **Technical Note**: The `service` parameter must reference an existing Service object. Each service can only be recommended once per Demand, but multiple parties can recommend different services.
+**Technical Note**: The `service` parameter must reference an existing Service object. Each service can only be recommended once per Demand, but different services can be recommended by multiple parties to the same Demand.
 
 ---
 
@@ -250,35 +270,14 @@ Demand is a blockchain object that enables posting service requests with attache
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `guard` | string/null | Guard object for recommendation verification |
-| `service_id_in_guard` | number (1-255) | Position ID where service address is provided as witness during verification |
+| `guard` | string/null | Guard object that checks recommendation quality |
+| `service_id_in_guard` | number (1-255) | Optional: position in Guard's verification list |
 
-> **Technical Note**: `service_id_in_guard` specifies the identifier position (1-255) in the Guard's verification table where the service address should be provided as witness data. This corresponds to the Guard's internal verification logic structure.
-
-**Guard Function**: Guard objects contain verification logic that automatically checks conditions before allowing recommendations. Examples include portfolio requirements, location constraints, or certification verification.
+**What Guard Does**: Guard checks if service providers meet your requirements before they can recommend their services. For example, only designers from Portland State University, or who worked at Nike, or built 10+ restaurant websites, or have Google UX certification.
 
 ---
 
 ### 7. Advanced Features
-
-#### Guard Witness System
-```json
-{
-  "witness": {
-    "guards": ["guard_object_address"],
-    "witness": [
-      {
-        "guard": "guard_object_address",
-        "identifier": 1,
-        "type": 101,
-        "witness": "user_provided_proof_value"
-      }
-    ]
-  }
-}
-```
-
-**Technical Note**: Only modify the `witness` field with your proof value. All other parameters (guard, identifier, type) are system-generated based on Guard requirements.
 
 #### Network Configuration
 ```json
@@ -301,27 +300,22 @@ Demand is a blockchain object that enables posting service requests with attache
 
 ### Address Formats
 
-#### Simple Address
+Blockchain addresses are long and hard to remember like `0x1234abcd5678ef90...`. You can use them directly or save them with friendly names.
+
+**Simple**: Use the full blockchain address
 ```json
-{
-  "address": "0x123...abc"
+"service": "0x1234abcd5678ef90..."
+```
+
+**Named**: Use a saved name instead
+```json
+"service": {
+  "local_mark_first": true,
+  "name_or_address": "sarah_web_studio"
 }
 ```
 
-#### Named Address
-```json
-{
-  "address": {
-    "local_mark_first": true,
-    "name_or_address": "saved_name_or_0x123...abc"
-  }
-}
-```
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `local_mark_first` | boolean | Search local saved names first (true) or account names first (false) |
-| `name_or_address` | string | Saved name or full address |
+Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_web_studio" instead of remembering the long address.
 
 ### Token Type Examples
 
@@ -333,48 +327,26 @@ Demand is a blockchain object that enables posting service requests with attache
 
 ---
 
-## Integration Patterns
-
-### Cross-Object Dependencies
-- **Demand → Permission**: Controls who can perform operations (create, add bounty, reward, refund)
-- **Demand → Guard**: Filters recommendation quality through verification rules
-- **Demand → Service**: Service objects can be recommended to fulfill Demand requirements
-- **Guard → Repository**: Guards can query Repository data for verification logic
-
-### Common Architecture Patterns
-1. **Simple Request**: Demand + Permission (basic service request)
-2. **Quality Filtered**: Demand + Permission + Guard (verified recommendations only)  
-3. **Multi-Service**: Multiple Service objects competing for one Demand reward
-4. **Referral Network**: Third parties recommending services they don't own
-
-### Object Creation Sequence
-1. Create Permission object (access control)
-2. Create Guard object (optional, for recommendation filtering)
-3. Create Demand object (references Permission and optional Guard)
-4. Service objects (must exist before they can be recommended)
-
----
-
 ## Complete Examples
 
 ### Basic Demand Creation
 ```json
 {
-  "account": "my_account",
+  "account": "bakery_owner",
   "data": {
     "object": {
       "type_parameter": "0x2::coin::Coin<0x2::sui::SUI>",
-      "permission": "my_permission_object"
+      "permission": "bakery_permission"
     },
-    "description": "Logo design for fintech startup",
+    "description": "I'm starting a small bakery and really need a simple website where customers can see our daily menu and maybe order online. Nothing fancy, just something that feels warm and shows off our homemade bread.",
     "time_expire": {
       "op": "duration", 
-      "minutes": 2880
+      "minutes": 10080
     },
     "bounty": {
       "op": "add",
       "object": {
-        "balance": "500"
+        "balance": "200"
       }
     }
   }
@@ -384,12 +356,12 @@ Demand is a blockchain object that enables posting service requests with attache
 ### Submit Service Recommendation
 ```json
 {
-  "account": "recommender_account",
+  "account": "web_designer",
   "data": {
-    "object": "logo_design_demand",
+    "object": "bakery_website_demand",
     "present": {
-      "service": "design_agency_service",
-      "recommend_words": "Specialized fintech design team with 15+ successful projects"
+      "service": "sarah_web_studio",
+      "recommend_words": "I know exactly the right bakery website designer! Sarah from LocalWeb Studio has built 5+ bakery sites in Portland and really understands the cozy, artisanal feel you want. Her work for Sunrise Bakery increased their online orders by 200%. She's affordable and local too."
     }
   }
 }
@@ -398,18 +370,18 @@ Demand is a blockchain object that enables posting service requests with attache
 ### Reward Selected Service
 ```json
 {
-  "account": "my_account",
+  "account": "bakery_owner",
   "data": {
-    "object": "logo_design_demand",
+    "object": "bakery_website_demand",
     "bounty": {
       "op": "reward",
-      "service": "design_agency_service"
+      "service": "sarah_web_studio"
     }
   }
 }
 ```
 
-**Expected Result**: 500 SUI transfers from Demand bounty pool to the account that recommended "design_agency_service".
+**Expected Result**: 200 SUI transfers from Demand bounty pool to the account that recommended "sarah_web_studio".
 
 ---
 
@@ -428,6 +400,11 @@ Demand is a blockchain object that enables posting service requests with attache
 1. Check current time against expiry time using `time_expire` settings
 2. Use `refund` operation to reclaim unused rewards after expiry
 3. Create new Demand if continued service discovery needed
+
+**Problem**: "Cannot refund, no expiry time set"
+**Solutions**:
+1. Set time expiry to enable refunds
+2. Create new Demand with expiry time if you need fund recovery option
 
 ### Guard Verification Issues
 **Problem**: "Guard verification failed for recommendation"  
