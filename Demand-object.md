@@ -1,226 +1,447 @@
-# Demand Object: Your Smart Service Marketplace
+# Demand Object: Your Service Request & Reward System
 
-> "Post what you need, set your reward, let providers compete to serve you better."
+> "Post service requests with reward pools, receive recommendations, control reward distribution"
+
+**MCP Tool**: `mcp_wowok_demand_demand_operations`
+
+## How to Use This Documentation
+
+### Document Structure
+- **[Overview](#overview)**: Core functionality and technical capabilities
+- **[Core Parameters](#core-parameters)**: All configuration options organized by operation type
+- **[Data Types & Formats](#data-types--formats)**: Technical reference for addresses and types
+- **[Integration Patterns](#integration-patterns)**: How Demand works with other objects
+- **[Complete Examples](#complete-examples)**: Working configurations with expected results
+
+### Navigation by Need
+| I need to... | Go to section |
+|--------------|---------------|
+| Create new Demand | [Core Parameters → Account & Object](#1-account--object-identification) |
+| Add reward funds | [Core Parameters → Bounty Operations](#3-bounty-operations) |
+| Set time limits | [Core Parameters → Time Configuration](#4-time-configuration) |
+| Accept recommendations | [Core Parameters → Service Recommendations](#5-service-recommendations) |
+| Distribute rewards | [Core Parameters → Bounty Operations](#3-bounty-operations) |
+| Reference tables | [Data Types & Formats](#data-types--formats) |
+
+---
 
 ## Overview
 
 ### Definition
+Demand is a blockchain object that enables posting service requests with attached reward pools, receiving service recommendations, and executing reward distribution based on selection criteria.
 
-Personalized demand fulfillment through reward-based bounty, attracting services that meet specific requirements.
+### Technical Capabilities
+- **Request Publishing**: Create structured service requests with metadata
+- **Reward Pool Management**: Add/distribute funds or tokens as incentives
+- **Recommendation Collection**: Accept service proposals from providers
+- **Time Control**: Set validity periods for request and reward phases
+- **Guard Integration**: Apply verification rules for recommendation filtering
+- **Permission Control**: Manage operation access through Permission objects
 
-### Functionality
+### Core Technical Constraints
+> **Critical**: Bounty pool is additive-only (cannot reduce funds once added)
+> **Critical**: Time expiry is mandatory (prevents permanent fund locking)
+> **Critical**: Single winner model (entire pool goes to one recommender)
+> **Critical**: Refund only available after expiry AND no reward distributed
 
-Enables users to post specific demands with bounty rewards, allowing service providers to present qualifying services, with automated bounty distribution upon service selection and Guard-based eligibility verification. Bounty-based service presentation system where service providers can present qualifying services for specific demands.
+### Core Operations
+1. **Create**: Initialize Demand object with token type and permissions
+2. **Configure**: Set description, location, and optional verification rules
+3. **Fund**: Add rewards to bounty pool (additive only, cannot reduce)
+4. **Accept**: Receive service recommendations from providers
+5. **Distribute**: Execute reward payment to selected service recommender
+6. **Refund**: Reclaim unused rewards after expiration (if no selection made)
 
-### Use Cases
+**Example Usage**: Post "Logo design needed" request with 1000 SUI reward → Receive 5 service recommendations → Select best match → Reward automatically transfers to recommender
 
-Traditional travel planning projects involve multiple communications and comparisons, which is time-consuming and labor-intensive. By publishing requirements, travelers can put forward all their requirements at once, which greatly improves efficiency. The interaction between travelers and service providers becomes more direct and efficient, while providing a more fair and transparent trading environment for both parties.
-
-**Traveler's needs launch:**
-
-Tom wanted to experience the Great Migration in Africa and was looking for a relaxing safari with accommodation close to nature and a guide who could provide knowledge of the wildlife and natural environment.
-
-### Key Features
-
-- **Bounty-based reward system** — Incentivizes quality service recommendations
-- **Service presentation and selection** — Providers compete to meet your requirements
-- **Time-limited claim windows** — Creates urgency and efficient matching
-- **Guard-based presenter qualification** — Ensures only qualified providers can respond
-
-## What You'll Build (30 seconds)
-
-By the end, you will understand buyer-driven marketplaces:
-
-- **Basic Demand** — post detailed requirements, set rewards, get recommendations
-- **Advanced Demand** — add provider verification and compare multiple options
-
-**Prereqs**: You already created Personal, Permission, and Treasury objects. Network is `sui testnet`.
-
-**Note**: Demand objects use Coin type `0x2::coin::Coin<0x2::sui::SUI>` (different from other objects that use Token type `0x2::sui::SUI`).
-
-**Pre-flight** (copy one line):
-
-```
-"On sui testnet, show my default account and SUI balance; if low, guide me to the faucet and wait for funds."
-```
+*Related Implementation*: [→ Errand Flower Delivery Case Study](./Errand-flower_delivery.md)
 
 ---
 
-## 🎯 Level 1 — Foundation (post and reward)
+## Core Parameters
 
-**Scenario**: You need a service but want providers to compete for your business.
+### 1. Account & Object Identification
 
-**Your Mission**: Create your first Demand with a reward pool and attract service recommendations.
+> **Note**: All operations require `account` parameter to specify transaction signer. If omitted, current active account is used.
 
-**Try This A** (create demand with reward):
-
-```
-"Create a Demand for website design services on sui testnet. I want to offer 0.2 SUI as reward and set it to expire in 24 hours. Lock the reward funds in the Demand object."
-```
-
-**Try This B** (submit service recommendation):
-
-```
-"Submit a service recommendation to my Demand. Recommend a website design service with description, portfolio link, timeline, and pricing. Show how recommendations are recorded."
+#### Object Reference (Existing)
+```json
+{
+  "object": "existing_demand_name_or_address"
+}
 ```
 
-**Try This C** (select winner and release reward):
-
+#### Object Creation (New)
+```json
+{
+  "object": {
+    "type_parameter": "0x2::coin::Coin<0x2::sui::SUI>",
+    "permission": "permission_object_reference",
+    "name": "demand_identifier",
+    "tags": ["category1", "category2"],
+    "onChain": true,
+    "useAddressIfNameExist": false
+  }
+}
 ```
-"Select the best recommendation and release the 0.2 SUI reward to the chosen service provider. Show how the reward pool works and what happens to other recommendations."
-```
 
-**💡 If you get stuck**: Ask your AI "Help me create a Demand with reward pool" or "How do I submit service recommendations to Demand objects?"
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `type_parameter` | string | Required | Token/NFT type for rewards (must be Coin or NFT type) |
+| `permission` | string/object | Required | Permission object controlling access |
+| `name` | string | Optional | Human-readable identifier |
+| `tags` | string[] | Optional | Categorization labels |
+| `onChain` | boolean | Optional | Metadata blockchain visibility |
+| `useAddressIfNameExist` | boolean | Optional | Name conflict resolution |
 
-**Success Looks Like**:
-
-- ✅ You see Demand address and on-chain link
-- ✅ Your balance decreases by 200 SUI (locked in reward pool)
-- ✅ Service provider successfully submits recommendation with details
-- ✅ You can select a winner and see 200 SUI transfer to their address
-- ✅ **Fund flow is clear**: Money locked → recommendation → selection → reward release
-- ✅ **Buyer power**: You control terms and let providers compete
-- ✅ **Transparent process**: All recommendations and reasoning are visible
-
-**Why This Matters**: Demand objects provide:
-
-- **Buyer power**: You set the terms and let providers compete
-- **Quality incentive**: Providers compete on value, not just price
-- **Transparent process**: All recommendations and reasoning are visible
-- **Automated rewards**: Best recommendations get rewarded automatically
-
-This Demand puts you in control of the service discovery process.
+> **Technical Note**: `type_parameter` must match the actual token type you'll add to bounty pool. Common formats:
+> - SUI tokens: `"0x2::coin::Coin<0x2::sui::SUI>"`
+> - Custom tokens: `"0x2::coin::Coin<0xABC123::token::TOKEN>"`
+> - NFTs: `"0xDEF456::nft::NFTType"`
 
 ---
 
-## 🎯 Level 2 — Advanced (verification and comparison)
+### 2. Basic Configuration
 
-**Scenario**: You want to add verification requirements and compare multiple provider recommendations.
-
-**Your Mission**: Create a Demand with provider verification and evaluate multiple proposals.
-
-**Try This A** (create verified demand):
-
-```
-"Create a Demand for website development services on sui testnet. Offer 0.4 SUI reward, require providers to have minimum 0.1 SUI Treasury balance, and set detailed requirements: responsive design, 5 pages, contact form, 2-week delivery. Set it to expire in 48 hours."
+```json
+{
+  "description": "Service requirements and specifications",
+  "location": "Geographic or virtual location details"
+}
 ```
 
-**Try This B** (collect verified recommendations):
-
-```
-"Have 2-3 qualified providers (with sufficient Treasury balance) submit recommendations with different approaches: premium vs. standard design, different pricing, and varying timelines. Show how verification filters serious providers."
-```
-
-**Try This C** (compare and select):
-
-```
-"Compare the recommendations based on design approach, price, timeline, and provider credentials. Select the best value and release the 0.4 SUI reward to your chosen provider."
-```
-
-**Success Looks Like**:
-
-- ✅ You see Demand address + on-chain link
-- ✅ Only verified providers can submit recommendations
-- ✅ Multiple qualified providers submit different approaches
-- ✅ **Quality filtering working**: Verification ensures serious providers only
-
-**Why This Matters**: Advanced Demands enable:
-
-- **Quality control**: Verification requirements filter serious providers
-- **Better comparisons**: Multiple qualified options to choose from
-- **Detailed specification**: Describe what you want with more specificity
-- **Provider competition**: Qualified suppliers compete on value and approach
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `description` | string | Detailed service requirements, qualifications, deliverables |
+| `location` | string | Location specification or "remote" |
 
 ---
 
-## 💡 Mini Challenge — Ultra-Detailed Demand Creation
+### 3. Bounty Operations
 
-**Goal**: Experience Demand's most powerful feature - the ability to describe your needs in extreme detail, letting providers organize their own solutions.
-
-**The Demand Advantage**: Unlike traditional "I need a website" requests, you can specify many details upfront, reducing guesswork and back-and-forth communication.
-
-**Try This**:
-
+#### Add Rewards (from account balance)
+```json
+{
+  "bounty": {
+    "op": "add",
+    "object": {
+      "balance": "1000"
+    }
+  }
+}
 ```
-"Create an Ultra-Detailed Demand for a complete brand identity project on sui testnet. Offer 1.0 SUI reward and specify comprehensive requirements: Logo design (3 concepts, vector format, color and B&W versions), Brand guidelines (typography, color palette, usage rules), Business card design (front/back, print-ready), Letterhead template, Social media kit (Facebook, Instagram, LinkedIn covers), Website mockup (homepage design), Brand story copywriting (200 words), Delivery timeline (2 weeks), File formats (AI, PNG, PDF, JPG), Revision rounds (2 rounds included), Brand personality (modern, trustworthy, innovative), Target audience (tech startups), Industry (SaaS), Budget considerations (premium quality expected). Let providers organize their own teams and workflows to meet these detailed specifications."
+
+#### Add Specific Objects (NFTs or existing coins)
+```json
+{
+  "bounty": {
+    "op": "add",
+    "object": {
+      "address": "0x123...abc"
+    }
+  }
+}
 ```
 
-**Success Looks Like**:
+#### Distribute Reward to Selected Service
+```json
+{
+  "bounty": {
+    "op": "reward",
+    "service": "service_object_address"
+  }
+}
+```
 
-- ✅ Extremely detailed Demand with comprehensive specifications
-- ✅ Providers understand exactly what's needed without clarification
-- ✅ Different providers organize their own solutions (solo designer vs. agency team)
-- ✅ **Clearer requirements**: Your detailed description reduces guesswork
-- ✅ **Provider self-organization**: Suppliers figure out how to deliver your exact requirements
+#### Reclaim Unused Rewards
+```json
+{
+  "bounty": {
+    "op": "refund"
+  }
+}
+```
 
-**💡 Pro Tip**: The more detailed your Demand, the better the proposals you'll receive. Don't hold back - describe everything you want!
+| Operation | Purpose | Availability | Requirements |
+|-----------|---------|--------------|--------------|
+| `add` | Increase reward pool | Before expiry | Sufficient account balance |
+| `reward` | Pay selected service recommender | Before expiry | Valid recommendation exists |
+| `refund` | Reclaim unused funds | After expiry + no rewards distributed | Demand owner permissions |
 
-**Creative Ideas**: Software development with detailed specs, content creation with style guides, event planning with venue requirements, marketing campaigns with target demographics.
+> **Technical Constraint**: Bounty pool is additive-only. Cannot reduce or withdraw funds except through reward/refund operations.
 
-**Share Your Creation**: Post your detailed Demand and how it attracted better proposals!
-
----
-
-## 🔧 Troubleshooting (friendly and fast)
-
-**Schema error** → Create a minimal Demand first; add qualification criteria step by step.
-
-**No recommendations** → Check if your requirements are too restrictive or reward too low.
-
-**Wrong token type** → Use Coin type (0x2::coin::Coin<0x2::sui::SUI>) not Token type for Demands.
-
-**Guard blocking everyone** → Verify Guard conditions aren't too strict; check specific error messages like "experience requirement not met".
-
-**Reward not distributed** → Check if time_expire is set and conditions are met.
-
-**Fund flow confusion**:
-
-- **Reward pool**: Your SUI is locked in the Demand when created, not in a separate Treasury
-- **Selection process**: You manually select winners, or automatic distribution happens at expiry
-- **Refund mechanism**: Unused rewards return to your address if no qualified responses
-
-**Reset, without losing learning**:
-
-- Note the Demand address and any good recommendations received
-- Create a new Demand with adjusted requirements or rewards
-- Test with simpler qualification criteria first
-- Gradually add complexity as you understand the dynamics
-
-**Common Use Cases**:
-
-- **Freelance projects**: Detailed proposals with portfolio requirements
-- **Professional services**: Credential verification and experience matching
-- **Creative work**: Portfolio-based evaluation with style preferences
-- **Technical consulting**: Skill-based matching with complexity assessment
-
-**Need help?**: The community has great examples of Demand patterns for different industries!
+> **Technical Note**: `reward` operation transfers entire bounty pool to the account that recommended the selected service. Only one service can receive rewards per Demand.
 
 ---
 
-## ✅ Ready for More?
+### 4. Time Configuration
 
-**You've Unlocked**:
+#### Duration-based (recommended)
+```json
+{
+  "time_expire": {
+    "op": "duration",
+    "minutes": 1440
+  }
+}
+```
 
-- 🎯 **Detailed Requirements**: You can specify what you need with comprehensive detail
-- 🔍 **Provider Verification**: Basic qualification systems that filter serious providers
-- 📊 **Comparison Skills**: Ability to evaluate multiple proposals and choose the best
-- 💰 **Reward Systems**: Incentive structures that attract quality service providers
+#### Absolute timestamp
+```json
+{
+  "time_expire": {
+    "op": "time",
+    "time": 1703923200
+  }
+}
+```
 
-**Next Up**: **Order Objects** — learn how individual transactions work when customers purchase services!
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `op` | string | Required | "duration" or "time" |
+| `minutes` | number | For duration | Minutes from current time |
+| `time` | number | For time | Unix timestamp |
 
-**Quick Check**: Can you create a Demand that attracts qualified recommendations and explain how the reward system works? If yes, you're ready to orchestrate complex workflows!
+> **Technical Requirement**: Time expiry is mandatory. Without expiry setting, funds remain permanently locked in Demand object.
 
 ---
 
-## 🌟 What Makes Demand Objects Special?
+### 5. Service Recommendations
 
-Unlike traditional service marketplaces, Wowok Demand objects are:
+#### Submit Recommendation
+```json
+{
+  "present": {
+    "service": "service_object_address_or_name",
+    "recommend_words": "Recommendation explanation and value proposition"
+  }
+}
+```
 
-1. **Ultra-Detailed Requirements**: Describe your needs in comprehensive detail, eliminating guesswork
-2. **Provider Self-Organization**: Suppliers organize their own teams and workflows to meet your specifications
-3. **Clearer Communication**: Detailed descriptions can reduce communication overhead and misunderstandings
-4. **Quality-Driven**: Reward systems incentivize better proposals, not just lower prices
-5. **Transparent Process**: All recommendations and evaluation criteria are visible on-chain
-6. **Composable**: Can integrate with Guard objects for verification and other Wowok components
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `service` | string | Required | Service object address or name |
+| `recommend_words` | string | Optional | Recommendation justification |
 
-Demand objects offer a different approach to buying services - instead of vague requests that often require clarification, you can specify what you want in detail and let providers compete to meet your requirements.
+> **Technical Note**: The `service` parameter must reference an existing Service object. Each service can only be recommended once per Demand, but multiple parties can recommend different services.
+
+---
+
+### 6. Guard Integration
+
+#### Set Recommendation Filter
+```json
+{
+  "guard": {
+    "guard": "guard_object_address",
+    "service_id_in_guard": 1
+  }
+}
+```
+
+#### Remove Filter
+```json
+{
+  "guard": {
+    "guard": null
+  }
+}
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `guard` | string/null | Guard object for recommendation verification |
+| `service_id_in_guard` | number (1-255) | Position ID where service address is provided as witness during verification |
+
+> **Technical Note**: `service_id_in_guard` specifies the identifier position (1-255) in the Guard's verification table where the service address should be provided as witness data. This corresponds to the Guard's internal verification logic structure.
+
+**Guard Function**: Guard objects contain verification logic that automatically checks conditions before allowing recommendations. Examples include portfolio requirements, location constraints, or certification verification.
+
+---
+
+### 7. Advanced Features
+
+#### Guard Witness System
+```json
+{
+  "witness": {
+    "guards": ["guard_object_address"],
+    "witness": [
+      {
+        "guard": "guard_object_address",
+        "identifier": 1,
+        "type": 101,
+        "witness": "user_provided_proof_value"
+      }
+    ]
+  }
+}
+```
+
+> **Technical Note**: Only modify the `witness` field with your proof value. All other parameters (guard, identifier, type) are system-generated based on Guard requirements.
+
+#### Network Configuration
+```json
+{
+  "session": {
+    "network": "sui testnet",
+    "retentive": "always"
+  }
+}
+```
+
+| Parameter | Options | Description |
+|-----------|---------|-------------|
+| `network` | `sui mainnet/testnet`, `wowok mainnet/testnet` | Target blockchain |
+| `retentive` | `always`, `session` | Session persistence |
+
+---
+
+## Data Types & Formats
+
+### Address Formats
+
+#### Simple Address
+```json
+{
+  "address": "0x123...abc"
+}
+```
+
+#### Named Address
+```json
+{
+  "address": {
+    "local_mark_first": true,
+    "name_or_address": "saved_name_or_0x123...abc"
+  }
+}
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `local_mark_first` | boolean | Search local saved names first (true) or account names first (false) |
+| `name_or_address` | string | Saved name or full address |
+
+### Token Type Examples
+
+| Type Category | Format | Example |
+|---------------|--------|---------|
+| **SUI Coin** | `0x2::coin::Coin<0x2::sui::SUI>` | Native SUI tokens |
+| **Custom Coin** | `0x2::coin::Coin<0xPACKAGE::MODULE::TYPE>` | Custom fungible tokens |
+| **NFT** | `0xPACKAGE::MODULE::TYPE` | Non-fungible tokens |
+
+---
+
+## Integration Patterns
+
+### Cross-Object Dependencies
+- **Demand → Permission**: Controls who can perform operations (create, add bounty, reward, refund)
+- **Demand → Guard**: Filters recommendation quality through verification rules
+- **Demand → Service**: Service objects can be recommended to fulfill Demand requirements
+- **Guard → Repository**: Guards can query Repository data for verification logic
+
+### Common Architecture Patterns
+1. **Simple Request**: Demand + Permission (basic service request)
+2. **Quality Filtered**: Demand + Permission + Guard (verified recommendations only)  
+3. **Multi-Service**: Multiple Service objects competing for one Demand reward
+4. **Referral Network**: Third parties recommending services they don't own
+
+### Object Creation Sequence
+1. Create Permission object (access control)
+2. Create Guard object (optional, for recommendation filtering)
+3. Create Demand object (references Permission and optional Guard)
+4. Service objects (must exist before they can be recommended)
+
+---
+
+## Complete Examples
+
+### Basic Demand Creation
+```json
+{
+  "account": "my_account",
+  "data": {
+    "object": {
+      "type_parameter": "0x2::coin::Coin<0x2::sui::SUI>",
+      "permission": "my_permission_object"
+    },
+    "description": "Logo design for fintech startup",
+    "time_expire": {
+      "op": "duration", 
+      "minutes": 2880
+    },
+    "bounty": {
+      "op": "add",
+      "object": {
+        "balance": "500"
+      }
+    }
+  }
+}
+```
+
+### Submit Service Recommendation
+```json
+{
+  "account": "recommender_account",
+  "data": {
+    "object": "logo_design_demand",
+    "present": {
+      "service": "design_agency_service",
+      "recommend_words": "Specialized fintech design team with 15+ successful projects"
+    }
+  }
+}
+```
+
+### Reward Selected Service
+```json
+{
+  "account": "my_account",
+  "data": {
+    "object": "logo_design_demand",
+    "bounty": {
+      "op": "reward",
+      "service": "design_agency_service"
+    }
+  }
+}
+```
+
+**Expected Result**: 500 SUI transfers from Demand bounty pool to the account that recommended "design_agency_service".
+
+---
+
+## Common Issues & Troubleshooting
+
+### Bounty Operation Failures
+**Problem**: "Insufficient balance for bounty add operation"  
+**Solutions**:
+1. Verify account has sufficient balance of the token type specified in `type_parameter`
+2. Check token type matches exactly (e.g., `0x2::coin::Coin<0x2::sui::SUI>` not `0x2::sui::SUI`)
+3. Confirm account has permission to transfer tokens
+
+### Time Configuration Errors  
+**Problem**: "Cannot perform operation, Demand expired"  
+**Solutions**:
+1. Check current time against expiry time using `time_expire` settings
+2. Use `refund` operation to reclaim unused rewards after expiry
+3. Create new Demand if continued service discovery needed
+
+### Guard Verification Issues
+**Problem**: "Guard verification failed for recommendation"  
+**Solutions**:
+1. Verify the service/recommender meets all Guard requirements
+2. Check witness data format matches Guard expectations exactly
+3. Ensure Guard object exists and is properly configured
+4. Test Guard verification independently before integrating with Demand
+
+### Service Recommendation Problems
+**Problem**: "Service object not found" or "Service already recommended"  
+**Solutions**:
+1. Verify Service object exists and is accessible
+2. Each service can only be recommended once per Demand (but multiple services can be recommended to one Demand)
+3. Service name/address must match exactly with existing Service object
+
+---
