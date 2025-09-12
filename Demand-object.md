@@ -30,22 +30,18 @@
 ### Definition
 Demand is a blockchain object that enables posting service requests with attached reward pools, receiving service recommendations, and executing reward distribution based on selection criteria.
 
-### Technical Capabilities
-- **Request Publishing**: Create structured service requests with metadata
-- **Reward Pool Management**: Add/distribute funds or tokens as incentives
-- **Recommendation Collection**: Accept service proposals from providers
-- **Time Control**: Set validity periods for request and reward phases
-- **Guard Integration**: Apply verification rules for recommendation filtering
-- **Permission Control**: Manage operation access through Permission objects
+### Core Capabilities
+- **Post Requests**: Describe what you need and set rewards
+- **Collect Recommendations**: Let service providers pitch their solutions
+- **Reward Winners**: Automatically pay the best recommendation
 
-### Key Technical Constraints
-**Key Technical Constraints**:
+### Important Notes
 - Bounty pool is additive-only (cannot reduce funds once added)
 - Single winner model (entire pool goes to one recommender)
 - Refund only available after expiry AND no reward distributed
 - No time expiry = no refund option (funds stay locked)
 
-### Core Operations
+### Core Workflow
 1. **Create**: Initialize Demand object with [token type and permissions](#1-account--object-identification)
 2. **Configure**: Set [description, location](#2-basic-configuration), and optional [verification rules](#6-guard-integration)
 3. **Fund**: Add rewards to [bounty pool](#3-bounty-operations) (additive only, cannot reduce)
@@ -55,7 +51,11 @@ Demand is a blockchain object that enables posting service requests with attache
 
 **Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. **Setting expiration time (`time_expire`) is strongly recommended to enable refund operations if no suitable service is found.**
 
-**Example Usage**: Post "Logo design needed" request with 1000 SUI reward → Receive 5 service recommendations → Select best match → Reward automatically transfers to recommender
+**Example Usage**: 
+1. Post "Bakery website needed" request with 200 SUI reward
+2. Receive 3 web designer recommendations  
+3. Select best match
+4. Reward automatically transfers to recommender
 
 *Related Implementation*: [→ Errand Flower Delivery Case Study](./Errand-flower_delivery.md)
 
@@ -109,7 +109,9 @@ Demand is a blockchain object that enables posting service requests with attache
 ```json
 {
   "description": "Service requirements and specifications",
+  // description: "I'm starting a small bakery and really need a simple website where customers can see our daily menu and maybe order online. Nothing fancy, just something that feels warm and shows off our homemade bread. Would love to work with someone who gets what small local businesses need, not just another corporate template. Budget is tight but this could really help us grow."
   "location": "Geographic or virtual location details"
+  // location: "Local preferred (Portland area) but open to remote if you understand small business"
 }
 ```
 
@@ -117,14 +119,6 @@ Demand is a blockchain object that enables posting service requests with attache
 |-----------|------|-------------|
 | `description` | string | Detailed service requirements, qualifications, deliverables |
 | `location` | string | Location specification or "remote" |
-
-**Example: Small Bakery Website Request**
-```json
-{
-  "description": "I'm starting a small bakery and really need a simple website where customers can see our daily menu and maybe order online. Nothing fancy, just something that feels warm and shows off our homemade bread. I've seen some bakery sites I like but honestly have no idea how to make one myself. Would love to work with someone who gets what small local businesses need, not just another corporate template. Budget is tight but this could really help us grow.",
-  "location": "Local preferred (Portland area) but open to remote if you understand small business"
-}
-```
 
 ---
 
@@ -153,11 +147,6 @@ Demand is a blockchain object that enables posting service requests with attache
   }
 }
 ```
-
-**Reward Tips**: 
-- Standard rate: 10-20% of expected service cost
-- High competition: 20-30% to attract quality recommendations  
-- Specialized skills: 30%+ for rare expertise
 
 #### Distribute Reward to Selected Service Recommender
 ```json
