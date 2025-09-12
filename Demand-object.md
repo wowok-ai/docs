@@ -278,7 +278,7 @@ Demand is a blockchain object that enables posting service requests with attache
 }
 ```
 
-> **Technical Note**: Only modify the `witness` field with your proof value. All other parameters (guard, identifier, type) are system-generated based on Guard requirements.
+**Technical Note**: Only modify the `witness` field with your proof value. All other parameters (guard, identifier, type) are system-generated based on Guard requirements.
 
 #### Network Configuration
 ```json
