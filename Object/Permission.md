@@ -482,6 +482,7 @@ Organizations can use different Permission objects for different security domain
 ```
 
 **Expected Result**: alice_manager gets full operational control (Treasury create/deposit/withdraw + all business operations), bob_barista gets customer service and inventory duties, carol_parttime gets customer service only.
+<img width="1903" height="1065" alt="image" src="https://github.com/user-attachments/assets/cfc84597-6c1b-4c70-9fd2-0fe5e429ca08" />
 
 ### External Address Integration
 ```json
