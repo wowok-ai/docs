@@ -521,6 +521,8 @@ Use blockchain addresses directly when you have the full address.
 }
 
 ```
+Result should look like:
+![img_v3_02q5_550b3095-4dfa-4b45-b291-adeb99fd8a9g](https://github.com/user-attachments/assets/db5e2705-11d8-4fad-97d7-29e9b0b55ede)
 
 **Step 2**: Create Treasury with `mcp_wowok_treasury_treasury_operations`
 ```json 
@@ -538,6 +540,9 @@ Use blockchain addresses directly when you have the full address.
 }
 
 ```
+Result should look like:
+![img_v3_02q5_626c323b-7606-45c3-b08e-0bc614859ebg](https://github.com/user-attachments/assets/824495ef-a5d9-44eb-9ee3-59dd540c9273)
+![img_v3_02q5_1795b945-2f1e-43d3-bcf0-2c8400c973bg](https://github.com/user-attachments/assets/0512f13f-6f44-4fe7-90e1-d6cf814171d9)
 
 **Step 3**: Configure Security with `mcp_wowok_treasury_treasury_operations`
 ```json
@@ -599,6 +604,10 @@ Use blockchain addresses directly when you have the full address.
   }
 }
 ```
+Result should look like：
+![img_v3_02q5_3a3acf90-6229-46a0-ba8e-5ded74a0995g](https://github.com/user-attachments/assets/8639ad58-619a-4f02-948e-86e888ede589)
+Payment：
+![img_v3_02q5_c6aa604c-eca1-4e37-9f77-f2e19a3a789g](https://github.com/user-attachments/assets/82b40fb0-ccc9-4dbe-8ed8-7f5a39c6896f)
 
 ### Emergency Equipment Purchase
 ```json
@@ -634,6 +643,8 @@ Use blockchain addresses directly when you have the full address.
   }
 }
 ```
+Result should look like：
+<img width="1927" height="761" alt="image" src="https://github.com/user-attachments/assets/092f9cb7-470f-4c06-9b94-7e3a2aa2983d" />
 
 **Expected Results**:
 - Treasury created with 2-tier spending approval system
