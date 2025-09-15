@@ -2,7 +2,7 @@
 
 > "Shared fund management with custom rules - like a team bank account that enforces your agreements automatically"
 
-**MCP Tool**: `mcp_wowok_treasury_treasury_operations`
+**MCP Tool**: [`mcp_wowok_treasury_treasury_operations`](https://www.npmjs.com/package/wowok_treasury_mcp_server)
 
 ## How to Use This Documentation
 
@@ -83,10 +83,10 @@ Treasury creates shared fund pools for teams with programmable spending rules an
 7. **Receive**: Accept [incoming payment objects](#3-fund-operations) automatically
 
 **Example Usage**:
-1. Coffee shop creates shared fund for daily operations
-2. Owner deposits monthly budget, barista manager has daily withdrawal rights
-3. Automatic approval for small expenses (<50 SUI), owner approval for large purchases (>200 SUI)
-4. Real-time fund tracking and team member payment distribution
+1. **Coffee Shop Operations**: Owner deposits monthly budget, barista manager has daily withdrawal rights with automatic approval for small expenses (<50 SUI) and owner approval for large purchases (>200 SUI)
+2. **Service Integration**: Customer payments from Service objects automatically flow into Treasury, enabling centralized fund management and automatic team profit sharing
+3. **Workflow Automation**: Machine objects trigger Treasury withdrawals based on project milestones, automating supplier payments and team compensation according to progress
+4. **Conditional Access**: Guards verify business hours, manager presence, or emergency status before allowing fund movements, ensuring secure operations
 
 *Related Implementation*: → Integration with Service and Machine objects for automated business workflows
 
@@ -155,7 +155,6 @@ Treasury creates shared fund pools for teams with programmable spending rules an
 |-----------|------|-------------|-------------|
 | `description` | string | Human-readable purpose and scope | Always recommended for team clarity |
 | `deposit_guard` | string/null | Guard verification for incoming deposits | Restrict who can add funds |
-
 ---
 
 ### 3. Fund Operations
@@ -223,6 +222,8 @@ Accept incoming payment objects into Treasury automatically.
 }
 ```
 
+**Explanation**: `"recently"` automatically processes the last 50 received payment objects into the Treasury. This operation can be run multiple times safely - it only processes new, unhandled payment objects and won't duplicate existing deposits.
+
 ```json
 {
   "receive": {
@@ -245,8 +246,8 @@ Accept incoming payment objects into Treasury automatically.
 | `withdraw_guard` | string | Optional | Specific guard for this withdrawal operation | `"executive_guard"` |
 
 **Address Resolution**:
-- `local_mark_first: true` - Search your saved nicknames first, then account names
-- `local_mark_first: false` - Search account names first, then nicknames
+- `local_mark_first: true` - Search your saved nickname first, then account name
+- `local_mark_first: false` - Search account name first, then nickname
 
 #### Combined Operations
 Treasury supports multiple operations in single transaction for efficiency:
@@ -422,6 +423,8 @@ Use blockchain addresses directly when you have the full address.
 
 **Address Resolution**: `local_mark_first: true` searches saved nicknames first, `false` searches account names first. Save team addresses with descriptive names for easier management.
 
+**Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_barista_manager" instead of remembering the long address.
+
 ### Token Type Formats
 
 | Token Category | Format Example | Common Use |
@@ -496,7 +499,7 @@ Use blockchain addresses directly when you have the full address.
 ## Complete Examples
 
 ### Complete Cafe Treasury Setup
-**Step 1**: Create Permission Object with `mcp_wowok_permission_permission_operations`
+**Step 1**: Create Permission Object with `mcp_wowok_permission_operations`
 ```json
 {
   "account": "cafe_owner",
@@ -524,7 +527,7 @@ Use blockchain addresses directly when you have the full address.
 Result should look like:
 ![img_v3_02q5_550b3095-4dfa-4b45-b291-adeb99fd8a9g](https://github.com/user-attachments/assets/db5e2705-11d8-4fad-97d7-29e9b0b55ede)
 
-**Step 2**: Create Treasury with `mcp_wowok_treasury_treasury_operations`
+**Step 2**: Create Treasury with `mcp_wowok_treasury_operations`
 ```json 
 {
   "account": "cafe_owner",
@@ -544,7 +547,7 @@ Result should look like:
 ![img_v3_02q5_626c323b-7606-45c3-b08e-0bc614859ebg](https://github.com/user-attachments/assets/824495ef-a5d9-44eb-9ee3-59dd540c9273)
 ![img_v3_02q5_1795b945-2f1e-43d3-bcf0-2c8400c973bg](https://github.com/user-attachments/assets/0512f13f-6f44-4fe7-90e1-d6cf814171d9)
 
-**Step 3**: Configure Security with `mcp_wowok_treasury_treasury_operations`
+**Step 3**: Configure Security with `mcp_wowok_treasury_operations`
 ```json
 {
   "account": "cafe_owner",

@@ -2,7 +2,7 @@
 
 > "Create organized information storage that multiple entities(Human, AI and Device) can contribute to and reference"
 
-**MCP Tool**: `mcp_wowok_repository_repository_operations`
+**MCP Tool**: [wowok_repository_mcp_server](https://www.npmjs.com/package/wowok_repository_mcp_server)
 
 ## How to Use This Documentation
 
@@ -192,7 +192,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 | `key` | string | Required | Unique field identifier |
 | `description` | string | Required | Field purpose explanation |
 | `dataType` | 200-206 | Required | Data type enforcement |
-| `permissionIndex` | number ≥1000 | Optional | Custom permission requirement（讲清楚|
+| `permissionIndex` | number ≥1000 | Optional | Custom permission requirement. Set this to require a specific permission (from the Permission object) for users to access or modify this field. For example, if you set `"permissionIndex": 1001`, only users with permission 1001 can operate on this field. |
 | `guard` | string | Optional | Additional field verification |
 
 #### Policy Operations
@@ -314,27 +314,26 @@ A Witness is **real-time data that doesn't exist on the blockchain** and must be
       {
         "guard": "guard_address",
         "identifier": 1,
-        "type": 101,
+        "type": 120,  // String type
         "witness": "happy_confirmed",  // ← YOUR REAL-TIME PROOF
-        "cmd": [
-          {
-            "cmd": 30,
-            "witness": 30
-          }
-        ],
+        "cmd": [],  // Empty array, no on-chain data queries required
         "cited": 1,
-        "witnessTypes": [30, 31, 32]
+        "witnessTypes": []  // Empty array, no witness types required
       }
     ]
   }
 }
 ```
 
+
 **Witness Parameters:**
 | Parameter | User Input | Description |
 |-----------|------------|-------------|
-| `guards`, `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes` | ❌ | Auto-filled by system |
+| `guards`, `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes`, `payload` | ❌ | Auto-filled by system |
 | **`witness`** | **✅** | **User proof value (only field to modify)** |
+
+**Payload Field:**
+The `payload` field is automatically managed by the system and carries additional verification data or context information. Users do not need to manually modify this field - it's populated automatically based on the verification requirements and provides richer context for complex validation scenarios.
 
 **Witness Logic Mechanism:**
 
@@ -405,6 +404,8 @@ Use integers for time-based addresses (like timestamps) or when you have numeric
 }
 ```
 Use named addresses when you've saved addresses locally with human-readable names. Set `local_mark_first: true` to search your saved names first, or `false` to search account names first.
+
+**Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "user_name" instead of remembering the long address.
 
 ---
 

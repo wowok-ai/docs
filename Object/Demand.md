@@ -49,7 +49,7 @@ Demand is an on-chain object that enables posting service requests with attached
 5. **Distribute**: Execute [reward payment](#3-bounty-operations) to selected service recommender
 6. **Refund**: Reclaim unused rewards after [expiration](#4-time-configuration) (if no selection made)
 
-**Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. **Setting expiration time (`time_expire`) is strongly recommended to enable refund operations if no suitable service is found.**（查询默认值）
+**Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. **Setting expiration time (`time_expire`) is strongly recommended to enable refund operations if no suitable service is found. Default: 7 days if not specified.**
 
 **Example Usage**: 
 1. Post "Bakery website needed" request with 200 SUI reward
@@ -88,14 +88,14 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `type_parameter` | string | Required | Coin/NFT type for rewards (must be Coin or NFT type) |
-| `permission` | string/object | Required（可以不指定） | Permission object controlling access（简单说明创建新的）（写一段可复用的描述） |
-| `name` | string | Optional | Human-readable identifier |
-| `tags` | string[] | Optional | Categorization labels |
-| `onChain` | boolean | Optional | Metadata blockchain visibility |
-| `useAddressIfNameExist` | boolean | Optional | Name conflict resolution |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `type_parameter` | string | Required | - | Coin/NFT type for rewards (must be Coin or NFT type) |
+| `permission` | string/object | Optional | Auto-created | Permission object controlling access (if omitted, creates new permission) |
+| `name` | string | Optional | Auto-generated | Human-readable identifier |
+| `tags` | string[] | Optional | `[]` | Categorization labels |
+| `onChain` | boolean | Optional | `false` | Metadata blockchain visibility |
+| `useAddressIfNameExist` | boolean | Optional | `false` | Name conflict resolution |
 
 **Technical Note**: `type_parameter` must match the actual token type you'll add to bounty pool. Common formats:
 - SUI tokens: `"0x2::coin::Coin<0x2::sui::SUI>"`
@@ -115,10 +115,10 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `description` | string | Detailed service requirements, qualifications, deliverables |
-| `location` | string | Location specification or "remote" |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `description` | string | Required | - | Detailed service requirements, qualifications, deliverables |
+| `location` | string | Optional | `"remote"` | Location specification or "remote" |
 
 ---
 
@@ -203,11 +203,11 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `op` | string | Required | "duration" or "time" |
-| `minutes` | number | For duration | Minutes from current time |
-| `time` | number | For time | Unix timestamp |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `op` | string | Required | - | "duration" or "time" |
+| `minutes` | number | For duration | `10080` (7 days) | Minutes from current time |
+| `time` | number | For time | - | Unix timestamp |
 
 **Best Practice**: Set time expiry to enable refunds. No expiry = no way to get unused funds back.
 
@@ -227,10 +227,10 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `service` | string | Required | Service object address or name |
-| `recommend_words` | string | Optional (default: "") | Recommendation justification |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `service` | string | Required | - | Service object address or name |
+| `recommend_words` | string | Optional | `""` | Recommendation justification |
 
 **Technical Note**: The `service` parameter must reference an existing Service object. Each service can only be recommended once per Demand, but different services can be recommended by multiple parties to the same Demand.
 
@@ -257,10 +257,10 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `guard` | string/null | Guard object that checks recommendation quality |
-| `service_id_in_guard` | number (1-255) | Optional: position in Guard's verification list |（在guard里面统一）
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `guard` | string/null | Optional | `null` | Guard object that checks recommendation quality |
+| `service_id_in_guard` | number (1-255) | Optional | `1` | Position in Guard's verification list |
 
 **What Guard Does**: Guard checks if service providers meet your requirements before they can recommend their services. For example, only designers from Portland State University, or who worked at Nike, or built 10+ restaurant websites, or have Google UX certification.
 
@@ -278,10 +278,10 @@ Demand is an on-chain object that enables posting service requests with attached
 }
 ```
 
-| Parameter | Options | Description |
-|-----------|---------|-------------|
-| `network` | `sui mainnet/testnet`, `wowok mainnet/testnet` | Target blockchain |
-| `retentive` | `always`, `session` | Session persistence |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `network` | string | Optional | `"sui testnet"` | Target blockchain (`sui mainnet/testnet`, `wowok mainnet/testnet`) |
+| `retentive` | string | Optional | `"always"` | Session persistence (`always`, `session`) |
 
 ---
 
@@ -304,7 +304,7 @@ Blockchain addresses are long and hard to remember like `0x1234abcd5678ef90...`.
 }
 ```
 
-Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_web_studio" instead of remembering the long address.（每个地方都加mark）
+Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_web_studio" instead of remembering the long address.
 
 ### Token Type Examples
 
@@ -390,9 +390,9 @@ Local marks are nicknames you save on your device for addresses you use often. S
 2. Use `refund` operation to reclaim unused rewards after expiry
 3. Create new Demand if continued service discovery needed
 
-**Problem**: "Cannot refund, no expiry time set"（时间有默认值，只能延长不能缩短）
+**Problem**: "Cannot refund, no expiry time set"  
 **Solutions**:
-1. Set time expiry to enable refunds
+1. Set time expiry to enable refunds (default: 7 days if not specified)
 2. Create new Demand with expiry time if you need fund recovery option
 
 ### Guard Verification Issues

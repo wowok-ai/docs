@@ -3,9 +3,7 @@
 > "Define who can do what in your digital spaces - the security system that powers all your other Wowok objects"
 
 **MCP Tools**: 
-- `mcp_wowok_permission_permission_operations` (main operations)
-- `mcp_wowok_permission_Built-in_permissions` (query permission indexes)
-- `mcp_wowok_permission_replace_permission_object` (batch management)
+- [`wowok_permission_mcp_server`](https://www.npmjs.com/package/wowok_permission_mcp_server) (main operations)
 
 ## How to Use This Documentation
 
@@ -217,7 +215,7 @@ Permission objects use a two-tier administrative structure for organizational fl
 
 | Role | Capabilities | Restrictions |
 |------|-------------|-------------|
-| **Builder** | • Transfer Builder role (permanent, irreversible)<br>• Add/remove/replace all administrators<br>• All admin capabilities plus ownership transfer<br>• Replace entire Permission object via batch operations | None - ultimate control |
+| **Builder** | • Transfer Builder role (permanent, irreversible)<br>• Add/remove/replace all administrators<br> | Cannot assign/remove specific permissions to addresses<br>Cannot manage custom business permissions<br>Cannot perform operational permission tasks |
 | **Admin** | • Assign/remove any permissions to any addresses<br>• Add other admins<br>• Manage custom business permissions<br>• All permission operations | Cannot remove Builder or other admins<br>Cannot transfer Builder role |
 
 #### Add Administrators
@@ -274,7 +272,7 @@ Permission objects use a two-tier administrative structure for organizational fl
 
 ⚠️ **Critical Warning**: Builder transfer is permanent and irreversible. The original Builder loses all control over the Permission object and cannot reclaim ownership.
 
-💡 **AI Prompt Tip**: "Add [person] as administrator with capability to [specific admin tasks] while maintaining Builder control."
+💡 **AI Prompt Tip**: "Add [person] as administrator with capability to [specific admin tasks] while maintaining Builder role for admin management."
 
 ---
 
@@ -327,34 +325,6 @@ Custom permissions are organizational concepts you create - the system provides 
 
 ---
 
-### 6. Advanced Features
-
-#### Witness Verification System
-For operations requiring Guard verification, provide real-time proof data like current location or temporary access codes:
-
-```json
-{
-  "witness": {
-    "guards": ["guard_address"],
-    "witness": [
-      {
-        "guard": "guard_address",
-        "identifier": 1,
-        "type": 101,
-        "witness": "your_proof_value",
-        "cmd": [{"cmd": 30, "witness": 30}],
-        "cited": 1,
-        "witnessTypes": [30, 31, 32]
-      }
-    ]
-  }
-}
-```
-
-**Witness Usage**: Only modify `witness` field with your proof value (GPS coordinates for location Guards, timestamps for time-based restrictions, verification codes for approval workflows, etc.). All other fields are system-generated.
-
----
-
 ## Data Types & Formats
 
 ### Built-in Permission Indexes
@@ -380,6 +350,8 @@ All address fields use consistent format with local name resolution:
 **External Address**: `"name_or_address": "0x1234567890abcdef..."` for hardware wallets or multi-sig  
 **Named Address**: `"name_or_address": "alice_manager"` for saved local names  
 **Resolution Priority**: `"local_mark_first": true` searches saved names first, `false` searches account names first
+
+**Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "alice_manager" instead of remembering the long address.
 
 **Troubleshooting Address Issues**: If "Address not found" errors occur, try switching the `local_mark_first` setting or use the full blockchain address directly.
 
@@ -412,10 +384,10 @@ Organizations can use different Permission objects for different security domain
 
 | Pattern | Team Structure | Permission Design | Example Configuration |
 |---------|---------------|-------------------|--------------------|
-| **Solo Operation** | Single person | Builder = Admin = User | All operations through one account |
-| **Small Team** | Owner + 2-5 members | Builder (owner) + Admin (manager) + members with specific permissions | Builder: all access, Admin: operational control, Members: task-specific permissions |
+| **Solo Operation** | Single person | Builder + Admin + User (same person) | Builder manages admins, Admin handles permissions, User performs tasks |
+| **Small Team** | Owner + 2-5 members | Builder (owner) + Admin (manager) + members with specific permissions | Builder: admin management only, Admin: operational control, Members: task-specific permissions |
 | **Department Structure** | Multiple departments | Separate Permissions per department + shared admin Permission | Each department has independent Permission object |
-| **Enterprise Governance** | Complex hierarchy | Builder (board) + Admins (executives) + department-specific custom permissions | Board controls Builder role, executives manage operations, departments use custom permissions ≥1000 |
+| **Enterprise Governance** | Complex hierarchy | Builder (board) + Admins (executives) + department-specific custom permissions | Board holds Builder role for admin management, executives manage operations, departments use custom permissions ≥1000 |
 
 ---
 
@@ -558,7 +530,7 @@ Organizations can use different Permission objects for different security domain
 
 ### Admin Role Confusion
 **Problem**: "Cannot perform admin operations" or "Access denied"  
-**Solutions**: Review the [Admin Management](#4-admin-management) role table - Builder can do everything including ownership transfer, Admin can assign permissions but cannot remove other admins or transfer Builder role
+**Solutions**: Review the [Admin Management](#4-admin-management) role table - Builder can manage admins and transfer ownership, Admin can assign permissions but cannot remove other admins or transfer Builder role
 
 ### Technical Implementation Issues
 **Problem**: Permission indexes don't work as expected  
