@@ -309,16 +309,21 @@ A Witness is **real-time data that doesn't exist on the blockchain** and must be
 ```json
 {
   "witness": {
-    "guards": ["guard1", "guard2"],
+    "guards": ["guard_address"],
     "witness": [
       {
-        "guard": "guard_object",
-        "cmd": [{"cmd": 1, "witness": 35}],
-        "cited": 0,
-        "type": 101,
+        "guard": "guard_address",
         "identifier": 1,
-        "witnessTypes": [35],
-        "witness": "happy_confirmed"  // ← YOUR REAL-TIME PROOF
+        "type": 101,
+        "witness": "happy_confirmed",  // ← YOUR REAL-TIME PROOF
+        "cmd": [
+          {
+            "cmd": 30,
+            "witness": 30
+          }
+        ],
+        "cited": 1,
+        "witnessTypes": [30, 31, 32]
       }
     ]
   }
@@ -328,7 +333,7 @@ A Witness is **real-time data that doesn't exist on the blockchain** and must be
 **Witness Parameters:**
 | Parameter | User Input | Description |
 |-----------|------------|-------------|
-| `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes` | ❌ | Auto-filled by system |
+| `guards`, `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes` | ❌ | Auto-filled by system |
 | **`witness`** | **✅** | **User proof value (only field to modify)** |
 
 **Witness Logic Mechanism:**
@@ -354,7 +359,7 @@ The Witness system works through **predictable type derivation**:
 **Complete Witness Types:**
 | Code | Description | Example Use |
 |------|-------------|-------------|
-| **30** | Progress's Order address | Order address associated with Progress object |
+| **30** | Order's Progress address | Progress address associated with Order object |
 | **31** | Order's Machine address | Machine address associated with Order object |
 | **32** | Order's Service address | Service address associated with Order object |
 | **33** | Progress's Machine address | Machine address associated with Progress object |
