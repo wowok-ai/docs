@@ -71,7 +71,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 |-----------|------|----------|-------------|
 | `name` | string | Optional | Repository identifier |
 | `onChain` | boolean | Optional | Metadata visibility on blockchain |
-| `permission` | string/object | Required | Permission object reference |
+| `permission` | string/object | Optional | Permission object reference |
 | `tags` | string[] | Optional | Organizational labels |
 | `useAddressIfNameExist` | boolean | Optional | Name conflict resolution |
 
