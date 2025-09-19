@@ -8,6 +8,7 @@
 
 ### Document Structure
 - **[Overview](#overview)**: What Guards do and core concepts
+- **[Guard Data Concepts](#guard-data-concepts)**: Understanding blockchain data vs witness data
 - **[Core Parameters](#core-parameters)**: Guard creation configuration options
 - **[Logic System Parameters](#logic-system-parameters)**: Detailed root field structure and parameters
 - **[Data Types & Formats](#data-types--formats)**: Type codes and witness usage
@@ -18,6 +19,7 @@
 | I want to... | Go to section |
 |--------------|---------------|
 | Understand what Guards do | [Overview](#overview) |
+| Learn about blockchain vs witness data | [Guard Data Concepts](#guard-data-concepts) |
 | Create a new Guard | [Core Parameters](#core-parameters) |
 | Build verification logic | [Logic System Parameters](#logic-system-parameters) |
 | Work with constants and witness data | [Logic System Parameters → Table References](#6-table-references-identifier-field) |
@@ -30,26 +32,80 @@
 ## Overview
 
 ### Definition
-Guards are immutable verification engines that return true or false based on configurable conditions. They can verify on-chain data, real-time blockchain state, and dynamic off-chain proof data. Other Wowok objects reference Guards to make automated decisions.
+Guards are immutable verification engines that return true or false based on configurable conditions. They can verify on-chain data, real-time blockchain state, and witness data that users provide at verification moment. Other Wowok objects reference Guards to make automated decisions.
 
 ### Core Capabilities
+- **Public Auditability**: Guard verification logic is publicly auditable. Anyone can view and use the verification algorithms
 - **Automatic Verification**: Check time windows, account balances, object states, and any custom conditions
 - **Multi-Object Integration**: Query data from Treasury, Permission, Repository, Service, and all other objects
-- **Real-time Validation**: Accept dynamic proof data for conditions that isn't stored onchain
+- **Atomic Real-time Validation**: Verification and subsequent operations execute atomically at the same blockchain moment - either both succeed or both fail together
+- **Witness Data Support**: Accept dynamic proof data that users provide during verification, enabling verification of information not stored on blockchain
 - **Complex Logic**: Support AND/OR operations, mathematical calculations, and nested conditions
-- **Immutable & Reusable**: Once created, verification logic cannot be changed, but Guards can be cloned for improvements and reused across multiple objects
-
+- **Immutable & Reusable**: Once created, verification logic cannot be changed, and it's reusable across multiple objects
 ### Development Recommendations
 
-💡 **Create Dependencies First**: For Guards that verify specific conditions (like Machine node names, Treasury balances, or Permission indices), create the referenced objects first, then create the Guard. This ensures accurate parameter matching.
+💡 **Create Dependencies First**: For Guards that verify specific conditions (like Machine node names, Treasury balances, or Permission indices), create the referenced objects first, then create the Guard. This ensures accurate parameter matching. Exception: Witness data can be provided later during Guard usage.
 
 **Example workflow**:
 1. Create Machine with specific node names like "order_confirmed", "payment_received" → Create Guard that verifies current node equals "payment_received"
 2. Create Treasury with known address like "0x1234...cafe" → Create Guard that queries balance from "0x1234...cafe"
 3. Create Permission with specific indices like permission 703 (Treasury withdrawal) → Create Guard that checks if user has permission 703
 
-💡 **Iterative Development**: Objects like Machine, Service, and Treasury can be modified multiple times before publishing. If issues arise after publishing, you can pause the object, clone it, make corrections, and republish.
+---
+## Witness System
 
+### Guard Data Types
+
+Guards verify two types of data:
+
+**Blockchain Data**: Information stored on-chain that Guards query automatically
+- Such as Account balances, permission status, object states, transaction history
+
+**Witness Data**: Real-time information you provide during verification that doesn't exist on blockchain
+- Such as Dynamic codes, private assessments, object addresses, current status confirmations
+
+### Witness Mechanism
+
+**What is Witness**: Real-time proof data you provide to Guards that cannot be stored on blockchain. Unlike blockchain queries that check existing data, witnesses require you to provide specific information at verification time.
+
+
+**When do you need Witnesses?**
+- **Time-sensitive decisions**: Your mood when making a decision, current location, today's weather preference
+- **Dynamic verification codes**: One-time passwords, temporary access codes, session tokens
+- **Private information**: Personal opinions, confidential ratings, subjective assessments  
+- **External real-time data**: Current market sentiment, immediate availability status, live preferences
+
+### Witness Configuration Example
+
+```json
+{
+  "witness": {
+    "guards": ["guard_address"],
+    "witness": [
+      {
+        "guard": "guard_address",
+        "identifier": 1,
+        "type": 120,  // String type
+        "witness": "happy_confirmed",  // ← YOUR REAL-TIME PROOF
+        "cmd": [],  // Empty array, no on-chain data queries required
+        "cited": 1,
+        "witnessTypes": []  // Empty array, no witness types required
+      }
+    ]
+  }
+}
+```
+
+### Witness Parameters
+
+| Parameter | User Input | Description |
+|-----------|------------|-------------|
+| `guards`, `guard`, `identifier`, `type` | ❌ | Auto-filled by system based on Guard configuration |
+| **`witness`** | **✅** | **User-provided proof value (only field to modify)** |
+
+**Key Advantage**: Witness data enables relationship-based verification - provide one address and Guard can verify related data without multiple submissions. For example, provide Order address and Guard can verify the Order's Service, Progress, and payment status all at once.
+
+**Advanced Witness Concepts**: For witness type derivation, relationship verification, and complete witness types reference, see [Complete Witness Types Reference](#complete-witness-types-reference).
 
 ---
 
@@ -118,12 +174,12 @@ Guards are immutable verification engines that return true or false based on con
 
 The `root` field contains verification logic structures. Guards support six different structure types, each using different field combinations:
 
-- **[Logic Operations](#1-logic-operations-logic-field)**: Use `logic` + `parameters` fields to compare values or combine multiple conditions with AND/OR logic
+- **[Logic Operations](#1-logic-operations-logic-field)**: Use `logic` + `parameters` fields to compare values or combine multiple conditions with AND/OR/NOT logic
 - **[Mathematical Calculations](#2-mathematical-calculations-calc-field)**: Use `calc` + `parameters` fields to perform arithmetic like addition, subtraction, or percentage calculations
 - **[Object Queries](#3-object-queries-object--query-fields)**: Use `object` + `query` + `parameters` fields to retrieve current data from Treasury, Permission, Service, or other objects
 - **[Context Data](#4-context-data-context-field)**: Use `context` field to access real-time transaction information like current time or transaction signer
 - **[Fixed Values](#5-fixed-values-value--value_type-fields)**: Use `value` + `value_type` fields to embed constant thresholds, addresses, or limits directly in logic
-- **[Table References](#6-table-references-identifier-field)**: Use `identifier` field to access data stored in the table array, either constants or user-provided witness data
+- **[Table References](#6-table-references-identifier-field)**: Use `identifier` field to access data stored in the table array, either constants or real-time witness data provided by users
 
 #### 1. Logic Operations (`logic` field)
 
@@ -138,11 +194,11 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **`logic`**: Specifies a comparison method. Different comparison methods have different numeric codes. For example, code 12 means "greater than or equal" comparison.
 
-**Parameters for logic operations**: Must contain exactly 2 items for comparisons (>, ≥, ==, etc.) or 2+ items for combinations (AND, OR). Each item can be current time, stored numbers, object query results, or calculations. For example, [current_time, deadline_timestamp] compares time values, or [user_balance_query, minimum_amount] compares balance against threshold.
+**Parameters for logic operations**: Must contain 2+ items for comparisons (>, ≥, ==, etc.) where first item is compared against all others, or 2+ items for combinations (AND, OR). Each item can be current time, stored numbers, object query results, or calculations. For example, [current_time, deadline_timestamp] compares time values, or [user_balance, min_threshold, emergency_reserve] checks balance against multiple limits.
 
 
 **Logic Field Concepts**:
-- **Comparison operations** (11-16): Compare two values and return true/false
+- **Comparison operations** (11-16): Compare first value against all other values and return true/false
 - **Logical operations** (18-20): Combine multiple conditions with NOT/AND/OR logic
 - **Return value**: Always boolean (true if condition met, false otherwise)
 
@@ -152,16 +208,17 @@ The `root` field contains verification logic structures. Guards support six diff
 
 | Code | Operation | Description | Parameters |
 |------|-----------|-------------|------------|
-| **11** | Greater than (>) | Left > Right | 2 values |
-| **12** | Greater/equal (≥) | Left ≥ Right | 2 values |
-| **13** | Less than (<) | Left < Right | 2 values |
-| **14** | Less/equal (≤) | Left ≤ Right | 2 values |
-| **15** | Numeric equal (==) | Numbers match | 2 values |
-| **16** | Strict equal (===) | Values and types match | 2 values |
+| **11** | Greater than (>) | First > all others | 2+ values |
+| **12** | Greater/equal (≥) | First ≥ all others | 2+ values |
+| **13** | Less than (<) | First < all others | 2+ values |
+| **14** | Less/equal (≤) | First ≤ all others | 2+ values |
+| **15** | Numeric equal (==) | First == all others | 2+ values |
+| **16** | Strict equal (===) | First === all others | 2+ values |
 | **18** | Logical NOT | Inverse result | 1 condition |
 | **19** | Logical AND | All conditions true | 2+ conditions |
 | **20** | Logical OR | Any condition true | 2+ conditions |
 
+**Multi-value Comparison**: All comparison operations (11-16) support multiple values. The first parameter is compared against all subsequent parameters. For example, `{"logic": 11, "parameters": [A, B, C, D]}` checks if A > B AND A > C AND A > D.
 #### 2. Mathematical Calculations (`calc` field)
 
 ```json
@@ -175,7 +232,7 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **`calc`**: Specifies a mathematical operation method. Different math operations have different numeric codes. For example, code 2 means "addition" operation.
 
-**Parameters for calculations**: Must contain 2 numbers for most operations (addition needs 2+, subtraction needs exactly 2). Each item can be stored constants, user-provided witness data, object query results, or context values. For example, [last_action_time, cooldown_duration] adds time values, or [treasury_balance, percentage_number] calculates portions.
+**Parameters for calculations**: Must contain 2+ numbers for most operations (addition supports multiple values, subtraction/division/modulo need exactly 2). Each item can be stored constants, real-time witness data, object query results, or context values. For example, [last_action_time, cooldown_duration] adds time values, or [treasury_balance, percentage_number] calculates portions.
 
 **Calculation Field Concepts**:
 - **Arithmetic operations**: Perform math on numeric values (addition, subtraction, etc.)
@@ -210,7 +267,7 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **Object Reference Format Options**:
 - **Fixed address**: `"object": "0x1234567890abcdef..."` - Direct blockchain address reference
-- **Table reference**: `"object": {"identifier": 1}` - References address stored at table identifier 1
+- **Table reference**: `"object": {"identifier": 1}` - References address stored at table identifier 1  
 - **Named reference**: `"object": {"name_or_address": "treasury_name"}` - References object by local name or address
 
 **`query`**: Tells the system what specific information to get from that object. For example, `{"module": "treasury", "function": "Balance"}` gets the current balance amount, or `{"module": "permission", "function": "Has Rights"}` checks if user has a specific permission.
@@ -225,8 +282,7 @@ The `root` field contains verification logic structures. Guards support six diff
 **Query Structure Reference**:
 - `module`: Object type ("treasury", "permission", "repository", "service", "machine", "order")
 - `function`: Query function name ("Balance", "Has Rights", "Current Node", "Published")
-- `parameters`: Function-specific parameters (See appendix for complete function reference)
-
+- `parameters`: Function-specific parameters (See [Complete Query Functions Reference](#complete-query-functions-reference) for function IDs and parameter requirements)
 #### 4. Context Data (`context` field)
 
 ```json
@@ -319,7 +375,7 @@ Complete type reference: [Data Types & Formats](#data-types--formats)
 
 In this example, `identifier: 1` (user amount) is referenced twice in different verification logic, but defined only once in the table.
 
-**Identifier Range**: Use numbers 1-255 as reference labels. No special meaning - just pick any unused number for each data item you define.
+**Identifier Range**: Use numbers 1-255 as reference labels. No special meaning - just pick any unused number for each data item you define. Maximum 255 entries supported per Guard.
 
 ### Combining Logic Structures
 
@@ -368,7 +424,7 @@ Logic structures can be nested to create verification rules with multiple condit
           "query": {"module": "treasury", "function": "Balance"},  // Query the current Treasury balance
           "parameters": []  // No extra parameters needed for balance query
         },
-        {"value": "1000000000", "value_type": 103}  // 1000000000 base units = minimum required balance of 1 SUI
+        {"value": "1000000000", "value_type": 103}  // 1000000000 base units = minimum required Treasury token balance
       ]
     }
   ]
@@ -379,16 +435,33 @@ This Guard returns true only when all three conditions are met: current time is 
 
 ### Complete Data Types Reference
 
-| Code | Type | Size | Description | JSON Format |
-|------|------|------|-------------|-------------|
-| **100** | Bool | 1 bit | Boolean values | `true`, `false` |
-| **101** | Address | 32 bytes | Blockchain addresses | `"0x1234567890abcdef..."` |
-| **102** | U8 | 1 byte | Small integers | `255` |
-| **103** | U64 | 8 bytes | Large integers | `"1000000000"` |
-| **105** | U128 | 16 bytes | Very large integers | `"999999999999999999"` |
-| **106** | Vec<Address> | Variable | Address arrays | `["0x111...", "0x222..."]` |
-| **120** | String | Variable | Text strings | `"completed"` |
-| **121** | Vec<String> | Variable | String arrays | `["status1", "status2"]` |
+**Basic Data Types (100-122)**
+
+| Code | Type | Description | JSON Format |
+|------|------|-------------|-------------|
+| **100** | Bool | Boolean values (true/false) | `true`, `false` |
+| **101** | Address | Blockchain addresses | `"0x1234567890abcdef..."` |
+| **102** | U8 | 8-bit unsigned integer (0-255) | `255` |
+| **103** | U64 | 64-bit unsigned integer | `"1000000000"` |
+| **104** | Vec<U8> | Byte arrays | `[0, 255, 128]` |
+| **105** | U128 | 128-bit unsigned integer | `"999999999999999999"` |
+| **106** | Vec<Address> | Address arrays | `["0x111...", "0x222..."]` |
+| **107** | Vec<Bool> | Boolean arrays | `[true, false, true]` |
+| **108** | Vec<Vec<U8>> | Nested byte arrays | `[[0, 1], [2, 3]]` |
+| **109** | Vec<U64> | 64-bit integer arrays | `["100", "200", "300"]` |
+| **110** | Vec<U128> | 128-bit integer arrays | `["1000", "2000"]` |
+| **111** | Option<Address> | Optional addresses | `"0x123..."` or `null` |
+| **112** | Option<Bool> | Optional boolean values | `true` or `null` |
+| **113** | Option<U8> | Optional 8-bit integers | `255` or `null` |
+| **114** | Option<U64> | Optional 64-bit integers | `"1000"` or `null` |
+| **115** | Option<U128> | Optional 128-bit integers | `"999999"` or `null` |
+| **116** | Option<U256> | Optional 256-bit integers | `"123456789..."` or `null` |
+| **117** | Option<String> | Optional strings | `"text"` or `null` |
+| **118** | Option<Vec<U8>> | Optional byte arrays | `[0, 1, 2]` or `null` |
+| **119** | Vec<U256> | 256-bit integer arrays | `["999...", "888..."]` |
+| **120** | String | Text strings | `"completed"` |
+| **121** | Vec<String> | String arrays | `["status1", "status2"]` |
+| **122** | U256 | 256-bit unsigned integer | `"123456789012345678901234567890"` |
 
 **Technical Note**: Large numbers (103, 105) must be strings to avoid precision loss: `"1000000000"` not `1000000000`.
 
@@ -483,33 +556,49 @@ Example: **stake_requirement_guard** ensures voters have skin in the game.
       "tags": ["treasury", "balance-check", "reserves"]
     },
     "root": {
-      "logic": 11,  // Greater than: current balance > minimum threshold
+      "logic": 19,  // AND logic: both balance and currency type conditions must be met
       "parameters": [
         {
-          "object": {"identifier": 1},  // References Treasury object address provided in table
-          "query": {"module": "treasury", "function": "Balance"},  // Queries current Treasury balance
-          "parameters": []  // Balance query requires no additional parameters
+          "logic": 11,  // Greater than: current balance > minimum threshold
+          "parameters": [
+            {
+              "object": {"identifier": 1},  // References Treasury object address provided in table
+              "query": {"module": "treasury", "function": "Balance"},  // Queries current Treasury balance
+              "parameters": []  // Balance query requires no additional parameters
+            },
+            {"value": "10000000000", "value_type": 103}  // 10 SUI minimum (10 billion MIST)
+          ]
         },
-        {"value": "10000000000", "value_type": 103}  // 10 SUI minimum (10 billion MIST)
+        {
+          "logic": 16,  // Strict equal: Treasury token type must match SUI
+          "parameters": [
+            {
+              "object": {"identifier": 1},  // Same Treasury object reference
+              "query": {"module": "treasury", "function": "Type"},  // Queries Treasury token type
+              "parameters": []
+            },
+            {"value": "0x2::sui::SUI", "value_type": 120}  // Must be SUI token type
+          ]
+        }
       ]
     },
-  "table": [
-    {
-      "identifier": 1,
+    "table": [
+      {
+        "identifier": 1,
         "bWitness": true,  // User must provide Treasury address when using this Guard
         "value_type": 101  // Treasury address must be in address format
       }
     ]
   },
   "session": {
-    "network": "sui testnet", 
+    "network": "sui testnet",
     "retentive": "always"
   }
 }
 ```
 
-**Learning Focus**: Object queries for real-time data verification and witness data usage.
-**Expected Result**: Guard blocks Treasury withdrawals when balance would drop below 10 SUI.
+**Learning Focus**: Object queries for real-time data verification, witness data usage, and multi-condition AND logic combining balance and currency type verification.
+**Expected Result**: Guard blocks Treasury withdrawals when balance would drop below 10 SUI OR when Treasury token type is not SUI.
 
 
 
@@ -818,5 +907,22 @@ Example: **stake_requirement_guard** ensures voters have skin in the game.
 | **38** | Arbitration → Service | Address | Provides Service address associated with Arbitration |
 
 **Technical Note**: Witness types verify object relationships by requiring users to provide addresses that demonstrate specific connections between Wowok objects. All witness types return Address format (type 101).
+
+### Advanced Witness Verification
+
+**Relationship-Based Verification**: Witness data enables comprehensive verification through object relationships. Provide one address and Guard can verify multiple related aspects without requiring separate submissions.
+
+**Witness Logic Mechanism:**
+1. **Guard defines verification need**: "Verify user owns this Order"
+2. **System derives witness type**: Since it's about Order ownership, witness type = 34 (Order address)  
+3. **User provides witness value**: Actual Order address they claim to own
+4. **Guard verifies**: Checks if the provided Order address is actually owned by the user AND can verify related Service, Progress, payment status
+
+**Type Derivation Examples:**
+- Guard needs "Arb's Order verification" → Type 34 → User provides Order address → Guard can verify Order ownership, Service relationship, payment status
+- Guard needs "Progress's Machine verification" → Type 33 → User provides Machine address → Guard can verify Machine configuration, workflow status, node progression
+- Guard needs "Service relationship proof" → Type 32/38 → User provides Service address → Guard can verify Service status, pricing, availability
+
+**Payload Field**: The `payload` field is automatically managed by the system and carries additional verification data or context information. Users do not need to manually modify this field - it's populated automatically based on verification requirements.
 
 ---
