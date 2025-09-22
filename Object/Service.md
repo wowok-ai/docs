@@ -2,6 +2,8 @@
 
 > "Your transparent business promise portal - where customers see exactly what they'll receive, bound to verifiable Machine workflows, Treasury payments, Guard protections, and Arbitration guarantees"
 
+**MCP Tool**: [wowok_service_mcp_server](https://www.npmjs.com/package/wowok_service_mcp_server)
+
 ## How to Use This Documentation
 
 ### Document Structure

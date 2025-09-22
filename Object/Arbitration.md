@@ -2,7 +2,7 @@
 
 > "Create on-chain arbitration services with weighted voting, automated fee collection, and transparent dispute resolution"
 
-**MCP Tool**: `mcp_wowok_arbitration_operations`
+**MCP Tool**: [`wowok_arbitration_mcp_server` on npm](https://www.npmjs.com/package/wowok_arbitration_mcp_server)
 
 ## How to Use This Documentation
 
