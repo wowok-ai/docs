@@ -1,6 +1,6 @@
 # Service Object: Your Complete Business Platform
 
-> "Transform ideas into revenue - create sellable services with automated order processing, payment collection, and business operations management"
+> "Your transparent business promise portal - where customers see exactly what they'll receive, bound to verifiable Machine workflows, Treasury payments, Guard protections, and Arbitration guarantees"
 
 ## How to Use This Documentation
 
@@ -64,6 +64,8 @@ Service objects create complete business platforms enabling revenue generation t
 ```
 **Use this when**: You want to modify an existing Service (add products, change settings, create orders)
 
+**Address Formats**: Can be blockchain address (`0x1234...`) or saved nickname (`my_service`). → [Address Format Guide](#address-format-options)
+
 ### Object Creation (New Service)
 ```json
 {
@@ -80,12 +82,12 @@ Service objects create complete business platforms enabling revenue generation t
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `name` | string | Optional | - | Service identifier for easy reference |
 | `type_parameter` | string | **Required** | - | Payment token type: `"0x2::sui::SUI"` (Token format, not Coin) |
-| `permission` | string/object | **Required** | - | Permission object controlling service operations |
-| `onChain` | boolean | Optional | `false` | Whether metadata visible on blockchain |
+| `permission` | string/object | Optional | Auto-created | Permission object controlling service operations (if omitted, creates new permission). → [Address Formats](#address-format-options) |
+| `name` | string | Optional | Auto-generated | Service identifier for easy reference |
 | `tags` | string[] | Optional | `[]` | Service categorization labels |
-| `useAddressIfNameExist` | boolean | Optional | `false` | Name conflict resolution |
+| `onChain` | boolean | Optional | `false` | Whether metadata visible on blockchain |
+| `useAddressIfNameExist` | boolean | Optional | `false` | Name conflict resolution strategy |
 
 **Technical Note**: `type_parameter` uses Token format (`"0x2::sui::SUI"`), different from Demand's Coin format (`"0x2::coin::Coin<0x2::sui::SUI>"`).
 
@@ -104,8 +106,8 @@ Service objects create complete business platforms enabling revenue generation t
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `description` | string | Optional | - | Detailed service explanation for customers |
-| `location` | string | Optional | - | Geographic service area or coordinates |
+| `description` | string | Optional | Empty string | Detailed service explanation for customers |
+| `location` | string | Optional | Empty string | Geographic service area or coordinates |
 | `endpoint` | string/null | Optional | `null` | HTTPS URL for extended product information |
 
 **Endpoint Usage**: System appends `?&service={service_id}&product={product_name}` for product details.
@@ -167,16 +169,16 @@ Service objects create complete business platforms enabling revenue generation t
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `op` | enum | Required | - | `"add"` or `"remove"` |
-| `item` | string | Required | - | **Unique product identifier within service** |
-| `price` | number/string | Required | - | Product price in token base units (≥0) |
-| `stock` | number/string | Required | - | Available inventory quantity (≥0) |
+| `op` | enum | **Required** | - | Operation type: `"add"` or `"remove"` |
+| `item` | string | **Required** (add) | - | **Unique product identifier within service** |
+| `price` | number/string | **Required** (add) | - | Product price in token base units (≥0, no upper limit) |
+| `stock` | number/string | **Required** (add) | - | Available inventory quantity (≥0, no upper limit) |
 | `endpoint` | string/null | Optional | `null` | Product-specific detail URL |
-| `sales_name` | string[] | Required (remove) | - | Product names to remove |
+| `sales_name` | string[] | **Required** (remove) | - | Product names to remove |
 
 **Inventory Management**: When stock reaches 0, product automatically becomes unavailable for new orders. Existing orders remain unaffected.
 
-**Price Format**: Use base token units. For SUI: `50` = 50 SUI, `1` = 1 SUI.
+**Price Format**: Accepts both `number` and `string` formats. Use base token units: `50` or `"50"` = 50 SUI, `1` or `"1"` = 1 SUI.
 
 ## 4. Business Workflow
 
@@ -189,10 +191,7 @@ Service objects create complete business platforms enabling revenue generation t
 ```
 
 **What is Machine**: Machine objects define step-by-step workflows for service delivery - from order creation through completion stages with automated progression rules.
-
-**Technical Mechanism**: Multiple Services can share the same Machine workflow. Machine defines the step-by-step process from order creation to completion.
-
-**Configuration Lock**: Once Service is published (`bPublished: true`), Machine reference cannot be changed. This ensures workflow consistency for customers.
+ Multiple Services can share the same Machine workflow. Machine defines the step-by-step process from order creation to completion.
 
 **For detailed Machine configuration**: → [Machine Documentation](./Machine.md)
 
@@ -205,10 +204,9 @@ Service objects create complete business platforms enabling revenue generation t
 ```
 
 **What is Guard**: Guard objects are verification engines that return true/false based on configurable conditions - time windows, account balances, custom business logic.
+ Guard verification runs before order creation. Only customers passing Guard conditions can purchase this service.
 
-**Technical Mechanism**: Guard verification runs before order creation. Only customers passing Guard conditions can purchase this service.
-
-**Common Use Cases**: VIP membership verification, geographic restrictions, time-based access windows.
+**Common Use Cases**: VIP membership verification, geographic restrictions, time-based access windows, etc.
 
 **For detailed Guard configuration**: → [Guard Documentation](./Guard.md)
 
@@ -217,16 +215,35 @@ Service objects create complete business platforms enabling revenue generation t
 ## 5. Fund Management
 
 ### Treasury Configuration
+
+#### Reference Existing Treasury
 ```json
 {
   "payee_treasury": "business_main_fund"
   // payee_treasury: Treasury object address receiving customer payments
 }
 ```
+**Address Format**: Can use blockchain address or saved name. → [Address Format Guide](#address-format-options)
+
+#### Create New Treasury
+```json
+{
+  "payee_treasury": {
+    "type_parameter": "0x2::sui::SUI",
+    "permission": "team_permission",
+    "name": "service_treasury",
+    "tags": ["service", "payments"],
+    "onChain": true,
+    "useAddressIfNameExist": false
+  }
+}
+```
 
 **What is Treasury**: Treasury objects are shared fund pools with programmable access controls, enabling multiple authorized entities to deposit and withdraw according to predefined rules.
 
 **Payment Flow**: Customer payments automatically flow into specified Treasury for centralized fund management.
+
+**For detailed Treasury configuration**: → [Treasury Documentation](./Treasury.md)
 
 ### Withdrawal Guards
 ```json
@@ -238,12 +255,13 @@ Service objects create complete business platforms enabling revenue generation t
       {
         "guard": "daily_operations_limit",
         // guard: Guard object address defining withdrawal verification conditions  
-        "percent": 80
-        // percent: Percentage of funds accessible through this guard (0-100)
+        "rate": 8000
+        // rate: Withdrawal rate in basis points (8000 = 80%)
       },
       {
         "guard": "owner_approval_required", 
-        "percent": 100
+        "rate": 10000
+        // rate: 10000 basis points = 100%
       }
     ]
   }
@@ -260,8 +278,8 @@ Service owners must pass withdrawal guard verification for **any fund extraction
     "guards": [
       {
         "guard": "customer_satisfaction_check",
-        "percent": 50
-        // percent: Percentage of order funds refundable through this guard
+        "rate": 5000
+        // rate: Refund rate in basis points (5000 = 50%)
       }
     ]
   }
@@ -275,17 +293,19 @@ Service owners must pass withdrawal guard verification for **any fund extraction
 
 Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) and dispute resolution processes (e.g., arbitration-based refunds for service quality issues).
 
+**Rate Format**: Service withdrawal guards use basis points (10000 = 100%), different from Treasury's direct percentage format.
+
 | Operation | Type | Required | Default | Purpose | Guard Usage |
 |-----------|------|----------|---------|---------|-------------|
-| `add` | enum | Required | - | Append new guards | Multiple guards create spending tiers |
-| `set` | enum | Required | - | Replace all guards | Complete guard policy reset |
-| `remove` | enum | Required | - | Delete specific guards | Remove outdated conditions |
-| `removeall` | enum | Required | - | Clear all guards | Remove all restrictions |
+| `add` | enum | **Required** | - | Append new guards | Multiple guards create spending tiers |
+| `set` | enum | **Required** | - | Replace all guards | Complete guard policy reset |
+| `remove` | enum | **Required** | - | Delete specific guards | Remove outdated conditions |
+| `removeall` | enum | **Required** | - | Clear all guards | Remove all restrictions |
 
 | Guard Parameter | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `guard` | string | Required | - | Guard object address or name |
-| `percent` | number | Required | - | Withdrawal percentage (0-100) |
+| `guard` | string | **Required** | - | Guard object address or name |
+| `rate` | number | **Required** | - | Withdrawal rate in basis points (0-10000, where 10000 = 100%) |
 
 ---
 
@@ -337,8 +357,8 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 | Integration Parameter | Type | Required | Default | Description |
 |----------------------|------|----------|---------|-------------|
-| `op` | enum | Required | - | `"add"`, `"set"`, `"remove"`, `"removeall"` |
-| `objects` | string[] | Required | - | Array of object addresses or names |
+| `op` | enum | **Required** | - | `"add"`, `"set"`, `"remove"`, `"removeall"` |
+| `objects` | string[] | **Required** | - | Array of object addresses or names |
 
 **Cross-Object Data Flow**: These integrations enable Service to participate in larger business ecosystems with shared data and processes.
 ## 7. Customer Management
@@ -357,8 +377,8 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
-| `pubkey` | string | Required | - | Public key for encrypting customer information |
-| `required_info` | string[] | Required | - | Array of information types customers must provide |
+| `pubkey` | string | **Required** | - | Public key for encrypting customer information |
+| `required_info` | string[] | **Required** | - | Array of information types customers must provide |
 
 **Privacy Protection**: Customer information is encrypted using the provided public key before storage, ensuring data protection.
 
@@ -403,36 +423,59 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 ### Order Management Operations
 
-| Operation | JSON Parameter | Purpose |
-|-----------|----------------|---------|
-| **Agent Assignment** | `order_agent.agents[]` | Authorize additional addresses to manage order |
-| **Payer Transfer** | `order_payer.payer_new` | Change order ownership to different account |
-| **Payment Collection** | `order_receive.order` | Extract received payments to order owner |
-| **Information Update** | `order_required_info` | Modify customer information requirements |
-
-| Order Parameter | Type | Required | Default | Description |
-|-----------------|------|----------|---------|-------------|
-| `item` | string | Required | - | Product name from service sales catalog |
-| `max_price` | number/string | Required | - | Maximum willing to pay (≥0) |
-| `count` | number/string | Required | - | Quantity to purchase (≥0) |
-| `customer_info_required` | string | Optional | - | Customer information string (encrypted) |
-| `discount_object` | string | Optional | - | Discount object address for price reduction |
+**Base Structure**: All order operations use the same basic JSON structure - only the highlighted parameter changes:
 
 ```json
 {
-  "order_agent": {
-    "order": "roses_for_anniversary",
-    // order: Order address (optional, defaults to newly created order)
-    "agents": [
+  "account": "your_account",
+  "data": {
+    "object": "your_service_name",
+    // 👇 Replace this section with specific operation parameters below
+    "OPERATION_PARAMETER": { ... }
+  },
+  "session": {"network": "sui testnet"}
+}
+```
+
+**Detailed Example - Agent Assignment**:
+```json
+{
+  "account": "service_owner",
+  "data": {
+    "object": "flower_delivery_service",
+    "order_agent": {                    // ← This replaces OPERATION_PARAMETER
+      "order": "roses_for_anniversary", // Order to assign agents to
+      "agents": [                       // List of authorized agents
       {
         "local_mark_first": true,
         "name_or_address": "delivery_coordinator"
-        // name_or_address: Agent address with order management rights
-      }
-    ]
-  }
+        }
+      ]
+    }
+  },
+  "session": {"network": "sui testnet"}
 }
 ```
+**Purpose**: Allow "delivery_coordinator" to manage the "roses_for_anniversary" order on behalf of the service owner.
+
+**Address Note**: All `name_or_address` fields support both formats. → [Address Format Options](#address-format-options)
+
+**Operation-Specific Parameters**:
+
+| Operation | Replace `OPERATION_PARAMETER` with | Quick Example |
+|-----------|-----------------------------------|---------------|
+| **Agent Assignment** | `"order_agent": {"agents": [{"name_or_address": "agent_address"}]}` | Authorize delivery manager |
+| **Payer Transfer** | `"order_payer": {"payer_new": {"name_or_address": "new_owner"}}` | Transfer order to new account |
+| **Payment Collection** | `"order_receive": {"order": "order_address"}` | Collect payments from order |
+| **Information Update** | `"order_required_info": {"order": "order_address", "customer_info_required": "new_info"}` | Update customer requirements |
+
+| Order Parameter | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `item` | string | **Required** | - | Product name from service sales catalog |
+| `max_price` | number/string | **Required** | - | Maximum willing to pay (≥0, no upper limit) |
+| `count` | number/string | **Required** | - | Quantity to purchase (≥1, no upper limit) |
+| `customer_info_required` | string | Optional | Empty string | Customer information string (encrypted) |
+| `discount_object` | string | Optional | - | Discount object address for price reduction |
 
 ### Order Financial Operations
 
@@ -480,10 +523,10 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 | Withdrawal Parameter | Type | Required | Default | Description |
 |---------------------|------|----------|---------|-------------|
-| `order` | string | Required | - | Order address for fund extraction |
-| `remark` | string | Required | - | Transaction description for financial records |
-| `withdraw_guard` | string | Required | - | Guard address validating withdrawal conditions |
-| `index` | number/string | Optional | `0` | Business reference number for accounting |
+| `order` | string | **Required** | - | Order address for fund extraction |
+| `remark` | string | **Required** | - | Transaction description for financial records |
+| `withdraw_guard` | string | **Required** | - | Guard address validating withdrawal conditions |
+| `index` | number/string | Optional | `0` | Business reference number for accounting (≥0) |
 | `for_object` | string | Optional | - | Target object address for fund purpose tracking |
 | `for_guard` | string | Optional | - | Additional verification guard reference |
 
@@ -526,22 +569,22 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 | Discount Parameter | Type | Required | Default | Description |
 |-------------------|------|----------|---------|-------------|
-| `receiver` | object | Required | - | Discount recipient address configuration |
-| `discount` | object | Required | - | Discount coupon configuration |
+| `receiver` | object | **Required** | - | Discount recipient address configuration |
+| `discount` | object | **Required** | - | Discount coupon configuration |
 | `count` | number | Optional | `1` | Number of discount coupons to generate |
 
 | Receiver Parameter | Type | Required | Default | Description |
 |-------------------|------|----------|---------|-------------|
 | `local_mark_first` | boolean | Optional | `false` | Search address in local marks first |
-| `name_or_address` | string | Required | - | Recipient address or name |
+| `name_or_address` | string | **Required** | - | Recipient address or name |
 
 | Discount Config Parameter | Type | Required | Default | Description |
 |--------------------------|------|----------|---------|-------------|
-| `type` | number | Required | - | `0` = percentage, `1` = fixed amount |
-| `off` | number | Required | - | Discount value (≥0) |
-| `price_greater` | number/string | Optional | - | Minimum purchase amount for activation |
-| `duration_minutes` | number | Optional | `43200` | Validity period in minutes (default: 30 days) |
-| `time_start` | number | Optional | Current time | Discount activation timestamp (ms) |
+| `type` | number | **Required** | - | `0` = percentage, `1` = fixed amount |
+| `off` | number | **Required** | - | Discount value (≥0) |
+| `price_greater` | number/string | Optional | `0` | Minimum purchase amount for activation |
+| `duration_minutes` | number | Optional | `43200` | Validity period in minutes (≥1, default: 30 days) |
+| `time_start` | number | Optional | Current time | Discount activation timestamp in milliseconds (≥0) |
 | `name` | string | Optional | `""` | Display name for discount coupon |
 
 **Discount Types**: Percentage discounts encourage larger purchases, fixed amount discounts provide guaranteed savings.
@@ -572,8 +615,6 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 **Configuration Inheritance**: Cloned service copies all configuration except token type, enabling rapid deployment of service variations.
 
 ---
-## 继续写剩余部分
-
 ## Data Types & Formats
 
 ### Address Format Options
@@ -605,112 +646,128 @@ Refund guards enable satisfaction guarantees (e.g., 30-day money-back policy) an
 
 **Format Note**: Service uses Token format, different from Demand's Coin format.
 
-### Data Type Enumerations
-
-| Data Type | Values | Description |
-|-----------|--------|-------------|
-| **Boolean** | `true`, `false` | Logical values |
-| **Network** | `"sui mainnet"`, `"sui testnet"`, `"wowok mainnet"`, `"wowok testnet"` | Blockchain network selection |
-| **Session Retention** | `"always"`, `"session"` | Network configuration persistence |
-| **Address Resolution** | `true`, `false` | Local mark vs account name priority |
-| **Visibility** | `true`, `false` | On-chain metadata visibility |
-| **Service Status** | `true`, `false` | Published/paused state |
-| **Price Format** | `number`, `string` | Numeric or string representation |
-| **Token Format** | `"0x2::sui::SUI"`, `"0xPACKAGE::MODULE::TYPE"` | Token type specification (Service uses Token format, not Coin format) |
-
-### Customer Information Types
-
-| Standard Types | Custom Types | Purpose |
-|---------------|--------------|---------|
-| `"address"` | `"delivery_instructions"` | Location and logistics |
-| `"phone"` | `"allergies"` | Contact and health info |
-| `"postcode"` | `"preferred_time"` | Geographic and scheduling |
-| `"name"` | `"special_requests"` | Identity and customization |
-
-### Parameter Value Constraints
-
-| Parameter | Min Value | Max Value | Special Rules |
-|-----------|-----------|-----------|---------------|
-| `price` | `0` | No limit | Must be ≥ 0 |
-| `stock` | `0` | No limit | Must be ≥ 0 |
-| `count` | `1` | No limit | Must be ≥ 1 for orders |
-| `percent` | `0` | `100` | Withdrawal percentage (0-100) |
-| `duration_minutes` | `1` | No limit | Validity period in minutes |
-| `max_price` | `0` | No limit | Must be ≥ 0 |
-| `time_start` | `0` | No limit | Unix timestamp in milliseconds |
-| `index` | `0` | No limit | Business reference number |
-
-### Default Values Summary
-
-| Parameter Category | Common Defaults |
-|-------------------|-----------------|
-| **Boolean Flags** | `false` (onChain, bPublished, bPaused, local_mark_first) |
-| **Arrays** | `[]` (tags, required_info, objects) |
-| **Strings** | `""` (name), `null` (endpoint) |
-| **Numbers** | `0` (index), `1` (count), `43200` (duration_minutes) |
-| **Objects** | `null` (machine, buy_guard, customer_required_info) |
-
 ---
-
-## Integration Patterns
-
-Service objects serve as business platforms that coordinate with other Wowok objects:
-
-**Core Integration Flow**: Permission → Treasury → Service → Machine → Orders → Revenue
-
-**Key Integration Points**:
-- **Permission**: Controls who can manage Service and create orders
-- **Treasury**: Receives and manages all Service revenues  
-- **Machine**: Automates service delivery workflows
-- **Guards**: Enforce business rules for purchases, withdrawals, and refunds
-- **Repository**: Stores customer data and business records
-- **Arbitration**: Handles customer disputes and service issues
-
-**Technical Dependencies**: Service requires Permission object. Treasury, Machine, and Guards enhance business capabilities but are optional.
-
-**Business Model Patterns**:
-| Business Model | Configuration | Integration Focus |
-|----------------|---------------|-------------------|
-| **Physical Products** | Sales catalog + Machine workflow + Treasury | Inventory → Order → Fulfillment → Payment |
-| **Digital Services** | Buy_guard + Repository + Arbitration | Access control → Data delivery → Dispute resolution |
-| **Subscription Services** | Treasury + Withdrawal guards + Machine | Recurring payments → Service delivery → Usage tracking |
-| **Marketplace Platform** | Multiple Services + Shared Treasury + Arbitration | Vendor management → Payment routing → Dispute handling |
 
 ## Complete Examples
 
-### Basic Product Service Setup
+### Flower Delivery Service (Real Implementation)
 
-**AI Prompt**: "Create a flower delivery service that accepts SUI payments, sells roses and wedding packages, uses existing shop permission and treasury, and publishes immediately for customer orders."
+**From**: [Errand Flower Delivery Case](../Business_case/Errand-flower_delivery.md)
+
+**AI Prompt**: "Create Jake's flower delivery service with Machine workflow integration, Guard protection, and Repository communication system."
 
 ```json
 {
-  "account": "flower_shop_owner",
+  "account": "{delivery_account_address}",
   "data": {
     "object": {
-      "name": "downtown_flowers",
+      "name": "flower_delivery_service",
+      "permission": "{flower_delivery_permission_address}",
       "type_parameter": "0x2::sui::SUI",
-      "permission": "shop_permission",
       "onChain": true,
-      "tags": ["flowers", "delivery", "gifts"]
+      "tags": ["flower delivery", "errand service"]
     },
-    "description": "Fresh flower delivery service with same-day delivery in downtown area",
-    "location": "Downtown District, 5-mile radius",
+    "description": "Flower delivery service",
+    "location": "Manhattan, New York",
+    "endpoint": "https://flower-delivery-api.com/service",
+    "machine": "{flower_delivery_machine_address}",
+    "repository": {
+      "op": "set",
+      "objects": ["{flower_delivery_records_address}"]
+    },
     "sales": {
       "op": "add",
       "sales": [
         {
-          "item": "Rose Bouquet",
-          "price": 45,
-          "stock": 50
+          "item": "basic_flower_delivery",
+          "price": 100000000000,
+          "stock": 1000,
+          "endpoint": "https://flower-delivery-api.com/basic"
         },
         {
-          "item": "Wedding Package",
-          "price": 300,
-          "stock": 10
+          "item": "urgent_flower_delivery", 
+          "price": 150000000000,
+          "stock": 500,
+          "endpoint": "https://flower-delivery-api.com/urgent"
         }
       ]
     },
-    "payee_treasury": "shop_main_fund",
+    "withdraw_guard": {
+      "op": "set",
+      "guards": [
+        {
+          "guard": "{universal_withdrawal_guard_address}",
+          "rate": 10000
+        }
+      ]
+    },
+    "refund_guard": {
+      "op": "set", 
+      "guards": [
+        {
+          "guard": "{universal_refund_guard_address}",
+          "rate": 10000
+        }
+      ]
+    },
+    "customer_required_info": {
+      "pubkey": "public_key_for_encrypting_customer_info",
+      "required_info": ["address", "phone", "name"]
+    },
+    "bPublished": false
+  },
+  "session": {
+    "network": "sui testnet",
+    "retentive": "always"
+  }
+}
+```
+
+**Comprehensive Business Integration**: This Service showcases how multiple Wowok objects coordinate to create sophisticated business operations:
+
+- **Machine Workflow Automation**: Eight-node workflow handles order confirmation, product verification, delivery completion, and exception scenarios with adaptive branching
+- **Universal Guard System**: Unified withdrawal and refund Guards handle multiple completion states (product_confirmation, delivery_completed, refund_negotiation, buyer_cancellation)
+- **Repository Communication**: Structured data storage for photos, messages, videos, location updates, and timestamps - enabling rich customer interaction beyond basic transactions
+- **Customer Privacy Protection**: Encrypted information collection (address, phone, name) with public key encryption for sensitive delivery details
+
+**Business Model**: Two-tier pricing (basic $100, urgent $150) with high inventory capacity (1000+ slots) supports scalable delivery operations while maintaining service quality differentiation.
+
+### LA28 Olympic Volunteer Service (Real Implementation)
+
+**From**: [LA28 Design Documentation](../文档/LA28/LA28设计梳理.md)
+
+**AI Prompt**: "Create LA28 Olympic volunteer registration service supporting 100,000 applicants with 0.2 SUI registration fee, integrated with complete verification workflow."
+
+```json
+{
+  "account": "LA28_organizer",
+  "data": {
+    "object": {
+      "name": "LA28_main_service_v3_complete",
+      "permission": "LA28_Owner",
+      "type_parameter": "0x2::sui::SUI",
+      "onChain": true,
+      "tags": ["LA28", "Olympic", "volunteer", "registration"]
+    },
+    "description": "2028 Los Angeles Olympic Games volunteer registration service, supporting 100,000 applicants with 0.2 SUI registration fee",
+    "location": "Los Angeles, California",
+    "machine": "LA28_main_machine_final_config",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "item": "LA28_volunteer_registration",
+          "price": 200000000,
+          "stock": 100000
+        }
+      ]
+    },
+    "payee_treasury": {
+      "type_parameter": "0x2::sui::SUI",
+      "permission": "LA28_Owner",
+      "name": "LA28_main_service_treasury",
+      "tags": ["LA28", "volunteer", "registration"]
+    },
     "bPublished": true
   },
   "session": {
@@ -719,27 +776,107 @@ Service objects serve as business platforms that coordinate with other Wowok obj
 }
 ```
 
-### Customer Order Creation
+**Complex Service Architecture**: This Service demonstrates advanced patterns beyond basic product sales:
 
-**AI Prompt**: "Help customer Alice order 2 rose bouquets from downtown_flowers service, with maximum willingness to pay 50 SUI each, including her delivery information."
+- **Triple Guard Verification**: Applicants must pass three automated checks (basic qualifications, professional skills, position matching) before approval
+- **Nested Service Integration**: Uses suppliers mechanism in Machine workflow - approved volunteers must purchase sub-services for task assignment  
+- **Scale-Ready Design**: Handles 100,000 concurrent applications with automated processing and Treasury fund collection
+- **Permission Hierarchy**: Five-tier permission system (Owner→Admin→Lead→Supervisor→Volunteer) with weighted approval mechanisms
+
+**Business Logic**: Registration fee (0.2 SUI) filters serious applicants and covers operational costs. Non-refundable model ensures commitment while automated verification reduces manual review burden.
+
+**Deployed Address**: `0x4efdf4c455a8c6f43c06faebc8647a74cccc30245e5c185ebb3884738d6f27b8`
+
+### Personal Shopping Service (Real Implementation)
+
+**From**: [代购服务完整案例文档](../文档/代购/代购服务完整案例文档.md)
+
+**AI Prompt**: "Create personal shopping service with dual Treasury protection (deposit + main escrow), timeout confirmation mechanism, and multi-refund-less-supplement logic."
 
 ```json
 {
-  "account": "customer_alice",
+  "account": "personal_shopper",
   "data": {
-    "object": "downtown_flowers",
+    "object": {
+      "name": "personal_shopping_service",
+      "type_parameter": "0x2::sui::SUI",
+      "permission": "shopping_permission",
+      "onChain": true,
+      "tags": ["personal shopping", "escrow", "dual protection"]
+    },
+    "description": "Personal shopping service with dual Treasury protection and timeout confirmation",
+    "location": "Global service",
+    "machine": "shopping_workflow_machine",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "item": "personal_shopping_service",
+          "price": 25000000000,
+          "stock": 1000,
+          "endpoint": "https://shopping-service.com/details"
+        }
+      ]
+    },
+    "withdraw_guard": {
+      "op": "set",
+      "guards": [
+        {
+          "guard": "shopping_completion_guard",
+          "rate": 10000
+        }
+      ]
+    },
+    "refund_guard": {
+      "op": "set",
+      "guards": [
+        {
+          "guard": "shopping_refund_guard", 
+          "rate": 10000
+        }
+      ]
+    },
+    "bPublished": true
+  },
+  "session": {
+    "network": "sui testnet"
+  }
+}
+```
+
+**Advanced Trust Engineering**: This Service solves traditional marketplace trust problems through innovative financial architecture:
+
+- **Dual Treasury Protection**: Separate deposit Treasury (protects shopper's labor costs) and main escrow Treasury (ensures transaction safety with multi-refund-less-supplement logic)
+- **Game Theory Application**: Converts "prisoner's dilemma" into "coordination game" - eliminates single-party betrayal incentives, making cooperation the only profitable strategy
+- **Mature Platform Inspiration**: Adopts Xianyu/Taobao's proven timeout auto-confirmation mechanism (10-day buyer confirmation window, defaults to seller protection)
+- **Precise Financial Control**: Four specific Guards handle different scenarios - deposit withdrawal after purchase completion, buyer refund after 48-hour timeout, seller payment after shipping, buyer remainder after transaction completion
+
+**Technical Innovation**: Uses Machine workflow to control complex business logic while Guards only handle simple verification, achieving clear separation of concerns and robust dispute resolution.
+
+### Customer Order Creation (Flower Delivery)
+
+**From**: Real flower delivery workflow scenario
+
+**AI Prompt**: "Help Sarah order urgent flower delivery for Emma's birthday surprise, including special delivery instructions."
+
+```json
+{
+  "account": "sarah_customer",
+  "data": {
+    "object": "flower_delivery_service",
     "order_new": {
       "buy_items": [
         {
-          "item": "Rose Bouquet",
-          "max_price": 50,
-          "count": 2
+          "item": "urgent_flower_delivery",
+          "max_price": 160000000000,
+          "count": 1
         }
       ],
-      "customer_info_required": "Alice Johnson, 123 Main St, Apt 4B, 555-0123",
+      "customer_info_required": "Sarah, Emma's birthday surprise - white roses, watercolor art preference, deliver by 3 PM",
       "namedNewOrder": {
-        "name": "anniversary_roses",
-        "onChain": true
+        "name": "emma_birthday_roses",
+        "onChain": true,
+        "tags": ["birthday", "urgent", "watercolor"]
       }
     }
   },
@@ -749,20 +886,30 @@ Service objects serve as business platforms that coordinate with other Wowok obj
 }
 ```
 
-### Business Revenue Withdrawal
+**Real Scenario**: Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise, with personalized watercolor-style gift card matching Emma's artistic preferences.
 
-**AI Prompt**: "Configure flower shop owner to withdraw completed service payment from anniversary_roses order, with proper business documentation and approval guard verification."
+**Order Features Demonstrated**:
+- **Price Protection**: `max_price` set higher than service price (160 vs 150 SUI) protects against price fluctuations
+- **Rich Customer Information**: Encrypted delivery requirements include recipient preferences, timing constraints, and personalization requests
+- **Order Naming**: Local identifier (`emma_birthday_roses`) enables easy reference for subsequent operations
+- **Tag Organization**: Order tags facilitate filtering and business analytics
+
+### Business Revenue Withdrawal (Real Scenarios)
+
+**From**: Universal withdrawal patterns across real implementations
+
+**AI Prompt**: "Configure Jake to withdraw delivery payment after completing Emma's birthday flower delivery, using universal withdrawal guard verification."
 
 ```json
 {
-  "account": "flower_shop_owner",
+  "account": "jake_delivery_person",
   "data": {
-    "object": "downtown_flowers",
+    "object": "flower_delivery_service",
     "order_withdrawl": {
-      "order": "anniversary_roses",
+      "order": "emma_birthday_roses",
       "data": {
-        "remark": "Service completion payment for rose delivery",
-        "withdraw_guard": "daily_operations_approval",
+        "remark": "Service completion payment - delivered white roses with watercolor card to Emma by 3 PM",
+        "withdraw_guard": "universal_withdrawal_guard",
         "index": "20241215001"
       }
     }
@@ -773,29 +920,38 @@ Service objects serve as business platforms that coordinate with other Wowok obj
 }
 ```
 
-### Discount Campaign
+**Real Protection**: Uses universal withdrawal guard that verifies Progress reached completion states: "product_confirmation", "delivery_completed", "refund_negotiation", or "buyer_cancellation".
 
-**AI Prompt**: "Generate 50 holiday discount coupons giving 15% off orders over 100 SUI, valid for one week, for loyal customers in the flower shop's customer list."
+**Withdrawal Features Demonstrated**:
+- **Business Documentation**: Detailed `remark` creates audit trail for financial records and business operations
+- **Guard Verification**: Universal withdrawal guard automatically verifies workflow completion before allowing fund extraction
+- **Business Reference**: `index` parameter enables integration with external accounting systems and transaction tracking
+- **Completion-Based Payment**: Funds only release when service delivery reaches verified completion states
+
+### Marketing Campaign (Flower Delivery)
+
+**AI Prompt**: "Generate Valentine's Day discount coupons for loyal flower delivery customers, encouraging larger orders with percentage-based savings."
 
 ```json
 {
-  "account": "flower_shop_owner",
+  "account": "jake_delivery_person",
   "data": {
-    "object": "downtown_flowers",
+    "object": "flower_delivery_service",
     "gen_discount": [
       {
         "receiver": {
-          "name_or_address": "loyal_customer_list",
+          "name_or_address": "loyal_customer_alice",
           "local_mark_first": true
         },
         "discount": {
           "type": 0,
-          "off": 15,
+          "off": 20,
           "price_greater": 100,
-          "duration_minutes": 10080,
-          "name": "Holiday Special 15% Off"
+          "duration_minutes": 43200,
+          "time_start": 1703923200000,
+          "name": "Valentine's Day Special"
         },
-        "count": 50
+        "count": 5
       }
     ]
   },
@@ -805,46 +961,12 @@ Service objects serve as business platforms that coordinate with other Wowok obj
 }
 ```
 
+**Marketing Features Demonstrated**:
+- **Targeted Distribution**: Specific customer targeting through saved address references
+- **Conditional Activation**: Minimum purchase thresholds encourage larger orders  
+- **Time-Limited Campaigns**: Precise validity periods create urgency and seasonal relevance
+- **Bulk Generation**: Multiple coupons for comprehensive customer outreach
+
 **Template Prompt**: "Create Service configuration for [business type] selling [products] with [payment method], integrating with [other objects] for [business workflow]."
 ---
-
-## Common Issues & Troubleshooting
-
-### Service Creation Problems
-**Problem**: "Permission object not found" or "Invalid type_parameter"  
-**Solutions**:
-1. Create Permission object first using Permission MCP
-2. Use Token format: `"0x2::sui::SUI"` not Coin format `"0x2::coin::Coin<0x2::sui::SUI>"`
-3. Ensure account has admin rights in Permission object
-
-### Publishing and Configuration Issues  
-**Problem**: "Cannot modify Machine/Guard after publishing"  
-**Solutions**:
-1. Configure all business rules before setting `bPublished: true`
-2. Use `bPaused: true` for temporary order suspension without losing configuration
-3. Clone service with `clone_new` for different configurations
-
-### Order Processing Failures
-**Problem**: "Insufficient stock" or "Price exceeded max_price"  
-**Solutions**:
-1. Check product stock levels with sales management operations
-2. Update `max_price` in order creation to account for price changes
-3. Verify customer has sufficient balance for order total
-
-### Payment and Withdrawal Issues
-**Problem**: "Guard verification failed" or "Withdrawal permission denied"  
-**Solutions**:
-1. Ensure Treasury is properly configured and funded
-2. Verify withdrawal guards exist and conditions are met
-3. Check account has required permissions in Permission object
-4. Provide correct witness data for Guard verification
-
-### Integration Problems
-**Problem**: "Machine not found" or "Repository access denied"  
-**Solutions**:
-1. Verify all referenced objects exist on same network
-2. Ensure Machine is published before Service publication
-3. Check Repository permissions allow Service access
-4. Confirm object addresses are correct and accessible
-
 **Development Tip**: Test all integrations on testnet before publishing Service. Published services lock critical configurations permanently.
