@@ -13,6 +13,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Permission indexes and address formats
 - **[Integration Patterns](#integration-patterns)**: How Permission controls other objects
 - **[Complete Examples](#complete-examples)**: Working configurations with expected results
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Permission data
 
 ### Navigation by Need
 | I need to... | Go to section |
@@ -23,6 +24,7 @@
 | Create custom permissions | [Core Parameters → Business Permissions](#5-business-permissions) |
 | Find permission indexes | [Data Types & Formats → Built-in Permissions](#built-in-permission-indexes) |
 | Connect to other objects | [Integration Patterns](#integration-patterns) |
+| Query permission data | [Query Capabilities](#query-capabilities) |
 
 ---
 
@@ -541,5 +543,25 @@ Organizations can use different Permission objects for different security domain
 3. Query live permission lists using `mcp_wowok_permission_Built-in_permissions` for verification
 
 💡 **Development Tip**: Test Permission configurations with minimal team first. Use query operations to verify assignments before creating dependent objects. Save working JSON configurations for future use.
+
+---
+
+## Query Capabilities
+
+Permission objects provide comprehensive query access to examine access control structures, audit permissions, and verify authorization settings.
+
+**What You Can Query:**
+- **Complete permission structure** - including administrator roles, entity access rights, and custom permission definitions
+- **Entity permission details** - specific access rights for any address with pagination support
+- **Built-in permission definitions** - available permissions across all protocol modules
+- **Administrator hierarchy** - builder and admin relationships for governance auditing
+
+**Quick Query Examples:**
+- "Show me the complete permission structure for permission_name including all administrators"
+- "List all entities that have permissions in this permission object, showing their access levels"
+- "Check what specific permissions entity address 0x123... has in the system"
+- "Show me all built-in permissions available for the treasury and service modules"
+
+**Detailed Query Reference:** See the complete [Permission Object Query Capabilities](./Query_Reference.md#permission-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---

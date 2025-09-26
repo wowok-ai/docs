@@ -13,6 +13,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Technical reference for addresses and types
 - **[Integration Patterns](#integration-patterns)**: How Treasury works with other objects
 - **[Complete Examples](#complete-examples)**: Working configurations with expected results
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Treasury data
 
 ### Navigation by Need
 | I need to... | Go to section |
@@ -23,6 +24,7 @@
 | Control team access | [Core Parameters → Access Control](#4-access-control) |
 | Connect with Guards/Machines | [Integration Patterns](#integration-patterns) |
 | Reference tables | [Data Types & Formats](#data-types--formats) |
+| Query treasury data | [Query Capabilities](#query-capabilities) |
 
 ---
 
@@ -675,5 +677,25 @@ Result should look like：
 | "Recipient address invalid" | Wrong address format | Use full blockchain address if local names fail |
 
 💡 **Development Tip**: Always test Treasury configurations on testnet first, especially mode changes and Guard integrations. Use small amounts initially to verify everything works correctly before handling real business funds.
+
+---
+
+## Query Capabilities
+
+Treasury objects provide comprehensive financial tracking and transaction history access for auditing, monitoring, and financial analysis.
+
+**What You Can Query:**
+- **Complete treasury configuration** - including token type, withdrawal modes, guard settings, and balance information
+- **Financial transaction history** - detailed operation records with pagination support for comprehensive auditing
+- **Specific transaction details** - by sequential index numbers for precise transaction tracking
+- **Pending ReceivedObject instances** - payments waiting to be processed into the treasury
+
+**Quick Query Examples:**
+- "Show me the complete treasury configuration including withdrawal modes and guard settings"
+- "List all transaction records in treasury_addr to see the complete financial history"
+- "Get the details of transaction index 5 in treasury_addr to see what happened"
+- "Check what payments are waiting to be deposited into this treasury"
+
+**Detailed Query Reference:** See the complete [Treasury Object Query Capabilities](./Query_Reference.md#treasury-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---

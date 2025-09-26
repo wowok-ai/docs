@@ -15,6 +15,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Type codes and witness usage
 - **[Integration Patterns](#integration-patterns)**: How Guards connect with other objects
 - **[Complete Examples](#complete-examples)**: Advanced Guard configurations
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Guard data
 
 ### Navigation by Need
 
@@ -28,6 +29,7 @@
 | Check data type codes                  | [Data Types & Formats](#data-types--formats)                                       |
 | Connect Guards to other objects        | [Integration Patterns](#integration-patterns)                                      |
 | Find complete working configurations   | [Complete Examples](#complete-examples)                                            |
+| Query guard data                       | [Query Capabilities](#query-capabilities)                                          |
 
 ---
 
@@ -990,5 +992,25 @@ For detailed Arbitration configuration, see [Arbitration Documentation](./Arbitr
 - Guard needs "Service relationship proof" → Type 32/38 → User provides Service address → Guard can verify Service status, pricing, availability
 
 **Payload Field**: The `payload` field is automatically managed by the system and carries additional verification data or context information. Users do not need to manually modify this field - it's populated automatically based on verification requirements.
+
+---
+
+## Query Capabilities
+
+Guard objects provide comprehensive verification logic analysis and query definition access for understanding verification requirements, auditing access controls, and analyzing verification patterns.
+
+**What You Can Query:**
+- **Complete guard configuration** - including verification logic, table definitions, and witness requirements
+- **Guard query definitions** - available verification queries across all protocol modules for integration planning
+- **Verification logic analysis** - understanding how conditions are evaluated and what data is required
+- **Witness type specifications** - detailed witness relationship codes and verification requirements
+
+**Quick Query Examples:**
+- "Show me the complete guard configuration including verification logic and table definitions"
+- "List all available guard queries for the service and order modules to understand verification options"
+- "Get the verification logic details for guard_addr to understand what conditions it checks"
+- "Check the witness type specifications for this guard to see what proof is required"
+
+**Detailed Query Reference:** See the complete [Guard Object Query Capabilities](./Query_Reference.md#guard-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---

@@ -12,6 +12,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Technical reference for addresses and types
 - **[Integration Patterns](#integration-patterns)**: How Demand works with other objects
 - **[Complete Examples](#complete-examples)**: Working configurations with expected results
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Demand data
 
 ### Navigation by Need
 | I need to... | Go to section |
@@ -22,6 +23,7 @@
 | Accept recommendations | [Core Parameters → Service Recommendations](#5-service-recommendations) |
 | Distribute rewards | [Core Parameters → Bounty Operations](#3-bounty-operations) |
 | Reference tables | [Data Types & Formats](#data-types--formats) |
+| Query demand data | [Query Capabilities](#query-capabilities) |
 
 ---
 
@@ -406,5 +408,25 @@ For complete Wowok data types reference (100-122), see [Guard Documentation - Da
 1. Verify Service object exists and is accessible
 2. Each service can only be recommended once per Demand (but multiple services can be recommended to one Demand)
 3. Service name/address must match exactly with existing Service object
+
+---
+
+## Query Capabilities
+
+Demand objects provide comprehensive service discovery and recommendation tracking for analyzing market demand, monitoring service presentations, and understanding recommendation patterns.
+
+**What You Can Query:**
+- **Complete demand configuration** - including requirements, guard settings, reward pool information, and expiration times
+- **All service recommendations** - submitted by potential service providers with timestamps and recommender details
+- **Specific recommendation details** - including presentation content and service provider information
+- **Service presentation events** - recommendation activity tracking across the entire system
+
+**Quick Query Examples:**
+- "Show me the complete demand configuration including bounty pool and guard requirements"
+- "List all services recommended to demand_addr to see available options"
+- "Get the recommendation details for service_addr in demand_addr to understand the presentation"
+- "Review the bounty pool and reward settings for this demand to understand incentives"
+
+**Detailed Query Reference:** See the complete [Demand Object Query Capabilities](./Query_Reference.md#demand-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---

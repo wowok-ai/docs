@@ -13,6 +13,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Technical reference for addresses and types
 - **[Integration Patterns](#integration-patterns)**: How Service works with other objects
 - **[Complete Examples](#complete-examples)**: Working business configurations
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Service data
 
 ### Navigation by Need
 
@@ -25,6 +26,7 @@
 | Connect with Machine/Guards | [Core Parameters → Business Workflow](#4-business-workflow)  |
 | Generate discount coupons   | [Core Parameters → Marketing Tools](#9-marketing-tools)      |
 | Reference tables            | [Data Types & Formats](#data-types--formats)                 |
+| Query service data          | [Query Capabilities](#query-capabilities)                    |
 
 ---
 
@@ -1039,3 +1041,25 @@ Service owners must pass withdrawal guard verification for **any fund extraction
 ## **Template Prompt**: "Create Service configuration for [business type] selling [products] with [payment method], integrating with [other objects] for [business workflow]."
 
 **Development Tip**: Test all integrations on testnet before publishing Service. Published services lock critical configurations permanently.
+
+---
+
+## Query Capabilities
+
+Service objects provide comprehensive business intelligence and customer activity tracking for analyzing service performance, monitoring product sales, and understanding customer behavior patterns.
+
+**What You Can Query:**
+- **Complete service configuration** - including workflow machines, guard requirements, arbitration commitments, and product catalog
+- **All available products** - with pricing, inventory, and availability information for product discovery
+- **Detailed product specifications** - including endpoints and stock levels for specific product analysis
+- **Order creation events** - customer activity tracking and service usage monitoring across the system
+
+**Quick Query Examples:**
+- "Show me the complete service configuration including workflow machine and arbitration setup"
+- "List all products in service_addr to see pricing and availability"
+- "Get the details of product 'premium_delivery' in service_addr to understand its specifications"
+- "Check the service workflow machine and arbitration setup before making a purchase"
+
+**Detailed Query Reference:** See the complete [Service Object Query Capabilities](./Query_Reference.md#service-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
+
+---

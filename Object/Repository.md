@@ -12,6 +12,7 @@
 - **[Data Types & Formats](#data-types--formats)**: Reference tables for types and addresses  
 - **[Integration Patterns](#integration-patterns)**: How Repository works with other objects
 - **[Complete Examples](#complete-examples)**: Ready-to-use configurations
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Repository data
 
 ### Navigation by Need
 | I want to... | Go to section |
@@ -21,6 +22,7 @@
 | Set up field structure | [Core Parameters → Policy Management](#4-policy-management) |
 | Connect with Guards/Services | [Integration Patterns](#integration-patterns) |
 | See working examples | [Complete Examples](#complete-examples) |
+| Query repository data | [Query Capabilities](#query-capabilities) |
 
 ---
 
@@ -544,6 +546,26 @@ Result should look like:
 1. Only modify the `witness` field value
 2. Keep all other witness parameters unchanged
 3. Ensure proof value matches Guard requirements
+
+---
+
+## Query Capabilities
+
+Repository objects provide comprehensive data access for exploring stored information, auditing data entries, and analyzing information patterns across different addresses and field types.
+
+**What You Can Query:**
+- **Complete repository configuration** - including policy definitions, data types, access controls, and field structures
+- **All stored data entries** - organized by owner addresses and field names with pagination support for comprehensive data exploration
+- **Specific data entries** - by providing both the data owner's address and the field name for precise data retrieval
+- **Time-based data** - using timestamps converted to addresses for temporal data storage patterns
+
+**Quick Query Examples:**
+- "Show me the complete repository configuration including all policy definitions and data types"
+- "List all data entries in repository_addr to see what information is available"
+- "Query the 'credit_score' field for user 0xabc... in the financial_data repository"
+- "Get all data entries for address 0x123... to see their complete profile"
+
+**Detailed Query Reference:** See the complete [Repository Object Query Capabilities](./Query_Reference.md#repository-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---
 

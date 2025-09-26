@@ -26,10 +26,11 @@
 - **[Complete Examples](#complete-examples)**: End-to-end implementation scenarios
 - **[Data Types & Technical Reference](#data-types--technical-reference)**: Technical specifications
 
-**Part 4: Reference Materials (Section 10-11)**
+**Part 4: Reference Materials (Section 10-12)**
 
 - **[Common Issues & Troubleshooting](#common-issues--troubleshooting)**: Problem resolution
 - **[Configuration Reference](#configuration-reference)**: Witness parameters and advanced settings
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Machine data
 
 ### Navigation by Need
 
@@ -42,6 +43,7 @@
 | Execute workflow instances                | [Progress Operations](#progress-operations)                                |
 | Connect with other objects                | [Integration Patterns](#integration-patterns)                              |
 | Fix broken workflows                      | [Common Issues & Troubleshooting](#common-issues--troubleshooting)         |
+| Query machine data                         | [Query Capabilities](#query-capabilities)                                 |
 
 ---
 
@@ -1403,5 +1405,25 @@ Real-world example from supplier orders verification workflow:
 ```
 
 **Verification Sequence**: All conditions must be satisfied in sequence - permission check → namedOperator check → Guard verification → supplier orders verification.
+
+---
+
+## Query Capabilities
+
+Machine objects provide comprehensive workflow analysis and Progress tracking capabilities for understanding process design, monitoring execution, and auditing workflow performance.
+
+**What You Can Query:**
+- **Complete workflow architecture** - including all node definitions, operation sequences, and transition conditions
+- **Individual workflow nodes** - with their operation paths, threshold requirements, and permission settings
+- **Progress instance tracking** - all Progress objects created from this Machine template with execution status
+- **Node relationship analysis** - transition conditions and workflow flow patterns
+
+**Quick Query Examples:**
+- "Show me the complete workflow structure for machine_name including all nodes and operations"
+- "List all Progress instances created from this Machine to see execution activity"
+- "Get the details of node 'payment_confirmation' in machine_addr to understand its requirements"
+- "Check if this Machine is published and ready for creating new Progress instances"
+
+**Detailed Query Reference:** See the complete [Machine Object Query Capabilities](./Query_Reference.md#machine-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
 
 ---

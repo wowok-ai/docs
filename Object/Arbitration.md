@@ -11,6 +11,7 @@
 - **[Overview](#overview)**: Arbitration capabilities and dispute workflow
 - **[Core Parameters](#core-parameters)**: All configuration options organized by operation type
 - **[Data Types & Formats](#data-types--formats)**: Technical reference for permissions and witness types
+- **[Query Capabilities](#query-capabilities)**: What you can query and how to access Arbitration data
 
 ### Navigation by Need
 
@@ -25,6 +26,7 @@
 | Issue final decision           | [Core Parameters → Issue Decision](#issue-decision-arb_arbitration)                |
 | Extract service fees           | [Core Parameters → Extract Service Fee](#extract-service-fee-arb_withdraw_fee)     |
 | Reference permission indexes   | [Data Types & Formats → Built-in Permission Indexes](#built-in-permission-indexes) |
+| Query arbitration data         | [Query Capabilities](#query-capabilities)                                         |
 
 ## Overview
 
@@ -479,3 +481,25 @@ For complete permission index list across all modules, see [Permission Documenta
 **Permission Usage**: Different roles require different permission combinations - service creators need 800-806, arbitrators need 807-808, administrators need 809-811.
 
 **Witness Usage**: Types 34-35 are most common for basic dispute resolution. Types 36-38 handle complex workflow-integrated disputes. See [Guard Object documentation](./Guard.md) for complete witness configuration.
+
+---
+
+## Query Capabilities
+
+Arbitration objects provide comprehensive dispute resolution monitoring and voting transparency for analyzing arbitration performance, tracking dispute patterns, and ensuring fair resolution processes.
+
+**What You Can Query:**
+- **Complete arbitration configuration** - including fee structures, voting guard requirements, treasury settings, and pause status
+- **Arb instance creation events** - dispute resolution activity tracking and system usage monitoring
+- **Guard query definitions** - specific to arbitration processes for verification requirements
+- **Arbitrator permissions** - voting weights and verification requirements for transparency
+
+**Quick Query Examples:**
+- "Show me the fee structure and treasury settings for this arbitration service"
+- "List all Arb instances created from arbitration_addr to see dispute activity"
+- "Check the voting guard configuration and arbitrator requirements"
+- "Track dispute creation patterns to understand arbitration system usage"
+
+**Detailed Query Reference:** See the complete [Arbitration Object Query Capabilities](./Query_Reference.md#arbitration-object-query-capabilities) in the Wowok Query Technical Reference for field specifications, query operations, and advanced usage patterns.
+
+---
