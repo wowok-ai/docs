@@ -293,86 +293,41 @@ References declare which other objects use this Repository's data, creating a de
 
 #### Guard Witness System
 
-**What is a Witness?**
-A Witness is **real-time data that doesn't exist on the blockchain** and must be provided at the moment of verification. Unlike regular data checks that query existing blockchain information, witnesses capture dynamic, temporal, or private information that only you know.
+Repository supports witness verification for dynamic data. For complete witness system explanation, see [Guard Object Documentation - Witness System](Guard.md#witness-system-configuration).
 
-**Witness vs Regular Data Verification:**
-- **Regular Verification**: Checks existing blockchain data (account balances, object ownership, transaction history)  
-- **Witness Verification**: Requires real-time input that only exists when you provide it
-
-**When do you need Witnesses?**
-- **Time-sensitive decisions**: Your mood when making a decision, current location, today's weather preference
-- **Dynamic verification codes**: One-time passwords, temporary access codes, session tokens
-- **Private information**: Personal opinions, confidential ratings, subjective assessments  
-- **External real-time data**: Current market sentiment, immediate availability status, live preferences
+**Repository-Specific Witness Usage:**
 
 ```json
 {
   "witness": {
-    "guards": ["guard_address"],
+    "guards": ["repository_data_guard"],
     "witness": [
       {
-        "guard": "guard_address",
+        "guard": "repository_data_guard",
         "identifier": 1,
-        "type": 120,  // String type
-        "witness": "happy_confirmed",  // ← YOUR REAL-TIME PROOF
-        "cmd": [],  // Empty array, no on-chain data queries required
+        "type": 204,  // String type for Repository data
+        "witness": "verified_data_content",  // ← User provides actual data proof
+        "cmd": [],
         "cited": 1,
-        "witnessTypes": []  // Empty array, no witness types required
+        "witnessTypes": []
       }
     ]
   }
 }
 ```
 
-
-**Witness Parameters:**
-| Parameter | User Input | Description |
-|-----------|------------|-------------|
-| `guards`, `guard`, `cmd`, `cited`, `type`, `identifier`, `witnessTypes`, `payload` | ❌ | Auto-filled by system |
-| **`witness`** | **✅** | **User proof value (only field to modify)** |
-
-**Payload Field:**
-The `payload` field is automatically managed by the system and carries additional verification data or context information. Users do not need to manually modify this field - it's populated automatically based on the verification requirements and provides richer context for complex validation scenarios.
-
-**Witness Logic Mechanism:**
-
-The Witness system works through **predictable type derivation**:
-1. **Guard defines verification need**: "Verify user owns this Order"
-2. **System derives witness type**: Since it's about Order ownership, witness type = 34 (Order address)  
-3. **User provides witness value**: Actual Order address they claim to own
-4. **Guard verifies**: Checks if the provided Order address is actually owned by the user
-
-**Type Derivation Examples:**
-- Guard needs "Arb's Order verification" → Type 34 → User provides specific Order address
-- Guard needs "Progress's Machine verification" → Type 33 → User provides specific Machine address  
-- Guard needs "Service relationship proof" → Type 32/38 → User provides specific Service address
-
-**Witness Examples:**
-- **Mood verification**: "happy" (your current emotional state when making a decision)
-- **Dynamic code**: "AUTH2024" (a temporary verification code sent to your phone)
-- **Real-time preference**: "urgent" (your current priority level for this specific request)
-- **Private assessment**: "8.5" (your confidential rating that shouldn't be stored on-chain)
-- **Object relationship**: "0x123abc..." (specific address proving your relationship to an object)
-
-**Complete Witness Types:**
-| Code | Description | Example Use |
-|------|-------------|-------------|
-| **30** | Order's Progress address | Progress address associated with Order object |
-| **31** | Order's Machine address | Machine address associated with Order object |
-| **32** | Order's Service address | Service address associated with Order object |
-| **33** | Progress's Machine address | Machine address associated with Progress object |
-| **34** | Arb's Order address | Order address under arbitration dispute |
-| **35** | Arb's Arbitration address | Arbitration object handling the dispute |
-| **36** | Arb's Progress address | Progress address related to arbitration |
-| **37** | Arb's Machine address | Machine address related to arbitration |
-| **38** | Arb's Service address | Service address related to arbitration |
+**Repository Witness Examples:**
+- **Dynamic data verification**: "current_status_active" (real-time status for time-sensitive Repository updates)
+- **External data proof**: "weather_clear" (external condition verification for Repository data validity)
+- **Private assessment data**: "quality_approved" (confidential evaluation result not stored on-chain)
 
 ---
 
 ## Data Types & Formats
 
 ### Repository Data Types
+
+**Repository-Specific Data Types (200-206):**
 
 | Code | Type | Description | Example Use |
 |------|------|-------------|-------------|
@@ -384,28 +339,24 @@ The Witness system works through **predictable type derivation**:
 | **205** | string vector | Text arrays | Tags, option lists |
 | **206** | bool | Boolean values | Status flags, toggles |
 
+For general Wowok data types (100-122), see [Guard Object Documentation - Data Types](Guard.md#wowok-data-types).
+
 ### Address Format Options
 
-#### Simple Address
+For complete address format documentation, see [Service Object Documentation - Address Formats](Service.md#address-formats).
+
+#### Repository-Specific: Timestamp Address
 ```json
 {
   "address": 202509102100
 }
 ```
-Use integers for time-based addresses (like timestamps) or when you have numeric identifiers that need to be converted to blockchain addresses.
+**Repository-specific usage**: Use integers for time-based addresses (like timestamps) when storing time-series data or creating temporal data keys. This converts numeric timestamps to blockchain addresses for Repository data organization.
 
-#### Named Address
-```json
-{
-  "address": {
-    "local_mark_first": true,
-    "name_or_address": "user_name_or_0x123..."
-  }
-}
-```
-Use named addresses when you've saved addresses locally with human-readable names. Set `local_mark_first: true` to search your saved names first, or `false` to search account names first.
-
-**Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "user_name" instead of remembering the long address.
+**Example Use Cases:**
+- Weather data by hour: `address: 2025091021` (timestamp) with weather conditions
+- Daily reports: `address: 20250910` (date) with summary data
+- Session logs: `address: 1726847460` (Unix timestamp) with session records
 
 ---
 

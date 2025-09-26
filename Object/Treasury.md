@@ -364,7 +364,8 @@ Control the overall access system for your Treasury.
 ```
 
 #### Real-time Verification (Witness)
-Provide proof data that Guards can verify in real-time during operations.
+
+For complete witness system and Guard verification, see [Guard Object Documentation - Witness System](Guard.md#witness-system-configuration).
 
 ```json
 {
@@ -382,10 +383,6 @@ Provide proof data that Guards can verify in real-time during operations.
 }
 ```
 
-**What is Witness**: Real-time proof you provide to Guards for dynamic verification that can't be stored on blockchain (current situation, mood, emergency status, or relationships between objects).
-
-**When you need it**: Guards that check conditions beyond stored blockchain data (like "confirm current emergency status" or "verify owner presence during transaction").
-
 | Parameter | Options | Description |
 |-----------|---------|-------------|
 | `network` | `sui mainnet`, `sui testnet`, `wowok mainnet`, `wowok testnet` | Target blockchain |
@@ -400,18 +397,9 @@ Provide proof data that Guards can verify in real-time during operations.
 
 ### Address Format Options
 
-#### Simple Address (Recommended for API/Script Use)
-```json
-{
-  "address": {
-    "name_or_address": "0x1234567890abcdef1234567890abcdef12345678",
-    "local_mark_first": false
-  }
-}
-```
-Use blockchain addresses directly when you have the full address.
+For complete address format options, see [Service Object Documentation - Address Formats](Service.md#address-formats).
 
-#### Named Address (Recommended for Team Use)
+#### Treasury-Specific Address Examples
 ```json
 {
   "address": {
@@ -421,9 +409,7 @@ Use blockchain addresses directly when you have the full address.
 }
 ```
 
-**Address Resolution**: `local_mark_first: true` searches saved nicknames first, `false` searches account names first. Save team addresses with descriptive names for easier management.
-
-**Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_barista_manager" instead of remembering the long address.
+**Treasury Context**: Treasury address resolution focuses on team member management and payment recipients. Use descriptive names for team members to simplify fund distribution operations.
 
 ### Token Type Formats
 

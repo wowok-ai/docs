@@ -65,7 +65,7 @@ Demand is an on-chain object that enables posting service requests with attached
 
 ### 1. Account & Object Identification
 
-**Note**: All operations require `account` parameter to specify transaction signer. If omitted, current active account is used.
+**Account Parameter**: All operations require `account` parameter to specify the transaction signer address or account name. If omitted, the currently active account is used automatically.
 
 #### Object Reference (Existing)
 ```json
@@ -96,6 +96,8 @@ Demand is an on-chain object that enables posting service requests with attached
 | `tags` | string[] | Optional | `[]` | Categorization labels |
 | `onChain` | boolean | Optional | `false` | Metadata blockchain visibility |
 | `useAddressIfNameExist` | boolean | Optional | `false` | Name conflict resolution |
+
+**Important Format Difference**: Demand uses Coin wrapper format (`"0x2::coin::Coin<0x2::sui::SUI>"`) for rewards, different from Treasury/Service Token format (`"0x2::sui::SUI"`). This is by design - Demand handles coins as reward objects.
 
 **Technical Note**: `type_parameter` must match the actual token type you'll add to bounty pool. Common formats:
 - SUI tokens: `"0x2::coin::Coin<0x2::sui::SUI>"`
@@ -238,6 +240,8 @@ Demand is an on-chain object that enables posting service requests with attached
 
 ### 6. Guard Integration
 
+For complete Guard configuration and verification logic, see [Guard Documentation](./Guard.md).
+
 #### Set Recommendation Filter
 ```json
 {
@@ -262,7 +266,7 @@ Demand is an on-chain object that enables posting service requests with attached
 | `guard` | string/null | Optional | `null` | Guard object that checks recommendation quality |
 | `service_id_in_guard` | number (1-255) | Optional | `1` | Position in Guard's verification list |
 
-**What Guard Does**: Guard checks if service providers meet your requirements before they can recommend their services. For example, only designers from Portland State University, or who worked at Nike, or built 10+ restaurant websites, or have Google UX certification.
+**Demand-specific Guard Usage**: Guard checks if service providers meet your requirements before they can recommend their services. For example, only designers from Portland State University, or who worked at Nike, or built 10+ restaurant websites, or have Google UX certification.
 
 ---
 
@@ -289,30 +293,23 @@ Demand is an on-chain object that enables posting service requests with attached
 
 ### Address Formats
 
-Blockchain addresses are long and hard to remember like `0x1234abcd5678ef90...`. You can use them directly or save them with friendly names.
+Demand supports both blockchain addresses and saved local names. For complete address format options and Local Marks explanation, see [Service Documentation - Address Format Options section].
 
-**Simple**: Use the full blockchain address
+**Demand-specific examples**:
 ```json
 "service": "0x1234abcd5678ef90..."
+// or
+"service": "sarah_web_studio"
 ```
-
-**Named**: Use a saved name instead
-```json
-"service": {
-  "local_mark_first": true,
-  "name_or_address": "sarah_web_studio"
-}
-```
-
-Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "sarah_web_studio" instead of remembering the long address.
 
 ### Token Type Examples
 
-| Type Category | Format | Example |
-|---------------|--------|---------|
-| **SUI Coin** | `0x2::coin::Coin<0x2::sui::SUI>` | Native SUI tokens |
-| **Custom Coin** | `0x2::coin::Coin<0xPACKAGE::MODULE::TYPE>` | Custom fungible tokens |
-| **NFT** | `0xPACKAGE::MODULE::TYPE` | Non-fungible tokens |
+For complete Wowok data types reference (100-122), see [Guard Documentation - Data Types section].
+
+**Demand-specific token formats** (note the Coin wrapper requirement):
+- **SUI Coin**: `0x2::coin::Coin<0x2::sui::SUI>`
+- **Custom Coin**: `0x2::coin::Coin<0xPACKAGE::MODULE::TYPE>`
+- **NFT**: `0xPACKAGE::MODULE::TYPE`
 
 ---
 

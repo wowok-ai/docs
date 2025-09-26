@@ -3,7 +3,7 @@
 > "Define who can do what in your digital spaces - the security system that powers all your other Wowok objects"
 
 **MCP Tools**: 
-- [`wowok_permission_mcp_server`](https://www.npmjs.com/package/wowok_permission_mcp_server) (main operations)
+- [`wowok_permission_mcp_server`](https://www.npmjs.com/package/wowok_permission_mcp_server) 
 
 ## How to Use This Documentation
 
