@@ -2,7 +2,7 @@
 
 > "Shared fund management with custom rules - like a team bank account that enforces your agreements automatically"
 
-**MCP Tool**: [`mcp_wowok_treasury_treasury_operations`](https://www.npmjs.com/package/wowok_treasury_mcp_server)
+**MCP Tool**: [`wowok_treasury_mcp_server`](https://www.npmjs.com/package/wowok_treasury_mcp_server)
 
 ## How to Use This Documentation
 
@@ -45,7 +45,7 @@ graph TD
 
 **Permission Options**:
 - **Inherit existing**: If you specify an existing Permission object, Treasury will use those established access rules
-- **Create automatically**: If you omit the permission field, system creates a dedicated Permission object with basic access rights for your Treasury
+- **Create automatically**: If you omit the permission field, system creates a dedicated Permission object with admin access rights for your Treasury
 
 #### Step 2: Guard Objects (Optional for Mode 0/2, required before setting Mode 1)
 > "Create a Guard that limits daily spending to 100 SUI for our cafe operations, allowing small purchases without additional approval."
@@ -468,14 +468,6 @@ For complete address format options, see [Service Object Documentation - Address
 
 **Team Data Integration**: Treasury can query Repository for team member information, payment preferences, tax details, and performance metrics to automate personalized compensation and benefit distribution.
 
-### Common Treasury Patterns
-
-| Pattern | Configuration | Use Case |
-|---------|---------------|----------|
-| **Small Business Fund** | Mode 2, daily spending guards (≤100 SUI), manager+owner permissions | Coffee shop, retail store operations |
-| **Team Project Fund** | Mode 1, milestone guards (progress verification), role-based limits | Development projects, service delivery |
-| **Enterprise Treasury** | Mode 1, multi-tier guards (50/500/5000 SUI), department permissions | Large organization fund management |
-| **Emergency Fund** | Mode 0, time-window guards (24h approval), minimal permissions | Crisis response, urgent expense handling |
 
 💡 **AI Prompt Template for Treasury Integration**:
 ```
@@ -646,35 +638,63 @@ Result should look like：
 
 ---
 
-## Common Issues & Troubleshooting
+## AI Assistant Troubleshooting
 
-### Creation Failures
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Permission object not found" | Permission doesn't exist | Create Permission object first using Permission MCP |
-| "Invalid type_parameter" | Wrong token format | Use `"0x2::sui::SUI"` not Coin format |
-| "Account unauthorized" | No admin rights | Use account with Permission admin rights |
+Instead of manually debugging Treasury issues, use these AI prompts for instant, personalized assistance:
 
-### Fund Operation Failures  
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Insufficient balance" | Not enough tokens in Treasury | Check Treasury balance, add funds via deposit |
-| "Permission denied" | No operation rights | Verify account has required Permission index (702: Deposit, 703: Withdraw) |
-| "Mode restriction" | Wrong mode for operation | Check current mode supports operation type |
-| "Guard verification failed" | Guard conditions not met | Review Guard logic, provide correct witness data |
+### 🤖 **Treasury Creation Problems**
 
-### Access Control Issues
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Cannot set mode 1" | No Guards configured | Create and configure Guard objects first |
-| "Cannot change mode" | Already in Mode 1 | Mode 1 is permanent - create new Treasury if needed |
-| "Guard amount exceeded" | Withdrawal above guard limit | Use appropriate guard or get higher-level approval |
+**Prompt**: "I'm trying to create a Treasury object but getting error '[ERROR_MESSAGE]'. I'm using account [ACCOUNT] with Permission object [PERMISSION_NAME] and token type [TOKEN_TYPE]. Can you help me fix this?"
 
-### Address Resolution Problems
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Address not found" | Local mark not saved | Check `local_mark_first` setting, verify saved names |
-| "Recipient address invalid" | Wrong address format | Use full blockchain address if local names fail |
+**The AI will check**:
+- Permission object existence and accessibility  
+- Token type parameter format (must be `"0x2::sui::SUI"` not Coin format)
+- Account authorization and admin rights in Permission object
+- Network consistency between components
+
+### 🤖 **Fund Operation Issues**
+
+**Prompt**: "I'm getting '[ERROR_MESSAGE]' when trying to [DEPOSIT/WITHDRAW] [AMOUNT] tokens [TO/FROM] Treasury [TREASURY_NAME]. My account is [ACCOUNT]. What's wrong with my operation?"
+
+**The AI will verify**:
+- Treasury balance and token availability
+- Account permissions (702: Deposit, 703: Withdraw)  
+- Treasury mode compatibility with operation type
+- Guard configuration and verification requirements
+
+### 🤖 **Access Control & Mode Problems**
+
+**Prompt**: "I can't change my Treasury [NAME] to mode [MODE_NUMBER] and getting '[ERROR_MESSAGE]'. Current configuration: [CONFIG_DETAILS]. What should I do?"
+
+**The AI will analyze**:
+- Current Treasury mode and transition rules
+- Guard object configuration requirements for Mode 1
+- Mode permanence implications (Mode 1 cannot be changed back)
+- Alternative solutions if mode change is blocked
+
+### 🤖 **Guard Integration Issues**
+
+**Prompt**: "My Treasury guard verification is failing with error '[ERROR_MESSAGE]'. I'm trying to withdraw [AMOUNT] using Guard [GUARD_NAME]. Here's my witness data: [WITNESS_JSON]. Can you help me fix the guard verification?"
+
+**The AI will help**:
+- Review Guard logic and verification requirements
+- Check witness data format and required fields
+- Verify withdrawal amount against guard limits
+- Suggest correct witness values for verification
+
+### 🤖 **Address Resolution Problems**
+
+**Prompt**: "I'm getting 'Address not found' or 'Invalid address' when trying to send Treasury funds to [RECIPIENT_ADDRESS]. I'm using local_mark_first: [true/false]. How can I fix the address resolution?"
+
+**The AI will check**:
+- local_mark_first setting compatibility with address format
+- Local mark existence and naming consistency  
+- Address format validation (blockchain address vs local names)
+- Alternative addressing methods
+
+### 🎯 **General Treasury Troubleshooting**
+
+**Comprehensive Issue Resolution**: "I'm having trouble with Treasury [NAME]. Here's what I'm trying to do: [DESCRIBE_GOAL]. Here's the error: [ERROR_MESSAGE]. Current Treasury configuration: [CONFIG_JSON]. Can you walk me through diagnosing and fixing this step by step?"
 
 💡 **Development Tip**: Always test Treasury configurations on testnet first, especially mode changes and Guard integrations. Use small amounts initially to verify everything works correctly before handling real business funds.
 

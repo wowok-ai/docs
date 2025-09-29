@@ -243,16 +243,9 @@ Forward operations define executable actions that advance workflow between nodes
   "namedOperator": "order_processor", // Role template name for operator binding - users with permission OR bound operators can execute (union)
   "weight": 2, // Points contributed toward threshold advancement
   "guard": {
-    "guard": "business_hours_guard", // Guard object for additional verification
-    "order_ids": [1, 2] // Supplier Orders Commitment verification IDs
-  },
-  "suppliers": [
-    // Optional Service coordination requirements
-    {
-      "service": "inventory_check_service", // Service object address or name
-      "bRequired": true // true = must provide order, false = optional choice
-    }
-  ]
+    "guard": "supplier_verification_guard", // Guard object that handles supplier order verification
+    "order_ids": [1, 2] // Supplier order verification IDs in Guard table
+  }
 }
 ```
 
@@ -264,80 +257,35 @@ Forward operations define executable actions that advance workflow between nodes
 | `permission`    | number ≥1000   | Optional     | Custom permission index from Permission object - determines who can execute                                       |
 | `namedOperator` | string         | Optional     | Role template name for operator binding - Progress instances map actual addresses to this role                    |
 | `weight`        | number ≥1      | **Required** | Points contributed toward threshold when operation executes successfully. Default set as 1.                       |
-| `guard`         | string/object  | Optional     | Guard object address (string) or Guard configuration object with supplier orders verification                     |
-| `suppliers`     | array          | Optional     | Service objects for multi-vendor coordination - see Service Suppliers Configuration                               |
+| `guard`         | string/object | Optional     | Single Guard object (string address or object with order_ids) for verification                     |
+
 
 **Guard Configuration Formats**:
 
-- **Simple Guard**: `"guard": "guard_object_address"` - Basic Guard verification without supplier orders
-- **Supplier Orders Guard**: 
+- **Simple Guard**: `"guard": "guard_object_address"` - Basic Guard verification
+- **Multi-Order Guard**: One Guard can verify multiple orders through order_ids array
   ```json
   "guard": {
     "guard": "supplier_commitment_guard",
-    "order_ids": [1, 2, 3]
+    "order_ids": [1, 2, 3] // One Guard verifies multiple supplier orders
   }
   ```
 
-**Access Control Requirements**: At least one of `guard`, `permission`, or `namedOperator` must be specified for each forward operation.
+**Important**: Each forward operation can only specify ONE Guard object. If you need different Guards for different verification logic, create separate forward operations.
 
-### Service Suppliers Configuration
+**Access Control Requirements**: At least one of `permission` or `namedOperator` must be specified for each forward operation. Guard verification is optional and can be added for additional business logic validation.
 
-Service suppliers coordinate workflow operations with external Service objects during forward execution, providing comprehensive supply chain management with Guard verification.
+### Guard-Based Supplier Verification
 
-```json
-{
-  "suppliers": [
-    {
-      "service": "inventory_check_service", // Service object address or name
-      "bRequired": true  // Must provide order for operation to proceed
-    },
-    {
-      "service": "express_shipping", // Optional shipping choice A
-      "bRequired": false
-    },
-    {
-      "service": "standard_shipping", // Optional shipping choice B  
-      "bRequired": false
-    }
-  ]
-}
-```
-
-**Supplier Configuration Parameters**:
-
-| Parameter   | Type    | Required     | Description                                                                   |
-| ----------- | ------- | ------------ | ----------------------------------------------------------------------------- |
-| `service`   | string  | **Required** | Service object address or name that provides the required supplier service   |
-| `bRequired` | boolean | **Required** | true = must provide order, false = optional choice for flexible selection    |
-
-**Supplier Execution Logic**:
-
-- **Required suppliers** (`bRequired: true`): All must provide orders before operation can execute
-- **Optional suppliers** (`bRequired: false`): Selection rules depend on context:
-  - If required suppliers exist: Optional suppliers can be selected or skipped entirely
-  - If only optional suppliers exist: At least one must be selected from the optional group
-- **Examples**:
-  - 1 required + 2 optional = minimum 1 order (required only) or up to 3 orders total
-  - 0 required + 3 optional = minimum 1 order (choose any) up to 3 orders total
-- **Use Cases**: Multi-vendor coordination, service dependency management, flexible service combinations within workflows
-
-### Supplier Orders Commitment & Guard Verification
-
-When suppliers are configured in forward operations, the system implements Supplier Orders Commitment verification to ensure supply chain reliability.
+Forward operations use Guard objects to implement supplier order verification and supply chain management. The Guard handles all supplier-related verification logic, eliminating the need for separate supplier configuration.
 
 ```json
 {
   "name": "supplier_verification",
   "guard": {
-    "guard": "supplier_commitment_guard", // Guard object for verification
+    "guard": "supplier_commitment_guard", // Guard object handles all supplier verification logic
     "order_ids": [1, 2, 3] // Guard table IDs for supplier order verification
   },
-  "suppliers": [
-    {
-      "service": "material_supplier_service",
-      "bRequired": true
-    }
-  ],
   "namedOperator": "procurement_team",
   "weight": 1
 }
@@ -411,60 +359,43 @@ The specific verification logic depends entirely on how the Guard object is conf
 
 **User Responsibility**: Users only need to provide the `witness` field value - the actual order address generated when they purchased from the supplier service. All other fields are automatically populated by the system.
 
-### Supplier Integration Examples
+### Guard-Based Supplier Integration Examples
 
 #### Manufacturing Supply Chain
 ```json
 {
   "name": "production_start",
   "guard": {
-    "guard": "manufacturing_suppliers_guard",
-    "order_ids": [10, 11, 12] // Raw materials, components, packaging
+    "guard": "manufacturing_suppliers_guard", // Guard verifies all supplier orders
+    "order_ids": [10, 11, 12] // Raw materials, components, packaging orders
   },
-  "suppliers": [
-    {
-      "service": "raw_material_supplier",
-      "bRequired": true
-    },
-    {
-      "service": "component_supplier", 
-      "bRequired": true
-    },
-    {
-      "service": "packaging_supplier",
-      "bRequired": false // Optional premium packaging
-    }
-  ],
   "namedOperator": "production_manager",
   "weight": 2
 }
 ```
+
+**Guard Configuration**: The `manufacturing_suppliers_guard` implements verification logic for:
+- Raw material supplier order completion (order_id: 10)
+- Component supplier delivery verification (order_id: 11) 
+- Optional packaging supplier orders (order_id: 12)
 
 #### Restaurant Food Service
 ```json
 {
   "name": "meal_preparation",
   "guard": {
-    "guard": "fresh_ingredients_guard",
-    "order_ids": [20, 21] // Fresh produce, dairy verification
+    "guard": "fresh_ingredients_guard", // Guard handles ingredient verification
+    "order_ids": [20, 21] // Fresh produce and dairy verification
   },
-  "suppliers": [
-    {
-      "service": "fresh_produce_supplier",
-      "bRequired": true
-    },
-    {
-      "service": "dairy_supplier",
-      "bRequired": true  
-    },
-    {
-      "service": "specialty_ingredients",
-      "bRequired": false // Optional for premium dishes
-    }
-  ],
   "namedOperator": "head_chef",
   "weight": 1
 }
+```
+
+**Guard Configuration**: The `fresh_ingredients_guard` implements verification logic for:
+- Fresh produce supplier quality standards (order_id: 20)
+- Dairy supplier delivery timing (order_id: 21)
+- Optional specialty ingredients for premium dishes
 
 ### Threshold and Weight Logic
 
@@ -504,7 +435,7 @@ Forwards can store messages and data for Progress instances to retrieve during e
 | Field    | Purpose                                          | Content Examples                              | Notes |
 | -------- | ------------------------------------------------ | --------------------------------------------- | ------------ |
 | `msg`    | Store any data for communication in the progress | Links, text, parameters, status information   | Size limited by transaction limits and Gas costs |
-| `orders` | Reference supplier services                      | Order objects from required/optional services |
+| `orders` | Reference external services                      | Order objects from external service providers |
 
 ### Additional Node Operations
 
@@ -768,7 +699,7 @@ Operator binding assigns specific entity to Machine template roles for individua
       },
       "deliverable": {
         "msg": "Order approved - inventory confirmed, payment verified, customer credit check passed", // Description of completed work
-        "orders": ["inventory_check_order", "credit_verification_order"] // Service orders from suppliers
+        "orders": ["inventory_check_order", "credit_verification_order"] // Order objects from external services
       }
     }
   }
@@ -782,7 +713,7 @@ Operator binding assigns specific entity to Machine template roles for individua
 | `next_node_name` | string | **Required** | Target node name from Machine definition                                                                                                                        |
 | `forward`        | string | **Required** | Forward operation name that must match Machine forward configuration                                                                                            |
 | `msg`            | string | Optional     | Attach any message while forwarding progress like link, text or specific parameter defined in repository for dynamic requirement. It stores in Progress Object. |
-| `orders`         | array  | Optional     | Order objects from supplier services required by this forward operation                                                                                         |
+| `orders`         | array  | Optional     | Order objects from external services required by this forward operation                                                                                         |
 
 **Branch Selection**: Same node can lead to different next nodes through different forward operations. Each forward has independent conditions and leads to specific target nodes. Since operations are atomic, Progress can only advance to one target node per execution.When a node has multiple forward operations, you must specify exactly which forward to execute.
 
@@ -1086,12 +1017,10 @@ _Different roles have different decision weights, flexible threshold achievement
                   "name": "buyer_agree_upgrade",
                   "namedOperator": "buyer",
                   "weight": 1,
-                  "suppliers": [
-                    {
-                      "service": "flower_delivery_extra_fee_service",
-                      "bRequired": false
-                    }
-                  ]
+                  "guard": {
+                    "guard": "price_upgrade_guard",
+                    "order_ids": [5] // Extra fee service verification
+                  }
                 }
               ]
             }
@@ -1108,7 +1037,7 @@ _Different roles have different decision weights, flexible threshold achievement
 - **Dual Approval**: `threshold: 2` requires both delivery person and buyer confirmation
 - **Price Upgrade Loop**: Enables cost adjustments with buyer approval and supplier service integration
 - **Role-Based Access**: Different `namedOperator` roles for different participants
-- **Service Integration**: Uses `suppliers` mechanism for extra fee handling
+- **Guard Integration**: Uses Guard object for extra fee verification
 
 **Deployed Address**: `0x49415465ca622f1cb42e3867f7211a844e57993af8cf5143326023a1eed8b301`
 
@@ -1177,12 +1106,10 @@ _Different roles have different decision weights, flexible threshold achievement
                   "permission": 1003,
                   "namedOperator": "team_lead",
                   "weight": 1,
-                  "suppliers": [
-                    {
-                      "service": "LA28_Subservice_Language_Assistance",
-                      "bRequired": false
-                    }
-                  ]
+                  "guard": {
+                    "guard": "LA28_Task_Assignment_Guard",
+                    "order_ids": [4] // Language assistance service verification
+                  }
                 }
               ]
             }
@@ -1197,8 +1124,7 @@ _Different roles have different decision weights, flexible threshold achievement
 **Key Implementation Features**:
 
 - **Triple Verification**: `threshold: 3` requires all three Guard verifications to pass
-- **Guard Integration**: Each forward uses different Guard for qualification, skill, and position matching
-- **Supplier Mechanism**: Task assignment requires selecting from available sub-services
+- **Multi-Guard Integration**: Each forward uses different Guard objects for qualification, skill, position matching, and task assignment
 - **Hierarchical Roles**: Different permission levels (1001, 1003) for different approval stages
 
 **Deployed Address**: `0xfdce0ac5cba309d3bd3d36de352e5946f1022d22a263048f57f577dbac578449`
@@ -1360,13 +1286,14 @@ Real-world example from supplier orders verification workflow:
 ```
 
 **Workflow**: 
-1. User executes forward operation that requires supplier verification
-2. System detects Guard needs witness data and generates witness structure  
-3. **User only fills in `witness` field values** with actual data from their supplier purchases
-4. System uses this witness data to verify Guard conditions
+1. User executes forward operation that requires Guard verification
+2. System detects if the Guard needs witness data and generates witness structure
+3. **User only fills in `witness` field values** with actual data from their business operations
+4. System uses witness data to verify the Guard condition
 5. If verification passes, forward operation completes successfully
 
 **Why Witness Data?**: The supplier order addresses and quantities are unknown when the Guard object is created. They only become available when users actually purchase from supplier services during workflow execution, making them perfect examples of "witness" data.
+
 
 ### Advanced Configuration Patterns
 
@@ -1375,25 +1302,79 @@ Real-world example from supplier orders verification workflow:
 {
   "name": "multi_supplier_check",
   "guard": {
-    "guard": "supply_chain_guard",
-    "order_ids": [1, 2, 3, 4] // Multiple supplier orders
+    "guard": "supply_chain_guard", // Guard handles all supplier verification logic
+    "order_ids": [1, 2, 3, 4] // Material, packaging, quality, logistics orders
   },
-  "suppliers": [
-    {"service": "material_supplier", "bRequired": true},
-    {"service": "packaging_supplier", "bRequired": true},
-    {"service": "quality_service", "bRequired": false},
-    {"service": "logistics_service", "bRequired": false}
-  ],
   "namedOperator": "supply_chain_manager",
   "permission": 1005,
   "weight": 3
 }
 ```
 
-#### Permission and Guard Integration
+**Guard Logic**: The `supply_chain_guard` implements complex verification for:
+- Required supplier orders (material, packaging)
+- Optional supplier orders (quality service, logistics)
+- Cross-supplier dependency validation
+
+#### Multiple Verification Requirements (Separate Forwards)
+
+When you need different Guards for different verification logic, create separate forward operations:
+
 ```json
 {
-  "name": "secure_approval",
+  "name": "verify_business_hours",
+  "permission": 1001,
+  "namedOperator": "authorized_approvers",
+  "guard": "business_hours_guard", // First verification: business hours
+  "weight": 1
+},
+{
+  "name": "verify_supplier_orders",  
+  "permission": 1001,
+  "namedOperator": "authorized_approvers",
+  "guard": {
+    "guard": "supplier_commitment_guard",
+    "order_ids": [5, 6] // Second verification: supplier orders
+  },
+  "weight": 1
+}
+```
+
+**Node Configuration**: These forwards would be used in a node with `threshold: 2` to require both verifications:
+
+```json
+{
+  "name": "comprehensive_approval",
+  "pairs": [
+    {
+      "prior_node": "initial_request",
+      "threshold": 2, // Requires both forwards to execute
+      "forwards": [
+        {
+          "name": "verify_business_hours",
+          "permission": 1001,
+          "guard": "business_hours_guard",
+          "weight": 1
+        },
+        {
+          "name": "verify_supplier_orders",
+          "permission": 1001, 
+          "guard": {
+            "guard": "supplier_commitment_guard",
+            "order_ids": [5, 6]
+          },
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Single Guard Integration
+```json
+{
+  "name": "simple_approval",
   "permission": 1001, // Must have Machine permission
   "namedOperator": "authorized_approvers", // AND be assigned operator
   "guard": {
@@ -1404,7 +1385,12 @@ Real-world example from supplier orders verification workflow:
 }
 ```
 
-**Verification Sequence**: All conditions must be satisfied in sequence - permission check → namedOperator check → Guard verification → supplier orders verification.
+**Verification Sequence**: All conditions must be satisfied in sequence:
+1. **Access Control**: Permission check OR namedOperator check (union logic)
+2. **Guard Verification**: The single specified Guard must pass verification
+3. **Operation Execution**: Forward operation executes successfully
+
+**Multiple Guards Strategy**: To implement multiple verification requirements, create separate forward operations with different Guards, then set the node threshold to require execution of multiple forwards.
 
 ---
 

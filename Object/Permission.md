@@ -1,6 +1,6 @@
 # Permission Object: Your Access Control Foundation
 
-> "Define who can do what in your digital spaces - the security system that powers all your other Wowok objects"
+> "Define who can do what in your digital spaces - the security system that powers all your Wowok objects"
 
 **MCP Tools**: 
 - [`wowok_permission_mcp_server`](https://www.npmjs.com/package/wowok_permission_mcp_server) 
@@ -199,12 +199,14 @@ Permission assignment supports entity-centered (assign multiple permissions to o
 
 | Operation | Use Case | Who Can Execute |
 |-----------|----------|-----------------|
-| `add entity` | Setting up new team member with multiple permissions | Builder, Admin |
-| `add permission` | Adding multiple people to same role | Builder, Admin |
-| `remove permission` | Revoking specific access while keeping other permissions | Builder, Admin |
-| `remove entity` | Completely removing someone from Permission object | Builder, Admin |
-| `transfer permission` | Moving role from departing to new team member | Builder, Admin |
-
+| `add entity` | Setting up new team member with multiple permissions | Admin |
+| `add permission` | Adding multiple people to same role | Admin |
+| `remove permission` | Revoking specific access while keeping other permissions | Admin |
+| `remove entity` | Completely removing someone from Permission object | Admin |
+| `transfer permission` | Moving role from departing to new team member | Admin |
+| `add admin` | Adding new administrators to help manage permissions | Builder only |
+| `remove admin` | Removing administrators from management roles | Builder only |
+| `set admin` | Replacing all administrators with new set | Builder only |
 💡 **Cold Wallet Integration**: Add external addresses for enhanced security: `"name_or_address": "0x1234..."` - hardware wallets, multi-sig addresses, or any external address can receive full administrative rights for secure management through external wallet interfaces.
 
 💡 **AI Prompt Tip**: "Assign [permission types] to team member [name] for [business purpose] with appropriate Guard conditions."
@@ -218,7 +220,7 @@ Permission objects use a two-tier administrative structure for organizational fl
 | Role | Capabilities | Restrictions |
 |------|-------------|-------------|
 | **Builder** | • Transfer Builder role (permanent, irreversible)<br>• Add/remove/replace all administrators<br> | Cannot assign/remove specific permissions to addresses<br>Cannot manage custom business permissions<br>Cannot perform operational permission tasks |
-| **Admin** | • Assign/remove any permissions to any addresses<br>• Add other admins<br>• Manage custom business permissions<br>• All permission operations | Cannot remove Builder or other admins<br>Cannot transfer Builder role |
+| **Admin** | • Assign/remove any permissions to any addresses<br> • Manage custom business permissions<br>• All permission operations | Cannot remove Builder or other admins<br>Cannot transfer Builder role |
 
 #### Add Administrators
 ```json
@@ -331,17 +333,6 @@ Custom permissions are organizational concepts you create - the system provides 
 
 ### Built-in Permission Indexes
 
-| Module | Index Range | Key Permissions | Example Use |
-|--------|-------------|----------------|-------------|
-| **Repository** | 100-105 | 100: Launch, 103: Policy | Data storage management |
-| **Service** | 200-219 | 200: Launch, 212: Publish | Service offering management |
-| **Demand** | 260-266 | 260: Launch, 261: Refund | Service request management |
-| **Machine** | 600-607 | 600: Launch, 607: Publish | Workflow management |
-| **Progress** | 650-655 | 650: Launch, 651: Operator | Workflow execution tracking |
-| **Treasury** | 700-707 | 700: Launch, 702: Deposit, 703: Withdraw | Fund management |
-| **Arbitration** | 800-811 | 800: Launch, 807: Vote, 808: Arbitrate | Dispute resolution |
-
-**Complete Permission List**: [Repository: 100-105] [Service: 200-219] [Demand: 260-266] [Machine: 600-607] [Progress: 650-655] [Treasury: 700-707] [Arbitration: 800-811]
 
 **Query All Permissions**: Use `mcp_wowok_permission_Built-in_permissions` with `{"module": "all"}` for complete list or `{"module": "treasury"}` for specific module.
 
@@ -356,16 +347,6 @@ All address fields use consistent format with local name resolution:
 **Local Marks**: Local marks are nicknames you save on your device for addresses you use often. Set `local_mark_first: true` to search your saved nicknames first, or `false` to search your account names first. This way you can reference "alice_manager" instead of remembering the long address.
 
 **Troubleshooting Address Issues**: If "Address not found" errors occur, try switching the `local_mark_first` setting or use the full blockchain address directly.
-
-### Witness Data Types
-
-| Type Code | Data Type | Common Applications |
-|-----------|-----------|-------------------|
-| **100** | Bool | Yes/no verification flags |
-| **101** | Address | Object relationship proofs |
-| **103** | U64 | Timestamps, large numbers |
-| **104** | Vec<U8> | Binary data, document hashes |
-
 ---
 
 ## Integration Patterns
@@ -381,16 +362,6 @@ Organizations can use different Permission objects for different security domain
 - **Public Permission**: Community access to Repository data
 - **Business Permission**: Service and financial operations  
 - **Admin Permission**: System configuration and governance
-
-### Common Permission Patterns
-
-| Pattern | Team Structure | Permission Design | Example Configuration |
-|---------|---------------|-------------------|--------------------|
-| **Solo Operation** | Single person | Builder + Admin + User (same person) | Builder manages admins, Admin handles permissions, User performs tasks |
-| **Small Team** | Owner + 2-5 members | Builder (owner) + Admin (manager) + members with specific permissions | Builder: admin management only, Admin: operational control, Members: task-specific permissions |
-| **Department Structure** | Multiple departments | Separate Permissions per department + shared admin Permission | Each department has independent Permission object |
-| **Enterprise Governance** | Complex hierarchy | Builder (board) + Admins (executives) + department-specific custom permissions | Board holds Builder role for admin management, executives manage operations, departments use custom permissions ≥1000 |
-
 ---
 
 ## Complete Examples
@@ -515,32 +486,53 @@ Organizations can use different Permission objects for different security domain
 
 ---
 
-## Common Issues & Troubleshooting
+## AI Assistant Troubleshooting
 
-### Permission Assignment Failures
-**Problem**: "Permission denied for permission assignment"  
-**Solutions**:
-1. Verify you have Admin rights in Permission object (check if your address is in admin list)
-2. Ensure target addresses use correct format and local_mark_first setting (see [Address Format Options](#address-format-options))
-3. For custom permissions: create in biz_permission before assigning to users
+Instead of manually diagnosing Permission issues, use these AI prompts to get personalized help:
 
-### Object Integration Errors  
-**Problem**: "Permission object not found" when creating Treasury/Service/Repository  
-**Solutions**:
-1. Verify Permission object exists using exact name or address
-2. Ensure Permission and target object are on same network
-3. Check Permission object is properly configured with required admin structure
+### 🤖 **Permission Assignment Issues**
 
-### Admin Role Confusion
-**Problem**: "Cannot perform admin operations" or "Access denied"  
-**Solutions**: Review the [Admin Management](#4-admin-management) role table - Builder can manage admins and transfer ownership, Admin can assign permissions but cannot remove other admins or transfer Builder role
+**Prompt**: "I'm getting 'Permission denied for permission assignment' when trying to assign permission [PERMISSION_INDEX] to address [ADDRESS] in Permission object [PERMISSION_NAME]. Can you help me diagnose what's wrong?"
 
-### Technical Implementation Issues
-**Problem**: Permission indexes don't work as expected  
-**Solutions**:
-1. Use exact permission indexes from the [Built-in Permission table](#built-in-permission-indexes)
-2. Ensure custom permissions use indexes ≥1000
-3. Query live permission lists using `mcp_wowok_permission_Built-in_permissions` for verification
+**The AI will check**:
+- Your admin rights in the Permission object
+- Address format and local_mark_first settings
+- Whether custom permissions need to be created first
+- Network consistency between components
+
+### 🤖 **Object Integration Problems**
+
+**Prompt**: "I'm trying to create a [SERVICE/TREASURY/REPOSITORY] object but getting 'Permission object not found' error with Permission object [NAME_OR_ADDRESS]. What should I check?"
+
+**The AI will verify**:
+- Permission object existence and accessibility
+- Network alignment between objects  
+- Permission object configuration and admin structure
+- Correct reference format (name vs address)
+
+### 🤖 **Admin Role Confusion**
+
+**Prompt**: "I can't perform admin operations on Permission object [NAME]. I'm getting 'Access denied' but I think I should have admin rights. Can you check my role and permissions?"
+
+**The AI will clarify**:
+- Your current role (Builder vs Admin vs User)
+- What operations your role allows
+- How to transfer or escalate permissions if needed
+- Admin hierarchy and delegation rules
+
+### 🤖 **Permission Index Problems**
+
+**Prompt**: "Permission index [INDEX] isn't working as expected in my Permission object [NAME]. Can you verify if this permission exists and help me understand how to use it correctly?"
+
+**The AI will**:
+- Check built-in permission indexes and their functions
+- Verify custom permission setup (≥1000 indexes)
+- Query live permission configurations
+- Suggest correct permission assignment methods
+
+### 🎯 **General Troubleshooting Prompt**
+
+**Comprehensive Issue Resolution**: "I'm having trouble with Permission object [NAME]. Here's what I'm trying to do: [DESCRIBE_GOAL]. Here's the error I'm getting: [ERROR_MESSAGE]. Can you walk me through diagnosing and fixing this step by step?"
 
 💡 **Development Tip**: Test Permission configurations with minimal team first. Use query operations to verify assignments before creating dependent objects. Save working JSON configurations for future use.
 

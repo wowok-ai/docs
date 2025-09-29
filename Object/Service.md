@@ -50,11 +50,13 @@ Service objects create complete business platforms enabling revenue generation t
 
 - Token type uses Token format (`"0x2::sui::SUI"`), not Coin format
 - Publishing (`bPublished: true`) permanently locks Machine and Guard configuration
-- Order objects allow buyer deposits but restrict buyer withdrawals
-- Service owners can withdraw from Orders without restrictions (normal business flow)
 - Multiple Services can share the same Machine workflow
 
-**Order Balance Management**: Order balance serves as a temporary fund buffer pool with two distinct components: seller-deposited operational funds (Order Balance) and buyer purchase payments. Only Order owners (buyers) can withdraw from Order balance, while purchase payments flow to designated Treasury based on workflow completion and Guard conditions.
+**Fund Allocation Rules**: Different contract terms determine how funds are distributed between parties. Payments are allocated based on service completion status, Guard verification results, and predefined agreement terms.
+
+**Breach Resolution Options**: When service commitments are violated, there are two primary resolution paths:
+1. **Arbitration Route**: Formal dispute resolution through configured Arbitration objects with structured ruling and compensation processes
+2. **Direct Compensation**: Service owner can deposit compensation funds directly into the Order balance, allowing immediate customer withdrawal without requiring formal arbitration proceedings
 
 ### Core Business Workflow
 
@@ -274,7 +276,11 @@ Guard verification runs before order creation. Only customers passing Guard cond
 
 **What is Treasury**: Treasury objects are shared fund pools with programmable access controls, enabling multiple authorized entities to deposit and withdraw according to predefined rules.
 
-**Payment Flow**: Customer purchase payments temporarily held in Order objects, then flow to specified Treasury based on workflow completion and Guard conditions. Order Balance (seller deposits) remains separate and can only be withdrawn by Order owners under specific conditions.
+**Payment Flow**: Customer purchase payments temporarily held in Order objects, then flow to specified Treasury based on workflow completion and Guard conditions. 
+
+**Withdrawal Rules**: Once one party withdraws funds from the Treasury, the other party can withdraw any remaining balance. Each party can only withdraw once - withdrawals are one-time operations and cannot be repeated.
+
+**Example**: If Customer pays 100 tokens → Service Provider withdraws 80 tokens → Customer can withdraw remaining 20 tokens as refund. Neither party can make additional withdrawals after their first withdrawal operation.
 
 **For detailed Treasury configuration**: → [Treasury Documentation](./Treasury.md)
 
@@ -302,7 +308,7 @@ Guard verification runs before order creation. Only customers passing Guard cond
 }
 ```
 
-Service owners must pass withdrawal guard verification for **any fund extraction** from Service or Order objects. This creates universal fund control enabling staged payments (e.g., milestone-based contractor payments) and escrow conditions (e.g., buyer protection for large purchases).
+Service owners must pass withdrawal guard verification for **any fund extraction** from Service or Order objects. Since withdrawals are **one-time operations**, complex payment scenarios requiring multiple stages should be implemented using separate Service objects for each stage (e.g., multiple Services for milestone-based contractor payments) rather than attempting multiple withdrawals from a single Order.
 
 ### Refund Guards
 
@@ -418,7 +424,30 @@ Service owners must pass withdrawal guard verification for **any fund extraction
   }
 }
 ```
+```javascript
+// HTTP Request Format for Customer Information Transmission
+{
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(customerRequiredInfo) // Encrypted customer data
+}
+```
 
+**Endpoint Types & Usage**:
+
+- **Service Endpoint**: Global service information and encrypted customer data transmission
+  - **Purpose**: Accepts private customer information securely
+  - **Configuration**: Set in main Service object (`"endpoint": "https://api.myservice.com/secure"`)
+  - **Data**: Encrypted personal details, contact information, delivery addresses
+  - **Security**: Handles sensitive data with encryption
+
+- **Product Endpoint**: Individual product specifications and details
+  - **Purpose**: Provides public product information and availability
+  - **Configuration**: Set per product in sales configuration (`"endpoint": "https://api.myservice.com/products/flowers"`)
+  - **Data**: Product descriptions, specifications, inventory status, pricing details
+  - **Access**: Public information accessible without encryption
 **Data Transmission Methods**:
 
 - **On-chain Storage**: Encrypted data stored directly on blockchain (accessible if private key is compromised)
@@ -1041,6 +1070,39 @@ Service owners must pass withdrawal guard verification for **any fund extraction
 ## **Template Prompt**: "Create Service configuration for [business type] selling [products] with [payment method], integrating with [other objects] for [business workflow]."
 
 **Development Tip**: Test all integrations on testnet before publishing Service. Published services lock critical configurations permanently.
+
+### Breach Resolution Scenarios
+
+**Scenario**: Customer ordered premium flower delivery service but flowers arrived wilted due to delivery delay.
+
+#### Option 1: Direct Compensation 
+```json
+{
+  "account": "flower_delivery_service_owner",
+  "data": {
+    "order_receive": {
+      "order": "order_premium_flowers_001"
+      // Service owner deposits compensation funds directly to Order balance
+      // Customer can immediately withdraw funds without arbitration delay
+    }
+  }
+}
+```
+
+#### Option 2: Formal Arbitration Process
+```json
+{
+  "account": "dissatisfied_customer", 
+  "data": {
+    "order_refund": {
+      "order": "order_premium_flowers_001",
+      "arb": "flower_delivery_arbitration_service"
+      // Formal dispute through configured Arbitration object
+      // Structured ruling process with evidence and compensation determination
+    }
+  }
+}
+```
 
 ---
 
