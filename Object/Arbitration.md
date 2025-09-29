@@ -1,6 +1,6 @@
 # Arbitration Object: Your Dispute Resolution Engine
 
-> "Create on-chain arbitration services with weighted voting, automated fee collection, and transparent dispute resolution"
+> "Resolve order disputes through transparent arbitration services that provide impartial evaluation, weighted voting decisions, and automated compensation execution for fair dispute settlement"
 
 **MCP Tool**: [`wowok_arbitration_mcp_server`](https://www.npmjs.com/package/wowok_arbitration_mcp_server)
 
@@ -37,7 +37,7 @@ Arbitration objects create on-chain dispute resolution services that handle orde
 ### Core Capabilities
 
 - **Weighted Voting Decisions**: Multiple arbitrators vote on dispute propositions with configurable influence levels based on expertise and qualifications
-- **Automated Fee Management**: Collect arbitration fees (if applicable) during dispute creation, distribute compensation after decisions, and allow arbitrators to withdraw their earned payments. Arbitration can also be free.
+- **Automated Fee Management**: Collect arbitration fees (if applicable) into the Arbitration's Treasury during dispute creation for operational costs. Fee distribution is managed through Treasury operations. Arbitration services can also be offered for free.
 - **Conditional Access Control**: Guard integration verifies arbitrator qualifications and dispute eligibility before participation
 
 - **Proposition-based voting**: Consumer submits specific claims about what went wrong and how they want to solve it, and arbitrators vote to support or reject each proposition, with compensation determined by which claims receive consensus approval.
@@ -46,7 +46,7 @@ Arbitration objects create on-chain dispute resolution services that handle orde
 
 - **Creation Dependencies**: Treasury and Guard objects required, Permission object optional (auto-created with basic access if omitted)
 - **Token Type Alignment**: Arbitration `type_parameter` must exactly match Treasury `type_parameter` for fee collection compatibility
-- **Single Decision Model**: Each Arb (dispute case) receives one final decision affecting Order compensation
+- **Single Decision Model**: Each Arb (dispute case) receives one final decision affecting Order compensation, but decisions remain modifiable until compensation withdrawal occurs
 - **Transparent voting records**: All voting activities, arbitrator identities, and weight allocations are permanently recorded on-chain, providing full auditability of the decision-making process.
 
 ### Core Workflow
@@ -89,7 +89,7 @@ _Related Implementation_: → Integration with Order objects for compensation an
 | `account` | string | Optional | Default account                                       | Transaction signer account name or address. If omitted, the system uses the current active account.                                                                                                                               |
 | `data`    | object | Required | -                                                     | Core arbitration configuration and operations.                                                                                                                                                                                    |
 | `session` | object | Optional | `{ "network": "sui testnet", "retentive": "always" }` | Network and session persistence settings. `network` specifies the target blockchain (`"sui mainnet"`, `"sui testnet"`, `"wowok mainnet"`, `"wowok testnet"`). `retentive` controls session persistence (`"always"`, `"session"`). |
-| `witness` | object | Optional | -                                                     | Guard verification data for conditional operations.                                                                                                                                                                               |
+| `witness` | object | Optional | - | User-proof data for verification. See [Guard Documentation - Witness System section](./Guard.md#witness-system). |
 
 **Note**: All Arbitration operations require `account` parameter to specify transaction signer. If omitted, current active account is used.
 
@@ -158,7 +158,7 @@ All address fields support both simple string format and named address format wi
 ### Technical Requirements
 
 - **Token Format**: Use native token format `"0x2::sui::SUI"`, not Coin wrapper format `"0x2::coin::Coin<0x2::sui::SUI>"`. Must match exactly across Arbitration and Treasury objects for fee collection compatibility.
-- **Permission Reference**: See [Permission Object documentation](./Permission.md) for detailed configuration. If omitted, system creates basic Permission with standard access rights.
+- **Permission Reference**: See [Permission Object documentation](./Permission.md) for detailed configuration. If omitted, the system creates a new Permission with administrator access rights.
 - **Retentive Mode**: `"always"` affects all device sessions, `"session"` affects only current program execution.
 
 ### 3. Guard Verification System

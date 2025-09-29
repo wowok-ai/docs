@@ -169,7 +169,7 @@ Guards verify two types of data:
 | `network`     | string   | **Required**                 | Blockchain network: "sui mainnet", "sui testnet", "wowok mainnet", "wowok testnet" |
 | `retentive`   | string   | Optional (default: "always") | Network scope: "always" (all device sessions), "session" (current program only)    |
 
-## 💡 **AI Prompt Tip**: "I want to create a new Guard. Please guide me through what information you need to help me create it accurately."
+💡 **AI Prompt Tip**: "I want to create a new Guard. Please guide me through what information you need to help me create it accurately."
 
 ## Logic System Parameters
 
@@ -209,7 +209,7 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **`logic`**: Specifies a comparison method. Different comparison methods have different numeric codes. For example, code 12 means "greater than or equal" comparison.
 
-**Parameters for logic operations**: Must contain 2+ items for comparisons (>, ≥, ==, etc.) where first item is compared against all others, or 2+ items for combinations (AND, OR). Each item can be current time, stored numbers, object query results, or calculations. For example, [current_time, deadline_timestamp] compares time values, or [user_balance, min_threshold, emergency_reserve] checks balance against multiple limits.
+**Parameters for logic operations**: Must contain 2+ items for comparisons (>, ≥, ==, etc.) where first item is compared against all others, or 2+ items for combinations (AND, OR). Each item can be current time, stored numbers, object query results, or calculations. For example, [current_time, deadline_timestamp] compares time values, or [user_balance, min_threshold, emergency_reserve] checks if balance > min_threshold AND balance > emergency_reserve.
 
 **Logic Field Concepts**:
 
@@ -248,7 +248,7 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **`calc`**: Specifies a mathematical operation method. Different math operations have different numeric codes. For example, code 2 means "addition" operation.
 
-**Parameters for calculations**: Must contain 2+ numbers for most operations (addition supports multiple values, subtraction/division/modulo need exactly 2). Each item can be stored constants, real-time witness data, object query results, or context values. For example, [last_action_time, cooldown_duration] adds time values, or [treasury_balance, percentage_number] calculates portions.
+**Parameters for calculations**: Must contain 2+ numbers for all operations. Each item can be stored constants, real-time witness data, object query results, or context values. For example, [last_action_time, cooldown_duration] adds time values, or [treasury_balance, percentage_number] calculates portions. All operations support multiple values: addition sums all values, subtraction/division/modulo apply left-to-right (A - B - C..., A / B / C..., A % B % C...).
 
 **Calculation Field Concepts**:
 
@@ -260,13 +260,13 @@ The `root` field contains verification logic structures. Guards support six diff
 
 **Structure Pattern**: `{"calc": code, "parameters": [...]}`
 
-| Code  | Operation           | Description | Parameters |
-| ----- | ------------------- | ----------- | ---------- |
-| **2** | Addition (+)        | Sum values  | 2+ numbers |
-| **3** | Subtraction (-)     | Difference  | 2 numbers  |
-| **4** | Multiplication (\*) | Product     | 2+ numbers |
-| **5** | Division (/)        | Quotient    | 2 numbers  |
-| **6** | Modulo (%)          | Remainder   | 2 numbers  |
+| Code  | Operation           | Description                 | Parameters |
+| ----- | ------------------- | --------------------------- | ---------- |
+| **2** | Addition (+)        | Sum values                  | 2+ numbers |
+| **3** | Subtraction (-)     | Left-to-right: A - B - C... | 2+ numbers |
+| **4** | Multiplication (\*) | Product of all values       | 2+ numbers |
+| **5** | Division (/)        | Left-to-right: A / B / C... | 2+ numbers |
+| **6** | Modulo (%)          | Left-to-right: A % B % C... | 2+ numbers |
 
 #### 3. Object Queries (`object` + `query` fields)
 
@@ -287,7 +287,7 @@ The `root` field contains verification logic structures. Guards support six diff
 - **Fixed address**: `"object": "0x1234567890abcdef..."` - Direct blockchain address reference
 - **Table reference**: `"object": {"identifier": 1}` - References address stored at table identifier 1
 - **Named reference**: `"object": {"name_or_address": "treasury_name"}` - References object by local name or address
-
+（可能是一个witness，或witness 和witness type）
 **`query`**: Tells the system what specific information to get from that object. For example, `{"module": "treasury", "function": "Balance"}` gets the current balance amount, or `{"module": "permission", "function": "Has Rights"}` checks if user has a specific permission.
 
 **Parameters for object queries**: Contains the inputs that the query function needs to work. For permission checks, needs [user_address, permission_index]. For balance checks, needs no inputs so use empty array `[]`. For data retrieval, needs [address, field_name]. The number and type depend on which function you're calling.
@@ -468,10 +468,13 @@ Logic structures can be nested to create verification rules with multiple condit
   ]
 }
 ```
-
+**Important Note: Currency Type Validation**
+When dealing with balance checks or currency-related Guard verifications, always include currency type validation. Ensure the verified currency type matches the actual transaction currency type to avoid security risks from type mismatches.
 This Guard returns true only when all three conditions are met: current time is during business hours (9AM-6PM) AND user has management permission (1001) AND Treasury balance is at least 1 SUI. It combines time calculation, object querying, and permission verification.
 
 ## Data Types & Formats
+**Important Note: Real-time Protocol Updates**
+Since the Wowok protocol undergoes continuous updates, always prioritize real-time queries over this documentation when conflicts arise. For the most current information, use prompts like: "Based on your knowledge of XXX Object, tell me what the XXX parameter does, without searching documentation."
 
 **Note**: This section serves as the complete data types reference for all Wowok objects.
 
@@ -966,14 +969,22 @@ For detailed Arbitration configuration, see [Arbitration Documentation](./Arbitr
 | **31** | Order → Machine           | Address   | Provides Machine address associated with Order        |
 | **32** | Order → Service           | Address   | Provides Service address associated with Order        |
 | **33** | Progress → Machine        | Address   | Provides Machine address associated with Progress     |
-| **34** | Arbitration → Order       | Address   | Provides Order address associated with Arbitration    |
+| **34** | Arb（和arbitration不一样） → Order       | Address   | Provides Order address associated with Arbitration    |
 | **35** | Arbitration → Arbitration | Address   | Provides Arbitration address for arbitration rules    |
 | **36** | Arbitration → Progress    | Address   | Provides Progress address associated with Arbitration |
 | **37** | Arbitration → Machine     | Address   | Provides Machine address associated with Arbitration  |
 | **38** | Arbitration → Service     | Address   | Provides Service address associated with Arbitration  |
 
 **Technical Note**: Witness types verify object relationships by requiring users to provide addresses that demonstrate specific connections between Wowok objects. All witness types return Address format (type 101).
+**Important Distinction: Address vs Object Queries**
 
+When performing queries in Guard verifications, understand the crucial difference between address and object queries:
+
+- **Address**: An address is just a string identifier (e.g., `0x123...`). Querying an address alone typically returns limited information and cannot access operational methods or internal data.
+
+- **Object Query**: An object contains the complete data structure and available operations. Object queries can access methods, properties, states, and actual functional data.
+
+**Key Point**: To check an object's status, call its methods, or access its data in Guard verification, you must query the object itself, not just its address. The address is like a "street number" while the object is the "house contents" - you need the contents for meaningful verification.
 ### Advanced Witness Verification
 
 **Relationship-Based Verification**: Witness data enables comprehensive verification through object relationships. Provide one address and Guard can verify multiple related aspects without requiring separate submissions.

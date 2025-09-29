@@ -2,7 +2,7 @@
 
 > "Post service requests with reward pools, receive recommendations, control reward distribution"
 
-**MCP Tool**: `mcp_wowok_demand_demand_operations`
+**MCP Tool**: [`wowok_demand_mcp_server`](https://www.npmjs.com/package/wowok_demand_mcp_server)
 
 ## How to Use This Documentation
 
@@ -41,7 +41,7 @@ Demand is an on-chain object that enables posting service requests with attached
 - Bounty pool is additive-only (cannot reduce funds once added)
 - Single winner model (entire pool goes to one recommender)
 - Refund only available after expiry AND no reward distributed
-- No time expiry = no refund option (funds stay locked)
+- If no expiration time is set, the default expiration is 7 days.
 
 ### Core Workflow
 1. **Create**: Initialize Demand object with [token type and permissions](#1-account--object-identification)
@@ -51,7 +51,7 @@ Demand is an on-chain object that enables posting service requests with attached
 5. **Distribute**: Execute [reward payment](#3-bounty-operations) to selected service recommender
 6. **Refund**: Reclaim unused rewards after [expiration](#4-time-configuration) (if no selection made)
 
-**Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. **Setting expiration time (`time_expire`) is strongly recommended to enable refund operations if no suitable service is found. Default: 7 days if not specified.**
+**Note**: Once funds are added to bounty pool, they cannot be withdrawn until reward distribution or post-expiration refund operations. 
 
 **Example Usage**: 
 1. Post "Bakery website needed" request with 200 SUI reward
@@ -179,9 +179,7 @@ Demand is an on-chain object that enables posting service requests with attached
 | `reward` | Pay selected service recommender | Before expiry | Valid recommendation exists |
 | `refund` | Reclaim unused funds | After expiry + no rewards distributed | Demand owner permissions |
 
-**Technical Constraint**: Bounty pool is additive-only. Cannot reduce or withdraw funds except through reward/refund operations.
-
-**Technical Note**: `reward` operation transfers entire bounty pool to the account that recommended the selected service. Only one recommender can receive rewards per Demand.
+**Technical**: The bounty pool can only be increased and cannot be reduced or withdrawn except through the `reward` or `refund` operations. When the `reward` operation is used, the entire bounty pool is transferred to the account that recommended the selected service—only one recommender can receive the reward per Demand.
 
 ---
 
@@ -212,8 +210,6 @@ Demand is an on-chain object that enables posting service requests with attached
 | `op` | string | Required | - | "duration" or "time" |
 | `minutes` | number | For duration | `10080` (7 days) | Minutes from current time |
 | `time` | number | For time | - | Unix timestamp |
-
-**Best Practice**: Set time expiry to enable refunds. No expiry = no way to get unused funds back.
 
 ---
 
@@ -295,7 +291,7 @@ For complete Guard configuration and verification logic, see [Guard Documentatio
 
 ### Address Formats
 
-Demand supports both blockchain addresses and saved local names. For complete address format options and Local Marks explanation, see [Service Documentation - Address Format Options section].
+Demand supports both blockchain addresses and saved local names. For complete address format options and Local Marks explanation, see [Service Object Documentation – Address Format Options](./Service.md#address-format-options).
 
 **Demand-specific examples**:
 ```json

@@ -16,7 +16,90 @@ Wowok Query is a comprehensive querying system for the Wowok protocol that provi
 8. [Received Objects Query](#received-objects-query)
 9. [Wowok Protocol Query](#wowok-protocol-query)
 10. [Common Parameters](#common-parameters)
+## Quick Query Guide - Copy & Use Directly
 
+### Universal Query Templates
+
+Just copy these templates and replace the `{parameters}` with your specific values:
+
+#### 1. **View Object** - Get complete object information
+```
+Show complete information for {object_name/address}
+```
+
+#### 2. **Browse List** - Paginate through object data  
+```
+List all data in {object_name}, show {number} items per page
+```
+
+#### 3. **Find Specific** - Get exact item details
+```
+Query {specific_identifier} in {object_name}
+```
+
+#### 4. **Monitor Events** - Track system activity
+```
+Monitor recent {event_type} events, show {number} records
+```
+
+#### 5. **Local Info** - Check local data
+```
+Show local {query_type}
+```
+
+---
+
+### Quick Reference Tables
+
+#### Common Object Types
+| Object Type | Description | Example Names |
+|-------------|-------------|---------------|
+| `service_name` | Service objects | flower_delivery_service, cleaning_service |
+| `repository_name` | Data repositories | medical_records, user_profiles |
+| `treasury_name` | Financial treasuries | payment_treasury, reward_pool |
+| `machine_name` | Workflow machines | order_process_machine |
+| `progress_name` | Workflow instances | order_123_progress |
+| `permission_name` | Access control | admin_permissions |
+| `arbitration_name` | Dispute resolution | order_arbitration |
+| `demand_name` | Service requests | flower_demand_nyc |
+
+#### Event Types (for monitoring)
+| Event Type | Description |
+|------------|-------------|
+| `OnNewOrder` | New orders created |
+| `OnNewArb` | New arbitration cases |
+| `OnPresentService` | Services recommended to demands |
+| `OnNewProgress` | New workflow instances |
+
+#### Local Query Types
+| Query Type | Description |
+|------------|-------------|
+| `account_list` | All local accounts |
+| `account` | Specific account details |
+| `mark_list` | Address bookmarks |
+| `info_list` | Personal information |
+
+#### Common Identifiers for Specific Queries
+| Object Type | Identifier Type | Example |
+|-------------|-----------------|---------|
+| **Service** | Product name | `"premium_flowers"`, `"basic_cleaning"` |
+| **Treasury** | Transaction index | `0`, `1`, `25` |
+| **Repository** | Address + field name | `0x123...` + `"medical_record"` |
+| **Progress** | Session index | `0`, `5`, `12` |
+| **Permission** | Entity address | `0x123...`, `user_account` |
+| **Arbitration** | Voter address | `0x123...`, `arbitrator_1` |
+
+### Ready-to-Use Examples
+
+```
+Show complete information for flower_delivery_service
+List all data in payment_treasury, show 50 items per page
+Query "premium_flowers" in flower_delivery_service
+Monitor recent OnNewOrder events, show 10 records
+Show local account_list
+```
+
+##### **💡 Tip**: Replace `{parameters}` with values from the tables above, then paste directly into your query tool!
 ---
 
 ## Objects Query
@@ -1126,7 +1209,7 @@ This section provides standardized query documentation for each Wowok object typ
 | `participant_address` | address | Address involved in the event |
 | `timestamp` | number | When the event occurred |
 | `details` | string | Additional event information |
-
+（检查）
 **How to Query:**
 
 • **Object Query** - Understand the dispute context, involved parties, claims being arbitrated, and current status
