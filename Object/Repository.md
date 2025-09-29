@@ -37,7 +37,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 - **Cross-Object Integration**: Other Wowok objects can query Repository data
 - **Policy Management**: Define and modify data structure rules
 
-**Example**: Errand delivery service uses Repository for communication records (messages, photos, locations) with automated verification by other objects.
+##### **Example**: Errand delivery service uses Repository for communication records (messages, photos, locations) with automated verification by other objects.
  [→ Complete Errand Flower Delivery Implementation](./Errand-flower_delivery.md)
 ---
 
@@ -93,10 +93,10 @@ Repository is a policy-driven, on-chain database enabling structured information
 |-----------|---------|-------------|---------|-------------|
 | `description` | string | Human-readable purpose | None | Always recommended |
 | `guard` | string/null | Additional access verification | null | Sensitive data |
-| `mode` | 0 or 1 | **0**: Free (any data) <br>**1**: Strict (policy only) | **0 (Free)** | **Free**: Prototyping<br>**Strict**: Team collaboration |
+| `mode` | 0 or 1 | **0**: Relax (any data) <br>**1**: Strict (policy only) | **0 (Relax)** | **Relax**: Prototyping<br>**Strict**: Team collaboration |
 
 **Mode Selection Guidance:**
-- **Free Mode (0)**: Use when you need flexibility to add any data fields without planning ahead. Good for personal notes, experimentation, or rapidly changing requirements.
+- **Relax Mode (0)**: Use when you need flexibility to add any data fields without planning ahead. Good for personal notes, experimentation, or rapidly changing requirements.
 - **Strict Mode (1)**: Use when you need structured collaboration with predefined data fields. Good for team projects, formal documentation, or consistent data validation.
 
 💡 **AI Prompt Tip**: "Help me choose Repository mode for [project type] with [team size] collaborators."
@@ -104,7 +104,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 ---
 
 ### 3. Data Operations
-
+（更新，policy和数据更新字段）
 #### Add Data by Key (Group by Field)
 ```json
 {
@@ -114,7 +114,9 @@ Repository is a policy-driven, on-chain database enabling structured information
       "key": "field_name",
       "data": [
         {
-          "address": "target_address",
+          "address_or_witness": {
+            "address": "target_address"
+          },
           "data": {
             "type": 204,
             "data": "content"
@@ -132,7 +134,9 @@ Repository is a policy-driven, on-chain database enabling structured information
   "data": {
     "op": "add_by_address",
     "data": {
-      "address": "target_address", 
+      "address_or_witness": {
+        "address": "target_address"
+      },
       "data": [
         {
           "key": "field_name",
@@ -146,6 +150,24 @@ Repository is a policy-driven, on-chain database enabling structured information
   }
 }
 ```
+
+#### Witness-Based Address (Advanced)
+```json
+{
+  "address_or_witness": {
+    "witness": 1  // Get address from Guard witness value at identifier 1
+  }
+}
+```
+
+**Address Format Options**:
+
+| Format | Usage | Description |
+|--------|-------|-------------|
+| `{"address": "0x123..."}` | Direct address | Use blockchain address directly |
+| `{"address": {"name_or_address": "user_mark", "local_mark_first": true}}` | Named address | Use local mark resolution |
+| `{"address": 1726847460}` | Timestamp address | Use timestamp as address for time-series data |
+| `{"witness": 1}` | Witness address | Get address from Guard witness value |
 
 #### Remove Data
 ```json
@@ -182,7 +204,10 @@ Repository is a policy-driven, on-chain database enabling structured information
         "description": "Field purpose",
         "dataType": 204,
         "permissionIndex": 1001,
-        "guard": "field_guard"
+        "guard": {
+          "guard": "field_guard_object",
+          "witness_ids": [1, 2]
+        }
       }
     ]
   }
@@ -195,7 +220,70 @@ Repository is a policy-driven, on-chain database enabling structured information
 | `description` | string | Required | Field purpose explanation |
 | `dataType` | 200-206 | Required | Data type enforcement |
 | `permissionIndex` | number ≥1000 | Optional | Custom permission requirement. Set this to require a specific permission (from the Permission object) for users to access or modify this field. For example, if you set `"permissionIndex": 1001`, only users with permission 1001 can operate on this field. |
-| `guard` | string | Optional | Additional field verification |
+| `guard` | object | Optional | Guard verification with witness IDs |
+
+**Guard Configuration Structure**:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `guard` | string/null | Required | Guard object address/name or null to remove |
+| `witness_ids` | number[] | Required | Array of Guard witness identifiers (1-255) for verification |
+
+**Guard Configuration Examples**:
+```json
+// Simple guard without witness
+{
+  "guard": {
+    "guard": "access_control_guard",
+    "witness_ids": []
+  }
+}
+
+// Guard with witness verification
+{
+  "guard": {
+    "guard": "data_validation_guard", 
+    "witness_ids": [1, 3, 5]
+  }
+}
+
+// Remove guard protection
+{
+  "guard": {
+    "guard": null,
+    "witness_ids": []
+  }
+}
+```
+
+**Policy Guard Witness Mechanism**:
+
+**What are witness_ids?**: The `witness_ids` array specifies which Guard witness identifiers (1-255) are required for field access verification. When users try to add/modify data in this field, they must provide witness data for ALL specified identifiers.
+
+**How it works**: User attempts field access → Repository checks Guard protection → Requires witness data → Guard validates → Access decision
+
+**Witness Data Requirements**:
+
+When accessing fields with Guard protection, users must provide witness data matching the `witness_ids`:
+
+```json
+{
+  "witness": {
+    "guards": ["approval_guard"],
+    "witness": [
+      {
+        "guard": "approval_guard",
+        "identifier": 1,  // Must match witness_ids[0]
+        "type": 120,      // String type
+        "witness": "approved_by_manager",  // ← User provides proof
+        "cmd": [],
+        "cited": 1,
+        "witnessTypes": []
+      }
+    ]
+  }
+}
+```
 
 #### Policy Operations
 | Operation | Purpose | Parameters |
@@ -212,13 +300,6 @@ Repository is a policy-driven, on-chain database enabling structured information
 - **Guard-only fields**: Add Guard verification without permission requirements for condition-based access
 - **Double-protected fields**: Combine both custom permissions AND Guard verification for maximum security
 
-**Field Access Control Combinations:**
-1. **No Protection**: Field accessible to anyone with basic Repository access
-2. **Permission Only**: `"permissionIndex": 1001` - User must have specific permission in Permission object
-3. **Permission + Embedded Guard**: Permission itself has Guard requirements - user must pass Guard to get permission, then use permission to access field
-4. **Guard Only**: `"guard": "field_guard"` - Direct Guard verification for field access, no permission needed
-5. **Permission + Field Guard**: Both permission requirement AND separate field-level Guard verification
-
 💡 **AI Prompt Tip**: "Design Repository field structure for [data type] with [access requirements] and [validation needs]."
 
 #### Data vs Policy Best Practices
@@ -228,7 +309,7 @@ Repository is a policy-driven, on-chain database enabling structured information
 - Policy defines the "contract" for how data should be structured and accessed
 
 **Mode Differences:**
-- **Mode 0 (Free)**: Can add data to fields without pre-defined Policy, OR follow existing Policy rules if Policy exists
+- **Mode 0 (Relax)**: Can add data to fields without pre-defined Policy, OR follow existing Policy rules if Policy exists
 - **Mode 1 (Strict)**: Can ONLY add data to fields that have pre-defined Policy
 
 **When to Set Policy:**
@@ -236,23 +317,23 @@ Repository is a policy-driven, on-chain database enabling structured information
 - Enforce data consistency and validation rules
 - Set custom permissions or Guard verification for sensitive fields
 
-**When to Add Data Without Policy (Free Mode Only):**
+**When to Add Data Without Policy (Relax Mode Only):**
 - Rapid prototyping with unknown data structure
 - Personal experimentation and flexible data storage
 - Simple data collection before formalizing structure
 
 **Policy Migration Pattern:**
-1. **Start Free**: "Help me create a Repository in free mode for [project type] experimentation"
+1. **Start Relax**: "Help me create a Repository in Relax mode for [project type] experimentation"
 2. **Add Data**: "Help me add data fields for [describe your data needs] without strict structure"  
 3. **Analyze Patterns**: "Review my Repository usage and suggest which fields to formalize as policies"
 4. **Create Policies**: "Design policies for these data fields: [list your used fields] with [access requirements]"
 5. **Switch Mode**: "Help me migrate my Repository to strict mode with proper policy validation"
 
-This migration approach allows you to prototype quickly without predefined structure, then formalize the data structure once you understand your requirements. Note that switching from free to strict mode requires adding policies before any new data operations can succeed.
+This migration approach allows you to prototype quickly without predefined structure, then formalize the data structure once you understand your requirements. Note that switching from Relax to strict mode requires adding policies before any new data operations can succeed.
 
 **AI Prompt Template:**
 ```
-"I have a Repository in free mode with [describe your data]. Please design policies for strict mode that cover these data types: [list field names and data types you've been using]. I need [describe access requirements]. Show me the complete policy configuration and explain each field's purpose. Don't execute the operation yet, just show me the configuration first."
+"I have a Repository in Relax mode with [describe your data]. Please design policies for strict mode that cover these data types: [list field names and data types you've been using]. I need [describe access requirements]. Show me the complete policy configuration and explain each field's purpose. Don't execute the operation yet, just show me the configuration first."
 ```
 
 ---
@@ -347,18 +428,38 @@ For general Wowok data types (100-122), see [Guard Object Documentation - Data T
 
 For complete address format documentation, see [Service Object Documentation - Address Formats](Service.md#address-formats).
 
-#### Repository-Specific: Timestamp Address
-```json
-{
-  "address": 202509102100
-}
-```
-**Repository-specific usage**: Use integers for time-based addresses (like timestamps) when storing time-series data or creating temporal data keys. This converts numeric timestamps to blockchain addresses for Repository data organization.
+#### Repository-Specific Address Types
 
-**Example Use Cases:**
-- Weather data by hour: `address: 2025091021` (timestamp) with weather conditions
-- Daily reports: `address: 20250910` (date) with summary data
-- Session logs: `address: 1726847460` (Unix timestamp) with session records
+**Supported Address Types**:
+
+| Type | Format | Description | Example |
+|------|--------|-------------|---------|
+| **Direct Address** | `"0x123..."` | Blockchain address | User accounts, object references |
+| **Named Address** | `{"name_or_address": "user_mark", "local_mark_first": true}` | Local mark resolution | Saved addresses |
+| **Integer Address** | `202509102100` | Number as address | Timestamp-based keys |
+| **BigInt Address** | `9007199254740991n` | Large number as address | High precision timestamps |
+| **Witness Address** | `{"witness": 1}` | From Guard witness | Dynamic address resolution |
+
+**Timestamp Address Examples**:
+```json
+// Standard timestamp
+{"address": 1726847460}
+
+// Large timestamp (BigInt)  
+{"address": "9007199254740991"}
+
+// Date-based key
+{"address": 20250910}
+
+// Hourly data key
+{"address": 2025091021}
+```
+
+**Use Cases:**
+- **Weather data by hour**: `address: 2025091021` (timestamp) with weather conditions
+- **Daily reports**: `address: 20250910` (date) with summary data  
+- **Session logs**: `address: 1726847460` (Unix timestamp) with session records
+- **High-precision timing**: BigInt timestamps for microsecond-level data
 
 ---
 
@@ -384,14 +485,6 @@ Link repositories for:
 - Project documentation + Transaction records  
 - Public information + Private details
 
-### Common Repository Patterns
-
-| Pattern | Configuration | Use Case |
-|---------|---------------|----------|
-| **Personal Storage** | `mode: 0`, minimal policy | Individual notes, experimentation |
-| **Team Collaboration** | `mode: 1`, structured policy | Shared project data, documentation |
-| **Service Integration** | `mode: 1`, Guards, references | Cross-object automation, payments |
-
 **AI Prompt Template for Repository Design:**
 ```
 "I need a Repository for [describe your use case]. I have [number] users who need to [describe access needs]. Please design a Repository configuration including mode, policies, and security settings. Show me the complete configuration and explain why each setting fits my needs. I'll confirm before creating it."
@@ -400,7 +493,7 @@ Link repositories for:
 ---
 
 ## Complete Examples
-
+（字段更新）
 ### Basic Repository Setup
 ```json
 {
@@ -449,7 +542,12 @@ Result should look like:
     "data": {
       "op": "add_by_address",
       "data": {
-        "address": {"local_mark_first": false, "name_or_address": ""},
+        "address_or_witness": {
+          "address": {
+            "local_mark_first": false, 
+            "name_or_address": ""
+          }
+        },
         "data": [
           {
             "key": "message",
@@ -495,7 +593,10 @@ Result should look like:
           "description": "Sensitive information",
           "dataType": 204,
           "permissionIndex": 2000,
-          "guard": "approval_guard"
+          "guard": {
+            "guard": "approval_guard",
+            "witness_ids": [1]
+          }
         }
       ]
     }
@@ -510,42 +611,65 @@ Result should look like:
 
 ---
 
-## Common Issues & Troubleshooting
+## AI Assistant Troubleshooting
 
-### Permission Errors
-**Problem**: "Permission denied for data operation"
-**Solution**: 
-1. Check if Repository mode is 1 (strict) and policy exists
-2. Verify your account has required `permissionIndex` permission
-3. Ensure Guard conditions are met if configured
+Instead of manually debugging Repository issues, use these AI prompts for personalized assistance:
 
-### Data Type Mismatches
-**Problem**: "Invalid data type for field"
-**Solution**:
-1. Verify `dataType` in policy matches data `type` in operation
-2. Check Repository-specific types (200-206) vs general Wowok types (100-122)
-3. Use correct type codes for your data format
+### 🤖 **Permission & Access Issues**
 
-### Mode Conflicts
-**Problem**: "Cannot add data without policy in strict mode"
-**Solution**:
-1. **Option A**: Switch to mode 0 (free) temporarily
-2. **Option B**: Define policy first, then add data
-3. **Option C**: Use migration pattern (free → data → strict → policy)
+**Prompt**: "I'm getting 'Permission denied for data operation' when trying to [ADD/UPDATE/REMOVE] data in Repository [REPOSITORY_NAME]. The operation is [DESCRIBE_OPERATION]. Can you help me check what's wrong with my permissions?"
 
-### Address Resolution Issues
-**Problem**: "Address not found or invalid"
-**Solution**:
-1. Check `local_mark_first` setting for named addresses
-2. Verify address format (string, number, or object)
-3. Ensure referenced addresses exist in your local marks
+**The AI will analyze**:
+- Repository mode (strict vs relax) and policy requirements
+- Your account's permission indexes and access rights
+- Guard configuration and verification requirements
+- Network consistency and object relationships
 
-### Guard Witness Errors
-**Problem**: "Witness verification failed"
-**Solution**:
-1. Only modify the `witness` field value
-2. Keep all other witness parameters unchanged
-3. Ensure proof value matches Guard requirements
+### 🤖 **Data Type Problems**
+
+**Prompt**: "I'm getting 'Invalid data type for field' error when adding data to Repository [NAME]. I'm trying to store [DATA_TYPE] data with value [VALUE] in field [FIELD_NAME]. What data type should I use?"
+
+**The AI will verify**:
+- Policy dataType vs operation type matching
+- Repository-specific types (200-206) vs Wowok types (100-122)
+- Correct type codes for your specific data format
+- Data structure compatibility with Repository schema
+
+### 🤖 **Mode Configuration Conflicts**
+
+**Prompt**: "I can't add data to my Repository [NAME] and getting 'Cannot add data without policy in strict mode'. I want to [DESCRIBE_GOAL]. What's the best approach to set this up?"
+
+**The AI will recommend**:
+- Whether to use Relax mode (0) temporarily
+- How to define policies before adding data
+- Migration patterns (Relax → data → strict → policy)
+- Best practices for your specific use case
+
+### 🤖 **Address Resolution Problems**
+
+**Prompt**: "I'm getting 'Address not found or invalid' when trying to access Repository data for address [ADDRESS]. I'm using [local_mark_first: true/false] setting. Can you help me fix the address resolution?"
+
+**The AI will check**:
+- local_mark_first configuration vs your address format
+- Address format validation (string/number/object)
+- Local marks existence and naming consistency
+- Alternative address resolution methods
+
+### 🤖 **Guard & Witness Issues**
+
+**Prompt**: "I'm getting 'Witness verification failed' when trying to access Repository [NAME] with Guard [GUARD_NAME]. Here's my witness data: [WITNESS_JSON]. What am I doing wrong?"
+
+**The AI will help**:
+- Identify which witness fields you should modify vs system fields
+- Verify witness value format against Guard requirements
+- Check Guard configuration and verification logic
+- Suggest correct witness data structure
+
+### 🎯 **General Repository Troubleshooting**
+
+**Comprehensive Issue Resolution**: "I'm having trouble with Repository [NAME]. Here's what I'm trying to do: [DESCRIBE_GOAL]. Here's the error: [ERROR_MESSAGE]. Here's my current configuration: [CONFIG_JSON]. Can you walk me through fixing this step by step?"
+
+💡 **Development Tip**: Start with Relax mode for prototyping, then migrate to Strict mode with proper policies for production. Test data operations with simple cases before implementing complex Guard verification.
 
 ---
 

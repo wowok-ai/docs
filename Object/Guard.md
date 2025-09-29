@@ -287,7 +287,28 @@ The `root` field contains verification logic structures. Guards support six diff
 - **Fixed address**: `"object": "0x1234567890abcdef..."` - Direct blockchain address reference
 - **Table reference**: `"object": {"identifier": 1}` - References address stored at table identifier 1
 - **Named reference**: `"object": {"name_or_address": "treasury_name"}` - References object by local name or address
-（可能是一个witness，或witness 和witness type）
+- **Witness reference**: `"object": {"identifier": 1, "witness": 34}` - References address derived from witness data with relationship verification
+
+**Witness vs Witness Type in Object Queries**:
+
+**Pure Witness (identifier only)**: The Guard table identifier provides the address directly from stored witness data.
+```json
+"object": {"identifier": 1}
+```
+Use this when the witness value IS the target address you want to query.
+
+**Witness + Witness Type (identifier + witness type)**: The Guard uses the witness address to derive a RELATED object address through object relationships.
+```json
+"object": {"identifier": 1, "witness": 34}
+```
+Use this when the witness value is an Order address, but you want to query the related Arbitration object (witness type 34 = Arb → Order relationship).
+
+**Example Scenarios**:
+- **Witness only**: User provides Treasury address `0x123...` → Query that Treasury's balance
+- **Witness + Type**: User provides Order address `0x456...` → Query the Service object (type 32) that created this Order
+- **Witness + Type**: User provides Progress address `0x789...` → Query the Machine object (type 33) that defines this Progress workflow
+
+**Supported Witness Types**: See [Complete Witness Types Reference](#complete-witness-types-reference) for the full list of object relationship codes (30-38).
 **`query`**: Tells the system what specific information to get from that object. For example, `{"module": "treasury", "function": "Balance"}` gets the current balance amount, or `{"module": "permission", "function": "Has Rights"}` checks if user has a specific permission.
 
 **Parameters for object queries**: Contains the inputs that the query function needs to work. For permission checks, needs [user_address, permission_index]. For balance checks, needs no inputs so use empty array `[]`. For data retrieval, needs [address, field_name]. The number and type depend on which function you're calling.
