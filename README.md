@@ -286,24 +286,20 @@ Each object includes:
 
 ### Object Directory
 
-- ([Demand](./Demand-object.md)) — Personalized demand expressions with optional incentives.
+- ([Demand](./Object/Demand.md)) — Personalized demand expressions with optional incentives.
 
-- ([Service](./Service-object.md)) — Supply definitions with immutable commitments and terms.
+- ([Service](./Object/Service.md)) — Supply definitions with immutable commitments and terms.
 
-- ([Guard](./Guard-object.md)) — Data verification for current/future states and conditional settlements.
+- ([Guard](./Object/Guard.md)) — Data verification for current/future states and conditional settlements.
 
-- ([Repository](./Repository-object.md)) — Referenceable, cross-organizational data registries.
+- ([Repository](./Object/Repository.md)) — Referenceable, cross-organizational data registries.
 
-- ([Machine](./Machine-object.md)) — Orchestration of progress pacing and quality toward market fit.
+- ([Machine](./Object/Machine.md)) — Orchestration of progress pacing and quality toward market fit.
 
-- ([Progress](./Progress-object.md)) — Event/milestone objects; can trigger chained workflows.
+- ([Treasury](./Object/Treasury.md)) — Funds custody, allocation, and programmable payouts.
 
-- ([Treasury](./Treasury-object.md)) — Funds custody, allocation, and programmable payouts.
+- ([Permission](./Object/Permission.md)) — Fine-grained access/ownership control over entities and objects.
 
-- ([Permission](./Permission-object.md)) — Fine-grained access/ownership control over entities and objects.
+- ([Arbitration](./Object/Arbitration.md)) — Dispute handling and resolution pathways.
 
-- ([Personal](./Personal-object.md)) — User/agent profile and preferences for personalization.
-
-- ([Order](./Order-object.md)) — Transactional objects that coordinate purchase lifecycle.
-
-- ([Arbitration](#arbitration)) — Dispute handling and resolution pathways.
+- ([Query Reference](./Object/Query_Reference.md)) — Query operations and reference documentation.
