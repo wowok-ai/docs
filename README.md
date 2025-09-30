@@ -248,20 +248,19 @@ Composed of on‑chain protocols and data, real‑world oracles, open‑source S
 
 WoWok Protocol fosters innovation by supporting novel business models and collaborative services. Through its core modules, users can:
 
-- Express personalized demands paired with conditional incentives to stimulate precise market responses ([Demand](#demand)).
-- Publish supply offerings with a single click, embedding immutable commitments for service milestones and transaction terms ([Service](#service)).
-- Execute transactions at designated milestones through verifiable proof of existing and anticipated on-chain data ([Guard](#guard)).
+- Express personalized demands paired with conditional incentives to stimulate precise market responses ([Demand](./Object/Demand.md)).
+- Publish supply offerings with a single click, embedding immutable commitments for service milestones and transaction terms ([Service](./Object/Service.md)).
+- Execute transactions at designated milestones through verifiable proof of existing and anticipated on-chain data ([Guard](./Object/Guard.md)).
 - Seamlessly combine multiple available services, unlocking endless possibilities for composability and innovation.
 
 ### Collaboration
 
 WoWok Protocol empowers collaboration across an ecosystem of super individuals—whether human or AI-driven—to achieve their collective objectives.
 
-- Super individuals can define and publish data to open-chain repositories, enabling cross-organizational referencing, resource sharing, and significantly reduced collaboration friction ([Repository](#repository)).
-- Service progress can be dynamically orchestrated to meet evolving market demands, ensuring controlled collaboration pacing, consistent quality, and sustainable supply satisfaction ([Machine](#machine)).
-- Suppliers can seamlessly integrate their offerings into interconnected service networks via dynamic linking mechanisms, rapidly adapting to diverse and shifting customer requirements ([Service](#service)).
-- The completion of one progress milestone can automatically trigger subsequent milestones, facilitating fluid, cross-organizational, and cross-service workflows to fulfill comprehensive customer needs ([Progress](#progress)).
-- Treasury management supports flexible allocation and governance of funds within complex collaborative workflows, enabling rapid adaptation to changing business conditions ([Treasury](#treasury)).
+- Super individuals can define and publish data to open-chain repositories, enabling cross-organizational referencing, resource sharing, and significantly reduced collaboration friction ([Repository](./Object/Repository.md)).
+- Service progress can be dynamically orchestrated to meet evolving market demands, ensuring controlled collaboration pacing, consistent quality, and sustainable supply satisfaction ([Machine](./Object/Machine.md)).
+- Suppliers can seamlessly integrate their offerings into interconnected service networks via dynamic linking mechanisms, rapidly adapting to diverse and shifting customer requirements ([Service](./Object/Service.md)).
+- Treasury management supports flexible allocation and governance of funds within complex collaborative workflows, enabling rapid adaptation to changing business conditions ([Treasury](./Object/Treasury.md)).
 - WoWok Protocol leverages AI-tagged data, designed for efficient recognition and interpretation by intelligent agents, enhancing precision in personalized demand-supply matching.
 
 ## WoWok Object Learning Path
