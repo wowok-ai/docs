@@ -25,9 +25,6 @@ For immediate implementation, create objects in this order:
 
 > 💡 **Pro Tip**: Each object references the previous ones by address or name. You can save addresses or simply tell AI "bind this service to XXX withdrawal guard" using object names.
 
----
-
-
 ## Flower Delivery: Errand's Promise in Action
 
 Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise. She describes her need once: "White roses for Emma's birthday, delivered with something personal – she loves watercolor art." The system identifies several providers in Emma's area with flower delivery experience. But knowing Emma's passion for hand-painted artwork and Jake's background in sketching custom gift cards, it narrows to Jake – someone whose $3 premium for watercolor-style illustrations perfectly matches what would make Emma's day special.
@@ -127,7 +124,6 @@ Result should look like:
 > 💡 **Cold Wallet Tip**: "Add my cold wallet address 0x1234... to this Permission object with full 
 administrative rights for secure management."
 
----
 *For complete Permission object documentation: [Permission Object Guide](Permission-object.md)*
 
 ### Repository Object: Your Communication Database
@@ -214,7 +210,6 @@ Result should look like:
 **Access Control:**
 Write permissions are controlled by the linked Permission object. Strict mode allows only predefined fields, preventing data clutter while enabling structured data retrieval.
 
----
 *For complete Repository object documentation: [Repository Object Guide](Repository-object.md)*
 
 ### Guard Objects: Universal Verification System
@@ -427,7 +422,6 @@ Result should look like:
 
 > 💡 **Troubleshooting**: If withdrawal fails, ask AI: "Check if current Progress node matches my withdrawal Guard conditions."
 
----
 *For complete Guard object documentation: [Guard Object Guide](Guard-object.md)*
 
 ### Extra Fee Service: Handling the Unexpected
@@ -818,7 +812,6 @@ Machine templates can be used by multiple services. Each Progress instance speci
 
 > 💡 **Business Logic**: Each forward is a digital signature recorded on-chain with timestamp and address.
 
----
 *For complete Machine object documentation: [Machine Object Guide](Machine-object.md)*
 
 ### Main Service: Your Complete Digital Storefront
@@ -920,7 +913,6 @@ Result should look like:
 
 With the Main Service defined, all components come together. You now have a fully runnable service on Wowok.
 
----
 *For complete Service object documentation: [Service Object Guide](Service-object.md)*
 
 ## What You've Built
@@ -930,6 +922,5 @@ You now have a complete automated delivery business that handles orders, tracks 
 But the value extends beyond individual transactions. Jake's successful patterns become reusable infrastructure. Sarah's preferences and Emma's feedback create data that improves future matching. Each completed delivery builds reputation and intelligence that makes the next transaction smoother and more precisely targeted.
 
 This creates a network where proven business logic spreads, successful providers scale efficiently, and buyers find exactly what they need through accumulated transaction intelligence.
----
 
 *For advanced design patterns and engineering best practices, see our companion guide: "Wowok Engineering Patterns for Service Design"*
