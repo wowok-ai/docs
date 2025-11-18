@@ -210,7 +210,7 @@ Result should look like:
 **Access Control:**
 Write permissions are controlled by the linked Permission object. Strict mode allows only predefined fields, preventing data clutter while enabling structured data retrieval.
 
-*For complete Repository object documentation: [Repository Object Guide](Repository-object.md)*
+*For complete Repository object documentation: [Repository Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Repository.md)*
 
 ### Guard Objects: Universal Verification System
 
@@ -422,7 +422,7 @@ Result should look like:
 
 > 💡 **Troubleshooting**: If withdrawal fails, ask AI: "Check if current Progress node matches my withdrawal Guard conditions."
 
-*For complete Guard object documentation: [Guard Object Guide](Guard-object.md)*
+*For complete Guard object documentation: [Guard Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Guard.md)*
 
 ### Extra Fee Service: Handling the Unexpected
 
@@ -812,7 +812,7 @@ Machine templates can be used by multiple services. Each Progress instance speci
 
 > 💡 **Business Logic**: Each forward is a digital signature recorded on-chain with timestamp and address.
 
-*For complete Machine object documentation: [Machine Object Guide](Machine-object.md)*
+*For complete Machine object documentation: [Machine Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Machine.md)*
 
 ### Main Service: Your Complete Digital Storefront
 
@@ -913,7 +913,7 @@ Result should look like:
 
 With the Main Service defined, all components come together. You now have a fully runnable service on Wowok.
 
-*For complete Service object documentation: [Service Object Guide](Service-object.md)*
+*For complete Service object documentation: [Service Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Service.md)*
 
 ## What You've Built
 
