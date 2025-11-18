@@ -124,7 +124,7 @@ Result should look like:
 > 💡 **Cold Wallet Tip**: "Add my cold wallet address 0x1234... to this Permission object with full 
 administrative rights for secure management."
 
-*For complete Permission object documentation: [Permission Object Guide](Permission-object.md)*
+*For complete Permission object documentation: [Permission Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Permission.md)*
 
 ### Repository Object: Your Communication Database
 
