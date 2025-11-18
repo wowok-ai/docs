@@ -6,13 +6,13 @@ This project implements a minimal framework of a food-delivery platform, built n
 
 Because many Wowok objects become immutable after being referenced, **stick to this order**:
 
->1. **Permission** – define all custom permission indexes up front so every other object can reference them.
->2. **Treasury** – services and Guards reference the payout pool; create it before anything binds to it.
->3. **Repository** – declare strict-mode policies while the Permission address is known; changing later requires a new Repository.
->4. **Arbitration** – attach the dispute board and fee treasury.
->5. **Guards** – publish buy/withdraw Guards once Permission/Treasury exist.
->6. **Machine** – clone/edit while unpublished, wire in Guard addresses, then publish.
->7. **Service** – bind Machine, Guards, and Treasury. Publishing freezes those references.
+>1. **[Permission](##1.PermissionFoundation)** – define all custom permission indexes up front so every other object can reference them.
+>2. **[Treasury](##2.TreasuryConfiguration)** – services and Guards reference the payout pool; create it before anything binds to it.
+>3. **[Repository](##3.Repository(StrictMode))** – declare strict-mode policies while the Permission address is known; changing later requires a new Repository.
+>4. **[Arbitration](##4.Arbitration+FeeTreasury)** – attach the dispute board and fee treasury.
+>5. **[Guards](##5.GuardSuite)** – publish buy/withdraw Guards once Permission/Treasury exist.
+>6. **[Machine](##6.MachineWorkflow)** – clone/edit while unpublished, wire in Guard addresses, then publish.
+>7. **[Service](##7.Service(Storefront))** – bind Machine, Guards, and Treasury. Publishing freezes those references.
 
 Following this chain prevents “object already referenced/cannot modify” errors when cloning or iterating.
 
@@ -68,6 +68,8 @@ The permission layer keeps every later object under a single governance umbrella
 The results may be as below:
 <img width="977" height="771" alt="Screenshot 2025-11-14 at 6 58 24 PM" src="https://github.com/user-attachments/assets/e451601d-ed81-4406-ab66-5c38d89dbd18" />
 
+For complete Permission object documentation: [Permission Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Permission.md)
+
 ## 2. Treasury Configuration
 
 Create the payout pool once and reuse it across services. The treasury inherits the same permission object so that only approved operators can deposit/withdraw funds from the delivery business.
@@ -94,6 +96,8 @@ Create the payout pool once and reuse it across services. The treasury inherits 
 
 The results may be as below:
 <img width="976" height="671" alt="Screenshot 2025-11-14 at 7 00 02 PM" src="https://github.com/user-attachments/assets/098060bb-fa0a-4ad0-8e6c-3447e0c70b64" />
+
+For complete Treasury object documentation: [Treasury Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Treasury.md)
 
 ## 3. Repository (Strict Mode)
 
@@ -130,6 +134,8 @@ This repository acts as the evidence vault. Each field lines up with a specific 
 
 The results may be as below:
 <img width="977" height="749" alt="Screenshot 2025-11-14 at 6 59 23 PM" src="https://github.com/user-attachments/assets/f72945ec-1282-48a1-8830-e2ff9c33e7f8" />
+
+For complete Repository object documentation: [Repository Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Repository.md)
 
 ## 4. Arbitration + Fee Treasury
 
@@ -178,6 +184,8 @@ The results may be as below:
   }
 }
 ```
+
+For complete Arbitration object documentation: [Arbitration Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Arbitration.md)
 
 ## 5. Guard Suite
 
@@ -264,6 +272,8 @@ Withdrawals are delayed until an admin attests the workflow is complete (witness
 
 The results may be as below:
 <img width="976" height="709" alt="Screenshot 2025-11-14 at 7 03 03 PM" src="https://github.com/user-attachments/assets/3d12c886-3390-46b2-8909-174eda42b3f2" />
+
+For complete Guard object documentation: [Guard Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Guard.md)
 
 ## 6. Machine Workflow
 
@@ -480,6 +490,8 @@ Publishing locks the Machine forever, so only do this once all guard references 
 }
 ```
 
+For complete Machine object documentation: [Machine Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Machine.md)
+
 ## 7. Service (Storefront)
 
 The service brings everything together: it points to the guarded Machine, binds the Treasury, and sets the buy/withdraw guards. Publish only after you verify prices, stock, and required info.
@@ -523,7 +535,7 @@ The service brings everything together: it points to the guarded Machine, binds 
 The results may be as below:
 <img width="976" height="419" alt="Screenshot 2025-11-14 at 7 01 33 PM" src="https://github.com/user-attachments/assets/ddcfba4d-903b-4e2f-a0e1-a00dffe4322f" />
 
----
+For complete Service object documentation: [Service Object Guide](https://github.com/wowok-ai/docs/blob/main/Object/Service.md)
 
 ## What You’ve Built
 
