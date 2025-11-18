@@ -45,4 +45,5 @@ Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise. She d
 **Technical Value:**
 This case provides a complete technical blueprint using Wowok's object system - Permission management, Repository communication, Guard verification, Machine workflow, and Service integration. Each component becomes reusable infrastructure that other providers can reference and build upon.
 
+**[🔗 Complete Implementation Guide: Flower Delivery Business Case](Errand_Flower_Delivery.md)**
 *This case study shows how Errand's vision of intelligent, personalized matching becomes reality through programmable business logic.*
