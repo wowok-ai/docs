@@ -61,4 +61,6 @@ This project implements a minimal framework of a food-delivery platform, built n
 
 This stack delivers a repeatable food delivery experience: customers, merchants, riders, and arbitrators all act against the same programmable rules, and every node is backed by on-chain data rather than verbal promises.
 
+**🔗 [Brief Implementation Tutorial: Local Delivery Platform](Local_Delivery_Platform.md)**
+
 ***🌟 By customizing Wowok objects, you can implement more advanced capabilities that are far more sophisticated and complete than the ones in this project.***
