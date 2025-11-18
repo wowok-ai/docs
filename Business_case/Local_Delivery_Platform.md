@@ -9,7 +9,7 @@ Because many Wowok objects become immutable after being referenced, **stick to t
 >1. **[Permission](#1-permission-foundation)** – define all custom permission indexes up front so every other object can reference them.
 >2. **[Treasury](#2-treasury-configuration)** – services and Guards reference the payout pool; create it before anything binds to it.
 >3. **[Repository](#3-repository-strict-mode)** – declare strict-mode policies while the Permission address is known; changing later requires a new Repository.
->4. **[Arbitration](#4-arbitration-fee-treasury)** – attach the dispute board and fee treasury.
+>4. **[Arbitration](#4-arbitration--fee-treasury)** – attach the dispute board and fee treasury.
 >5. **[Guards](#5-guard-suite)** – publish buy/withdraw Guards once Permission/Treasury exist.
 >6. **[Machine](#6-machine-workflow)** – clone/edit while unpublished, wire in Guard addresses, then publish.
 >7. **[Service](#7-service-storefront))** – bind Machine, Guards, and Treasury. Publishing freezes those references.
