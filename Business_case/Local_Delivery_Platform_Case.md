@@ -1,4 +1,4 @@
-# **Project Overview: Local Delivery Platform Based on Wowok**
+# **Project Overview: Local Delivery Platform based on Wowok**
 
 This project implements a minimal framework of a food-delivery platform, built natively on Wowok and integrating merchant craftsmanship, trusted couriers, and programmable workflows. Customers describe the meal and constraints to AI agent once, Service objects, Machine workflows, Guards, and Repository data make sure every promise is executed transparently.
 
