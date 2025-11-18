@@ -1,8 +1,8 @@
-### Errand
+# Project Overview: Errand Flower Delivery based on Wowok
 
 Errand is a local network that finds the right person for any errand. You post what you need, Supplier posts what they can offer and AI matches each quest with the right services. Each completed deal makes the next one smoother , smarter, and more tailored to you.
 
-### Core Capability
+## Core Capability
 
 - **Simple to Use**
     
@@ -37,8 +37,6 @@ Errand is a local network that finds the right person for any errand. You post w
 
 ## Implementation Case Study
 
-### Flower Delivery: A Complete Business Scenario
-
 The flower delivery case demonstrates how to build a complete business on Wowok, from simple customer requests to programmable execution.
 
 **Business Scenario:**
@@ -46,7 +44,5 @@ Sarah needs white roses delivered to Emma by 3 PM for a birthday surprise. She d
 
 **Technical Value:**
 This case provides a complete technical blueprint using Wowok's object system - Permission management, Repository communication, Guard verification, Machine workflow, and Service integration. Each component becomes reusable infrastructure that other providers can reference and build upon.
-
-**[→ Complete Implementation Guide: Flower Delivery Business Case](flower_delivery_v5.md)**
 
 *This case study shows how Errand's vision of intelligent, personalized matching becomes reality through programmable business logic.*
