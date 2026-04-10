@@ -43,7 +43,7 @@ Configure "wowok-agent" in your AI client (such as Claude Desktop, Cursor, etc.)
       "command": "npx",
       "args": [
         "-y",
-        "wowok-agent"
+        "wowok_agent"
       ]
     }
   }
