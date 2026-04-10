@@ -456,7 +456,9 @@ Cache frequently queried data.
 
 ## Related Components
 
-- **Account**: Account management
-- **LocalMark**: Local marks
-- **LocalInfo**: Local info
-- **Personal**: Public identity
+| Component | Description |
+|-----------|-------------|
+| **[Account](account.md)** | Local wallet management |
+| **[LocalMark](localmark.md)** | User/Object naming and categorization |
+| **[LocalInfo](localinfo.md)** | Private information management |
+| **[Personal](personal.md)** | Personal on-chain portal |

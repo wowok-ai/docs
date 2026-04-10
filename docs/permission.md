@@ -870,9 +870,11 @@ Perform multiple operations in a single call, such as creating an object while c
 
 ## Related Components
 
-- **Guard**: Programmable validation rules that can be used as Permission entities for complex validation
-- **Service**: Service marketplace, commonly managed by Permission
-- **Machine**: Workflow templates that require permission control
-- **Repository**: Data storage that can be controlled via Permission
-- **Treasury**: Fund management, permissions control who can deposit/withdraw
+| Component | Description |
+|-----------|-------------|
+| **[Guard](guard.md)** | Trust verification engine - can be used as Permission entities for complex validation |
+| **[Service](service.md)** | WYSIWYG product trading - commonly managed by Permission |
+| **[Machine](machine.md)** | Workflow template - requires permission control |
+| **[Repository](repository.md)** | Data ownership and usage rights - can be controlled via Permission |
+| **[Treasury](treasury.md)** | Team fund management - permissions control who can deposit/withdraw |
 

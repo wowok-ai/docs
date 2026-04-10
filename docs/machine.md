@@ -6,7 +6,7 @@
 
 The Machine component is WoWok's workflow automation engine, used to design and deploy automated workflow templates that define how services are delivered. Machines consist of nodes (workflow states) and forwards (operations that move the workflow forward), with permission checks and optional Guard validations.
 
-> **Note**: Use the `machineNode2file` tool to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse.
+> **Note**: Use the `machineNode2file` tool (see [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly build new workflows from existing ones.
 
 ---
 
@@ -19,6 +19,7 @@ The Machine component is WoWok's workflow automation engine, used to design and 
 | **Repository Management** | Attach or detach Repository objects | Store workflow-related data, configuration | Enables data persistence and sharing across workflow instances |
 | **Node Operations** | Add/modify/remove/clear workflow nodes | Design workflow state transitions | Core of workflow design - defines the states and connections |
 | **Node File Replacement** | Complete node replacement from file | Bulk updates, template reuse | Efficient way to manage complex workflows |
+| **Export Node Definitions** | Export node definitions to JSON/Markdown file | Reuse workflows, backup, documentation | Extract node definitions from any on-chain Machine to quickly build new workflows |
 | **Progress Generation** | Create new Progress instances | Start workflow execution | Converts templates into active running workflows |
 | **Pause/Resume** | Control new Progress generation | Temporarily stop workflow creation | Manages workflow availability during updates |
 | **Publish Machine** | Lock nodes for production use | Finalize workflow before deployment | Prevents accidental modifications to active workflows |
@@ -1142,6 +1143,8 @@ Completely replace ALL nodes by loading from a JSON or Markdown file. This is eq
 1. **Top-level field**: `json_or_markdown_file` at the same level as `data`
 2. **Inside data**: `data.node.json_or_markdown_file`
 
+> **Tip**: Use [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file) to export node definitions from existing Machines, then import them here to quickly build new workflows!
+
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
@@ -1770,35 +1773,140 @@ Returns transaction block information.
 
 ---
 
-## Export Machine Nodes with machineNode2file
+## Sub-feature 20: Export Node Definitions with machineNode2file
 
 ### Feature Description
 
-Use the `machineNode2file` tool to export an existing Machine's node definition to a JSON or Markdown file. This file can be edited and reused to create new Machines.
+Use the `machineNode2file` tool to export a Machine object's node definition from the blockchain to a local JSON or Markdown file. The exported file can be edited and used to create new Machine objects, enabling workflow reuse and rapid template creation.
+
+**Core Benefits:**
+- Quickly extract node definitions from ANY on-chain Machine
+- Edit and refine exported files offline
+- Use exported files with "Node File Replacement" to build new workflows
+- Create workflow templates and backups
+
+### Schema Tree (4-Level Structure)
+
+```
+machineNode2file (Machine Node to File)
+├── machine (required)
+│   └── [Machine name or Address/ID]
+├── file_path (required)
+│   └── [Output file path]
+├── format (optional)
+│   ├── "json" (default)
+│   └── "markdown"
+└── env (optional)
+    ├── account (optional)
+    ├── permission_guard (optional)
+    ├── no_cache (optional)
+    ├── network (optional)
+    └── referrer (optional)
+```
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------------|------|----------|-------------|-------------|
+| `machine` | string | Yes | Machine object ID or name to export | Use name (preferred) or ID |
+| `file_path` | string | Yes | Output file path | Absolute or relative path |
+| `format` | enum | No | Output format | "json" (default) or "markdown" |
+| `env.account` | string | No | Use specified account | Empty string '' uses default account |
+| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.no_cache` | boolean | No | Disable caching | true=bypass cache |
+
+### Important Notes
+
+⚠️ **This is a read-only operation!** Does not modify any on-chain state.
+
+⚠️ **Use names instead of 0x addresses!** Reference Machines by name for clarity.
+
+⚠️ **Exported file matches node structure!** The output format is compatible with "Node File Replacement" (Sub-feature 11).
+
+### Return Result
+
+Returns the exported file path, format, Machine object, and node count:
+
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "file_path": "d:/wowok/exported_nodes.json",
+      "format": "json",
+      "machine_object": "design_workflow",
+      "node_count": 8
+    }
+  }
+}
+```
+
+---
 
 ### Examples
 
-#### Example: Export Machine Nodes to JSON
+#### Example 20.1: Export to JSON (Default Format)
 
-**Prompt**: Export the node definition from "design_workflow" to the file "d:/wowok/exported_nodes.json" in JSON format.
+**Prompt**: Export the node definition from "design_workflow" to the file "d:/wowok/exported_nodes.json".
 
 ```json
 {
   "machine": "design_workflow",
-  "file_path": "d:/wowok/exported_nodes.json",
-  "format": "json"
+  "file_path": "d:/wowok/exported_nodes.json"
 }
 ```
 
-#### Example: Export Machine Nodes to Markdown
+#### Example 20.2: Export to Markdown Format
 
-**Prompt**: Export "design_workflow" nodes to "design_nodes.md" in Markdown format for documentation.
+**Prompt**: Export "design_workflow" nodes to "design_nodes.md" in Markdown format for documentation and sharing.
 
 ```json
 {
   "machine": "design_workflow",
   "file_path": "design_nodes.md",
   "format": "markdown"
+}
+```
+
+#### Example 20.3: Export with Custom Network
+
+**Prompt**: Export "public_template" Machine from testnet to "template_backup.json".
+
+```json
+{
+  "machine": "public_template",
+  "file_path": "template_backup.json",
+  "format": "json",
+  "env": {
+    "network": "testnet"
+  }
+}
+```
+
+#### Example 20.4: Workflow Reuse Pattern
+
+**Prompt**: Export "proven_workflow" nodes, edit to create a new variant, then use Sub-feature 11 to import into a new Machine.
+
+Step 1: Export
+```json
+{
+  "machine": "proven_workflow",
+  "file_path": "workflow_template.json"
+}
+```
+
+Step 2: Edit `workflow_template.json` (modify nodes as needed)
+
+Step 3: Import into new Machine (see Sub-feature 11)
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": {
+      "name": "new_workflow_variant"
+    }
+  },
+  "json_or_markdown_file": "workflow_template.json"
 }
 ```
 
@@ -1830,9 +1938,9 @@ Thresholds enable multi-signature workflows. Use threshold > 1 when multiple app
 
 Add all nodes, test the logic, and verify connections BEFORE publishing. You can't change nodes after publishing.
 
-### 7. Use machineNode2file for Reuse
+### 7. Use Export and Import for Workflow Reuse
 
-Export successful workflows to files, then use them as templates for similar workflows.
+Export proven workflows using [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file), then import them via [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly create new workflow variants. This pattern eliminates redundant work and ensures consistency across similar workflows.
 
 ### 8. Add Clear Descriptions
 
@@ -1860,8 +1968,10 @@ Document what the Machine does, what each node represents, and any special consi
 
 ## Related Components
 
-- **Progress**: Executes the Machine workflow (active instances)
-- **Service**: Binds Machine workflows to service offerings
-- **Permission**: Manages access control for Machine operations
-- **Repository**: Stores consensus data for workflow state
-- **Guard**: Provides additional validation for forward operations
+| Component | Description |
+|-----------|-------------|
+| **[Progress](progress.md)** | Order progress - executes the Machine workflow (active instances) |
+| **[Service](service.md)** | WYSIWYG product trading - binds Machine workflows to service offerings |
+| **[Permission](permission.md)** | Permission management - manages access control for Machine operations |
+| **[Repository](repository.md)** | Data ownership and usage rights - stores consensus data for workflow state |
+| **[Guard](guard.md)** | Trust verification engine - provides additional validation for forward operations |

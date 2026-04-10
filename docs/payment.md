@@ -415,10 +415,12 @@ Create a Payment with custom environment settings, such as specifying network or
 
 ## Related Components
 
-- **Treasury**: Fund management
-- **Reward**: Reward pool
-- **Allocation**: Auto distribution
-- **Service**: Service marketplace
-- **Order**: Order management
-- **Guard**: Programmable verification
+| Component | Description |
+|-----------|-------------|
+| **[Treasury](treasury.md)** | Team fund management |
+| **[Reward](reward.md)** | Marketing incentives |
+| **[Allocation](allocation.md)** | Automatic fund distribution |
+| **[Service](service.md)** | WYSIWYG product trading |
+| **[Order](order.md)** | Order management |
+| **[Guard](guard.md)** | Trust verification engine |
 

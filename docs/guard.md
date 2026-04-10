@@ -6,7 +6,7 @@
 
 The Guard component creates immutable programmable validation rules that return boolean results (pass/fail). Guards can define complex validation logic for use cases like service marketplaces, permission management, workflow templates, and more.
 
-&gt; **Note**: Use the `wowok_buildin_info` tool with 'guard instructions' to query all available operations.
+**Note**: Use the `guard2file` tool (see [Sub-feature 3](#sub-feature-3-export-guard-to-file-guard2file)) to export existing Guard definitions from the blockchain, then use [Sub-feature 2](#sub-feature-2-create-guard-from-file-type-file) to quickly build new trust verification Guard objects. Use `gen_passport` (see [Sub-feature 4](#sub-feature-4-generate-verified-passport-gen_passport)) to generate verifiable credentials for Messenger stranger verification. Use the `wowok_buildin_info` tool with 'guard instructions' to query all available operations.
 
 ---
 ## Function List
@@ -20,6 +20,7 @@ The Guard component creates immutable programmable validation rules that return 
 | **Define Data Table** | Define the data table that the Guard uses for validation | Specifying user-submitted data and fixed constants for validation logic | Foundation of Guard validation; all data must be defined here |
 | **Set Dependencies** | Define Guards that this Guard depends on using `rely` | Building composite validation logic from multiple simpler Guards; reusing existing Guards | Enables modular Guard design; reduces redundant validation logic |
 | **Export Guard to File** | Export an existing Guard's definition from the blockchain to a local JSON or Markdown file | Backing up Guards; editing Guard definitions locally; creating new Guards from templates | Enables Guard template workflow; facilitates Guard sharing and version control |
+| **Generate Verified Passport** | Create immutable verified Passport object after Guard validation passes | Offline friend verification in Messenger; transaction condition verification | Creates verifiable credentials; enables trust-based interactions without on-chain validation every time |
 | **Use Query Nodes** | Access real-time on-chain object data using `query` nodes | Building validation logic based on current on-chain state (e.g., Treasury balance, Service price, Permission status) | Most powerful Guard feature; enables dynamic, state-aware validation |
 | **Use Logic Nodes** | Combine and transform boolean results using logic operations | Building complex boolean expressions from simpler conditions | Core of Guard validation; enables multi-condition checks |
 | **Use Context Nodes** | Access system context like Signer, Clock, and Guard | Validating based on transaction sender, current time, or Guard itself | Enables time-based, sender-based, and self-referential validation |
@@ -173,20 +174,6 @@ The `query` node is your gateway to on-chain data! Some common query patterns:
 Use context nodes as inputs to calculations or comparisons, not directly in logic gates.
 
 ---
-## Complete Tool Call Structure
-
-Guard operations use the following top-level structure:
-
-```json
-{
-  "operation_type": "guard",
-  "data": { ... },    // Guard data definition
-  "env": { ... }       // Execution environment (optional)
-}
-```
-
----
-
 ## Constraint Constants
 
 | Constant Name | Value | Description |
@@ -755,61 +742,274 @@ First, let's create a sample JSON file that we'll use in the examples.
 ## Sub-feature 3: Export Guard to File (guard2file)
 
 ### Feature Description
-Export an existing Guard's definition from the blockchain to a local JSON or Markdown file. This allows you to backup your Guard definitions, edit them locally, and create new Guards based on existing ones.
+
+Use the `guard2file` tool to export a Guard object's definition from the blockchain to a local JSON or Markdown file. The exported file can be edited and used to create new Guard objects, enabling rapid reuse and reconstruction of validation rules.
+
+**Core Benefits:**
+- Quickly extract Guard definitions from ANY on-chain Guard
+- Edit and refine validation logic offline
+- Use exported files with "Create Guard from File" (Sub-feature 2) to build new Guards
+- Create validation template libraries and backups
+
+### Schema Tree (4-Level Structure)
+
+```
+guard2file (Guard to File)
+├── guard (required)
+│   └── [Guard name or Address/ID]
+├── file_path (required)
+│   └── [Output file path]
+├── format (optional)
+│   ├── "json" (default)
+│   └── "markdown"
+└── env (optional)
+    ├── account (optional)
+    ├── permission_guard (optional)
+    ├── no_cache (optional)
+    ├── network (optional)
+    └── referrer (optional)
+```
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `guard` | string | Yes | Guard object ID or name to export |
-| `file_path` | string | Yes | Output file path (absolute or relative) |
-| `format` | enum | No | Output format: "json" (default) or "markdown" |
-| `env` | object | No | Execution environment |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------------|------|----------|-------------|-------------|
+| `guard` | string | Yes | Guard object ID or name to export | Use name (preferred) or ID |
+| `file_path` | string | Yes | Output file path | Absolute or relative path |
+| `format` | enum | No | Output format | "json" (default) or "markdown" |
+| `env.account` | string | No | Use specified account | Empty string '' uses default account |
+| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.no_cache` | boolean | No | Disable caching | true=bypass cache |
+
+### Important Notes
+
+⚠️ **This is a read-only operation!** Does not modify any on-chain state.
+
+⚠️ **Use names instead of 0x addresses!** Reference Guards by name for clarity.
+
+⚠️ **Exported file matches Guard structure!** The output format is compatible with "Create Guard from File" (Sub-feature 2).
+
+### Return Result
+
+Returns the exported file path, format, and Guard object:
+
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "file_path": "./exported_guard.json",
+      "format": "json",
+      "guard_object": "public_age_check"
+    }
+  }
+}
+```
+
+---
 
 ### Examples
 
-#### Example 3.1: Export Guard to JSON File
+#### Example 3.1: Export to JSON (Default Format)
 
-**Prompt**: Export the "order_validation" Guard to a JSON file named "order_validation_export.json" so I can view and edit its definition.
+**Prompt**: Export the "order_validation" Guard to a JSON file named "order_validation_export.json".
 
 ```json
 {
   "guard": "order_validation",
-  "file_path": "...",
-  "format": "json"
+  "file_path": "./order_validation_export.json"
 }
 ```
 
----
+#### Example 3.2: Export to Markdown Format
 
-#### Example 3.2: Export Guard to Markdown File
-
-**Prompt**: Export the "public_age_check" Guard to a Markdown file for documentation purposes. Use Markdown format for better readability.
+**Prompt**: Export the "public_age_check" Guard to a Markdown file for documentation.
 
 ```json
 {
   "guard": "public_age_check",
-  "file_path": "...",
+  "file_path": "public_age_check.md",
   "format": "markdown"
 }
 ```
 
----
+#### Example 3.3: Export with Custom Network
 
-#### Example 3.3: Export with Network Specification
-
-**Prompt**: Export the "public_age_check" Guard from testnet network. Specify the network explicitly.
+**Prompt**: Export "public_template" Guard from testnet to "template_backup.json".
 
 ```json
 {
-  "guard": "public_age_check",
-  "file_path": "...",
+  "guard": "public_template",
+  "file_path": "template_backup.json",
   "format": "json",
   "env": {
     "network": "testnet"
   }
 }
 ```
+
+#### Example 3.4: Guard Reuse Pattern
+
+**Prompt**: Export "proven_guard" definition, edit to create a new variant, then use Sub-feature 2 to import into a new Guard.
+
+Step 1: Export
+```json
+{
+  "guard": "proven_guard",
+  "file_path": "guard_template.json"
+}
+```
+
+Step 2: Edit `guard_template.json` (modify validation logic as needed)
+
+Step 3: Import into new Guard (see Sub-feature 2)
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "new_guard_variant"
+    },
+    "root": {
+      "type": "file",
+      "file_path": "guard_template.json"
+    }
+  }
+}
+```
+
+---
+
+## Sub-feature 4: Generate Verified Passport (gen_passport)
+
+### Feature Description
+
+Generate an immutable verified Passport object after Guard validation passes. Passports can be used for offline friend verification in Messenger, transaction condition verification, and more.
+
+**Core Benefits:**
+- Create verifiable credentials that prove Guard validation passed
+- Use Passports in Messenger to verify strangers before accepting messages
+- Passports are immutable and tamper-proof on-chain
+- Enables trust-based interactions without direct on-chain validation every time
+
+### Schema Tree (4-Level Structure)
+
+```
+gen_passport (Generate Verified Passport)
+├── operation_type: "gen_passport" (fixed)
+├── guard (required)
+│   └── [Guard name or Address/ID]
+├── info (optional)
+│   └── [Submission data]
+└── env (optional)
+    ├── account (optional)
+    ├── permission_guard (optional)
+    ├── no_cache (optional)
+    ├── network (optional)
+    └── referrer (optional)
+```
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------------|------|----------|-------------|-------------|
+| `operation_type` | string | Yes | Operation type | Fixed value "gen_passport" |
+| `guard` | string | Yes | Guard object ID to verify and generate passport from | Use name (preferred) or ID |
+| `info` | object | No | Optional submission data | If not provided, will attempt to get existing submissions from the guard |
+| `env.account` | string | No | Use specified account | Empty string '' uses default account |
+| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+
+### Important Notes
+
+⚠️ **Guard validation must pass!** The Passport is only generated if the Guard validation succeeds.
+
+⚠️ **Passports are immutable!** Once created, Passports cannot be modified.
+
+⚠️ **Use names instead of 0x addresses!** Reference Guards by name for clarity.
+
+⚠️ **Messenger integration!** Passports can be used in Messenger tools to verify strangers before accepting messages.
+
+### Return Result
+
+Returns the created Passport object.
+
+---
+
+### Examples
+
+#### Example 4.1: Generate Passport with Submission Data
+
+**Prompt**: Generate a Passport using the "public_age_check" Guard. Submit age 25 to pass validation.
+
+```json
+{
+  "operation_type": "gen_passport",
+  "guard": "public_age_check",
+  "info": {
+    "submissions": [
+      {
+        "identifier": 0,
+        "value": "25"
+      }
+    ]
+  }
+}
+```
+
+#### Example 4.2: Generate Passport with Existing Submissions
+
+**Prompt**: Generate a Passport from "order_validation" Guard, using existing submissions already attached to the Guard.
+
+```json
+{
+  "operation_type": "gen_passport",
+  "guard": "order_validation"
+}
+```
+
+#### Example 4.3: Generate Passport with Custom Network
+
+**Prompt**: Generate a Passport from "identity_verify" Guard on testnet.
+
+```json
+{
+  "operation_type": "gen_passport",
+  "guard": "identity_verify",
+  "info": {
+    "submissions": [
+      {
+        "identifier": 0,
+        "value": "verified_user"
+      }
+    ]
+  },
+  "env": {
+    "network": "testnet"
+  }
+}
+```
+
+#### Example 4.4: Passport Usage in Messenger
+
+**Prompt**: Use a Passport to verify a stranger in Messenger. First generate the Passport, then reference it in Messenger's permission checks.
+
+Step 1: Generate Passport
+```json
+{
+  "operation_type": "gen_passport",
+  "guard": "friend_verification",
+  "info": {
+    "submissions": [
+      {
+        "identifier": 0,
+        "value": "mutual_friend_verified"
+      }
+    ]
+  }
+}
+```
+
+Step 2: Use Passport in Messenger (see [messenger.md](messenger.md)) to verify strangers before accepting messages.
 
 ---
 

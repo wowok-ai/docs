@@ -354,6 +354,8 @@ Don't store sensitive information on shared devices.
 
 ## Related Components
 
-- **LocalMark**: Local marking
-- **Account**: Account management
-- **Contact**: Communication center
+| Component | Description |
+|-----------|-------------|
+| **[LocalMark](localmark.md)** | User/Object naming and categorization |
+| **[Account](account.md)** | Local wallet management |
+| **[Contact](contact.md)** | Public contact information |

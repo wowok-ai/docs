@@ -693,9 +693,11 @@ Execute multiple operations in a single call.
 
 ## Related Components
 
-- **Service**: Service marketplace
-- **Reward**: Reward pools
-- **Arbitration**: Dispute resolution
-- **Payment**: Direct transfers
-- **Guard**: Validation rules
-- **Contact**: Contact information
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading |
+| **[Reward](reward.md)** | Marketing incentives |
+| **[Arbitration](arbitration.md)** | Dispute resolution |
+| **[Payment](payment.md)** | Direct coin transfers |
+| **[Guard](guard.md)** | Trust verification engine |
+| **[Contact](contact.md)** | Public contact information |

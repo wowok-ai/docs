@@ -874,11 +874,13 @@ Execute multiple operations in a single call.
 
 ## Related Components
 
-- **Service**: Service marketplace - creates orders that may need arbitration
-- **Order**: Order management - subject of arbitration disputes
-- **Treasury**: Fund management - can receive arbitration fees
-- **Allocation**: Auto distribution - can receive arbitration fees
-- **Permission**: Permission management - controls arbitration operations
-- **Guard**: Validation rules - used for eligibility and voting
-- **Contact**: Contact information - provides support channels
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - creates orders that may need arbitration |
+| **[Order](order.md)** | Order management - subject of arbitration disputes |
+| **[Treasury](treasury.md)** | Team fund management - can receive arbitration fees |
+| **[Allocation](allocation.md)** | Automatic fund distribution - can receive arbitration fees |
+| **[Permission](permission.md)** | Permission management - controls arbitration operations |
+| **[Guard](guard.md)** | Trust verification engine - used for eligibility and voting |
+| **[Contact](contact.md)** | Public contact information - provides support channels |
 

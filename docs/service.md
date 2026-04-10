@@ -7,6 +7,8 @@
 
 The Service component is WoWok protocol's service/product publishing and sales management module, used to create and manage service or product listings in the marketplace. Service publishers can bind Machine (workflow templates), Repository (data warehouses), Arbitration (dispute resolution), and other components, configure Order Allocators, set up Discounts, manage Compensation Funds, and handle order creation and payment workflows.
 
+**Critical Integration with WIP**: Every sales item in a Service requires a `wip_hash` field referencing a WIP (Witness Information Promise) file. This ensures product/service descriptions are immutable and verifiable. See the WIP section below for details on generating, verifying, and signing WIP files.
+
 ---
 
 ## Function List
@@ -522,7 +524,7 @@ Add, set, remove, or clear sales products/services from the Service.
 
 #### Example 8.1: Add Sales Items
 
-**Prompt**: Add two sales items: "basic_consulting" priced at 100 WOW (price=100000000000) and "premium_consulting" priced at 500 WOW (price=500000000000). Note: Prices are in smallest token unit (9 decimals for WOW).
+**Prompt**: Add two sales items: 1) "basic_consulting" priced at 100 WOW (price=100000000000) with WIP hash from "service_desc.wip", 2) "premium_consulting" priced at 500 WOW (price=500000000000) with WIP hash from "premium_service.wip". Note: Prices are in smallest token unit (9 decimals for WOW). See WIP section for how to generate WIP files.
 
 ```json
 {
@@ -537,7 +539,7 @@ Add, set, remove, or clear sales products/services from the Service.
           "price": 100000000000,
           "description": "Basic consulting service (1 hour)",
           "inventory": 100,
-          "wip_hash": "0xabc123...def456",
+          "wip_hash": "sha256:abc123def456...",
           "suspension": false
         },
         {
@@ -545,7 +547,7 @@ Add, set, remove, or clear sales products/services from the Service.
           "price": 500000000000,
           "description": "Premium consulting service (4 hours)",
           "inventory": 20,
-          "wip_hash": "0xdef456...abc123",
+          "wip_hash": "sha256:def456abc123...",
           "suspension": false
         }
       ]
@@ -924,7 +926,7 @@ Create a new order as a customer and make payment.
 
 #### Example 15.1: Create Order
 
-**Prompt**: Create an order for "basic_consulting" with quantity 1, pay 100 WOW (total_pay.balance=100000000000), use discount "new_user_20off", add payment remark, and name the order "my_first_order". Note: Amount is in smallest token unit (9 decimals for WOW).
+**Prompt**: Create an order for "basic_consulting" with quantity 1, pay 100 WOW (total_pay.balance=100000000000), use discount "new_user_20off", add payment remark, include the WIP hash from "service_desc.wip", and name the order "my_first_order". Note: Amount is in smallest token unit (9 decimals for WOW). See WIP section for how to verify the WIP file.
 
 ```json
 {
@@ -937,7 +939,7 @@ Create a new order as a customer and make payment.
           {
             "name": "basic_consulting",
             "stock": 1,
-            "wip_hash": "0xabc123...def456"
+            "wip_hash": "sha256:abc123def456..."
           }
         ],
         "total_pay": {
@@ -1086,6 +1088,8 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ## Important Notes
 
+⚠️ **CRITICAL: Every Service sales item requires a `wip_hash`** - this ensures product/service descriptions are immutable and verifiable. See the WIP section below for how to generate WIP files.
+
 ⚠️ **After publishing, these fields become immutable:** `machine`, `order_allocators`, `arbitrations`.
 
 ⚠️ **`type_parameter` defines the payment token type** accepted by this service, default is "0x2::wow::WOW".
@@ -1102,13 +1106,274 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ## Related Components
 
-- **Machine**: Workflow templates
-- **Repository**: Data warehouses
-- **Arbitration**: Dispute resolution
-- **Contact**: Instant messaging
-- **Treasury**: Fund management
-- **Reward**: Reward pools
-- **Allocation**: Auto distribution
-- **Order**: Order management
-- **Payment**: Direct transfers
+| Component | Description |
+|-----------|-------------|
+| **[Machine](machine.md)** | Workflow template |
+| **[Repository](repository.md)** | Data ownership and usage rights |
+| **[Arbitration](arbitration.md)** | Dispute resolution |
+| **[Contact](contact.md)** | Public contact information |
+| **[Treasury](treasury.md)** | Team fund management |
+| **[Reward](reward.md)** | Marketing incentives |
+| **[Allocation](allocation.md)** | Automatic fund distribution |
+| **[Order](order.md)** | Order management |
+| **[Payment](payment.md)** | Direct coin transfers |
+
+---
+
+# Witness Information Promise (WIP) File Operations
+
+---
+
+## Component Overview
+
+The Witness Information Promise (WIP) file format is a cryptographically verifiable JSON format for transmitting immutable promise information. WIP files can be created from markdown and images, verified for integrity, signed with accounts, and converted to HTML. WIP is closely integrated with the Service component, where every sales item must reference a WIP file hash to ensure product/service description immutability.
+
+---
+
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Generate WIP** | Create WIP files from markdown text and optional images | Product/service descriptions, contracts, terms of service | Foundation for immutable content creation |
+| **Verify WIP** | Check WIP file integrity and signatures | Validate product descriptions, verify contract authenticity | Ensures content hasn't been tampered with |
+| **Sign WIP** | Add digital signatures to WIP files | Sign service agreements, certify product details | Provides non-repudiation and authenticity |
+| **Convert to HTML** | Render WIP files to HTML format | Display product descriptions, view signed documents | Makes WIP content human-readable |
+
+---
+
+## Complete Tool Call Structure
+
+WIP operations use the following top-level structure:
+
+```json
+{
+  "type": "operation_type",
+  // operation-specific fields
+}
+```
+
+---
+
+## Schema Tree
+
+```
+wip_file (WIP Operations)
+├── type (discriminator, required)
+│   ├── "generate"
+│   │   ├── options (required, WipGenerationOptions)
+│   │   │   ├── markdown_text (required, string)
+│   │   │   ├── images (optional, ImageSource[])
+│   │   │   └── account (optional, string)
+│   │   └── outputPath (required, string)
+│   ├── "verify"
+│   │   ├── wipFilePath (required, string)
+│   │   └── hash_equal (optional, string)
+│   ├── "sign"
+│   │   ├── wipFilePath (required, string)
+│   │   ├── account (optional, string)
+│   │   └── outputPath (optional, string)
+│   └── "wip2html"
+│       ├── wipPath (required, string)
+│       └── options (optional, WipToHtmlOptions)
+│           ├── title (optional, string)
+│           ├── theme (optional, "light"/"dark")
+│           └── outputPath (optional, string)
+└── (no other top-level fields)
+```
+
+---
+
+## Example 1: Generate WIP File
+
+### Feature Description
+
+Create a new WIP file from markdown text and optional images. The generated file includes content hashing and can optionally be signed.
+
+### Examples
+
+#### Example 1.1: Generate Basic WIP
+
+**Prompt**: Please generate a WIP file for a service description. Use markdown text: "Basic Web3 Consulting Service - 1 hour session", output to "service_desc.wip".
+
+```json
+{
+  "type": "generate",
+  "options": {
+    "markdown_text": "Basic Web3 Consulting Service - 1 hour session"
+  },
+  "outputPath": "service_desc.wip"
+}
+```
+
+---
+
+#### Example 1.2: Generate WIP with Images and Signature
+
+**Prompt**: Generate a WIP file for premium consulting with markdown text, include two images from local files, and sign it with account "alice". Markdown: "Premium Consulting Package includes 4 hours of dedicated service and priority support.", images: "logo.png" and "demo.jpg", output to "premium_service.wip".
+
+```json
+{
+  "type": "generate",
+  "options": {
+    "markdown_text": "Premium Consulting Package includes 4 hours of dedicated service and priority support.",
+    "images": [
+      {
+        "source": "logo.png",
+        "id": "company_logo",
+        "filename": "company_logo.png"
+      },
+      {
+        "source": "demo.jpg",
+        "id": "service_demo"
+      }
+    ],
+    "account": "alice"
+  },
+  "outputPath": "premium_service.wip"
+}
+```
+
+---
+
+## Example 2: Verify WIP File
+
+### Feature Description
+
+Verify a WIP file's integrity by checking its hash and signatures. Optionally verify against an expected hash value.
+
+### Examples
+
+#### Example 2.1: Basic Verification
+
+**Prompt**: Verify the integrity of the WIP file at "service_desc.wip".
+
+```json
+{
+  "type": "verify",
+  "wipFilePath": "service_desc.wip"
+}
+```
+
+---
+
+#### Example 2.2: Verify with Expected Hash
+
+**Prompt**: Verify the WIP file at "premium_service.wip" and check that it matches the expected hash value.
+
+```json
+{
+  "type": "verify",
+  "wipFilePath": "premium_service.wip",
+  "hash_equal": "sha256:abc123def456..."
+}
+```
+
+---
+
+## Example 3: Sign WIP File
+
+### Feature Description
+
+Sign an existing WIP file with an account's private key. Adds a digital signature to prove authenticity.
+
+### Examples
+
+#### Example 3.1: Sign with Default Account
+
+**Prompt**: Sign the WIP file at "service_desc.wip" using the default account. Save to "signed_service_desc.wip".
+
+```json
+{
+  "type": "sign",
+  "wipFilePath": "service_desc.wip",
+  "outputPath": "signed_service_desc.wip"
+}
+```
+
+---
+
+#### Example 3.2: Sign with Specific Account
+
+**Prompt**: Sign the WIP file at "premium_service.wip" using account "bob".
+
+```json
+{
+  "type": "sign",
+  "wipFilePath": "premium_service.wip",
+  "account": "bob"
+}
+```
+
+---
+
+## Example 4: Convert WIP to HTML
+
+### Feature Description
+
+Convert one or more WIP files to HTML format for display. Supports single files, directories, and network URLs.
+
+### Examples
+
+#### Example 4.1: Convert Single File
+
+**Prompt**: Convert the WIP file at "service_desc.wip" to HTML, set page title to "Service Description", use light theme.
+
+```json
+{
+  "type": "wip2html",
+  "wipPath": "service_desc.wip",
+  "options": {
+    "title": "Service Description",
+    "theme": "light"
+  }
+}
+```
+
+---
+
+#### Example 4.2: Convert Directory with Output Path
+
+**Prompt**: Convert all WIP files in the "./wips" directory to HTML and save them to "./html_output".
+
+```json
+{
+  "type": "wip2html",
+  "wipPath": "./wips",
+  "options": {
+    "outputPath": "./html_output"
+  }
+}
+```
+
+---
+
+## WIP and Service Integration
+
+WIP files are deeply integrated with the Service component. Every sales item in a Service must reference a WIP file hash using the `wip_hash` field. This ensures that product/service descriptions are immutable and verifiable.
+
+### Workflow Example
+
+1. **Create WIP**: Generate a WIP file describing your product/service
+2. **Sign WIP** (optional): Sign the WIP file with your account
+3. **Get Hash**: Extract the WIP file's hash
+4. **Add to Service**: Reference the hash in your Service's sales item
+5. **Publish**: Customers can verify the product description by checking the WIP hash
+
+---
+
+## Important Notes
+
+⚠️ **Every Service sales item requires a `wip_hash`** - this ensures product description immutability.
+
+⚠️ **WIP files can be signed with multiple signatures** - supports multi-signature scenarios.
+
+---
+
+## Related Components
+
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - uses WIP hashes for sales items |
+| **[Account](account.md)** | Local wallet management - signs WIP files |
+| **[Query](query.md)** | Data query - can retrieve and verify WIP-related data |
 

@@ -346,9 +346,11 @@ Execute multiple operations in a single call: receive funds and execute distribu
 
 ## Related Components
 
-- **Service**: Service marketplace - can use Allocation for order fund distribution
-- **Reward**: Reward pool - similar distribution mechanism
-- **Treasury**: Fund management
-- **Permission**: Permission management
-- **Guard**: Validation rules - required for executing distributions
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - can use Allocation for order fund distribution |
+| **[Reward](reward.md)** | Marketing incentives - similar distribution mechanism |
+| **[Treasury](treasury.md)** | Team fund management |
+| **[Permission](permission.md)** | Permission management |
+| **[Guard](guard.md)** | Trust verification engine - required for executing distributions |
 

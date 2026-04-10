@@ -367,6 +367,8 @@ Tags are for local classification only.
 
 ## Related Components
 
-- **LocalInfo**: Local information
-- **Account**: Account management
-- **Personal**: Public identity
+| Component | Description |
+|-----------|-------------|
+| **[LocalInfo](localinfo.md)** | Private information management |
+| **[Account](account.md)** | Local wallet management |
+| **[Personal](personal.md)** | Personal on-chain portal |

@@ -395,8 +395,10 @@ Execute multiple operations in a single call.
 
 ## Related Components
 
-- **Service**: Service marketplace
-- **Personal**: Public identity
-- **Messenger**: Encrypted messaging
-- **LocalInfo**: Local information
-- **Permission**: Permission management
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading |
+| **[Personal](personal.md)** | Personal on-chain portal |
+| **[Messenger](messenger.md)** | Secure end-to-end encrypted chat |
+| **[LocalInfo](localinfo.md)** | Private information management |
+| **[Permission](permission.md)** | Permission management |

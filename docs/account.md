@@ -949,6 +949,8 @@ Step 5: Sign the invoice message
 
 ## Related Components
 
-- **LocalMark**: Local marking
-- **LocalInfo**: Local information
-- **Payment**: Direct transfer
+| Component | Description |
+|-----------|-------------|
+| **[LocalMark](localmark.md)** | User/Object naming and categorization |
+| **[LocalInfo](localinfo.md)** | Private information management |
+| **[Payment](payment.md)** | Direct coin transfers |

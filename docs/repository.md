@@ -551,9 +551,11 @@ Perform multiple operations on existing Repository in a single transaction.
 
 ## Related Components
 
-- **Service**: Service marketplace - can bind Repository to Service
-- **Machine**: Workflow template - can bind Repository to Machine
-- **Guard**: Validation rules - required for data write permissions
-- **Permission**: Permission management
-- **Reward**: Reward pools - can bind for data incentives
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - can bind Repository to Service |
+| **[Machine](machine.md)** | Workflow template - can bind Repository to Machine |
+| **[Guard](guard.md)** | Trust verification engine - required for data write permissions |
+| **[Permission](permission.md)** | Permission management |
+| **[Reward](reward.md)** | Marketing incentives - can bind for data incentives |
 

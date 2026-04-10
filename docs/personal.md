@@ -518,7 +518,9 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ## Related Components
 
-- **Service**: Service marketplace
-- **Contact**: Communication center
-- **LocalMark**: Local marks
-- **Account**: Account management
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading |
+| **[Contact](contact.md)** | Public contact information |
+| **[LocalMark](localmark.md)** | User/Object naming and categorization |
+| **[Account](account.md)** | Local wallet management |

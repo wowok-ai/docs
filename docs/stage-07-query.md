@@ -57,7 +57,11 @@ query_toolkit is WoWok's core query tool, capable of querying data on local devi
 - 📋 `onchain_table_item_*` - Query table items
 - 📥 `onchain_received` - Query received objects
 
-**→ [View query_toolkit Detailed Documentation →](watchquery.md)**
+**→ [View query_toolkit Detailed Documentation →](query.md)**
+
+**→ [View onchain_events Detailed Documentation →](onchain_events.md)**
+
+**→ [View wowok_buildin_info Detailed Documentation →](wowok_buildin_info.md)**
 
 ---
 

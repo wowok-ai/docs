@@ -743,8 +743,10 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ## Related Components
 
-- **Service**: Service Marketplace (orders usually created automatically by Service)
-- **Progress**: Order Progress
-- **Machine**: Workflow Template
-- **Arbitration**: Arbitration System
-- **Contact**: Communication Center
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading (orders usually created automatically by Service) |
+| **[Progress](progress.md)** | Order progress |
+| **[Machine](machine.md)** | Workflow template |
+| **[Arbitration](arbitration.md)** | Dispute resolution |
+| **[Contact](contact.md)** | Public contact information |

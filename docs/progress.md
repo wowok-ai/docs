@@ -498,8 +498,10 @@ Execute multiple operations in one call to the Progress object.
 
 ## Related Components
 
-- **Machine**: Workflow template
-- **Service**: Service marketplace
-- **Order**: Order management
-- **Permission**: Permission management
-- **Repository**: Data storage
+| Component | Description |
+|-----------|-------------|
+| **[Machine](machine.md)** | Workflow template |
+| **[Service](service.md)** | WYSIWYG product trading |
+| **[Order](order.md)** | Order management |
+| **[Permission](permission.md)** | Permission management |
+| **[Repository](repository.md)** | Data ownership and usage rights |

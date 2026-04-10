@@ -695,9 +695,11 @@ Perform multiple operations on existing Treasury in a single transaction, such a
 
 ## Related Components
 
-- **Permission**: Access control management
-- **Guard**: Validation rules for external operations
-- **Payment**: Payment tracking and management
-- **Allocation**: Auto-distribution of treasury funds
-- **Reward**: Incentive pools linked to treasury
+| Component | Description |
+|-----------|-------------|
+| **[Permission](permission.md)** | Permission management |
+| **[Guard](guard.md)** | Trust verification engine - validation rules for external operations |
+| **[Payment](payment.md)** | Direct coin transfers - payment tracking and management |
+| **[Allocation](allocation.md)** | Automatic fund distribution - auto-distribution of treasury funds |
+| **[Reward](reward.md)** | Marketing incentives - incentive pools linked to treasury |
 

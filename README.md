@@ -6,31 +6,42 @@
 
 ---
 
+## 🌟 Welcome to WoWok
+
 In this Skill Book, we will take you step by step to explore the complete WoWok ecosystem. Starting from the most basic account management, gradually diving into complex commercial transactions, allowing you to fully master the powerful features of WoWok.
 
-### What is WoWok?
+### 📖 What is WoWok?
+
 WoWok is not a centralized network, but a distributed trust network built on cryptography. It ensures that collaborative data, commitments, and trust are used and verified securely and reliably in a distributed network, while ensuring privacy and messages are not passively exposed to third parties.
 
 ### 🚀 WoWok Builds Brand-New Network Infrastructure
 
-- **⛓️ L1 Blockchain** - Public chain and smart contracts
-- **🔒 Messenger** - Commercial end-to-end encrypted instant messaging system, capable of self-proving the authenticity and integrity of sessions
-- **🤖 Wowok-Agent** - Interface for user, AI, and Blockchain interaction
+| Component | Description | Key Features |
+|-----------|-------------|--------------|
+| **⛓️ L1 Blockchain** | Public chain and smart contracts | Immutable data, transparent execution, secure trust |
+| **🔒 Messenger** | Commercial end-to-end encrypted IM | WTS self-proving messages, privacy-first |
+| **🤖 Wowok-Agent** | User-AI-Blockchain interface | MCP integration, prompt-driven workflows |
 
-### 🌐 Low-Cost Trust Network Balancing Privacy and Open Collaboration
+### 🌐 A Trust Network for Everyone
 
-- **Transparent and Trusted Infrastructure** - Based on WoWok public chain, collaborative data, conditions, and methods are publicly transparent and immutable
-- **User Data Sovereignty** - Data ownership and usage rights belong to users, who have complete control over their data
-- **Customizable Trust Rules** - Create custom trust verification rules based on on-chain data and data submitted by verified parties
-- **WTS Self-Proving Messages** - Witness Timestamped Signature mechanism ensures the authenticity, integrity, and self-provability of private messages
-- **WIP Immutable Commitments** - Witness Immutable Promise mechanism ensures that commitments for goods and services are visible and immutable to all participants
-- **Arbitration Dispute Protection** - Ensures compensation for broken order commitments, with on-chain data and self-provable session messages providing complete evidence chains
+WoWok balances privacy and open collaboration through innovative mechanisms:
 
-### 🤖 Transaction Mechanism Based on Commitments and Consensus
+| Feature | Benefit |
+|---------|---------|
+| **Transparent and Trusted Infrastructure** | Based on WoWok public chain, collaborative data, conditions, and methods are publicly transparent and immutable |
+| **User Data Sovereignty** | Data ownership and usage rights belong to users, who have complete control over their data |
+| **Customizable Trust Rules** | Create custom trust verification rules using Guards based on on-chain data |
+| **WTS Self-Proving Messages** | Witness Timestamped Signature ensures message authenticity, integrity, and self-provability |
+| **WIP Immutable Commitments** | Witness Immutable Promise ensures commitments are visible and immutable to all participants |
+| **Arbitration Dispute Protection** | Complete evidence chain for broken commitments, with on-chain data and provable messages |
 
-- **Deterministic Execution** - Based on smart contracts, commitments for goods and services, collaborative workflows, performance compensation, etc. can be deterministically visible and executed
-- **Disintermediation** - Based on on-chain open data and event streams, no third-party review, recommendation, matching, or fees required
-- **AI-Native Empowerment** - Empowering every AI Agent to independently complete demand expression, trust evaluation, collaboration, and transactions
+### 🤖 AI-Native Transaction Mechanism
+
+| Feature | How It Works |
+|---------|--------------|
+| **Deterministic Execution** | Smart contracts ensure commitments, workflows, and compensation are visible and executable |
+| **Disintermediation** | No third-party review, recommendation, or fees - just on-chain open data and events |
+| **AI Empowerment** | Every AI Agent can independently express demands, evaluate trust, collaborate, and transact |
 ---
 
 ### How to Use? Just One Step!
@@ -95,7 +106,9 @@ We have designed 7 learning stages and a large number of Prompt examples for you
 │  └─ Personal - Personal On-Chain Portal                       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Stage 7: Data Query 🔍                                        │
-│  └─ WatchQuery - Query any on-chain and local data you want   │
+│  ├─ WatchQuery - Query any on-chain and local data you want   │
+│  ├─ On-chain Events - Watch real-time on-chain events        │
+│  └─ WoWok Build-in Info - Query protocol constants & info    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -131,7 +144,7 @@ Choose a stage to begin your WoWok journey:
 ## 📋 Quick Reference
 
 | Component | Type | Stage | Description |
-|------|------|------|------|
+|-----------|------|-------|-------------|
 | [Account](docs/account.md) | Local | 1 | Local wallet management |
 | [LocalMark](docs/localmark.md) | Local | 1 | User/Object naming and categorization |
 | [LocalInfo](docs/localinfo.md) | Local | 6 | Private information management |
@@ -147,10 +160,12 @@ Choose a stage to begin your WoWok journey:
 | [Arbitration](docs/arbitration.md) | On-Chain | 4 | Dispute resolution |
 | [Repository](docs/repository.md) | On-Chain | 5 | Data ownership and usage rights |
 | [Treasury](docs/treasury.md) | On-Chain | 5 | Team fund management |
-| [Reward](reward.md) | On-Chain | 5 | Marketing incentives |
+| [Reward](docs/reward.md) | On-Chain | 5 | Marketing incentives |
 | [Demand](docs/demand.md) | On-Chain | 6 | Seeking assistance |
 | [Personal](docs/personal.md) | On-Chain | 6 | Personal on-chain portal |
 | [Query](docs/query.md) | Query | 7 | Data query |
+| [On-chain Events](docs/onchain_events.md) | Query | 7 | Watch and query on-chain events |
+| [WoWok Build-in Info](docs/wowok_buildin_info.md) | Query | 7 | Query protocol constants and info |
 
 ---
 

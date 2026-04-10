@@ -543,9 +543,11 @@ Perform multiple operations on existing Reward in a single transaction, such as 
 
 ## Related Components
 
-- **Service**: Service marketplace - can bind Reward to Service
-- **Guard**: Validation rules - required for reward claiming
-- **Permission**: Permission management
-- **Treasury**: Fund management - can fund reward pools from treasury
-- **Allocation**: Auto-distribution - similar distribution mechanism
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - can bind Reward to Service |
+| **[Guard](guard.md)** | Trust verification engine - required for reward claiming |
+| **[Permission](permission.md)** | Permission management |
+| **[Treasury](treasury.md)** | Team fund management - can fund reward pools from treasury |
+| **[Allocation](allocation.md)** | Automatic fund distribution - similar distribution mechanism |
 
