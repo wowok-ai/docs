@@ -151,7 +151,6 @@ Choose a stage to begin your WoWok journey:
 | [Demand](docs/demand.md) | On-Chain | 6 | Seeking assistance |
 | [Personal](docs/personal.md) | On-Chain | 6 | Personal on-chain portal |
 | [Query](docs/query.md) | Query | 7 | Data query |
-| [WIP](docs/wip.md) | Tool | - | Work files |
 
 ---
 

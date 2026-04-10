@@ -8,23 +8,42 @@ The LocalInfo component manages local private data, such as delivery addresses, 
 
 > **Note**: Use the `watch_and_query` tool to query all or filtered information.
 
+---
+
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Add Information** | Store private data with name/default value | Save delivery addresses, contact info | Secure local storage for sensitive personal data |
+| **Remove Information** | Delete specific info entries | Remove outdated addresses/contact details | Maintains data relevance and privacy |
+| **Reset Information** | Replace content of existing entries | Update address details, contact info | Allows data updates without recreating entries |
+| **Clear All Information** | Delete all local info | Factory reset, data privacy protection | Ensures complete data removal when needed |
 
 ---
 
-## Complete Tool Call Structure
+## Schema Tree (4-Level Structure)
 
-The `local_info_operation` tool uses the following top-level structure, all sub-functions are part of this structure:
-
-```json
-{
-  "add": { ... },      // Add information
-  "remove": { ... },   // Remove information
-  "reset": { ... },    // Reset information contents
-  "clear": { ... }     // Clear all information
-}
 ```
-
-**Important Rule**: Only one operation can be specified per call (only one of the above fields can exist).
+local_info_operation
+├── add
+│   └── op: "add"
+│   └── data (array)
+│       └── [info_data]
+│           ├── name (string)
+│           ├── default (string)
+│           ├── contents (array of strings, optional)
+│           ├── createdAt (number, optional)
+│           └── updatedAt (number, optional)
+├── remove
+│   └── op: "remove"
+│   └── data (array of strings)
+├── reset
+│   └── op: "reset"
+│   └── name (string)
+│   └── contents (array of strings)
+└── clear
+    └── op: "clear"
+```
 
 ---
 
@@ -39,57 +58,29 @@ The `local_info_operation` tool uses the following top-level structure, all sub-
 
 ---
 
-## Feature Tree
+## Sub-function 1: Add Information (add)
 
-```
-local_info_operation
-├── add (Add information)
-│   └── data: InfoData[] (Info data array, at least 1)
-│       ├── name: Info entry name (required, max 64 BCS characters)
-│       ├── default: Primary/default value (required, max 300 BCS characters)
-│       └── contents: Additional content value array (optional, max 50 items, each max 300 BCS characters)
-├── remove (Remove information)
-│   ├── op: "remove" (fixed value)
-│   └── data: string[] (Info name array, at least 1)
-├── reset (Reset information contents)
-│   ├── op: "reset" (fixed value)
-│   ├── name: Info entry name (required)
-│   └── contents: New content list (required, string array)
-└── clear (Clear all information)
-    └── op: "clear" (fixed value)
-```
-
----
-
-## Sub-feature 1: Add Information (add)
-
-### Feature Description
+### Function Description
 
 Add one or more local info entries. Each info entry includes name, default value, and optional additional content list for storing sensitive personal information like delivery addresses, phone numbers, etc.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `add.op` | string | Yes | Operation type | Fixed value "add" |
 | `add.data` | array | Yes | Info data array | At least 1 element |
 | `add.data[].name` | string | Yes | Info entry name | Max 64 BCS characters, unique identifier |
 | `add.data[].default` | string | Yes | Primary/default value | Max 300 BCS characters |
 | `add.data[].contents` | array | No | Additional content value array | Max 50 items, each max 300 BCS characters |
-
-### Return Result
-
-```json
-{
-  "success": true
-}
-```
+| `add.data[].createdAt` | number | No | Creation timestamp (ms) | Unix timestamp in milliseconds |
+| `add.data[].updatedAt` | number | No | Last modification timestamp (ms) | Unix timestamp in milliseconds |
 
 ### Examples
 
 #### Example 1.1: Add Minimal Info (Name + Default Value)
 
-**Prompt**: Add a simple info entry with name "shipping_address" and default value "123 Main St, New York, NY 10001".
+**Prompt:** Add a simple info entry with name "shipping_address" and default value "123 Main St, New York, NY 10001".
 
 ```json
 {
@@ -107,7 +98,7 @@ Add one or more local info entries. Each info entry includes name, default value
 
 #### Example 1.2: Add Info with Additional Contents
 
-**Prompt**: Add a shipping address info entry with name "shipping_address", default value "123 Main St, New York, NY 10001", and additional contents ["10001", "Contact: Alice Smith", "Phone: +1-234-567-8900"].
+**Prompt:** Add a shipping address info entry with name "shipping_address", default value "123 Main St, New York, NY 10001", and additional contents ["10001", "Contact: Alice Smith", "Phone: +1-234-567-8900"].
 
 ```json
 {
@@ -126,7 +117,7 @@ Add one or more local info entries. Each info entry includes name, default value
 
 #### Example 1.3: Add Phone Number Info
 
-**Prompt**: Add a phone number info entry with name "phone_number", default value "+1-234-567-8900", and additional contents ["AT&T", "New York Region"].
+**Prompt:** Add a phone number info entry with name "phone_number", default value "+1-234-567-8900", and additional contents ["AT&T", "New York Region"].
 
 ```json
 {
@@ -145,7 +136,7 @@ Add one or more local info entries. Each info entry includes name, default value
 
 #### Example 1.4: Batch Add Multiple Info Entries
 
-**Prompt**: Add three info entries in one call: 1) home address, 2) work address, 3) emergency contact.
+**Prompt:** Add three info entries in one call: 1) home address, 2) work address, 3) emergency contact.
 
 ```json
 {
@@ -173,7 +164,7 @@ Add one or more local info entries. Each info entry includes name, default value
 
 #### Example 1.5: Add Contact Info (Multiple Content Items)
 
-**Prompt**: Add a contact info entry for Alice Smith with name "contact_alice", default value "Alice Smith", and additional contents including email, phone, address, and note.
+**Prompt:** Add a contact info entry for Alice Smith with name "contact_alice", default value "Alice Smith", and additional contents including email, phone, address, and note.
 
 ```json
 {
@@ -197,32 +188,24 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ---
 
-## Sub-feature 2: Remove Information (remove)
+## Sub-function 2: Remove Information (remove)
 
-### Feature Description
+### Function Description
 
 Remove one or more local info entries by name.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `remove.op` | string | Yes | Operation type | Fixed value "remove" |
 | `remove.data` | array | Yes | Info name array to remove | At least 1 element, string type |
-
-### Return Result
-
-```json
-{
-  "success": true
-}
-```
 
 ### Examples
 
 #### Example 2.1: Remove Single Info Entry
 
-**Prompt**: Remove the info entry named "shipping_address".
+**Prompt:** Remove the info entry named "shipping_address".
 
 ```json
 {
@@ -235,7 +218,7 @@ Remove one or more local info entries by name.
 
 #### Example 2.2: Batch Remove Multiple Info Entries
 
-**Prompt**: Remove three info entries in one call: "home_address", "work_address", and "old_phone_number".
+**Prompt:** Remove three info entries in one call: "home_address", "work_address", and "old_phone_number".
 
 ```json
 {
@@ -248,33 +231,25 @@ Remove one or more local info entries by name.
 
 ---
 
-## Sub-feature 3: Reset Information Contents (reset)
+## Sub-function 3: Reset Information Contents (reset)
 
-### Feature Description
+### Function Description
 
 Reset the content list of a specified info entry. This completely replaces the existing content list.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `reset.op` | string | Yes | Operation type | Fixed value "reset" |
 | `reset.name` | string | Yes | Info entry name | Name of info to reset |
 | `reset.contents` | array | Yes | New content list | String array, replaces existing contents |
-
-### Return Result
-
-```json
-{
-  "success": true
-}
-```
 
 ### Examples
 
 #### Example 3.1: Reset Info Contents
 
-**Prompt**: Reset the contents of "shipping_address" to ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"].
+**Prompt:** Reset the contents of "shipping_address" to ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"].
 
 ```json
 {
@@ -288,7 +263,7 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 #### Example 3.2: Clear Info Content List (Keep Name and Default Value)
 
-**Prompt**: Clear the contents of "shipping_address", but keep the name and default value. Set the new contents to an empty array.
+**Prompt:** Clear the contents of "shipping_address", but keep the name and default value. Set the new contents to an empty array.
 
 ```json
 {
@@ -302,7 +277,7 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 #### Example 3.3: Update Contact Information
 
-**Prompt**: Update the contact information for "contact_alice" with new email, phone, and address.
+**Prompt:** Update the contact information for "contact_alice" with new email, phone, and address.
 
 ```json
 {
@@ -320,31 +295,23 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 ---
 
-## Sub-feature 4: Clear All Information (clear)
+## Sub-function 4: Clear All Information (clear)
 
-### Feature Description
+### Function Description
 
 Remove all local info entries. This operation is irreversible, use with caution.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `clear.op` | string | Yes | Operation type | Fixed value "clear" |
 
-### Return Result
-
-```json
-{
-  "success": true
-}
-```
-
-### Examples
+### Example
 
 #### Example 4.1: Clear All Information
 
-**Prompt**: Remove all local info entries. This operation cannot be undone.
+**Prompt:** Remove all local info entries. This operation cannot be undone.
 
 ```json
 {
@@ -382,7 +349,6 @@ Don't store sensitive information on shared devices.
 
 ⚠️ **Never uploaded to chain!**
 
-⚠️ **Safeguard your local sensitive information!**
 
 ---
 
@@ -391,4 +357,3 @@ Don't store sensitive information on shared devices.
 - **LocalMark**: Local marking
 - **Account**: Account management
 - **Contact**: Communication center
-

@@ -4,68 +4,103 @@
 
 ## Component Overview
 
-The WatchQuery component is used to query local and on-chain data, including accounts, balances, events, objects, table data, etc.
+The WatchQuery component is used to query local and on-chain data, including accounts, balances, objects, table data, etc.
 
 ---
 
-## Complete Tool Call Structure
+## Function List
 
-This is the complete top-level tool JSON structure; all sub-features below are part of this structure:
+| Name | Purpose | Usage Scenario | Significance |
+|------|---------|----------------|-------------|
+| **Query Local Mark List** | Query local ID/user address book with optional filter | When you need to retrieve your local saved names and addresses | Quick access to locally stored address mappings |
+| **Query Account List** | Query local account list with optional filter | When managing multiple local accounts | Overview of all available accounts |
+| **Query Local Info List** | Query local info list with optional filter | When accessing saved private data (addresses, phone numbers) | Manage sensitive personal information locally |
+| **Query Token List** | Query token list with optional filter | When exploring available token types | Understand supported token options |
+| **Query Account Balance** | Query account balance for specific token type | When checking your wallet balance | Monitor financial status |
+| **Query Personal Profile** | Query public on-chain personal profile | When viewing someone's public identity | Access public user information |
+| **Query Objects** | Query multiple on-chain objects by ID | When retrieving object details | Batch access to on-chain data |
+| **Query Table Data** | Query table data of specified object | When accessing object's table items | Retrieve structured object data |
+| **Query Repository Data Item** | Query specific repository data record | When accessing stored repository policy data | Get individual data records |
+| **Query Permission Perm Item** | Query specific permission record | When checking user/guard permissions | Verify access control settings |
+| **Query Entity Registrar Item** | Query entity registration record | When checking on-chain entity details | Access entity registration info |
+| **Query Entity Linker Item** | Query entity follow/vote record | When checking social follow relationships | View social interaction data |
+| **Query Reward Record Item** | Query reward claim record | When checking reward distribution history | Track reward payouts |
+| **Query Demand Presenter Item** | Query demand submission record | When checking service recommendation history | Review demand submissions |
+| **Query Treasury History Item** | Query treasury transaction record | When checking financial history | Audit treasury operations |
+| **Query Machine Node Item** | Query machine workflow node | When checking workflow definitions | Access workflow configurations |
+| **Query Progress History Item** | Query progress execution history | When checking workflow execution logs | Review workflow history |
+| **Query Address Mark Item** | Query address tag record | When checking on-chain address tags | View address labeling |
+| **Query Received Objects** | Query received payments and NFTs | When checking incoming assets | Monitor received value |
 
-```json
-{
-  "query_type": "local_mark_list|account_list|local_info_list|token_list|account_balance|onchain_personal_profile|onchain_objects|onchain_table|onchain_table_item_repository_data|onchain_table_item_permission_perm|onchain_table_item_entity_registrar|onchain_table_item_entity_linker|onchain_table_item_reward_record|onchain_table_item_demand_presenter|onchain_table_item_treasury_history|onchain_table_item_machine_node|onchain_table_item_progress_history|onchain_item_address_mark|onchain_received",
-  "filter": {},
-  "account": "string",
-  "token_type": "string",
-  "objects": ["string"],
-  "parent": "string",
-  "object_type": "string",
-  "name": "string",
-  "entity": "string|number",
-  "address": "string",
-  "key": "string",
-  "u64": "number|string",
-  "object": "string",
-  "all_type": false
-}
+---
+
+## Schema Tree
+
+```
+query_toolkit (Query Operations)
+├── query_type (discriminator, required)
+│   ├── "local_mark_list"
+│   │   └── filter (optional, LocalMarkFilter)
+│   ├── "account_list"
+│   │   └── filter (optional, AccountFilter)
+│   ├── "local_info_list"
+│   │   └── filter (optional, LocalInfoFilter)
+│   ├── "token_list"
+│   │   └── filter (optional, TokenDataFilter)
+│   ├── "account_balance"
+│   │   ├── account (optional, NameOrAddress)
+│   │   └── token_type (optional, TokenType)
+│   ├── "onchain_personal_profile"
+│   │   └── account (optional, NameOrAddress)
+│   ├── "onchain_objects"
+│   │   └── objects (required, NameOrAddress[])
+│   ├── "onchain_table"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── object_type (required, ObjectType)
+│   ├── "onchain_table_item_repository_data"
+│   │   ├── parent (required, NameOrAddress)
+│   │   ├── name (required, string)
+│   │   └── entity (required, Address/number)
+│   ├── "onchain_table_item_permission_perm"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── address (required, Address/string)
+│   ├── "onchain_table_item_entity_registrar"
+│   │   └── address (required, Address/string)
+│   ├── "onchain_table_item_entity_linker"
+│   │   └── address (required, Address/string)
+│   ├── "onchain_table_item_reward_record"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── address (required, Address)
+│   ├── "onchain_table_item_demand_presenter"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── address (required, Address)
+│   ├── "onchain_table_item_treasury_history"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── address (required, Address)
+│   ├── "onchain_table_item_machine_node"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── key (required, string)
+│   ├── "onchain_table_item_progress_history"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── u64 (required, number/string)
+│   ├── "onchain_table_item_address_mark"
+│   │   ├── parent (required, NameOrAddress)
+│   │   └── address (required, Address)
+│   └── "onchain_received"
+│       ├── object (required, string)
+│       └── all_type (optional, boolean)
+└── (no other top-level fields)
 ```
 
 ---
 
-## Feature Tree
-
-| Feature Type | Description |
-|----------|------|
-| **Local Query** | Query locally stored accounts, marks, info, tokens |
-| **On-Chain Query** | Query on-chain objects, personal profiles, table data, events |
-| **Table Item Query** | Query specific data items of various tables |
-
----
-
-## Sub-feature 1: Query Local Mark List
+## Example 1: Query Local Mark List
 
 ### 📝 Natural Language Prompt
 
-Please help me query the local mark list.
-- Filter: {FILTER}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{FILTER}` | object | No | Local mark filter | {"tags": ["friend"]} |
+Please help me query my local mark list, filtering for marks tagged with 'friend'.
 
 ### 📋 Generated Function JSON
-
-```json
-{
-  "query_type": "local_mark_list",
-  "filter": {FILTER}
-}
-```
-
-### 🎯 Complete Tool Call Example
 
 ```json
 {
@@ -76,46 +111,15 @@ Please help me query the local mark list.
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "marks": [
-    {
-      "name": "alice",
-      "address": "0x1234...abcd",
-      "tags": ["friend", "designer"]
-    }
-  ]
-}
-```
-
 ---
 
-## Sub-feature 2: Query Account List
+## Example 2: Query Account List
 
 ### 📝 Natural Language Prompt
 
-Please help me query the account list.
-- Filter: {FILTER}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{FILTER}` | object | No | Account filter | {} |
+Please help me query all my local accounts.
 
 ### 📋 Generated Function JSON
-
-```json
-{
-  "query_type": "account_list",
-  "filter": {FILTER}
-}
-```
-
-### 🎯 Complete Tool Call Example
 
 ```json
 {
@@ -123,46 +127,15 @@ Please help me query the account list.
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "accounts": [
-    {
-      "name": "my_account",
-      "address": "0x1234...abcd",
-      "suspended": false
-    }
-  ]
-}
-```
-
 ---
 
-## Sub-feature 3: Query Local Info List
+## Example 3: Query Local Info List
 
 ### 📝 Natural Language Prompt
 
-Please help me query the local info list.
-- Filter: {FILTER}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{FILTER}` | object | No | Local info filter | {} |
+Please help me query all my locally saved information entries.
 
 ### 📋 Generated Function JSON
-
-```json
-{
-  "query_type": "local_info_list",
-  "filter": {FILTER}
-}
-```
-
-### 🎯 Complete Tool Call Example
 
 ```json
 {
@@ -170,46 +143,15 @@ Please help me query the local info list.
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "infos": [
-    {
-      "name": "shipping_address",
-      "default": "123 Main St",
-      "contents": ["123 Main St", "10001"]
-    }
-  ]
-}
-```
-
 ---
 
-## Sub-feature 4: Query Token List
+## Example 4: Query Token List
 
 ### 📝 Natural Language Prompt
 
-Please help me query the token list.
-- Filter: {FILTER}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{FILTER}` | object | No | Token data filter | {} |
+Please help me query the list of available token types.
 
 ### 📋 Generated Function JSON
-
-```json
-{
-  "query_type": "token_list",
-  "filter": {FILTER}
-}
-```
-
-### 🎯 Complete Tool Call Example
 
 ```json
 {
@@ -217,744 +159,270 @@ Please help me query the token list.
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "tokens": [
-    {
-      "type": "0x2::wow::WOW",
-      "symbol": "WOW",
-      "decimals": 9
-    }
-  ]
-}
-```
-
 ---
 
-## Sub-feature 5: Query Account Balance
+## Example 5: Query Account Balance
 
 ### 📝 Natural Language Prompt
 
-Please help me query the account balance.
-- Account: {ACCOUNT}
-- Token type: {TOKEN_TYPE}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{ACCOUNT}` | string | No | Account name or address | "my_account" |
-| `{TOKEN_TYPE}` | string | No | Token type | "0x2::wow::WOW" |
+Please help me query the WOW token balance for my account named 'alice'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "account_balance",
-  "account": "{ACCOUNT}",
-  "token_type": "{TOKEN_TYPE}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "account_balance",
-  "account": "my_account",
+  "account": "alice",
   "token_type": "0x2::wow::WOW"
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "account": "my_account",
-  "balance": "100000000000"
-}
-```
-
 ---
 
-## Sub-feature 6: Query Personal Profile
+## Example 6: Query Personal Profile
 
 ### 📝 Natural Language Prompt
 
-Please help me query the personal profile.
-- Account: {ACCOUNT}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{ACCOUNT}` | string | No | Account name or address | "my_account" |
+Please help me query the public on-chain personal profile for the account named 'bob'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_personal_profile",
-  "account": "{ACCOUNT}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_personal_profile",
-  "account": "my_account"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "profile": {
-    "address": "0x1234...abcd",
-    "like": 10,
-    "dislike": 2,
-    "description": "This is my profile"
-  }
+  "account": "bob"
 }
 ```
 
 ---
 
-## Sub-feature 7: Query Objects
+## Example 7: Query Multiple Objects
 
 ### 📝 Natural Language Prompt
 
-Please help me query objects.
-- Object ID list: {OBJECTS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{OBJECTS}` | array | Yes | Object ID list | ["object_id_1", "object_id_2"] |
+Please help me query the on-chain objects with IDs 'service_marketplace' and 'treasury_main'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_objects",
-  "objects": {OBJECTS}
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_objects",
-  "objects": ["object_id_1", "object_id_2"]
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "objects": [
-    {
-      "id": "object_id_1",
-      "type": "Service",
-      "data": {}
-    }
-  ]
+  "objects": ["service_marketplace", "treasury_main"]
 }
 ```
 
 ---
 
-## Sub-feature 8: Query Table Data
+## Example 8: Query Table Data
 
 ### 📝 Natural Language Prompt
 
-Please help me query table data.
-- Parent object ID: {PARENT}
-- Object type: {OBJECT_TYPE}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "object_id" |
-| `{OBJECT_TYPE}` | string | Yes | Object type | "Service" |
+Please help me query the table data for the Service object with parent ID 'my_service'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table",
-  "parent": "{PARENT}",
-  "object_type": "{OBJECT_TYPE}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table",
-  "parent": "object_id",
+  "parent": "my_service",
   "object_type": "Service"
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "items": [
-    {
-      "name": "item1",
-      "data": {}
-    }
-  ]
-}
-```
-
 ---
 
-## Sub-feature 9: Query RepositoryData Table Item
+## Example 9: Query Repository Data Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the RepositoryData table item.
-- Parent object ID: {PARENT}
-- Name: {NAME}
-- Entity: {ENTITY}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "repository_object_id" |
-| `{NAME}` | string | Yes | Record name | "item_name" |
-| `{ENTITY}` | string/number | Yes | Entity ID or address | "entity_address" |
+Please help me query the repository data record named 'user_settings' for entity 'alice' from the repository object 'repo_main'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_repository_data",
-  "parent": "{PARENT}",
-  "name": "{NAME}",
-  "entity": "{ENTITY}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_repository_data",
-  "parent": "repository_object_id",
-  "name": "item_name",
-  "entity": "entity_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "name": "item_name",
-    "data": {}
-  }
+  "parent": "repo_main",
+  "name": "user_settings",
+  "entity": "alice"
 }
 ```
 
 ---
 
-## Sub-feature 10: Query PermissionPerm Table Item
+## Example 10: Query Permission Perm Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the PermissionPerm table item.
-- Parent object ID: {PARENT}
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "permission_object_id" |
-| `{ADDRESS}` | string | Yes | User or Guard address | "user_address" |
+Please help me query the permission record for address 'alice' from the permission object 'perm_admin'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_permission_perm",
-  "parent": "{PARENT}",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_permission_perm",
-  "parent": "permission_object_id",
-  "address": "user_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "user_address",
-    "permissions": []
-  }
+  "parent": "perm_admin",
+  "address": "alice"
 }
 ```
 
 ---
 
-## Sub-feature 11: Query EntityRegistrar Table Item
+## Example 11: Query Entity Registrar Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the EntityRegistrar table item.
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{ADDRESS}` | string | Yes | Entity address | "entity_address" |
+Please help me query the entity registration record for address 'service_provider'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_entity_registrar",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_entity_registrar",
-  "address": "entity_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "entity_address",
-    "description": "Entity description"
-  }
+  "address": "service_provider"
 }
 ```
 
 ---
 
-## Sub-feature 12: Query EntityLinker Table Item
+## Example 12: Query Entity Linker Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the EntityLinker table item.
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{ADDRESS}` | string | Yes | Address | "entity_address" |
+Please help me query the follow/vote record for address 'popular_creator'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_entity_linker",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_entity_linker",
-  "address": "entity_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "entity_address",
-    "votes": []
-  }
+  "address": "popular_creator"
 }
 ```
 
 ---
 
-## Sub-feature 13: Query RewardRecord Table Item
+## Example 13: Query Reward Record Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the RewardRecord table item.
-- Parent object ID: {PARENT}
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "reward_object_id" |
-| `{ADDRESS}` | string | Yes | Claimer address | "user_address" |
+Please help me query the reward claim record for address 'alice' from the reward object 'reward_pool'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_reward_record",
-  "parent": "{PARENT}",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_reward_record",
-  "parent": "reward_object_id",
-  "address": "user_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "user_address",
-    "records": []
-  }
+  "parent": "reward_pool",
+  "address": "alice"
 }
 ```
 
 ---
 
-## Sub-feature 14: Query DemandPresenter Table Item
+## Example 14: Query Demand Presenter Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the DemandPresenter table item.
-- Parent object ID: {PARENT}
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "demand_object_id" |
-| `{ADDRESS}` | string | Yes | Submitter address | "presenter_address" |
+Please help me query the service submission record for address 'bob' from the demand object 'demand_market'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_demand_presenter",
-  "parent": "{PARENT}",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_demand_presenter",
-  "parent": "demand_object_id",
-  "address": "presenter_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "presenter_address",
-    "data": {}
-  }
+  "parent": "demand_market",
+  "address": "bob"
 }
 ```
 
 ---
 
-## Sub-feature 15: Query TreasuryHistory Table Item
+## Example 15: Query Treasury History Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the TreasuryHistory table item.
-- Parent object ID: {PARENT}
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "treasury_object_id" |
-| `{ADDRESS}` | string | Yes | Payment ID | "payment_id" |
+Please help me query the treasury transaction record for payment ID 'payment_123' from the treasury object 'treasury_main'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_treasury_history",
-  "parent": "{PARENT}",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_treasury_history",
-  "parent": "treasury_object_id",
-  "address": "payment_id"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "payment_id",
-    "data": {}
-  }
+  "parent": "treasury_main",
+  "address": "payment_123"
 }
 ```
 
 ---
 
-## Sub-feature 16: Query MachineNode Table Item
+## Example 16: Query Machine Node Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the MachineNode table item.
-- Parent object ID: {PARENT}
-- Key: {KEY}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "machine_object_id" |
-| `{KEY}` | string | Yes | Node name key | "start" |
+Please help me query the machine workflow node with key 'validation_step' from the machine object 'workflow_v1'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_machine_node",
-  "parent": "{PARENT}",
-  "key": "{KEY}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_machine_node",
-  "parent": "machine_object_id",
-  "key": "start"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "key": "start",
-    "node": {}
-  }
+  "parent": "workflow_v1",
+  "key": "validation_step"
 }
 ```
 
 ---
 
-## Sub-feature 17: Query ProgressHistory Table Item
+## Example 17: Query Progress History Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the ProgressHistory table item.
-- Parent object ID: {PARENT}
-- U64 value: {U64}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "progress_object_id" |
-| `{U64}` | number/string | Yes | Record U64 value | 1 |
+Please help me query the progress execution history record with u64 value 1 from the progress object 'order_456'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_progress_history",
-  "parent": "{PARENT}",
-  "u64": "{U64}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_progress_history",
-  "parent": "progress_object_id",
+  "parent": "order_456",
   "u64": 1
 }
 ```
 
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "u64": 1,
-    "history": {}
-  }
-}
-```
-
 ---
 
-## Sub-feature 18: Query AddressMark Table Item
+## Example 18: Query Address Mark Item
 
 ### 📝 Natural Language Prompt
 
-Please help me query the AddressMark table item.
-- Parent object ID: {PARENT}
-- Address: {ADDRESS}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{PARENT}` | string | Yes | Parent object ID | "resource_object_id" |
-| `{ADDRESS}` | string | Yes | Mark address | "entity_address" |
+Please help me query the address tag record for address 'alice' from the resource object 'address_tags'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_table_item_address_mark",
-  "parent": "{PARENT}",
-  "address": "{ADDRESS}"
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_table_item_address_mark",
-  "parent": "resource_object_id",
-  "address": "entity_address"
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "item": {
-    "address": "entity_address",
-    "name": "tag_name",
-    "tags": []
-  }
+  "parent": "address_tags",
+  "address": "alice"
 }
 ```
 
 ---
 
-## Sub-feature 19: Query Received Objects
+## Example 19: Query Received Objects
 
 ### 📝 Natural Language Prompt
 
-Please help me query received objects.
-- Object ID: {OBJECT}
-- Query all types: {ALL_TYPE}
-
-### 🔧 Variable Description
-
-| Variable Name | Type | Required | Description | Example |
-|--------|------|------|------|------|
-| `{OBJECT}` | string | Yes | Object ID | "object_id" |
-| `{ALL_TYPE}` | boolean | No | Query all types | false |
+Please help me query all types of received objects for the object 'service_wallet'.
 
 ### 📋 Generated Function JSON
 
 ```json
 {
   "query_type": "onchain_received",
-  "object": "{OBJECT}",
-  "all_type": {ALL_TYPE}
-}
-```
-
-### 🎯 Complete Tool Call Example
-
-```json
-{
-  "query_type": "onchain_received",
-  "object": "object_id",
-  "all_type": false
-}
-```
-
-### 📤 Return Result Format
-
-```json
-{
-  "success": true,
-  "received": []
+  "object": "service_wallet",
+  "all_type": true
 }
 ```
 

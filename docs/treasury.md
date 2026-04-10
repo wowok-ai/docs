@@ -1,3 +1,4 @@
+
 # Treasury Component (💰 Team Fund Vault Management)
 
 ---
@@ -5,6 +6,20 @@
 ## Component Overview
 
 The Treasury component is used to create and manage team fund vaults, set deposit/withdrawal rules, etc. Treasury supports two operation modes: permission management through Permission objects, or verification through external Guard objects.
+
+---
+
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Treasury** | Establish new fund vault with access controls | Set up team budget vaults, project fund pools | Creates secure on-chain treasury with permission management |
+| **Deposit Funds** | Add assets to Treasury balance | Contribute to team funds, deposit project budgets | Fills the treasury balance pool |
+| **Withdraw Funds** | Remove assets from Treasury balance | Pay expenses, distribute bonuses, allocate funds | Releases funds from treasury to recipients |
+| **Manage Deposit Guards** | Configure external Guard verification for deposits | Allow public deposits, controlled external contributions | Enables permissionless deposits with Guard validation |
+| **Manage Withdrawal Guards** | Configure external Guard verification for withdrawals | Enable automated payouts, controlled external withdrawals | Enables permissionless withdrawals with Guard validation |
+| **Receive Assets** | Process received CoinWrapper objects | Deposit incoming payments, collect fees | Automatically adds received assets to treasury balance |
+| **Owner Receive** | Unwrap and send received assets to owner | Forward received tokens, process incoming payments | Delivers received assets to permission owner |
 
 ---
 
@@ -23,67 +38,34 @@ Treasury operations use the following top-level structure:
 
 ---
 
-## Feature Tree
+## Schema Tree
 
 ```
 treasury (Treasury Object)
 ├── operation_type: "treasury" (fixed value)
 ├── data (Treasury data definition)
 │   ├── object (object definition, required)
-│   │   ├── new: true (create new object)
-│   │   │   ├── name (object name)
-│   │   │   ├── type: "Treasury" (fixed type)
-│   │   │   ├── permission (Permission object, optional)
-│   │   │   │   ├── new: true (create new Permission)
-│   │   │   │   │   ├── name (Permission name)
-│   │   │   │   │   ├── admin (admin list)
-│   │   │   │   │   └── description (description)
-│   │   │   │   └── name|id (reference existing Permission)
-│   │   │   └── namedNew (optional, local naming)
-│   │   │       ├── name (local name)
-│   │   │       ├── tags (tag list, optional)
-│   │   │       └── replaceExistName (whether to replace existing name, optional)
-│   │   └── name|id (operate existing object)
+│   │   ├── name|id (reference existing object)
+│   │   └── name|tags|type_parameter|permission (create new object)
 │   ├── description (description, optional)
-│   ├── receive (receive CoinWrapper and deposit to balance, optional)
-│   │   ├── recently: true (recently received)
-│   │   └── balance (receive specified balance object, optional)
+│   ├── receive (receive CoinWrapper, optional)
 │   ├── deposit (deposit, optional)
 │   │   ├── coin (asset, required)
-│   │   │   ├── fixed (fixed amount)
-│   │   │   └── balance (use balance object)
-│   │   ├── by_external_deposit_guard (external Guard verification, optional)
-│   │   ├── payment_info (payment information, required)
-│   │   └── namedNewPayment (create new Payment object, optional)
+│   │   ├── by_external_deposit_guard (optional)
+│   │   ├── payment_info (required)
+│   │   └── namedNewPayment (optional)
 │   ├── withdraw (withdrawal, optional)
 │   │   ├── amount (amount, required)
-│   │   │   ├── fixed (fixed amount, withdraw through Permission)
-│   │   │   └── by_external_withdraw_guard (external Guard verification withdrawal)
 │   │   ├── recipient (recipient, required)
-│   │   ├── payment_info (payment information, required)
-│   │   └── namedNewPayment (create new Payment object, optional)
-│   ├── external_deposit_guard (external deposit Guard management, optional)
-│   │   └── op (operation type: add|set|remove|clear)
-│   │       ├── add: guards (Guard list)
-│   │       ├── set: guards (Guard list)
-│   │       ├── remove: guards (Guard name list)
-│   │       └── clear (clear all)
-│   ├── external_withdraw_guard (external withdrawal Guard management, optional)
-│   │   └── op (operation type: add|set|remove|clear)
-│   │       ├── add: guards (Guard list)
-│   │       ├── set: guards (Guard list)
-│   │       ├── remove: guards (Guard name list)
-│   │       └── clear (clear all)
-│   ├── owner_receive (unwrap CoinWrapper and send to owner, optional)
-│   │   ├── recently: true (recently received)
-│   │   └── objects (object list, optional)
+│   │   ├── payment_info (required)
+│   │   └── namedNewPayment (optional)
+│   ├── external_deposit_guard (optional)
+│   │   └── op (add|set|remove|clear)
+│   ├── external_withdraw_guard (optional)
+│   │   └── op (add|set|remove|clear)
+│   ├── owner_receive (optional)
 │   └── um (Contact object, optional)
 ├── env (optional, execution environment)
-│   ├── account (optional, use specified account)
-│   ├── permission_guard (optional, permission Guard list)
-│   ├── no_cache (optional, whether to disable cache)
-│   ├── network (optional, network selection)
-│   └── referrer (optional, referrer ID)
 └── submission (optional, submission data)
 ```
 
@@ -92,6 +74,7 @@ treasury (Treasury Object)
 ## Sub-feature 1: Create New Treasury
 
 ### Feature Description
+
 Create a new Treasury object, can simultaneously create a new Permission object or reference an existing Permission.
 
 ### Parameter Description
@@ -99,18 +82,8 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.new` | boolean | Yes | Create new object | true |
-| `data.object.name` | string | Yes | Treasury name | Maximum 64 BCS characters |
-| `data.object.type` | string | Yes | Object type | Fixed value "Treasury" |
-| `data.object.permission` | object | No | Permission object | Can be newly created or reference existing |
-| `data.object.permission.new` | boolean | No | Create new Permission | true |
-| `data.object.permission.name` | string | No | Permission name | Maximum 64 BCS characters |
-| `data.object.permission.admin` | array | No | Admin list | Address array |
-| `data.object.permission.description` | string | No | Permission description | Maximum length limit |
-| `data.object.namedNew.name` | string | No | Local name | Maximum 64 BCS characters |
-| `data.object.namedNew.tags` | array | No | Tag list | String array |
-| `data.object.namedNew.replaceExistName` | boolean | No | Whether to replace existing name | true=force replace; false=error when name exists (default) |
-| `data.description` | string | No | Treasury description | Maximum length limit |
+| `data.object` | object or string | Yes | Object definition | TypedPermissionObject |
+| `data.description` | string | No | Treasury description | Max 65535 characters |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
 | `env.network` | enum | No | Network selection | "localnet" or "testnet" |
 
@@ -119,10 +92,6 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 ⚠️ **Permission Object**: Treasury requires Permission to manage permissions, can create new or reference existing.
 
 ⚠️ **External Guard**: Can set external verification rules through `external_deposit_guard` and `external_withdraw_guard`, allowing non-permission users to deposit/withdraw through Guard verification.
-
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
@@ -137,9 +106,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "operation_type": "treasury",
   "data": {
     "object": {
-      "new": true,
-      "name": "team_treasury",
-      "type": "Treasury"
+      "name": "team_treasury"
     }
   }
 }
@@ -147,28 +114,17 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 1.2: Create Treasury and Simultaneously Create New Permission
+#### Example 1.2: Create Treasury with Tags
 
-**Prompt**: Create a Treasury named "project_fund", simultaneously create a new Permission object named "project_perm", set admin, add tags "project", "finance", and add description.
+**Prompt**: Create a Treasury named "project_fund", add tags "project", "finance", and description "Project fund treasury for managing team finances".
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
     "object": {
-      "new": true,
       "name": "project_fund",
-      "type": "Treasury",
-      "permission": {
-        "new": true,
-        "name": "project_perm",
-        "admin": ["0x1234...5678"],
-        "description": "Permission for project fund management"
-      },
-      "namedNew": {
-        "name": "project_fund",
-        "tags": ["project", "finance"]
-      }
+      "tags": ["project", "finance"]
     },
     "description": "Project fund treasury for managing team finances"
   }
@@ -177,37 +133,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 1.3: Create Treasury and Reference Existing Permission
-
-**Prompt**: Create a Treasury named "marketing_budget", reference existing Permission "marketing_perm", add tags "marketing", "budget", and specify testnet network.
-
-```json
-{
-  "operation_type": "treasury",
-  "data": {
-    "object": {
-      "new": true,
-      "name": "marketing_budget",
-      "type": "Treasury",
-      "permission": {
-        "name": "marketing_perm"
-      },
-      "namedNew": {
-        "name": "marketing_budget",
-        "tags": ["marketing", "budget"]
-      }
-    },
-    "description": "Marketing budget treasury"
-  },
-  "env": {
-    "network": "testnet"
-  }
-}
-```
-
----
-
-#### Example 1.4: Create Treasury and Set External Guard
+#### Example 1.3: Create Treasury and Set External Guards
 
 **Prompt**: Create a Treasury named "community_fund", set external deposit Guard and external withdrawal Guard, allowing deposit/withdrawal operations through Guard verification.
 
@@ -216,16 +142,8 @@ Returns transaction block information (WowTransactionBlockSchema).
   "operation_type": "treasury",
   "data": {
     "object": {
-      "new": true,
       "name": "community_fund",
-      "type": "Treasury",
-      "permission": {
-        "name": "community_perm"
-      },
-      "namedNew": {
-        "name": "community_fund",
-        "tags": ["community", "fund"]
-      }
+      "tags": ["community", "fund"]
     },
     "description": "Community fund treasury with external Guard access",
     "external_deposit_guard": {
@@ -255,6 +173,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 2: Deposit
 
 ### Feature Description
+
 Deposit assets into Treasury, supports verification through Permission or external Guard.
 
 ### Parameter Description
@@ -262,8 +181,8 @@ Deposit assets into Treasury, supports verification through Permission or extern
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.name` | string | Yes | Treasury name or ID | |
-| `data.deposit.coin.fixed` | string | Yes | Deposit amount | Minimum unit |
+| `data.object` | string | Yes | Treasury name or ID | |
+| `data.deposit.coin` | object | Yes | Asset to deposit | { balance: number } or { coin: string } |
 | `data.deposit.by_external_deposit_guard` | string | No | External Guard verification | Guard object ID or name |
 | `data.deposit.payment_info` | object | Yes | Payment information | |
 | `data.deposit.namedNewPayment` | object | No | Create new Payment object | |
@@ -274,30 +193,27 @@ Deposit assets into Treasury, supports verification through Permission or extern
 - Deposit through Permission (default, requires permission)
 - Deposit through external Guard verification (use `by_external_deposit_guard`)
 
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
-
 ---
 
 ### Examples
 
 #### Example 2.1: Deposit through Permission
 
-**Prompt**: Deposit 100 WOW into "team_treasury", operate through Permission permission.
+**Prompt**: Deposit 100 WOW into "team_treasury", operate through Permission.
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "team_treasury"
-    },
+    "object": "team_treasury",
     "deposit": {
       "coin": {
-        "fixed": "100000000000"
+        "balance": 100000000000
       },
-      "payment_info": {}
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      }
     }
   }
 }
@@ -313,15 +229,16 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "deposit": {
       "coin": {
-        "fixed": "50000000000"
+        "balance": 50000000000
       },
       "by_external_deposit_guard": "deposit_guard",
-      "payment_info": {},
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      },
       "namedNewPayment": {
         "name": "deposit_payment"
       }
@@ -335,6 +252,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 3: Withdrawal
 
 ### Feature Description
+
 Withdraw assets from Treasury, supports fixed amount withdrawal through Permission, or withdrawal through external Guard verification.
 
 ### Parameter Description
@@ -342,24 +260,17 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.name` | string | Yes | Treasury name or ID | |
-| `data.withdraw.amount.fixed` | string | Yes | Withdrawal amount (Permission method) | Minimum unit |
-| `data.withdraw.amount.by_external_withdraw_guard` | string | Yes | External Guard verification (Guard method) | Guard object ID or name |
-| `data.withdraw.recipient` | string | Yes | Recipient address | |
+| `data.object` | string | Yes | Treasury name or ID | |
+| `data.withdraw.amount` | object | Yes | Withdrawal amount | { fixed: number } or { by_external_withdraw_guard: string } |
+| `data.withdraw.recipient` | object | Yes | Recipient | AccountOrMark_Address object |
 | `data.withdraw.payment_info` | object | Yes | Payment information | |
 | `data.withdraw.namedNewPayment` | object | No | Create new Payment object | |
 
 ### Important Notes
 
 ⚠️ **Two Withdrawal Methods**: 
-- Fixed amount withdrawal: Set through `amount.fixed`, must go through Permission permission
+- Fixed amount withdrawal: Set through `amount.fixed`, must go through Permission
 - Guard verification withdrawal: Set through `amount.by_external_withdraw_guard`, amount obtained from Guard table data
-
-⚠️ **Balance Check**: Ensure Treasury has sufficient balance before withdrawal.
-
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
@@ -367,21 +278,24 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 #### Example 3.1: Fixed Amount Withdrawal through Permission
 
-**Prompt**: Withdraw 50 WOW from "team_treasury", through Permission permission, send to "0x1234...5678".
+**Prompt**: Withdraw 50 WOW from "team_treasury", through Permission, send to alice.
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "team_treasury"
-    },
+    "object": "team_treasury",
     "withdraw": {
       "amount": {
-        "fixed": "50000000000"
+        "fixed": 50000000000
       },
-      "recipient": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-      "payment_info": {}
+      "recipient": {
+        "name_or_address": "alice"
+      },
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      }
     }
   }
 }
@@ -391,21 +305,24 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 #### Example 3.2: Withdrawal through External Guard
 
-**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard", send to "0xabcd...1234", simultaneously create Payment object.
+**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard", send to bob, simultaneously create Payment object.
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "withdraw": {
       "amount": {
         "by_external_withdraw_guard": "withdraw_guard"
       },
-      "recipient": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef12345678",
-      "payment_info": {},
+      "recipient": {
+        "name_or_address": "bob"
+      },
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      },
       "namedNewPayment": {
         "name": "withdraw_payment"
       }
@@ -419,6 +336,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 4: Manage External Deposit Guard
 
 ### Feature Description
+
 Manage Treasury's external deposit Guard list, supports add, set, remove, clear operations.
 
 ### Parameter Description
@@ -426,19 +344,15 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.name` | string | Yes | Treasury name or ID | |
+| `data.object` | string | Yes | Treasury name or ID | |
 | `data.external_deposit_guard.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
-| `data.external_deposit_guard.guards` | array | Yes | Guard list | Required for add/set |
+| `data.external_deposit_guard.guards` | array | No | Guard list | Required for add/set/remove |
 
 ### Important Notes
 
-⚠️ **External Guard Function**: Allows non-Permission permission users to deposit through Guard verification.
+⚠️ **External Guard Function**: Allows non-Permission users to deposit through Guard verification.
 
 ⚠️ **identifier Parameter**: Corresponds to data index in Guard table, its value is depositable amount, null means unlimited.
-
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
@@ -452,9 +366,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_deposit_guard": {
       "op": "add",
       "guards": [
@@ -478,9 +390,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_deposit_guard": {
       "op": "add",
       "guards": [
@@ -504,9 +414,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_deposit_guard": {
       "op": "set",
       "guards": [
@@ -530,9 +438,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_deposit_guard": {
       "op": "remove",
       "guards": ["old_deposit_guard"]
@@ -551,9 +457,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_deposit_guard": {
       "op": "clear"
     }
@@ -566,6 +470,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 5: Manage External Withdrawal Guard
 
 ### Feature Description
+
 Manage Treasury's external withdrawal Guard list, supports add, set, remove, clear operations.
 
 ### Parameter Description
@@ -573,19 +478,15 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.name` | string | Yes | Treasury name or ID | |
+| `data.object` | string | Yes | Treasury name or ID | |
 | `data.external_withdraw_guard.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
-| `data.external_withdraw_guard.guards` | array | Yes | Guard list | Required for add/set |
+| `data.external_withdraw_guard.guards` | array | No | Guard list | Required for add/set/remove |
 
 ### Important Notes
 
-⚠️ **External Guard Function**: Allows non-Permission permission users to withdraw through Guard verification.
+⚠️ **External Guard Function**: Allows non-Permission users to withdraw through Guard verification.
 
 ⚠️ **identifier Parameter**: Corresponds to data index in Guard table, its value is withdrawable amount.
-
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
@@ -599,9 +500,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_withdraw_guard": {
       "op": "add",
       "guards": [
@@ -625,9 +524,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_withdraw_guard": {
       "op": "set",
       "guards": [
@@ -651,9 +548,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_withdraw_guard": {
       "op": "remove",
       "guards": ["old_withdraw_guard"]
@@ -672,9 +567,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "community_fund"
-    },
+    "object": "community_fund",
     "external_withdraw_guard": {
       "op": "clear"
     }
@@ -687,6 +580,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 6: Receive and Manage Received Assets
 
 ### Feature Description
+
 Process CoinWrapper objects received by Treasury, can deposit to balance or unwrap and send to Permission owner.
 
 ### Parameter Description
@@ -694,21 +588,15 @@ Process CoinWrapper objects received by Treasury, can deposit to balance or unwr
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
-| `data.object.name` | string | Yes | Treasury name or ID | |
-| `data.receive.recently` | boolean | No | Receive recently received | true |
-| `data.receive.balance` | string | No | Receive specified balance object | |
-| `data.owner_receive.recently` | boolean | No | Unwrap recently received | true |
-| `data.owner_receive.objects` | array | No | Unwrap specified object list | |
+| `data.object` | string | Yes | Treasury name or ID | |
+| `data.receive` | string or object | No | Receive CoinWrapper | "recently" or ReceivedBalance object |
+| `data.owner_receive` | string or object | No | Unwrap and send to owner | "recently" or ReceivedObjects object |
 
 ### Important Notes
 
 ⚠️ **receive**: Deposit received CoinWrapper into Treasury balance.
 
 ⚠️ **owner_receive**: Unwrap CoinWrapper and send to Permission owner.
-
-### Return Result
-
-Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
@@ -722,12 +610,8 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "team_treasury"
-    },
-    "receive": {
-      "recently": true
-    }
+    "object": "team_treasury",
+    "receive": "recently"
   }
 }
 ```
@@ -742,12 +626,8 @@ Returns transaction block information (WowTransactionBlockSchema).
 {
   "operation_type": "treasury",
   "data": {
-    "object": {
-      "name": "team_treasury"
-    },
-    "owner_receive": {
-      "recently": true
-    }
+    "object": "team_treasury",
+    "owner_receive": "recently"
   }
 }
 ```
@@ -757,14 +637,67 @@ Returns transaction block information (WowTransactionBlockSchema).
 ## Sub-feature 7: Operate Existing Treasury (Combined Operations)
 
 ### Feature Description
+
 Perform multiple operations on existing Treasury in a single transaction, such as simultaneous deposit and withdrawal, or simultaneous management of external Guards.
 
 ### Important Notes
 
 ⚠️ **Combined Operations**: Can combine multiple operations in the same transaction to improve efficiency.
 
-### Return Result
+---
 
-Returns transaction block information (WowTransactionBlockSchema).
+### Example
+
+#### Example 7.1: Combined Deposit and Withdrawal
+
+**Prompt**: For "team_treasury": 1) Deposit 200 WOW, 2) Withdraw 50 WOW to alice, 3) Simultaneously process received assets.
+
+```json
+{
+  "operation_type": "treasury",
+  "data": {
+    "object": "team_treasury",
+    "receive": "recently",
+    "deposit": {
+      "coin": {
+        "balance": 200000000000
+      },
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      }
+    },
+    "withdraw": {
+      "amount": {
+        "fixed": 50000000000
+      },
+      "recipient": {
+        "name_or_address": "alice"
+      },
+      "payment_info": {
+        "remark": "treasury operation",
+        "index": 1
+      }
+    }
+  }
+}
+```
 
 ---
+
+## Important Notes
+
+⚠️ **Treasury operations require Permission or external Guard verification.**
+
+⚠️ **External Guard verification allows permissionless operations with validation rules.**
+
+---
+
+## Related Components
+
+- **Permission**: Access control management
+- **Guard**: Validation rules for external operations
+- **Payment**: Payment tracking and management
+- **Allocation**: Auto-distribution of treasury funds
+- **Reward**: Incentive pools linked to treasury
+

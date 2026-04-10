@@ -1,3 +1,4 @@
+
 # Repository Component (📦 Data Repository)
 
 ---
@@ -8,27 +9,54 @@ Repository is WoWok's on-chain data repository component, used to store structur
 
 ---
 
-## Feature Tree
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Repository** | Establish data repository with access controls | Set up service data storage, user data records | Creates secure on-chain database with permission management |
+| **Manage Policies** | Define data write/read rules with Guard verification | Configure data permissions, set up access control | Defines who can write/read which data and under what conditions |
+| **Add Data** | Write data items to repository | Store user records, save workflow states | Persists structured data on-chain with policy validation |
+| **Remove Data** | Delete data items from repository | Clean up outdated records, remove invalid entries | Manages data lifecycle with permission checks |
+| **Bind Rewards** | Link reward objects for data incentives | Encourage data contributions, reward active users | Incentivizes data quality and participation |
+| **Owner Receive** | Unwrap and send received assets to owner | Forward received tokens, process payments | Delivers received assets to permission owner |
+
+---
+
+## Complete Tool Call Structure
+
+Repository operations use the following top-level structure:
+
+```json
+{
+  "operation_type": "repository",
+  "data": { ... },    // Repository data definition
+  "env": { ... },       // Execution environment (optional)
+  "submission": { ... }  // Submission data (optional)
+}
+```
+
+---
+
+## Schema Tree
 
 ```
-Repository Component
-├── Create New Repository
-│   ├── Set Name (object.name)
-│   ├── Bind Permission (object.permission)
-│   ├── Set Description (description)
-│   └── Set Repository Type (repo_type)
-├── Manage Repository Tables (table)
-│   ├── Add Table (table.op = "add")
-│   ├── Set Tables (table.op = "set")
-│   ├── Remove Table (table.op = "remove")
-│   └── Clear Tables (table.op = "clear")
-├── Manage Repository Data (data)
-│   ├── Add Data (data.op = "add")
-│   ├── Set Data (data.op = "set")
-│   ├── Remove Data (data.op = "remove")
-│   └── Clear Data (data.op = "clear")
-├── Receive Objects (owner_receive)
-└── Destroy Repository (destroy)
+repository (Repository Object)
+├── operation_type: "repository" (fixed value)
+├── data (Repository data definition)
+│   ├── object (object definition, required)
+│   │   ├── name|id (reference existing object)
+│   │   └── name|tags|type_parameter|permission (create new object)
+│   ├── description (description, optional)
+│   ├── policies (policy rules, optional)
+│   │   ├── op (operation: add|set|remove|clear)
+│   │   └── policy|policy_name (policy list or names)
+│   ├── data_add (add data items, optional)
+│   ├── data_remove (remove data items, optional)
+│   ├── rewards (reward objects, optional)
+│   ├── owner_receive (unwrap and send to owner, optional)
+│   └── um (Contact object, optional)
+├── env (optional, execution environment)
+└── submission (optional, submission data)
 ```
 
 ---
@@ -41,141 +69,144 @@ Create a new Repository object for storing structured data.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description | Constraints |
-|------|------|------|------|------|
-| `object.name` | string | No | Local mark name | Max 64 characters |
-| `object.id` | string | No | Object ID | 0x prefix + 64 hex characters |
-| `object.type` | string | Yes | Object type | Must be "Repository" |
-| `object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
-| `description` | string | No | Repository description | Max 4000 characters |
-| `repo_type` | string | No | Repository type | Default is "Generic" |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "repository" |
+| `data.object` | object or string | Yes | Object definition | WithPermissionObject |
+| `data.description` | string | No | Repository description | Max 65535 characters |
+| `env.account` | string | No | Use specified account | Empty string '' uses default account |
+| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
 
-### Repository Type Description
+### Important Notes
 
-| Type | Description |
-|------|------|
-| `Generic` | Generic repository |
-| `Service` | Service data repository |
-| `Machine` | Machine data repository |
-| `Progress` | Progress data repository |
+⚠️ **Policy Rules**: Policies define data write/read permissions using PolicyRule objects, which include write_guard, id_from, and value_type.
+
+---
 
 ### Examples
 
-#### Example 1.1: Create Simple Repository
+#### Example 1.1: Create Minimal Repository
+
+**Prompt**: Create a Repository named "service_data", use default account and network, no other configuration specified.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
     "object": {
-      "name": "service_data",
-      "type": "Repository",
-      "permission": "existing_permission"
-    },
-    "description": "Service data storage repository",
-    "repo_type": "Service"
-  }
-}
-```
-
-#### Example 1.2: Create Repository and New Permission Simultaneously
-
-```json
-{
-  "operation_type": "repository",
-  "data": {
-    "object": {
-      "name": "user_data",
-      "type": "Repository",
-      "permission": {
-        "name": "user_data_permission"
-      }
-    },
-    "description": "User data repository",
-    "repo_type": "Generic"
+      "name": "service_data"
+    }
   }
 }
 ```
 
 ---
 
-## Sub-feature 2: Manage Repository Tables (table)
+#### Example 1.2: Create Repository with Tags
+
+**Prompt**: Create a Repository named "user_records", add tags "users", "storage", description "User data storage repository".
+
+```json
+{
+  "operation_type": "repository",
+  "data": {
+    "object": {
+      "name": "user_records",
+      "tags": ["users", "storage"]
+    },
+    "description": "User data storage repository"
+  }
+}
+```
+
+---
+
+#### Example 1.3: Create Complete Repository with Policies
+
+**Prompt**: Create a Repository named "complete_repo": 1) Add tags "service", "database", 2) Add description "Complete repository example", 3) Add a policy named "user_notes" with write guard "user_write_guard", id from clock, value type string, 4) Bind reward object "contribution_reward".
+
+```json
+{
+  "operation_type": "repository",
+  "data": {
+    "object": {
+      "name": "complete_repo",
+      "tags": ["service", "database"]
+    },
+    "description": "Complete repository example",
+    "policies": {
+      "op": "add",
+      "policy": [
+        {
+          "name": "user_notes",
+          "description": "User notes storage",
+          "write_guard": ["user_write_guard"],
+          "id_from": "Clock",
+          "value_type": "string"
+        }
+      ]
+    },
+    "rewards": ["contribution_reward"]
+  }
+}
+```
+
+---
+
+## Sub-feature 2: Manage Policies
 
 ### Feature Description
 
-Manage table structure of Repository.
+Add, set, remove, or clear policy rules that define data write permissions and ID sources.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|------|------|------|------|
-| `table.op` | string | Yes | Operation type: add/set/remove/clear |
-| `table.tables` | array | Required for add/set | Table list |
-| `table.tables[].name` | string | Yes | Table name |
-| `table.tables[].fields` | array | Yes | Field list |
-| `table.tables[].fields[].name` | string | Yes | Field name |
-| `table.tables[].fields[].type` | string | Yes | Field type |
-| `table.tables[].fields[].required` | boolean | No | Whether required |
-| `table.table_name` | array | Required for remove | List of table names to remove |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "repository" |
+| `data.object` | string | Yes | Repository name or ID | |
+| `data.policies` | object | Yes | Policy operations | { op: "add\|set\|remove\|clear", ... } |
 
-### Field Type Description
+### PolicyRule Structure
 
-| Type | Description |
-|------|------|
-| `string` | String type |
-| `number` | Number type |
-| `boolean` | Boolean type |
-| `address` | Address type |
-| `object` | Object type |
-| `array` | Array type |
+| Field | Type | Required | Description |
+|-------|------|------|------|
+| `name` | string | Yes | Policy rule name |
+| `description` | string | Yes | Policy rule description |
+| `write_guard` | array | Yes | Guard object list for write verification |
+| `quote_guard` | string or null | No | Guard for on-chain reference verification |
+| `id_from` | enum | Yes | ID source: "None", "Clock", "Signer" |
+| `value_type` | enum | Yes | Value type: "string", "number", "boolean", etc. |
 
-### Operation Type Description
+### Operation Types
 
-| Operation Type | Description |
-|----------|------|
-| `add` | Add new tables to existing list |
-| `set` | Replace entire table list |
-| `remove` | Remove specified tables (by name) |
-| `clear` | Clear all tables |
+- **add**: Add new policies to existing list
+- **set**: Replace entire policy list
+- **remove**: Remove specified policies (by name)
+- **clear**: Clear all policies
+
+---
 
 ### Examples
 
-#### Example 2.1: Add Table
+#### Example 2.1: Add Single Policy
+
+**Prompt**: Add a policy to "user_records": 1) Policy name "user_profile", 2) Write guard "profile_guard", 3) ID from signer, 4) Value type object.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "table": {
+    "object": "user_records",
+    "policies": {
       "op": "add",
-      "tables": [
+      "policy": [
         {
-          "name": "user_info",
-          "fields": [
-            {
-              "name": "user_id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "email",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "phone",
-              "type": "string",
-              "required": false
-            },
-            {
-              "name": "created_at",
-              "type": "number",
-              "required": true
-            }
-          ]
+          "name": "user_profile",
+          "description": "User profile data",
+          "write_guard": ["profile_guard"],
+          "id_from": "Signer",
+          "value_type": "object"
         }
       ]
     }
@@ -183,42 +214,33 @@ Manage table structure of Repository.
 }
 ```
 
-#### Example 2.2: Set Tables (Replace)
+---
+
+#### Example 2.2: Add Multiple Policies
+
+**Prompt**: Add two policies to "service_data": 1) First policy "order_info" with clock ID and number type, 2) Second policy "feedback" with signer ID and string type.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "table": {
-      "op": "set",
-      "tables": [
+    "object": "service_data",
+    "policies": {
+      "op": "add",
+      "policy": [
         {
           "name": "order_info",
-          "fields": [
-            {
-              "name": "order_id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "user_id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "amount",
-              "type": "number",
-              "required": true
-            },
-            {
-              "name": "status",
-              "type": "string",
-              "required": true
-            }
-          ]
+          "description": "Order information records",
+          "write_guard": ["order_guard"],
+          "id_from": "Clock",
+          "value_type": "number"
+        },
+        {
+          "name": "feedback",
+          "description": "User feedback records",
+          "write_guard": ["feedback_guard"],
+          "id_from": "Signer",
+          "value_type": "string"
         }
       ]
     }
@@ -226,33 +248,37 @@ Manage table structure of Repository.
 }
 ```
 
-#### Example 2.3: Remove Table
+---
+
+#### Example 2.3: Remove Policies
+
+**Prompt**: Remove policies "old_policy_1" and "old_policy_2" from "service_data".
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "table": {
+    "object": "service_data",
+    "policies": {
       "op": "remove",
-      "table_name": ["old_table"]
+      "policy": ["old_policy_1", "old_policy_2"]
     }
   }
 }
 ```
 
-#### Example 2.4: Clear Tables
+---
+
+#### Example 2.4: Clear All Policies
+
+**Prompt**: Clear all policies from "service_data".
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "table": {
+    "object": "service_data",
+    "policies": {
       "op": "clear"
     }
   }
@@ -261,117 +287,45 @@ Manage table structure of Repository.
 
 ---
 
-## Sub-feature 3: Manage Repository Data (data)
+## Sub-feature 3: Add Data
 
 ### Feature Description
 
-Manage data in Repository.
+Add data items to the repository, following policy rules for ID source and value type.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|------|------|------|------|
-| `data.op` | string | Yes | Operation type: add/set/remove/clear |
-| `data.table_name` | string | Required for add/set/remove | Table name |
-| `data.records` | array | Required for add/set | Record list |
-| `data.record_keys` | array | Required for remove | List of record keys to remove |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "repository" |
+| `data.object` | string | Yes | Repository name or ID | |
+| `data.data_add` | object | Yes | Data to add | Must match policy name and type |
 
-### Operation Type Description
+### DataAdd Types
 
-| Operation Type | Description |
-|----------|------|
-| `add` | Add new records to table |
-| `set` | Replace records in table |
-| `remove` | Remove specified records (by key) |
-| `clear` | Clear all records in table |
+1. **SignerOrClock**: `{ name: "...", write_guard: "...", data: value }`
+2. **DataAddWithItems**: `{ name: "...", items: [{ data: [{ id, data }], write_guard: "..." }] }`
+
+---
 
 ### Examples
 
-#### Example 3.1: Add Data
+#### Example 3.1: Add Data with Signer/Clock ID
+
+**Prompt**: Add data to "user_records": 1) Policy name "user_profile", 2) Write guard "profile_guard", 3) Data value { name: "alice", email: "alice@example.com" }.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "data": {
-      "op": "add",
-      "table_name": "user_info",
-      "records": [
-        {
-          "user_id": "user_001",
-          "email": "user001@example.com",
-          "phone": "1234567890",
-          "created_at": 1704067200000
-        },
-        {
-          "user_id": "user_002",
-          "email": "user002@example.com",
-          "created_at": 1704067200000
-        }
-      ]
-    }
-  }
-}
-```
-
-#### Example 3.2: Set Data (Replace)
-
-```json
-{
-  "operation_type": "repository",
-  "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "data": {
-      "op": "set",
-      "table_name": "user_info",
-      "records": [
-        {
-          "user_id": "user_001",
-          "email": "updated@example.com",
-          "phone": "0987654321",
-          "created_at": 1704067200000
-        }
-      ]
-    }
-  }
-}
-```
-
-#### Example 3.3: Remove Data
-
-```json
-{
-  "operation_type": "repository",
-  "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "data": {
-      "op": "remove",
-      "table_name": "user_info",
-      "record_keys": ["user_001"]
-    }
-  }
-}
-```
-
-#### Example 3.4: Clear Data
-
-```json
-{
-  "operation_type": "repository",
-  "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "data": {
-      "op": "clear",
-      "table_name": "user_info"
+    "object": "user_records",
+    "data_add": {
+      "name": "user_profile",
+      "write_guard": "profile_guard",
+      "data": {
+        "name": "alice",
+        "email": "alice@example.com"
+      }
     }
   }
 }
@@ -379,30 +333,32 @@ Manage data in Repository.
 
 ---
 
-## Sub-feature 4: Receive Objects (owner_receive)
+#### Example 3.2: Add Multiple Data Items
 
-### Feature Description
-
-Receive objects sent to this Repository object and unwrap them to send to the permission owner.
-
-### Parameter Description
-
-| Parameter | Type | Required | Description |
-|------|------|------|------|
-| `owner_receive.objects` | array | No | Specify list of object IDs to receive |
-| `owner_receive.recent` | boolean | No | Whether to receive recent objects |
-
-### Example
+**Prompt**: Add multiple data items to "service_data" for policy "feedback": 1) First item with id 1 and value "Great service!", 2) Second item with id 2 and value "Very helpful".
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "owner_receive": {
-      "recent": true
+    "object": "service_data",
+    "data_add": {
+      "name": "feedback",
+      "items": [
+        {
+          "data": [
+            {
+              "id": 1,
+              "data": "Great service!"
+            },
+            {
+              "id": 2,
+              "data": "Very helpful"
+            }
+          ],
+          "write_guard": "feedback_guard"
+        }
+      ]
     }
   }
 }
@@ -410,34 +366,117 @@ Receive objects sent to this Repository object and unwrap them to send to the pe
 
 ---
 
-## Sub-feature 5: Destroy Repository
+## Sub-feature 4: Remove Data
 
 ### Feature Description
 
-Destroy the Repository object.
+Remove data items from the repository.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|------|------|------|------|
-| `destroy` | boolean | Yes | Whether to destroy |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "repository" |
+| `data.object` | string | Yes | Repository name or ID | |
+| `data.data_remove` | object | Yes | Data to remove | Must match policy name |
 
-### Important Notes
+### DataRemove Types
 
-⚠️ **Repository must be in a destroyable state**.
+1. **SignerOrClockBase**: `{ name: "...", write_guard: "..." }`
+2. **By IDs**: `{ name: "...", items: [{ id: [...], write_guard: "..." }] }`
 
-⚠️ **All data in the repository will be deleted**.
+---
 
-### Example
+### Examples
+
+#### Example 4.1: Remove Data by Signer/Clock
+
+**Prompt**: Remove data from "user_records" for policy "user_profile", using write guard "profile_guard".
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "service_data"
-    },
-    "destroy": true
+    "object": "user_records",
+    "data_remove": {
+      "name": "user_profile",
+      "write_guard": "profile_guard"
+    }
+  }
+}
+```
+
+---
+
+#### Example 4.2: Remove Data by Specific IDs
+
+**Prompt**: Remove data items with ids 1 and 3 from "service_data" for policy "feedback", using write guard "feedback_guard".
+
+```json
+{
+  "operation_type": "repository",
+  "data": {
+    "object": "service_data",
+    "data_remove": {
+      "name": "feedback",
+      "items": [
+        {
+          "id": [1, 3],
+          "write_guard": "feedback_guard"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Sub-feature 5: Bind Rewards and Receive Assets
+
+### Feature Description
+
+Bind reward objects for data contribution incentives, and process received assets.
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "repository" |
+| `data.object` | string | Yes | Repository name or ID | |
+| `data.rewards` | array | No | Reward object names/IDs to bind | |
+| `data.owner_receive` | string or object | No | Unwrap and send to owner | "recently" or ReceivedObjects |
+
+---
+
+### Examples
+
+#### Example 5.1: Bind Reward Objects
+
+**Prompt**: Bind reward objects "contribution_reward" and "quality_reward" to "service_data".
+
+```json
+{
+  "operation_type": "repository",
+  "data": {
+    "object": "service_data",
+    "rewards": ["contribution_reward", "quality_reward"]
+  }
+}
+```
+
+---
+
+#### Example 5.2: Unwrap and Send to Owner
+
+**Prompt**: Unwrap recently received CoinWrapper and other objects of "service_data", send to permission owner.
+
+```json
+{
+  "operation_type": "repository",
+  "data": {
+    "object": "service_data",
+    "owner_receive": "recently"
   }
 }
 ```
@@ -448,79 +487,48 @@ Destroy the Repository object.
 
 ### Feature Description
 
-Execute multiple operations in one call.
+Perform multiple operations on existing Repository in a single transaction.
+
+---
 
 ### Example
 
-#### Example 6.1: Complete Repository Creation Process
+#### Example 6.1: Complete Repository Setup
+
+**Prompt**: For "complete_repo": 1) Set description "Updated repository description", 2) Add two policies, 3) Add data, 4) Bind a reward, 5) Process received assets.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": {
-      "name": "complete_repository",
-      "type": "Repository",
-      "permission": "repository_permission"
-    },
-    "description": "Complete repository example",
-    "repo_type": "Service",
-    "table": {
+    "object": "complete_repo",
+    "description": "Updated repository description",
+    "policies": {
       "op": "add",
-      "tables": [
+      "policy": [
         {
-          "name": "users",
-          "fields": [
-            {
-              "name": "id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "name",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "email",
-              "type": "string",
-              "required": true
-            }
-          ]
+          "name": "activity_log",
+          "description": "User activity records",
+          "write_guard": ["activity_guard"],
+          "id_from": "Clock",
+          "value_type": "string"
         },
         {
-          "name": "orders",
-          "fields": [
-            {
-              "name": "order_id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "user_id",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "amount",
-              "type": "number",
-              "required": true
-            }
-          ]
+          "name": "settings",
+          "description": "User preferences",
+          "write_guard": ["settings_guard"],
+          "id_from": "Signer",
+          "value_type": "object"
         }
       ]
     },
-    "data": {
-      "op": "add",
-      "table_name": "users",
-      "records": [
-        {
-          "id": "user_001",
-          "name": "Alice",
-          "email": "alice@example.com"
-        }
-      ]
-    }
+    "data_add": {
+      "name": "activity_log",
+      "write_guard": "activity_guard",
+      "data": "user_login_event"
+    },
+    "rewards": ["participation_reward"],
+    "owner_receive": "recently"
   }
 }
 ```
@@ -529,17 +537,23 @@ Execute multiple operations in one call.
 
 ## Important Notes
 
-⚠️ **Table structure must be defined before adding data**.
+⚠️ **Policies define data structure and permissions**, always define policies before adding data.
 
-⚠️ **Data must conform to table field types and required constraints**.
+⚠️ **All data must conform to policy-defined value types and ID sources.**
 
-⚠️ **Repository is usually bound to Service or Machine**.
+⚠️ **Use names instead of addresses in prompts for better readability.**
+
+⚠️ **Write guards must verify successfully before data can be written.**
+
+⚠️ **Repository can bind multiple Reward objects for data contribution incentives.**
 
 ---
 
 ## Related Components
 
-- **Service**: Service marketplace
-- **Machine**: Workflow template
+- **Service**: Service marketplace - can bind Repository to Service
+- **Machine**: Workflow template - can bind Repository to Machine
+- **Guard**: Validation rules - required for data write permissions
 - **Permission**: Permission management
-- **Progress**: Workflow execution
+- **Reward**: Reward pools - can bind for data incentives
+

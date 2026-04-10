@@ -10,6 +10,112 @@ The Machine component is WoWok's workflow automation engine, used to design and 
 
 ---
 
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Object Management** | Reference or create Machine objects | Initialize workflow templates, reference existing workflows | Foundation for all Machine operations - defines which workflow to modify |
+| **Set Description** | Add or update Machine description | Document workflow purpose, business rules | Improves workflow discoverability and maintainability |
+| **Repository Management** | Attach or detach Repository objects | Store workflow-related data, configuration | Enables data persistence and sharing across workflow instances |
+| **Node Operations** | Add/modify/remove/clear workflow nodes | Design workflow state transitions | Core of workflow design - defines the states and connections |
+| **Node File Replacement** | Complete node replacement from file | Bulk updates, template reuse | Efficient way to manage complex workflows |
+| **Progress Generation** | Create new Progress instances | Start workflow execution | Converts templates into active running workflows |
+| **Pause/Resume** | Control new Progress generation | Temporarily stop workflow creation | Manages workflow availability during updates |
+| **Publish Machine** | Lock nodes for production use | Finalize workflow before deployment | Prevents accidental modifications to active workflows |
+| **Owner Receive** | Unwrap and send received objects | Distribute assets, deliverables | Ensures proper asset flow to workflow owners |
+| **Contact Object** | Set or remove contact reference | Link communication channels | Enables messaging and coordination |
+
+---
+
+## Schema Tree (4-Level Structure)
+
+```
+machine
+├── operation_type: "machine"
+├── data
+│   ├── object
+│   │   ├── Option 1: Name or Address (string)
+│   │   │   └── [machine_name or machine_id]
+│   │   └── Option 2: Named Object with Permission
+│   │       ├── name (string, optional)
+│   │       ├── tags (array of strings, optional)
+│   │       ├── onChain (boolean, optional)
+│   │       ├── replaceExistName (boolean, optional)
+│   │       └── permission
+│   │           ├── Option 1: Name or Address (string)
+│   │           │   └── [permission_name or permission_id]
+│   │           └── Option 2: Named Object with Description
+│   │               ├── name (string, optional)
+│   │               ├── tags (array of strings, optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
+│   ├── description (string, optional)
+│   ├── repository (object, optional)
+│   │   ├── Option 1: op: "add" or "set"
+│   │   │   └── objects (array of strings)
+│   │   ├── Option 2: op: "remove"
+│   │   │   └── objects (array of strings)
+│   │   └── Option 3: op: "clear"
+│   ├── node (object, optional)
+│   │   ├── Option 1: Node Operations
+│   │   │   ├── op: "add"
+│   │   │   │   └── nodes (array)
+│   │   │   │       └── [machine_node]
+│   │   │   │           ├── name (string)
+│   │   │   │           └── pairs (array)
+│   │   │   ├── op: "set"
+│   │   │   │   └── nodes (array)
+│   │   │   │       └── [machine_node]
+│   │   │   │           ├── name (string)
+│   │   │   │           └── pairs (array)
+│   │   │   ├── op: "remove"
+│   │   │   │   └── nodes (array of strings)
+│   │   │   ├── op: "clear"
+│   │   │   ├── op: "exchange"
+│   │   │   │   ├── node_one (string)
+│   │   │   │   └── node_other (string)
+│   │   │   ├── op: "rename"
+│   │   │   │   ├── node_name_old (string)
+│   │   │   │   └── node_name_new (string)
+│   │   │   ├── op: "remove prior node"
+│   │   │   │   └── pairs (array)
+│   │   │   ├── op: "add forward"
+│   │   │   │   └── data (array)
+│   │   │   └── op: "remove forward"
+│   │   │       └── data (array)
+│   │   └── Option 2: json_or_markdown_file (string)
+│   ├── progress_new (object, optional)
+│   │   ├── task (string, optional)
+│   │   ├── repository (object, optional)
+│   │   ├── progress_namedOperator (object, optional)
+│   │   │   ├── op: "add" | "set" | "remove"
+│   │   │   ├── name (string)
+│   │   │   └── operators (object)
+│   │   └── namedNew (object, optional)
+│   │       ├── name (string, optional)
+│   │       ├── tags (array of strings, optional)
+│   │       ├── onChain (boolean, optional)
+│   │       └── replaceExistName (boolean, optional)
+│   ├── pause (boolean, optional)
+│   ├── publish (boolean, optional)
+│   ├── owner_receive (optional)
+│   │   ├── Option 1: "recently"
+│   │   ├── Option 2: Array of received objects
+│   │   └── Option 3: Received balance object
+│   └── um (string or null, optional)
+├── json_or_markdown_file (string, optional)
+├── env (object, optional)
+│   ├── account (string, optional)
+│   ├── permission_guard (array of strings, optional)
+│   ├── no_cache (boolean, optional)
+│   ├── network (string, optional)
+│   └── referrer (string, optional)
+└── submission (object, optional)
+```
+
+---
+
 ## Complete Tool Call Structure
 
 Machine operations use the following top-level structure:
@@ -38,68 +144,6 @@ Machine operations use the following top-level structure:
 | `thresholdMax` | 4294967295 | Maximum threshold value (U32) |
 | `permissionIndexMin` | 1000 | Minimum custom permission index |
 | `permissionIndexMax` | 65535 | Maximum custom permission index |
-
----
-
-## Feature Tree
-
-```
-machine (Machine Object)
-├── operation_type: "machine" (fixed value)
-├── data (Machine data definition)
-│   ├── object (CRITICAL: Object reference)
-│   │   ├── Existing: string (name or ID)
-│   │   └── New object: { name, tags, onChain, replaceExistName, permission }
-│   ├── progress_new (optional: Generate new Progress)
-│   │   ├── task (optional: Task object ID/name)
-│   │   ├── repository (optional: Repository list)
-│   │   ├── progress_namedOperator (optional: Add/set/remove named operators)
-│   │   │   ├── op: "add" | "set" | "remove"
-│   │   │   ├── name: namespace name
-│   │   │   └── operators: entity array
-│   │   └── namedNew (optional: Progress naming)
-│   ├── description (optional: Machine description)
-│   ├── repository (optional: Set repository list)
-│   │   └── op: "add" | "set" | "remove" | "clear"
-│   │       └── objects: object ID array (if not clear)
-│   ├── node (CRITICAL: Node operations - TWO MODES)
-│   │   ├── Mode 1: NodeSchema (incremental operations)
-│   │   │   ├── op: "add" | "set" | "remove" | "clear" | "exchange" | "rename" | "remove prior node" | "add forward" | "remove forward"
-│   │   │   ├── op: "add" / "set"
-│   │   │   │   ├── nodes: MachineNode array
-│   │   │   │   └── bReplace: boolean (optional)
-│   │   │   ├── op: "remove"
-│   │   │   │   └── nodes: node name array
-│   │   │   ├── op: "clear" (no additional params)
-│   │   │   ├── op: "exchange"
-│   │   │   │   ├── node_one: first node name
-│   │   │   │   └── node_other: second node name
-│   │   │   ├── op: "rename"
-│   │   │   │   ├── node_name_old: old node name
-│   │   │   │   └── node_name_new: new node name
-│   │   │   ├── op: "remove prior node"
-│   │   │   │   └── pairs: [{ prior_node_name array, node_name }]
-│   │   │   ├── op: "add forward"
-│   │   │   │   └── data: [{ prior_node_name, node_name, forward array, threshold }]
-│   │   │   │       └── forward: { name, namedOperator?, permissionIndex?, weight, guard? }
-│   │   │   └── op: "remove forward"
-│   │   │       └── data: [{ prior_node_name, node_name, forward_name array }]
-│   │   └── Mode 2: NodeJsonOrMarkdownFileSchema (complete replacement)
-│   │       └── json_or_markdown_file: file path (COMPLETE REPLACEMENT of all nodes)
-│   ├── pause (optional: Pause new Progress generation)
-│   ├── publish (optional: Publish Machine - locks nodes)
-│   ├── owner_receive (optional: Unwrap and send received objects to owner)
-│   │   └── recent: boolean OR objects: object ID array
-│   └── um (optional: Contact object - string or null)
-├── json_or_markdown_file (TOP LEVEL optional: Alternative to data.node - file path)
-├── env (optional: Execution environment)
-│   ├── account (optional: Use specified account)
-│   ├── permission_guard (optional: Permission Guard list)
-│   ├── no_cache (optional: Disable cache)
-│   ├── network (optional: Network selection)
-│   └── referrer (optional: Referrer ID)
-└── submission (optional: Submission data)
-```
 
 ---
 
@@ -1508,25 +1552,30 @@ Returns transaction block information.
   "operation_type": "machine",
   "data": {
     "object": "design_workflow",
-    "owner_receive": {
-      "recent": true
-    }
+    "owner_receive": "recently"
   }
 }
 ```
 
-#### Example 16.2: Receive Specific Objects
+#### Example 16.2: Receive Specific Normal Objects
 
-**Prompt**: Receive specific objects with IDs ["0xabc...123", "0xdef...456"] from "design_workflow".
+**Prompt**: Receive specific objects with IDs ["0xabc123...", "0xdef456..."] from "design_workflow".
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": "design_workflow",
-    "owner_receive": {
-      "objects": ["0xabc123...", "0xdef456..."]
-    }
+    "owner_receive": [
+      {
+        "id": "0xabc123...",
+        "type": "object"
+      },
+      {
+        "id": "0xdef456...",
+        "type": "object"
+      }
+    ]
   }
 }
 ```

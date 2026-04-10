@@ -8,22 +8,92 @@ The Contact component is used to manage on-chain instant messaging contact profi
 
 ---
 
-## Function Tree
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Contact** | Set up IM contact profile | Establish team communication, service support | Enables secure on-chain messaging |
+| **Manage IM List** | Add/remove contact entries | Update communication partners | Maintains current contact information |
+| **Set Status** | Update availability message | Indicate online presence, response times | Improves communication efficiency |
+| **Receive Objects** | Collect assets sent to contact | Accept payments, documents | Facilitates value transfer to contact owners |
+
+---
+
+## Schema Tree (4-Level Structure)
 
 ```
 Contact Component
-├── Create New Contact
-│   ├── Set Name (object.name)
-│   ├── Bind Permission (object.permission)
-│   ├── Set Description (description)
-│   └── Set Location (location)
-├── Manage IM Contact List (ims)
-│   ├── Add Contact (ims.op = "add")
-│   ├── Set Contact List (ims.op = "set")
-│   ├── Remove Contact (ims.op = "remove")
-│   └── Clear Contacts (ims.op = "clear")
-├── Set Personal Status (my_status)
-└── Receive Objects (owner_receive)
+├── operation_type: "contact"
+├── data
+│   ├── object
+│   │   ├── Option 1: Name or Address (string)
+│   │   │   └── [contact_name or contact_id]
+│   │   └── Option 2: Named Object with Permission
+│   │       ├── name (string, optional)
+│   │       ├── tags (array of strings, optional)
+│   │       ├── onChain (boolean, optional)
+│   │       ├── replaceExistName (boolean, optional)
+│   │       └── permission
+│   │           ├── Option 1: Name or Address (string)
+│   │           │   └── [permission_name or permission_id]
+│   │           └── Option 2: Named Object with Description
+│   │               ├── name (string, optional)
+│   │               ├── tags (array of strings, optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
+│   ├── my_status (string, optional)
+│   ├── description (string, optional)
+│   ├── location (string, optional)
+│   ├── ims (optional)
+│   │   ├── op: "add"
+│   │   │   └── im (array)
+│   │   │       ├── at (string)
+│   │   │       └── description (string, optional)
+│   │   ├── op: "set"
+│   │   │   └── im (array)
+│   │   │       ├── at (string)
+│   │   │       └── description (string, optional)
+│   │   ├── op: "remove"
+│   │   │   └── im (array of strings)
+│   │   └── op: "clear"
+│   └── owner_receive (optional)
+│       ├── Option 1: "recently" (string)
+│       ├── Option 2: Array of Received Objects
+│       │   └── [object]
+│       │       ├── id (string)
+│       │       └── type (string)
+│       └── Option 3: Received Balance Object
+│           ├── balance (number or string)
+│           ├── token_type (string)
+│           └── received (array)
+│               └── [item]
+│                   ├── id (string)
+│                   ├── balance (number or string)
+│                   └── payment (string)
+├── env (optional)
+│   ├── account (string, optional)
+│   ├── permission_guard (array of strings, optional)
+│   ├── no_cache (boolean, optional)
+│   ├── network (string, optional: "localnet", "testnet")
+│   └── referrer (string, optional)
+└── submission (optional)
+    ├── type: "submission"
+    ├── guard (array)
+    │   └── [guard_item]
+    │       ├── object (string)
+    │       └── impack (boolean)
+    └── submission (array)
+        └── [submission_item]
+            ├── guard (string)
+            └── submission (array)
+                └── [guard_table_item]
+                    ├── identifier (number, 0-255)
+                    ├── b_submission (boolean)
+                    ├── value_type (string or number)
+                    ├── value (optional)
+                    ├── name (string, optional)
+                    └── object_type (optional)
 ```
 
 ---
@@ -49,6 +119,8 @@ Create a new Contact object for managing instant messaging contacts.
 
 #### Example 1.1: Create Simple Contact
 
+**Prompt:** Create a new contact object named "service_support" with an existing permission, set description to "Customer support contact information", and location to "Online service".
+
 ```json
 {
   "operation_type": "contact",
@@ -64,6 +136,8 @@ Create a new Contact object for managing instant messaging contacts.
 ```
 
 #### Example 1.2: Create Contact with New Permission
+
+**Prompt:** Create a new contact named "team_contact", create a new permission object named "team_permission", set description to "Team contact information", and add "team_member_1" with description "Product Manager" to the IM list.
 
 ```json
 {
@@ -123,13 +197,13 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 #### Example 2.1: Add Contacts
 
+**Prompt:** Use the existing contact "service_support" and add two new contacts: "support_agent_1" with description "Technical Support" and "support_agent_2" with description "Business Consulting".
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "service_support"
-    },
+    "object": "service_support",
     "ims": {
       "op": "add",
       "im": [
@@ -149,13 +223,13 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 #### Example 2.2: Set Contact List (Replace)
 
+**Prompt:** Use the existing contact "team_contact" and replace the entire IM list with "designer" (description: "Designer") and "developer" (description: "Development Engineer").
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "team_contact"
-    },
+    "object": "team_contact",
     "ims": {
       "op": "set",
       "im": [
@@ -175,13 +249,13 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 #### Example 2.3: Remove Contacts
 
+**Prompt:** Use the existing contact "service_support" and remove the contact named "old_agent" from the IM list.
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "service_support"
-    },
+    "object": "service_support",
     "ims": {
       "op": "remove",
       "im": ["old_agent"]
@@ -192,13 +266,13 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 #### Example 2.4: Clear Contacts
 
+**Prompt:** Use the existing contact "service_support" and clear all contacts from the IM list.
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "service_support"
-    },
+    "object": "service_support",
     "ims": {
       "op": "clear"
     }
@@ -226,13 +300,13 @@ Set your status message in this contact list.
 
 ### Example
 
+**Prompt:** Use the existing contact "team_contact" and set your personal status to "Online, available for contact".
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "team_contact"
-    },
+    "object": "team_contact",
     "my_status": "Online, available for contact"
   }
 }
@@ -255,16 +329,14 @@ Receive objects sent to this Contact object and unwrap them to send to the permi
 
 ### Example
 
+**Prompt:** Use the existing contact "service_support" and receive all recently sent objects.
+
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": {
-      "name": "service_support"
-    },
-    "owner_receive": {
-      "recent": true
-    }
+    "object": "service_support",
+    "owner_receive": "recently"
   }
 }
 ```
@@ -280,6 +352,8 @@ Execute multiple operations in a single call.
 ### Example
 
 #### Example 5.1: Create Contact and Add Contacts
+
+**Prompt:** Create a new contact named "customer_service" with existing permission "service_permission", set description to "Customer service team contact information", set location to "7x24 Online Support", add "cs_agent_1" (Pre-sales Consulting) and "cs_agent_2" (After-sales Support) to IM list, and set status to "Online".
 
 ```json
 {

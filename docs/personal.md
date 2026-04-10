@@ -10,6 +10,69 @@ The Personal component is used to establish and manage on-chain public identity.
 
 ---
 
+## Function List
+
+| Name | Purpose | Usage Scenario | Significance |
+|------|---------|----------------|--------------|
+| **Set Profile Description** | Add or update public profile description | Introducing yourself publicly on-chain | Establishes your public identity presence |
+| **Add Personal Info** | Add public personal information (social media, URLs) | Sharing GitHub, Twitter, website links | Provides verifiable public contact points |
+| **Remove Personal Info** | Remove specific public information items | Updating or removing outdated links | Keeps public profile current and accurate |
+| **Clear All Personal Info** | Remove all public personal information | Resetting public profile completely | Wipes all public personal data from identity |
+| **Add On-Chain Mark** | Add public marks (name + tags) to addresses | Labeling your services or addresses publicly | Creates public, verifiable identity labels |
+| **Remove Mark Tags** | Remove specific tags from on-chain marks | Updating or deprecating service labels | Keeps public marking accurate over time |
+| **Clear Marks** | Clear all marks from specified addresses | Removing public labels from addresses | Wipes public identity marks from addresses |
+| **Transfer Mark** | Transfer on-chain identity mark to another address | Selling or transferring mark ownership | Allows mark ownership to change hands |
+| **Replace Mark** | Replace current mark with a new mark object | Upgrading or replacing mark system | Enables mark system migration |
+| **Destroy Mark** | Permanently destroy on-chain identity mark | Removing mark from blockchain permanently | Irreversibly removes public identity mark |
+
+---
+
+## Schema Tree
+
+```
+personal
+├── operation_type: "personal"
+├── data
+│   ├── description (Profile description, optional)
+│   ├── referrer (Referrer ID or null, optional)
+│   ├── information
+│   │   ├── op: "add"
+│   │   │   └── data (Personal info array)
+│   │   │       ├── name (Info name)
+│   │   │       ├── default (Default value)
+│   │   │       ├── contents (Content array, optional)
+│   │   │       ├── createdAt (Creation time, optional)
+│   │   │       └── updatedAt (Update time, optional)
+│   │   ├── op: "remove"
+│   │   │   └── name (Info name array)
+│   │   └── op: "clear"
+│   ├── mark
+│   │   ├── op: "add"
+│   │   │   └── data (Mark data array)
+│   │   │       ├── address (Address)
+│   │   │       ├── name (Name, optional)
+│   │   │       └── tags (Tag array, optional)
+│   │   ├── op: "remove"
+│   │   │   └── data (Removal data array)
+│   │   │       ├── address (Address)
+│   │   │       └── tags (Tag array, optional)
+│   │   ├── op: "clear"
+│   │   │   └── address (Address array)
+│   │   ├── op: "transfer"
+│   │   │   └── to (Target address)
+│   │   ├── op: "replace"
+│   │   │   └── new_mark_object (New mark object ID)
+│   │   └── op: "destroy"
+└── env (optional)
+    ├── account (Account name/address)
+    ├── permission_guard (Permission Guard array)
+    ├── no_cache (Disable cache)
+    ├── network (Network: localnet/testnet)
+    └── referrer (Referrer ID)
+```
+
+---
+
 ## Complete Tool Call Structure
 
 Personal operations use the following top-level structure:
@@ -17,87 +80,88 @@ Personal operations use the following top-level structure:
 ```json
 {
   "operation_type": "personal",
-  "data": { ... },    // Personal data definition
-  "env": { ... },      // Execution environment (optional)
-  "submission": { ... } // Guard submission data (optional)
+  "data": { ... },
+  "env": { ... }
 }
 ```
 
 ---
 
-## Feature Tree
+## Function 1: Set Profile Description (description)
 
-```
-personal (Public Identity Profile)
-├── operation_type: "personal" (fixed value)
-├── data (Personal data definition)
-│   ├── description (optional, description)
-│   ├── referrer (optional, referrer ID)
-│   ├── information (optional, personal information management)
-│   │   ├── op: "add" (add personal information)
-│   │   │   └── data (personal information array)
-│   │   │       ├── name (information name)
-│   │   │       ├── default (default value)
-│   │   │       ├── contents (content array)
-│   │   │       ├── createdAt (creation time)
-│   │   │       └── updatedAt (update time)
-│   │   ├── op: "remove" (remove personal information)
-│   │   │   └── name (information name array)
-│   │   └── op: "clear" (clear all personal information)
-│   ├── mark (optional, on-chain identity mark management)
-│   │   ├── op: "add" (add mark)
-│   │   │   └── data (mark data array)
-│   │   │       ├── address (address)
-│   │   │       ├── name (optional, name)
-│   │   │       └── tags (optional, tag array)
-│   │   ├── op: "remove" (remove mark)
-│   │   │   └── data (removal data array)
-│   │   │       ├── address (address)
-│   │   │       └── tags (optional, tag array)
-│   │   ├── op: "clear" (clear marks)
-│   │   │   └── address (address array)
-│   │   ├── op: "transfer" (transfer mark)
-│   │   │   └── to (target address)
-│   │   ├── op: "replace" (replace mark)
-│   │   │   └── new_mark_object (new mark object ID)
-│   │   └── op: "destroy" (destroy mark)
-│   └── faucet (optional, whether to claim faucet tokens)
-├── env (optional, execution environment)
-│   ├── account (optional, use specified account)
-│   ├── permission_guard (optional, permission Guard list)
-│   ├── no_cache (optional, whether to disable cache)
-│   ├── network (optional, network selection)
-│   └── referrer (optional, referrer ID)
-└── submission (optional, Guard submission data)
-    └── items (submission item array)
-        ├── index (index)
-        └── data (data)
+### Description
+
+Set or update your public profile description. This will be permanently public on the blockchain.
+
+### Parameters
+
+| Path | Type | Required | Description |
+|------|------|----------|-------------|
+| `operation_type` | string | Yes | Fixed value "personal" |
+| `data.description` | string | Yes | Profile description (max 4000 chars) |
+| `data.referrer` | string/null | No | Referrer ID or null |
+| `env` | object | No | Execution environment |
+
+### Important Notes
+
+⚠️ **Description is permanently public!** Do not include sensitive information.
+
+### Return Value
+
+Returns transaction block information (WowTransactionBlockSchema).
+
+---
+
+### Examples
+
+#### Example 1.1: Set Basic Profile Description
+
+**Prompt**: Set public profile description to "Web3 developer and open source contributor".
+
+```json
+{
+  "operation_type": "personal",
+  "data": {
+    "description": "Web3 developer and open source contributor"
+  }
+}
 ```
 
 ---
 
-## Sub-feature 1: Manage Personal Information (information)
+#### Example 1.2: Set Description with Referrer
 
-### Feature Description
+**Prompt**: Set profile description and referrer to "alice".
+
+```json
+{
+  "operation_type": "personal",
+  "data": {
+    "description": "Blockchain enthusiast and builder",
+    "referrer": "alice"
+  }
+}
+```
+
+---
+
+## Function 2: Manage Personal Information (information)
+
+### Description
 
 Manage on-chain public personal information. Safe content: social media accounts, URLs, public emails. Never include: phone numbers, addresses, private keys.
 
-### Parameter Description
+### Parameters
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------|------|------|------|------|
-| `operation_type` | string | Yes | Operation type | Fixed value "personal" |
-| `data.description` | string | No | Description | Max 4000 characters |
-| `data.referrer` | string | No | Referrer ID | Account name or address |
-| `data.information.op` | string | Yes | Operation type | "add" \| "remove" \| "clear" |
-| `data.information.data` | array | No | Personal information array | Required when op is "add" |
-| `data.information.name` | array | No | Information name array | Required when op is "remove" |
-| `data.faucet` | boolean | No | Whether to claim faucet tokens | Only valid on some networks |
-| `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.permission_guard` | array | No | Permission Guard list | Guard ID array |
-| `env.no_cache` | boolean | No | Whether to disable cache | true=disable; false=enable |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
-| `env.referrer` | string | No | Referrer ID | Account name or address |
+| Path | Type | Required | Description |
+|------|------|----------|-------------|
+| `operation_type` | string | Yes | Fixed value "personal" |
+| `data.information.op` | string | Yes | Operation type: "add" \| "remove" \| "clear" |
+| `data.information.data` | array | No | Personal info array (required when op="add") |
+| `data.information.name` | array | No | Info name array (required when op="remove") |
+| `data.description` | string | No | Profile description |
+| `data.referrer` | string/null | No | Referrer ID |
+| `env` | object | No | Execution environment |
 
 ### Important Notes
 
@@ -107,7 +171,7 @@ Manage on-chain public personal information. Safe content: social media accounts
 
 ⚠️ **Never include: phone numbers, addresses, private keys!**
 
-### Return Result
+### Return Value
 
 Returns transaction block information (WowTransactionBlockSchema).
 
@@ -115,9 +179,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Examples
 
-#### Example 1.1: Add Personal Information
+#### Example 2.1: Add Personal Information
 
-**Prompt**: Add public personal information, including GitHub link and Twitter account.
+**Prompt**: Add public personal information: GitHub link "https://github.com/devuser" and Twitter handle "@devuser".
 
 ```json
 {
@@ -128,11 +192,11 @@ Returns transaction block information (WowTransactionBlockSchema).
       "data": [
         {
           "name": "github",
-          "default": "https://github.com/username"
+          "default": "https://github.com/devuser"
         },
         {
           "name": "twitter",
-          "default": "@username"
+          "default": "@devuser"
         }
       ]
     }
@@ -142,7 +206,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 1.2: Remove Personal Information
+#### Example 2.2: Remove Personal Information
 
 **Prompt**: Remove personal information named "old_website".
 
@@ -160,9 +224,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 1.3: Clear All Personal Information
+#### Example 2.3: Clear All Personal Information
 
-**Prompt**: Clear all public personal information.
+**Prompt**: Clear all public personal information from profile.
 
 ```json
 {
@@ -177,47 +241,47 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 1.4: Add Personal Information and Claim Faucet
+#### Example 2.4: Add Personal Info with Description
 
-**Prompt**: Add personal information and claim faucet tokens.
+**Prompt**: Add website info "https://myproject.io" and set profile description.
 
 ```json
 {
   "operation_type": "personal",
   "data": {
+    "description": "Building the future of decentralized applications",
     "information": {
       "op": "add",
       "data": [
         {
           "name": "website",
-          "default": "https://example.com"
+          "default": "https://myproject.io"
         }
       ]
-    },
-    "faucet": true
+    }
   }
 }
 ```
 
 ---
 
-## Sub-feature 2: Manage On-Chain Identity Marks (mark)
+## Function 3: Manage On-Chain Identity Marks (mark)
 
-### Feature Description
+### Description
 
 Manage on-chain identity marks. For private marks, please use the 'local' tool.
 
-### Parameter Description
+### Parameters
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------|------|------|------|------|
-| `operation_type` | string | Yes | Operation type | Fixed value "personal" |
-| `data.mark.op` | string | Yes | Operation type | "add" \| "remove" \| "clear" \| "transfer" \| "replace" \| "destroy" |
-| `data.mark.data` | array | No | Mark data array | Required when op is "add"/"remove" |
-| `data.mark.address` | array | No | Address array | Required when op is "clear" |
-| `data.mark.to` | string | No | Target address | Required when op is "transfer" |
-| `data.mark.new_mark_object` | string | No | New mark object ID | Required when op is "replace" |
-| `env` | object | No | Execution environment | Same as above |
+| Path | Type | Required | Description |
+|------|------|----------|-------------|
+| `operation_type` | string | Yes | Fixed value "personal" |
+| `data.mark.op` | string | Yes | Operation type: "add" \| "remove" \| "clear" \| "transfer" \| "replace" \| "destroy" |
+| `data.mark.data` | array | No | Mark data array (required for "add"/"remove") |
+| `data.mark.address` | array | No | Address array (required for "clear") |
+| `data.mark.to` | string | No | Target address (required for "transfer") |
+| `data.mark.new_mark_object` | string | No | New mark object ID (required for "replace") |
+| `env` | object | No | Execution environment |
 
 ### Important Notes
 
@@ -225,7 +289,7 @@ Manage on-chain identity marks. For private marks, please use the 'local' tool.
 
 ⚠️ **Marks are permanently public!**
 
-### Return Result
+### Return Value
 
 Returns transaction block information (WowTransactionBlockSchema).
 
@@ -233,9 +297,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Examples
 
-#### Example 2.1: Add On-Chain Mark
+#### Example 3.1: Add On-Chain Mark
 
-**Prompt**: Add on-chain mark for address, name as "my_service", tags as "service" and "active".
+**Prompt**: Add on-chain mark for address "service_wallet", name as "my_decentralized_service", tags as "service" and "active".
 
 ```json
 {
@@ -245,8 +309,8 @@ Returns transaction block information (WowTransactionBlockSchema).
       "op": "add",
       "data": [
         {
-          "address": "service_address",
-          "name": "my_service",
+          "address": "service_wallet",
+          "name": "my_decentralized_service",
           "tags": ["service", "active"]
         }
       ]
@@ -257,9 +321,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 2.2: Remove On-Chain Mark Tags
+#### Example 3.2: Remove On-Chain Mark Tags
 
-**Prompt**: Remove "deprecated" tag from address.
+**Prompt**: Remove "deprecated" tag from address "old_service_wallet".
 
 ```json
 {
@@ -269,7 +333,7 @@ Returns transaction block information (WowTransactionBlockSchema).
       "op": "remove",
       "data": [
         {
-          "address": "old_service_address",
+          "address": "old_service_wallet",
           "tags": ["deprecated"]
         }
       ]
@@ -280,9 +344,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 2.3: Clear On-Chain Marks
+#### Example 3.3: Clear On-Chain Marks
 
-**Prompt**: Clear all tags for specified address.
+**Prompt**: Clear all marks for addresses "wallet_1" and "wallet_2".
 
 ```json
 {
@@ -290,7 +354,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "data": {
     "mark": {
       "op": "clear",
-      "address": ["address_1", "address_2"]
+      "address": ["wallet_1", "wallet_2"]
     }
   }
 }
@@ -298,9 +362,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 2.4: Transfer On-Chain Mark
+#### Example 3.4: Transfer On-Chain Mark
 
-**Prompt**: Transfer on-chain identity mark to another address.
+**Prompt**: Transfer on-chain identity mark to address "new_owner_wallet".
 
 ```json
 {
@@ -308,7 +372,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "data": {
     "mark": {
       "op": "transfer",
-      "to": "new_owner_address"
+      "to": "new_owner_wallet"
     }
   }
 }
@@ -316,9 +380,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 2.5: Replace On-Chain Mark
+#### Example 3.5: Replace On-Chain Mark
 
-**Prompt**: Replace current on-chain identity mark with a new mark object.
+**Prompt**: Replace current on-chain identity mark with new mark object "new_mark_object_id".
 
 ```json
 {
@@ -334,7 +398,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-#### Example 2.6: Destroy On-Chain Mark
+#### Example 3.6: Destroy On-Chain Mark
 
 **Prompt**: Permanently destroy on-chain identity mark.
 
@@ -351,9 +415,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-## Sub-feature 3: Combined Operations
+## Function 4: Combined Operations
 
-### Feature Description
+### Description
 
 Execute multiple Personal operations in one transaction, such as adding personal information and marks simultaneously.
 
@@ -363,21 +427,21 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ### Examples
 
-#### Example 3.1: Add Personal Information + Add Mark
+#### Example 4.1: Add Personal Info + Add Mark
 
-**Prompt**: Add personal information and on-chain mark.
+**Prompt**: Add GitHub info, add mark for "service_wallet", and set profile description.
 
 ```json
 {
   "operation_type": "personal",
   "data": {
-    "description": "My public identity profile",
+    "description": "Full-stack developer building decentralized services",
     "information": {
       "op": "add",
       "data": [
         {
           "name": "github",
-          "default": "https://github.com/username"
+          "default": "https://github.com/devbuilder"
         }
       ]
     },
@@ -385,7 +449,7 @@ Execute multiple Personal operations in one transaction, such as adding personal
       "op": "add",
       "data": [
         {
-          "address": "my_service_address",
+          "address": "service_wallet",
           "name": "my_service",
           "tags": ["service"]
         }
@@ -397,22 +461,26 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ---
 
-#### Example 3.2: Full Parameter Example
+#### Example 4.2: Full Parameters Example
 
-**Prompt**: On testnet network, add personal information, add mark, set referrer, claim faucet, and use default account.
+**Prompt**: On testnet network, set description, add personal info, add mark, and set referrer to "bob".
 
 ```json
 {
   "operation_type": "personal",
   "data": {
-    "description": "Full parameter example",
-    "referrer": "referrer_address",
+    "description": "Complete public identity profile",
+    "referrer": "bob",
     "information": {
       "op": "add",
       "data": [
         {
           "name": "website",
-          "default": "https://example.com"
+          "default": "https://myprofile.io"
+        },
+        {
+          "name": "twitter",
+          "default": "@myprofile"
         }
       ]
     },
@@ -420,13 +488,12 @@ Execute multiple Personal operations in one transaction, such as adding personal
       "op": "add",
       "data": [
         {
-          "address": "service_address",
-          "name": "my_service",
-          "tags": ["service"]
+          "address": "main_wallet",
+          "name": "primary_wallet",
+          "tags": ["personal", "primary"]
         }
       ]
-    },
-    "faucet": true
+    }
   },
   "env": {
     "account": "",

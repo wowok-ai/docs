@@ -8,34 +8,115 @@ The Demand component is used to post service requests with reward pools on-chain
 
 ---
 
-## Function Tree
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Demand** | Post service requests | Request specific services with requirements | Initiates service discovery process |
+| **Recommend Service** | Suggest services to fulfill demand | Match demand with suitable providers | Facilitates service-provider matching |
+| **Manage Guards** | Configure validation rules | Ensure recommended services meet criteria | Quality control for service recommendations |
+| **Bind Components** | Attach rewards, contacts, etc. | Set up incentive pools and communication | Enhances demand with additional features |
+| **Provide Feedback** | Give feedback on recommendations | Rate and comment on suggested services | Improves matching quality over time |
+| **Owner Receive** | Unwrap and receive objects | Collect rewards, payments for fulfilled demands | Enables value transfer to demand owners |
+
+---
+
+## Schema Tree (4-Level Structure)
 
 ```
 Demand Component
-├── Create New Demand
-│   ├── Set Name (object.name)
-│   ├── Bind Permission (object.permission)
-│   ├── Set Description (description)
-│   └── Set Location (location)
-├── Recommend Service (present)
-│   ├── Recommendation (present.recommend)
-│   ├── Guard Selection (present.by_guard)
-│   └── Target Service (present.service)
-├── Manage Validation Guard List (guards)
-│   ├── Add Guard (guards.op = "add")
-│   ├── Set Guard List (guards.op = "set")
-│   ├── Remove Guard (guards.op = "remove")
-│   └── Clear Guards (guards.op = "clear")
-├── Bind Components
-│   ├── Bind Reward (rewards)
-│   └── Bind Contact (um)
-├── Provide User Feedback (feedback)
-│   ├── Target User (feedback[].who)
-│   ├── Acceptance Score (feedback[].acceptance_score)
-│   └── Feedback Content (feedback[].feedback)
-└── Receive Objects (owner_receive)
-    ├── Specify Objects (object array)
-    └── Recent Objects ("recently")
+├── operation_type: "demand"
+├── data
+│   ├── object
+│   │   ├── Option 1: Name or Address (string)
+│   │   │   └── [demand_name or demand_id]
+│   │   └── Option 2: Named Object with Permission
+│   │       ├── name (string, optional)
+│   │       ├── tags (array of strings, optional)
+│   │       ├── onChain (boolean, optional)
+│   │       ├── replaceExistName (boolean, optional)
+│   │       └── permission
+│   │           ├── Option 1: Name or Address (string)
+│   │           │   └── [permission_name or permission_id]
+│   │           └── Option 2: Named Object with Description
+│   │               ├── name (string, optional)
+│   │               ├── tags (array of strings, optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
+│   ├── present (optional)
+│   │   ├── recommend (string)
+│   │   ├── by_guard (string, optional)
+│   │   └── service (string, optional)
+│   ├── description (string, optional)
+│   ├── location (string, optional)
+│   ├── rewards (optional)
+│   │   ├── op: "add"
+│   │   │   └── objects (array of strings)
+│   │   ├── op: "set"
+│   │   │   └── objects (array of strings)
+│   │   ├── op: "remove"
+│   │   │   └── objects (array of strings)
+│   │   └── op: "clear"
+│   ├── feedback (optional, array)
+│   │   └── [feedback_item]
+│   │       ├── who (object)
+│   │       │   ├── name_or_address (string, optional)
+│   │       │   └── local_mark_first (boolean, optional)
+│   │       ├── acceptance_score (number, optional, 0-255)
+│   │       └── feedback (string, optional)
+│   ├── guards (optional)
+│   │   ├── op: "add"
+│   │   │   └── guard (array)
+│   │   │       └── [service_guard]
+│   │   │           ├── guard (string)
+│   │   │           └── service_identifier (number or null, optional, 0-255)
+│   │   ├── op: "set"
+│   │   │   └── guard (array)
+│   │   │       └── [service_guard]
+│   │   │           ├── guard (string)
+│   │   │           └── service_identifier (number or null, optional, 0-255)
+│   │   ├── op: "remove"
+│   │   │   └── guard (array of strings)
+│   │   └── op: "clear"
+│   ├── owner_receive (optional)
+│   │   ├── Option 1: "recently" (string)
+│   │   ├── Option 2: Array of Received Objects
+│   │   │   └── [object]
+│   │   │       ├── id (string)
+│   │   │       └── type (string)
+│   │   └── Option 3: Received Balance Object
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string)
+│   │       └── received (array)
+│   │           └── [item]
+│   │               ├── id (string)
+│   │               ├── balance (number or string)
+│   │               └── payment (string)
+│   └── um (string or null, optional)
+├── env (optional)
+│   ├── account (string, optional)
+│   ├── permission_guard (array of strings, optional)
+│   ├── no_cache (boolean, optional)
+│   ├── network (string, optional: "localnet", "testnet")
+│   └── referrer (string, optional)
+└── submission (optional)
+    ├── type: "submission"
+    ├── guard (array)
+    │   └── [guard_item]
+    │       ├── object (string)
+    │       └── impack (boolean)
+    └── submission (array)
+        └── [submission_item]
+            ├── guard (string)
+            └── submission (array)
+                └── [guard_table_item]
+                    ├── identifier (number, 0-255)
+                    ├── b_submission (boolean)
+                    ├── value_type (string or number)
+                    ├── value (optional)
+                    ├── name (string, optional)
+                    └── object_type (optional)
 ```
 
 ---
@@ -61,6 +142,8 @@ Create a new Demand object for posting service requests.
 
 #### Example 1.1: Create Simple Demand
 
+**Prompt:** Create a new demand object named "logo_design_demand" with description "Need a professional corporate LOGO design" and location "Online service".
+
 ```json
 {
   "operation_type": "demand",
@@ -75,6 +158,8 @@ Create a new Demand object for posting service requests.
 ```
 
 #### Example 1.2: Create Demand with Existing Permission
+
+**Prompt:** Create a new demand named "website_design_demand", bind to existing permission "existing_permission", set description to "Need a modern corporate website design", and location to "Online service".
 
 ```json
 {
@@ -91,6 +176,8 @@ Create a new Demand object for posting service requests.
 ```
 
 #### Example 1.3: Create Demand with New Permission
+
+**Prompt:** Create a new demand named "app_development_demand", create a new permission object named "demand_permission", set description to "Need a mobile app development service", and location to "Online service".
 
 ```json
 {
@@ -109,6 +196,8 @@ Create a new Demand object for posting service requests.
 ```
 
 #### Example 1.4: Operate Existing Demand
+
+**Prompt:** Use the existing demand "logo_design_demand" and update its description to "Updated description for the demand".
 
 ```json
 {
@@ -137,6 +226,8 @@ Recommend a Service to the Demand object.
 | `present.service` | string | No | Service ID or name to present |
 
 ### Example
+
+**Prompt:** Use the existing demand "logo_design_demand" and present the service "design_service" with recommendation "This design service is very suitable for your needs".
 
 ```json
 {
@@ -179,6 +270,8 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 
 #### Example 3.1: Add Guard
 
+**Prompt:** Use the existing demand "logo_design_demand" and add two guards: "service_qualification_check" and "price_check".
+
 ```json
 {
   "operation_type": "demand",
@@ -186,13 +279,22 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     "object": "logo_design_demand",
     "guards": {
       "op": "add",
-      "guard": ["service_qualification_check", "price_check"]
+      "guard": [
+        {
+          "guard": "service_qualification_check"
+        },
+        {
+          "guard": "price_check"
+        }
+      ]
     }
   }
 }
 ```
 
 #### Example 3.2: Set Guard List (Replace)
+
+**Prompt:** Use the existing demand "logo_design_demand" and replace the entire guard list with "service_qualification_check".
 
 ```json
 {
@@ -201,13 +303,19 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     "object": "logo_design_demand",
     "guards": {
       "op": "set",
-      "guard": ["service_qualification_check"]
+      "guard": [
+        {
+          "guard": "service_qualification_check"
+        }
+      ]
     }
   }
 }
 ```
 
 #### Example 3.3: Remove Guard
+
+**Prompt:** Use the existing demand "logo_design_demand" and remove the guard "old_guard".
 
 ```json
 {
@@ -223,6 +331,8 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 ```
 
 #### Example 3.4: Clear Guards
+
+**Prompt:** Use the existing demand "logo_design_demand" and clear all guards.
 
 ```json
 {
@@ -257,6 +367,8 @@ Bind Reward, Contact and other components to Demand.
 
 #### Example 4.1: Add Rewards
 
+**Prompt:** Use the existing demand "logo_design_demand", add reward "demand_reward", and bind contact "demand_contact".
+
 ```json
 {
   "operation_type": "demand",
@@ -273,6 +385,8 @@ Bind Reward, Contact and other components to Demand.
 
 #### Example 4.2: Set Rewards (Replace)
 
+**Prompt:** Use the existing demand "logo_design_demand" and replace the entire reward list with "reward_1" and "reward_2".
+
 ```json
 {
   "operation_type": "demand",
@@ -287,6 +401,8 @@ Bind Reward, Contact and other components to Demand.
 ```
 
 #### Example 4.3: Remove Rewards
+
+**Prompt:** Use the existing demand "logo_design_demand" and remove reward "old_reward".
 
 ```json
 {
@@ -303,6 +419,8 @@ Bind Reward, Contact and other components to Demand.
 
 #### Example 4.4: Clear Rewards
 
+**Prompt:** Use the existing demand "logo_design_demand" and clear all rewards.
+
 ```json
 {
   "operation_type": "demand",
@@ -317,6 +435,8 @@ Bind Reward, Contact and other components to Demand.
 
 #### Example 4.5: Bind Contact
 
+**Prompt:** Use the existing demand "logo_design_demand" and bind contact "demand_contact".
+
 ```json
 {
   "operation_type": "demand",
@@ -328,6 +448,8 @@ Bind Reward, Contact and other components to Demand.
 ```
 
 #### Example 4.6: Unbind Contact
+
+**Prompt:** Use the existing demand "logo_design_demand" and unbind the contact.
 
 ```json
 {
@@ -352,11 +474,15 @@ Provide user feedback information for the Demand object.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `feedback` | array | Yes | Feedback information list |
-| `feedback[].who` | string | Yes | Account address or mark name, used to identify providing feedback to this user |
+| `feedback[].who` | object | Yes | Account address or mark name, used to identify providing feedback to this user |
+| `feedback[].who.name_or_address` | string | No | Account or object name or address |
+| `feedback[].who.local_mark_first` | boolean | No | Whether to prioritize local marks |
 | `feedback[].acceptance_score` | number | No | Acceptance score (0-255), used to evaluate the reception level of the service recommended by the user |
 | `feedback[].feedback` | string | No | Feedback content for the user |
 
 ### Example
+
+**Prompt:** Use the existing demand "logo_design_demand" and provide feedback to "service_provider" with acceptance score 200 and feedback "The recommended service meets the requirements very well".
 
 ```json
 {
@@ -365,7 +491,9 @@ Provide user feedback information for the Demand object.
     "object": "logo_design_demand",
     "feedback": [
       {
-        "who": "service_provider",
+        "who": {
+          "name_or_address": "service_provider"
+        },
         "acceptance_score": 200,
         "feedback": "The recommended service meets the requirements very well"
       }
@@ -422,6 +550,8 @@ When `owner_receive` is a balance object:
 
 #### Example 6.1: Receive Recent Objects
 
+**Prompt:** Use the existing demand "logo_design_demand" and receive all recently sent objects.
+
 ```json
 {
   "operation_type": "demand",
@@ -434,6 +564,8 @@ When `owner_receive` is a balance object:
 
 #### Example 6.2: Receive Specific Objects
 
+**Prompt:** Use the existing demand "logo_design_demand" and receive specific objects.
+
 ```json
 {
   "operation_type": "demand",
@@ -441,11 +573,11 @@ When `owner_receive` is a balance object:
     "object": "logo_design_demand",
     "owner_receive": [
       {
-        "id": "0x1234...",
+        "id": "0xabc123...def456",
         "type": "0x2::object::Object"
       },
       {
-        "id": "0x5678...",
+        "id": "0x5678...9abc",
         "type": "0x2::object::Object"
       }
     ]
@@ -454,6 +586,8 @@ When `owner_receive` is a balance object:
 ```
 
 #### Example 6.3: Receive Balance
+
+**Prompt:** Use the existing demand "logo_design_demand" and receive balance.
 
 ```json
 {
@@ -465,9 +599,9 @@ When `owner_receive` is a balance object:
       "token_type": "0x2::wow::WOW",
       "received": [
         {
-          "id": "0x1234...",
+          "id": "0xabc123...def456",
           "balance": "1000000000",
-          "payment": "0xabcd..."
+          "payment": "0xabcd...efgh"
         }
       ]
     }
@@ -487,6 +621,8 @@ Execute multiple operations in a single call.
 
 #### Example 7.1: Create Demand and Configure Guards
 
+**Prompt:** Create a new demand named "complete_demand" with existing permission "demand_permission", set description to "Complete demand example", set location to "Online service", add reward "demand_reward", add guard "service_check", and bind contact "demand_contact".
+
 ```json
 {
   "operation_type": "demand",
@@ -503,7 +639,11 @@ Execute multiple operations in a single call.
     },
     "guards": {
       "op": "add",
-      "guard": ["service_check"]
+      "guard": [
+        {
+          "guard": "service_check"
+        }
+      ]
     },
     "um": "demand_contact"
   }
@@ -511,6 +651,8 @@ Execute multiple operations in a single call.
 ```
 
 #### Example 7.2: Full Combined Operation
+
+**Prompt:** Use the existing demand "logo_design_demand", update description to "Updated demand description", present service "premium_design_service" with recommendation "Highly recommended design service", provide feedback to "designer_1" with acceptance score 220 and feedback "Excellent service quality", and receive recent objects.
 
 ```json
 {
@@ -524,7 +666,9 @@ Execute multiple operations in a single call.
     },
     "feedback": [
       {
-        "who": "designer_1",
+        "who": {
+          "name_or_address": "designer_1"
+        },
         "acceptance_score": 220,
         "feedback": "Excellent service quality"
       }
@@ -539,8 +683,6 @@ Execute multiple operations in a single call.
 ## Important Notes
 
 ⚠️ **Guards are used to verify whether the service recommended by the user meets the requirements.**
-
-⚠️ **`rewards` uses the `ObjectsSchema` structure with `op` and `objects` fields.**
 
 ⚠️ **`owner_receive` can be:**
 - `"recently"` - receive all recent objects

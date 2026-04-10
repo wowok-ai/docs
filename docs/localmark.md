@@ -10,19 +10,35 @@ The LocalMark component manages local address book entries, storing ID names and
 
 ---
 
-## Complete Tool Call Structure
+## Function List
 
-The `local_mark_operation` tool uses the following top-level structure, all sub-functions are part of this structure:
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Add Marks** | Create local address-book entries | Save frequently used addresses with names/tags | Enables human-readable references for addresses/objects |
+| **Remove Marks** | Delete local marks by name/address | Clean up outdated or incorrect entries | Maintains address book accuracy |
+| **Clear All Marks** | Delete all local marks | Reset address book, privacy protection | Provides bulk cleanup capability |
 
-```json
-{
-  "add": { ... },      // Add marks
-  "remove": { ... },   // Remove marks
-  "clear": { ... }     // Clear all marks
-}
+---
+
+## Schema Tree (4-Level Structure)
+
 ```
-
-**Important Rule**: Only one operation can be specified per call (only one of the above fields can exist).
+local_mark_operation
+├── add
+│   └── op: "add"
+│   └── data (array)
+│       └── [mark_param]
+│           ├── name (object, optional)
+│           │   ├── value (string)
+│           │   └── replaceExistName (boolean, optional)
+│           ├── address (string)
+│           └── tags (array of strings, optional)
+├── remove
+│   └── op: "remove"
+│   └── names (array of strings)
+└── clear
+    └── op: "clear"
+```
 
 ---
 
@@ -36,35 +52,16 @@ The `local_mark_operation` tool uses the following top-level structure, all sub-
 
 ---
 
-## Feature Tree
+## Sub-function 1: Add Marks (add)
 
-```
-local_mark_operation
-├── add (Add marks)
-│   └── data: MarkParam[] (Mark parameter array, at least 1)
-│       ├── name (Mark name configuration, optional)
-│       │   ├── value: Mark name value (max 64 BCS characters)
-│       │   └── replaceExistName: Whether to replace existing name (default false)
-│       ├── address: Account or object address (required, WowAddress format)
-│       └── tags: Tag array (optional, max 50 tags, each max 64 BCS characters)
-├── remove (Remove marks)
-│   └── names: string[] (Name or address array, at least 1)
-└── clear (Clear all marks)
-    └── op: "clear" (fixed value)
-```
-
----
-
-## Sub-feature 1: Add Marks (add)
-
-### Feature Description
+### Function Description
 
 Add one or more local marks. Each mark includes name, address, and tags for local identification and classification of accounts or object IDs.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `add.op` | string | Yes | Operation type | Fixed value "add" |
 | `add.data` | array | Yes | Mark data array | At least 1 element |
 | `add.data[].name` | object | No | Mark name configuration | - |
@@ -73,34 +70,18 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 | `add.data[].address` | string | Yes | Account or object address | WowAddress format: 0x + 64 hex characters |
 | `add.data[].tags` | array | No | Tag list | Max 50 tags, each max 64 BCS characters |
 
-### Return Result
-
-```json
-{
-  "add": [
-    {
-      "name": "alice",
-      "address": "0x1234567890abcdef...",
-      "tags": ["friend", "designer"],
-      "createdAt": 1704067200000,
-      "updatedAt": 1704067200000
-    }
-  ]
-}
-```
-
 ### Examples
 
 #### Example 1.1: Add Minimal Mark (Address Only)
 
-**Prompt**: Add a mark for an address without a name or tags. The address is "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef".
+**Prompt:** Add a mark for an address without a name or tags. Use abbreviated address format for display.
 
 ```json
 {
   "add": {
     "op": "add",
     "data": [
-      { "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" }
+      { "address": "0x1234567890abcdef...def1234567890abcdef" }
     ]
   }
 }
@@ -108,7 +89,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.2: Add Mark with Name
 
-**Prompt**: Add a mark with name "alice" for address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef". Do not replace existing name if it already exists.
+**Prompt:** Add a mark with name "alice" for address. Do not replace existing name if it already exists.
 
 ```json
 {
@@ -117,7 +98,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice" },
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        "address": "0x1234567890abcdef...def1234567890abcdef"
       }
     ]
   }
@@ -126,7 +107,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.3: Add Mark with Tags
 
-**Prompt**: Add a mark with tags ["friend", "designer"] for address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", without a name.
+**Prompt:** Add a mark with tags ["friend", "designer"] for address, without a name.
 
 ```json
 {
@@ -134,7 +115,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "address": "0x1234567890abcdef...def1234567890abcdef",
         "tags": ["friend", "designer"]
       }
     ]
@@ -144,7 +125,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.4: Add Complete Mark (Name + Address + Tags)
 
-**Prompt**: Add a complete mark with name "alice", address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", and tags ["friend", "designer", "colleague"].
+**Prompt:** Add a complete mark with name "alice", address, and tags ["friend", "designer", "colleague"].
 
 ```json
 {
@@ -153,7 +134,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice" },
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "address": "0x1234567890abcdef...def1234567890abcdef",
         "tags": ["friend", "designer", "colleague"]
       }
     ]
@@ -163,7 +144,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.5: Add Mark and Replace Existing Name
 
-**Prompt**: Add a mark with name "alice", address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", and tags ["vip"]. Replace the existing name if it already exists.
+**Prompt:** Add a mark with name "alice", address, and tags ["vip"]. Replace the existing name if it already exists.
 
 ```json
 {
@@ -172,7 +153,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice", "replaceExistName": true },
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "address": "0x1234567890abcdef...def1234567890abcdef",
         "tags": ["vip"]
       }
     ]
@@ -182,7 +163,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.6: Batch Add Multiple Marks
 
-**Prompt**: Add three marks in one call: 1) name "alice" with tags ["friend"], 2) name "bob" with tags ["colleague", "developer"], 3) address-only without name or tags.
+**Prompt:** Add three marks in one call: 1) name "alice" with tags ["friend"], 2) name "bob" with tags ["colleague", "developer"], 3) address-only without name or tags.
 
 ```json
 {
@@ -191,16 +172,16 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice" },
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "address": "0x1234567890abcdef...def1234567890abcdef",
         "tags": ["friend"]
       },
       {
         "name": { "value": "bob" },
-        "address": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        "address": "0xabcdef1234567890...90abcdef1234567890",
         "tags": ["colleague", "developer"]
       },
       {
-        "address": "0x1111111111111111111111111111111111111111111111111111111111111111"
+        "address": "0x1111111111111111...111111111111111111111"
       }
     ]
   }
@@ -209,7 +190,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.7: Add Mark Without Name but With Tags
 
-**Prompt**: Add a mark for address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" with tags ["contract", "important"], but without a name.
+**Prompt:** Add a mark for address with tags ["contract", "important"], but without a name.
 
 ```json
 {
@@ -217,7 +198,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "address": "0x1234567890abcdef...def1234567890abcdef",
         "tags": ["contract", "important"]
       }
     ]
@@ -227,38 +208,24 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ---
 
-## Sub-feature 2: Remove Marks (remove)
+## Sub-function 2: Remove Marks (remove)
 
-### Feature Description
+### Function Description
 
 Remove one or more local marks by name or address.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `remove.op` | string | Yes | Operation type | Fixed value "remove" |
 | `remove.names` | array | Yes | Name or address array to remove | At least 1 element, string type |
-
-### Return Result
-
-```json
-{
-  "remove": [
-    {
-      "name": "alice",
-      "address": "0x1234567890abcdef...",
-      "tags": ["friend"]
-    }
-  ]
-}
-```
 
 ### Examples
 
 #### Example 2.1: Remove Single Mark by Name
 
-**Prompt**: Remove the mark named "alice".
+**Prompt:** Remove the mark named "alice".
 
 ```json
 {
@@ -271,20 +238,20 @@ Remove one or more local marks by name or address.
 
 #### Example 2.2: Remove Single Mark by Address
 
-**Prompt**: Remove the mark with address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef".
+**Prompt:** Remove the mark with abbreviated address.
 
 ```json
 {
   "remove": {
     "op": "remove",
-    "names": ["0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"]
+    "names": ["0x1234567890abcdef...def1234567890abcdef"]
   }
 }
 ```
 
 #### Example 2.3: Batch Remove Multiple Marks (Mixed Names and Addresses)
 
-**Prompt**: Remove three marks in one call: "alice", address "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890", and "bob".
+**Prompt:** Remove three marks in one call: "alice", abbreviated address, and "bob".
 
 ```json
 {
@@ -292,7 +259,7 @@ Remove one or more local marks by name or address.
     "op": "remove",
     "names": [
       "alice",
-      "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "0xabcdef1234567890...90abcdef1234567890",
       "bob"
     ]
   }
@@ -301,7 +268,7 @@ Remove one or more local marks by name or address.
 
 #### Example 2.4: Batch Remove Multiple Names
 
-**Prompt**: Remove three marks by their names: "alice", "bob", and "charlie".
+**Prompt:** Remove three marks by their names: "alice", "bob", and "charlie".
 
 ```json
 {
@@ -314,15 +281,15 @@ Remove one or more local marks by name or address.
 
 #### Example 2.5: Batch Remove Multiple Addresses
 
-**Prompt**: Remove two marks by their addresses.
+**Prompt:** Remove two marks by their abbreviated addresses.
 
 ```json
 {
   "remove": {
     "op": "remove",
     "names": [
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-      "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+      "0x1234567890abcdef...def1234567890abcdef",
+      "0xabcdef1234567890...90abcdef1234567890"
     ]
   }
 }
@@ -330,31 +297,23 @@ Remove one or more local marks by name or address.
 
 ---
 
-## Sub-feature 3: Clear All Marks (clear)
+## Sub-function 3: Clear All Marks (clear)
 
-### Feature Description
+### Function Description
 
 Remove all local marks. This operation is irreversible, use with caution.
 
 ### Parameter Description
 
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
 | `clear.op` | string | Yes | Operation type | Fixed value "clear" |
 
-### Return Result
-
-```json
-{
-  "clear": true
-}
-```
-
-### Examples
+### Example
 
 #### Example 3.1: Clear All Marks
 
-**Prompt**: Remove all local marks. This operation cannot be undone.
+**Prompt:** Remove all local marks. This operation cannot be undone.
 
 ```json
 {
@@ -411,4 +370,3 @@ Tags are for local classification only.
 - **LocalInfo**: Local information
 - **Account**: Account management
 - **Personal**: Public identity
-

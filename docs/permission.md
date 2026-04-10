@@ -1,3 +1,4 @@
+
 # Permission Component (🔑 Permission Management)
 
 ---
@@ -7,9 +8,10 @@
 The Permission component is used to manage access control permissions for WoWok objects. Through the Permission object, you can define who (entities) can perform which operations (permission indexes), making it the core of the WoWok permission system.
 
 ---
+
 ## Object Type Permission Range Overview
 
-> **Note**: Use the `wowok_buildin_info` tool to view all built-in permission numbers and their detailed descriptions.
+**Note**: Use the `wowok_buildin_info` tool to view all built-in permission numbers and their detailed descriptions.
 
 WoWok organizes built-in permissions by object type. Each object type has a dedicated permission index range:
 
@@ -124,93 +126,71 @@ All built-in permissions are listed below:
 | **454** | Contact | MESSNGER_OWNER_RECEIVE | Receive objects/payments for Messenger |
 | **1000+** | User-defined | Custom | Custom business permissions defined by you |
 
+---
+
+## Function List
+
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Permission** | Establish new permission object with access controls | Set up team access control, define role permissions | Creates secure on-chain permission system with admin management |
+| **Manage Admins** | Add/remove/set permission administrators | Manage who can modify permissions, delegate authority | Controls who has full access to the permission system |
+| **Manage Permissions by Index** | Grant/revoke permissions by permission ID | Give one permission to many users, revoke access | Permission-centric approach for mass permission assignment |
+| **Manage Permissions by Entity** | Grant/revoke permissions by user/Guard | Give many permissions to one user, define role access | Entity-centric approach for role-based access control |
+| **Manage Remarks** | Add descriptive remarks to custom permissions | Document custom permission purposes, improve clarity | Makes custom permissions easier to understand and maintain |
+| **Advanced Entity Operations** | Swap/replace/copy/delete entity permissions | Transfer roles, duplicate permissions, clean up access | Streamlines complex permission management workflows |
+| **Apply to Objects** | Apply permission set to other WoWok objects | Share permission scheme across multiple objects | Standardizes access control across your organization |
+| **Transfer Ownership** | Change permission object owner | Hand over management, pass responsibility to new owner | Transfers full control of the permission system |
+| **Owner Receive** | Unwrap and send received assets to owner | Forward received tokens, process payments | Delivers received assets to permission owner |
+
+---
+
 ## Complete Tool Call Structure
 
-The `permission` tool uses the following top-level structure, and all sub-features are part of this structure:
+Permission operations use the following top-level structure:
 
 ```json
 {
   "operation_type": "permission",
-  "data": {
-    "object": { ... },
-    "description": "...",
-    "remark": { ... },
-    "table": { ... },
-    "entity": { ... },
-    "admin": { ... },
-    "apply": [ ... ],
-    "builder": { ... },
-    "owner_receive": { ... },
-    "um": "..."
-  },
-  "env": { ... },
-  "submission": { ... }
+  "data": { ... },    // Permission data definition
+  "env": { ... },       // Execution environment (optional)
+  "submission": { ... }  // Submission data (optional)
 }
 ```
 
-**Important Rules**:
-- The `object` field can be an existing object name/ID or a configuration for creating a new object
-- `table` and `entity` operations require administrator permission
-- Only the object owner (builder) can manage `admin`
-- Only the object owner (builder) can transfer ownership via `builder`
-- Only the object owner (builder) can apply to other objects via `apply`
-
 ---
 
-### Important Notes
-
-- **Built-in permissions (0-999)**: Reserved for WoWok core system objects
-- **User-defined permissions (1000-65535)**: For your custom business needs
-- **All object operations use these permissions**: Every WoWok object's operations are controlled by these permission indexes
-- **Use `wowok_buildin_info`**: Query the tool for the most up-to-date permission list and detailed descriptions
-
----
-
-## Feature Tree
+## Schema Tree
 
 ```
-permission_operation
-├── object (Object Reference)
-│   ├── Existing Object: string (name or ID)
-│   └── New Object: { name, tags, onChain, replaceExistName }
-├── description (Description, optional)
-├── admin (Admin Operations, optional)
-│   ├── op: "add" | "remove" | "set"
-│   └── addresses: { entities: [...] }
-├── remark (Remark Operations, optional)
-│   ├── op: "set"
-│   │   ├── index: permission index
-│   │   └── remark: remark text
-│   ├── op: "remove"
-│   │   └── index: permission index
-│   └── op: "clear"
-├── table (Permission Table Operations, optional)
-│   ├── By Permission Index (op: "add perm by index" | "set perm by index" | "remove perm by index")
-│   │   ├── index: permission index
-│   │   └── entity: { entities: [{ name_or_address, local_mark_first }] }
-│   └── By Entity (op: "add perm by entity" | "set perm by entity" | "remove perm by entity")
-│       ├── entity: { name_or_address, local_mark_first }
-│       └── index: [permission index array]
-├── entity (Advanced Entity Operations, optional)
-│   ├── op: "swap"
-│   │   ├── entity1: { name_or_address, local_mark_first }
-│   │   └── entity2: { name_or_address, local_mark_first }
-│   ├── op: "replace"
-│   │   ├── entity1: source entity
-│   │   └── entity2: target entity
-│   ├── op: "copy"
-│   │   ├── entity1: source entity
-│   │   └── entity2: target entity
-│   └── op: "del"
-│       └── entity: { name_or_address, local_mark_first }
-├── apply (Apply to Other Objects, optional)
-│   └── [object ID or name array]
-├── builder (Transfer Ownership, optional)
-│   └── { name_or_address, local_mark_first }
-├── owner_receive (Receive Assets, optional)
-│   └── { recent: boolean } or { objects: [object ID array] }
-└── um (Contact Object, optional)
-    └── string | null
+permission (Permission Object)
+├── operation_type: "permission" (fixed value)
+├── data (Permission data definition)
+│   ├── object (object definition, optional)
+│   │   ├── name|id (reference existing object)
+│   │   └── name|tags|type_parameter|permission (create new object)
+│   ├── description (description, optional)
+│   ├── remark (remark operations, optional)
+│   │   ├── op (operation: set|remove|clear)
+│   │   ├── index (permission index)
+│   │   └── remark (remark text)
+│   ├── table (permission table operations, optional)
+│   │   ├── op (operation: add|set|remove perm by index/entity)
+│   │   ├── index (permission index or index array)
+│   │   └── entity (entity or entities)
+│   ├── entity (advanced entity operations, optional)
+│   │   ├── op (operation: swap|replace|copy|del)
+│   │   ├── entity1 (source entity)
+│   │   ├── entity2 (target entity)
+│   │   └── entity (entity to delete)
+│   ├── admin (admin operations, optional)
+│   │   ├── op (operation: add|remove|set)
+│   │   └── addresses (admin addresses)
+│   ├── apply (apply to objects, optional)
+│   ├── builder (transfer ownership, optional)
+│   ├── owner_receive (unwrap and send to owner, optional)
+│   └── um (Contact object, optional)
+├── env (optional, execution environment)
+└── submission (optional, submission data)
 ```
 
 ---
@@ -219,28 +199,31 @@ permission_operation
 
 ### Feature Description
 
-Create a new Permission object. You can set the name, description, tags, and whether to publish the name publicly on the blockchain. The creator automatically becomes the owner (builder) and administrator.
+Create a new Permission object. You can set the name, description, and tags. The creator automatically becomes the owner (builder) and administrator.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
 | `data.object` | object/string | Yes | Object reference | Provide object configuration when creating a new object |
-| `data.object.name` | string | No | Object name | Max 64 BCS characters, cannot start with '0x' |
-| `data.object.tags` | array | No | Object tags | String array for classification and search |
-| `data.object.onChain` | boolean | No | Whether to publish on-chain | true=public name; false/null=local storage (default) |
-| `data.object.replaceExistName` | boolean | No | Whether to replace existing name | true=replace; false=error (default) |
-| `data.description` | string | No | Permission object description | Explain the purpose and management scope of this Permission |
+| `data.object.name` | string | No | Object name | Max 64 characters |
+| `data.object.tags` | array | No | Object tags | String array for classification |
+| `data.description` | string | No | Permission object description | Explain the purpose and management scope |
 
-### Return Result
+### Important Notes
 
-Successfully created Permission object, returns object ID and transaction digest.
+⚠️ **Built-in permissions (0-999)**: Reserved for WoWok core system objects.
+
+⚠️ **User-defined permissions (1000-65535)**: For your custom business needs.
+
+---
 
 ### Examples
 
 #### Example 1.1: Create Minimal Permission Object
 
-**Prompt**: Create a basic Permission object named "my_permission" with default settings.
+**Prompt**: Create a basic Permission object named "my_permission", use default account and network, no other configuration specified.
 
 ```json
 {
@@ -253,9 +236,11 @@ Successfully created Permission object, returns object ID and transaction digest
 }
 ```
 
+---
+
 #### Example 1.2: Create Permission with Description
 
-**Prompt**: Create a Permission named "service_team_permission" with a detailed description explaining that it's for managing service team permissions including service creation, sales, and customer operations.
+**Prompt**: Create a Permission named "service_team_permission", add description "Service team permission management - responsible for service creation, sales, and customer operations".
 
 ```json
 {
@@ -269,9 +254,11 @@ Successfully created Permission object, returns object ID and transaction digest
 }
 ```
 
+---
+
 #### Example 1.3: Create Permission with Tags
 
-**Prompt**: Create a Permission named "design_team_permission" with tags ["design", "team", "internal", "creative"] for better categorization.
+**Prompt**: Create a Permission named "design_team_permission", add tags "design", "team", "internal", "creative" for better categorization.
 
 ```json
 {
@@ -280,22 +267,6 @@ Successfully created Permission object, returns object ID and transaction digest
     "object": {
       "name": "design_team_permission",
       "tags": ["design", "team", "internal", "creative"]
-    }
-  }
-}
-```
-
-#### Example 1.4: Create Permission with Public Name
-
-**Prompt**: Create a Permission named "public_permission" and publish its name on the blockchain by setting onChain to true.
-
-```json
-{
-  "operation_type": "permission",
-  "data": {
-    "object": {
-      "name": "public_permission",
-      "onChain": true
     }
   }
 }
@@ -312,14 +283,13 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Existing Permission object name or ID | - |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.admin.op` | string | Yes | Operation type | "add" / "remove" / "set" |
-| `data.admin.addresses.entities` | array | Yes | Administrator address array | Each element contains name_or_address |
+| `data.admin.addresses` | object | Yes | Administrator addresses | ManyAccountOrMark_Address |
 
-### Return Result
-
-Successfully updated administrator list, returns transaction digest.
+---
 
 ### Examples
 
@@ -345,6 +315,8 @@ Successfully updated administrator list, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 2.2: Remove Administrator
 
 **Prompt**: Remove "former_lead" from the administrators of "my_permission".
@@ -365,6 +337,8 @@ Successfully updated administrator list, returns transaction digest.
   }
 }
 ```
+
+---
 
 #### Example 2.3: Set Complete Administrator List (Overwrite)
 
@@ -390,24 +364,23 @@ Successfully updated administrator list, returns transaction digest.
 
 ---
 
-## Sub-feature 3: Add/Set/Remove Permissions (By Permission Index)
+## Sub-feature 3: Manage Permissions by Permission Index
 
 ### Feature Description
 
-Add, set, or remove entities (accounts or Guard IDs) for a specific permission index. This is the core operation of permission management. **Requires administrator permission**.
+Add, set, or remove entities (accounts or Guard IDs) for a specific permission index. This is the permission-centric approach. **Requires administrator permission**.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Existing Permission object name or ID | - |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.table.op` | string | Yes | Operation type | "add perm by index" / "set perm by index" / "remove perm by index" |
 | `data.table.index` | number | Yes | Permission index | Built-in index (e.g., 300) or 1000-65535 (custom) |
-| `data.table.entity.entities` | array | Yes | Entity array | Each element contains name_or_address |
+| `data.table.entity` | object | Yes | Entities | ManyAccountOrMark_Address |
 
-### Return Result
-
-Successfully updated permission assignments, returns transaction digest.
+---
 
 ### Examples
 
@@ -433,6 +406,8 @@ Successfully updated permission assignments, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 3.2: Add Multiple Entities to Permission Index
 
 **Prompt**: Add "marketing_specialist_1", "marketing_specialist_2", and "marketing_specialist_3" to permission index 300 of "my_permission".
@@ -456,6 +431,8 @@ Successfully updated permission assignments, returns transaction digest.
   }
 }
 ```
+
+---
 
 #### Example 3.3: Remove Entity from Permission Index
 
@@ -481,23 +458,23 @@ Successfully updated permission assignments, returns transaction digest.
 
 ---
 
-## Sub-feature 4: Add/Set/Remove Permissions (By Entity)
+## Sub-feature 4: Manage Permissions by Entity
 
 ### Feature Description
 
-Add, set, or remove permission indexes for a specific entity. Contrary to operating by permission index, this manages permissions from the entity perspective. **Requires administrator permission**.
+Add, set, or remove permission indexes for a specific entity. This is the entity-centric approach. **Requires administrator permission**.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.table.op` | string | Yes | Operation type | "add perm by entity" / "set perm by entity" / "remove perm by entity" |
-| `data.table.entity` | object | Yes | Entity | { name_or_address } |
+| `data.table.entity` | object | Yes | Entity | AccountOrMark_Address |
 | `data.table.index` | array | Yes | Permission index array | number[] |
 
-### Return Result
-
-Successfully updated entity permissions, returns transaction digest.
+---
 
 ### Examples
 
@@ -519,6 +496,8 @@ Successfully updated entity permissions, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 4.2: Add Multiple Permissions to Entity
 
 **Prompt**: Add permission indexes 300, 301, and 305 to "marketing_manager" in "my_permission".
@@ -536,6 +515,8 @@ Successfully updated entity permissions, returns transaction digest.
   }
 }
 ```
+
+---
 
 #### Example 4.3: Remove Some Permissions from Entity
 
@@ -566,14 +547,14 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.remark.op` | string | Yes | Operation type | "set" / "remove" / "clear" |
 | `data.remark.index` | number | Conditional | Permission index | Required when op is "set"/"remove" |
 | `data.remark.remark` | string | Conditional | Remark text | Required when op is "set" |
 
-### Return Result
-
-Successfully updated permission remarks, returns transaction digest.
+---
 
 ### Examples
 
@@ -595,6 +576,8 @@ Successfully updated permission remarks, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 5.2: Remove Permission Remark
 
 **Prompt**: Remove the remark from permission index 1001 of "my_permission".
@@ -611,6 +594,8 @@ Successfully updated permission remarks, returns transaction digest.
   }
 }
 ```
+
+---
 
 #### Example 5.3: Clear All Remarks
 
@@ -639,15 +624,15 @@ Perform advanced operations on entity permissions, including swapping permission
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.entity.op` | string | Yes | Operation type | "swap" / "replace" / "copy" / "del" |
 | `data.entity.entity1` | object | Conditional | First entity | Required for swap/replace/copy |
 | `data.entity.entity2` | object | Conditional | Second entity | Required for swap/replace/copy |
 | `data.entity.entity` | object | Conditional | Entity | Required for del |
 
-### Return Result
-
-Successfully performed entity operation, returns transaction digest.
+---
 
 ### Examples
 
@@ -669,6 +654,8 @@ Successfully performed entity operation, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 6.2: Swap Permissions Between Two Entities
 
 **Prompt**: Swap all permissions between "role_a" and "role_b" in "my_permission".
@@ -687,6 +674,8 @@ Successfully performed entity operation, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 6.3: Replace Entity Permissions
 
 **Prompt**: Transfer all permissions from "old_manager" to "new_manager" in "my_permission" (old_manager loses permissions).
@@ -704,6 +693,8 @@ Successfully performed entity operation, returns transaction digest.
   }
 }
 ```
+
+---
 
 #### Example 6.4: Delete All Permissions of an Entity
 
@@ -733,12 +724,12 @@ Apply the current Permission object to other WoWok objects so that these objects
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
 | `data.apply` | array | Yes | Object ID or name array | String array, can be Machine, Service, Repository, etc. |
 
-### Return Result
-
-Successfully applied Permission to objects, returns transaction digest.
+---
 
 ### Examples
 
@@ -756,6 +747,8 @@ Successfully applied Permission to objects, returns transaction digest.
 }
 ```
 
+---
+
 #### Example 7.2: Apply to Multiple Objects
 
 **Prompt**: Apply "marketing_team_permission" to "service_marketing_workflow", "customer_service_workflow", and "campaign_management_repo".
@@ -772,15 +765,51 @@ Successfully applied Permission to objects, returns transaction digest.
 
 ---
 
-## Sub-feature 8: Combined Operations
+## Sub-feature 8: Transfer Ownership
+
+### Feature Description
+
+Transfer ownership of the Permission object to another user. Only the current owner can perform this operation. **After transfer, the original owner no longer has management permissions for this object, please operate with caution!**
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
+| `data.builder` | object | Yes | New owner | AccountOrMark_Address |
+
+---
+
+### Examples
+
+#### Example 8.1: Transfer Ownership to Specified Account
+
+**Prompt**: Transfer ownership of "my_permission" to "new_owner" using the local mark name.
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "my_permission",
+    "builder": { "name_or_address": "new_owner" }
+  }
+}
+```
+
+---
+
+## Sub-feature 9: Combined Operations
 
 ### Feature Description
 
 Perform multiple operations in a single call, such as creating an object while configuring permissions, administrators, etc. This can reduce the number of transactions and improve efficiency.
 
-### Examples
+---
 
-#### Example 8.1: Create Permission and Configure Complete Permissions
+### Example
+
+#### Example 9.1: Create Permission and Configure Complete Permissions
 
 **Prompt**: Create a complete marketing department permission configuration: 1) Create a Permission named "full_marketing_permission", 2) Add description and tags, 3) Add "marketing_director" as administrator, 4) Add service creation permission (300) to "marketing_specialist_1" and "marketing_specialist_2", 5) Add a remark to permission 1001: "Machine Node 'order confirm': confirm operation".
 
@@ -822,123 +851,21 @@ Perform multiple operations in a single call, such as creating an object while c
 
 ---
 
-## Sub-feature 9: Transfer Ownership
-
-### Feature Description
-
-Transfer ownership of the Permission object to another user. Only the current owner can perform this operation. **After transfer, the original owner no longer has management permissions for this object, please operate with caution!**
-
-### Parameter Description
-
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
-| `data.builder` | object/string | Yes | New owner | { name_or_address } or address string |
-
-### Return Result
-
-Successfully transferred ownership, returns transaction digest.
-
-### Examples
-
-#### Example 9.1: Transfer Ownership to Specified Account
-
-**Prompt**: Transfer ownership of "my_permission" to "new_owner" using the local mark name.
-
-```json
-{
-  "operation_type": "permission",
-  "data": {
-    "object": "my_permission",
-    "builder": { "name_or_address": "new_owner" }
-  }
-}
-```
-
-#### Example 9.2: Transfer Ownership to Specified Address
-
-**Prompt**: Transfer ownership of "my_permission" to the blockchain address "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef".
-
-```json
-{
-  "operation_type": "permission",
-  "data": {
-    "object": "my_permission",
-    "builder": { "name_or_address": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" }
-  }
-}
-```
-
----
-
-## Query Permission Information
-
-### Query Permission Object
-
-Use the `watch_and_query` tool to query Permission objects:
-
-**Prompt**: Query the Permission object named "my_permission".
-
-```json
-{
-  "query_type": "onchain_objects",
-  "objects": ["my_permission"]
-}
-```
-
-### Query Built-in Permission List
-
-Use the `wowok_buildin_info` tool to query built-in permissions:
-
-**Prompt**: Show all built-in permissions.
-
-```json
-{
-  "info": "built-in permissions"
-}
-```
-
----
-
-## Best Practices
-
-### 1. Principle of Least Privilege
-
-Only grant necessary permissions, avoid over-authorization.
-
-### 2. Use Role Grouping
-
-Create different Permission objects for different roles, such as marketing team, customer service team, etc.
-
-### 3. Regular Permission Audits
-
-Regularly check and clean up unnecessary permissions, remove permissions of former employees.
-
-### 4. Add Clear Remarks
-
-Remember to add remarks for custom permission indexes to help team members understand permission purposes.
-
-### 5. Use Guard for Advanced Validation
-
-For sensitive operations, you can use Guard objects as entities to implement more complex permission validation logic.
-
-### 6. Use Combined Operations
-
-Try to use combined operations to reduce the number of transactions and improve efficiency.
-
----
-
 ## Important Notes
 
-⚠️ **Permission changes take effect immediately!**
+⚠️ **Built-in permissions (0-999)**: Reserved for WoWok core system objects.
+
+⚠️ **User-defined permissions (1000-65535)**: For your custom business needs.
+
+⚠️ **All object operations use these permissions**: Every WoWok object's operations are controlled by these permission indexes.
+
+⚠️ **Use `wowok_buildin_info`**: Query the tool for the most up-to-date permission list and detailed descriptions.
 
 ⚠️ **table and entity operations require administrator permission!**
 
 ⚠️ **Only the object owner (builder) can manage admin!**
 
 ⚠️ **After transferring ownership, the original owner no longer has permissions!**
-
-⚠️ **It is recommended to verify permission configurations on the test network first!**
-
 ---
 
 ## Related Components
@@ -947,3 +874,5 @@ Try to use combined operations to reduce the number of transactions and improve 
 - **Service**: Service marketplace, commonly managed by Permission
 - **Machine**: Workflow templates that require permission control
 - **Repository**: Data storage that can be controlled via Permission
+- **Treasury**: Fund management, permissions control who can deposit/withdraw
+

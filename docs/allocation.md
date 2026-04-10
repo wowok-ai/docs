@@ -1,56 +1,86 @@
+
 # Allocation Component (📤 Auto Distribution)
 
 ---
 
 ## Component Overview
 
-The Allocation component is used to create distribution plans that automatically distribute funds to multiple recipients.
+The Allocation component is WoWok protocol's automatic fund distribution module, used to create distribution plans that auto-distribute funds to multiple recipients. Allocation objects can be created with predefined distribution rules, receive funds, and automatically distribute them based on the configured allocators when Guard verification passes.
 
 ---
 
-## Function Tree
+## Function List
 
-```
-Allocation Component
-├── Create New Allocation
-│   ├── Set Name (object.name)
-│   ├── Set Type (object.type = "Allocation")
-│   ├── Configure Allocators (allocators)
-│   ├── Initial Deposit (coin)
-│   └── Set Payment Info (payment_info)
-└── Operate Existing Allocation
-    ├── Receive Funds (received_coins)
-    └── Execute Distribution (alloc_by_guard)
+| Function Name | Purpose | Usage Scenario | Significance |
+|---------------|---------|----------------|-------------|
+| **Create Allocation** | Define fund distribution plans | Set up profit sharing, team payouts | Establishes automated distribution rules |
+| **Receive Funds** | Deposit funds for distribution | Collect payments, revenues | Fills the allocation pool |
+| **Execute Distribution** | Trigger fund distribution | Run scheduled payouts, one-time distributions | Executes pre-defined sharing rules |
+| **Combined Operations** | Receive and distribute in one call | Complete payout workflow | Streamlines end-to-end distribution process |
+
+---
+
+## Complete Tool Call Structure
+
+Allocation operations use the following top-level structure:
+
+```json
+{
+  "operation_type": "allocation",
+  "data": { ... },    // Allocation data definition
+  "env": { ... },      // Execution environment (optional)
+  "submission": { ... } // Guard verification submission (optional)
+}
 ```
 
 ---
 
-## Sub-function 1: Create New Allocation
+## Sub-feature 1: Create New Allocation
 
-### Function Description
+### Feature Description
 
-Create a new Allocation object for automatic fund distribution.
+Create a new Allocation object with predefined distribution rules. Newly created allocations can receive funds and automatically distribute them based on the configured allocators.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description | Constraints |
-|-----------|------|----------|-------------|-------------|
-| `object.name` | string | No | Local mark name | Max 64 characters |
-| `object.type` | string | Yes | Object type | Must be "Allocation" |
-| `allocators.allocators` | array | Yes | Allocator list |
-| `allocators.allocators[].to` | string | Yes | Recipient address or name |
-| `allocators.allocators[].ratio` | string | Yes | Distribution ratio (1000000000 = 100%) |
-| `coin` | string | No | Initial deposit amount (minimum unit) |
-| `payment_info.payment_remark` | string | No | Payment remark |
-| `payment_info.payment_index` | number | No | Payment index |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "allocation" |
+| `data.object` | object | Yes | Create new Allocation | TypeNamedObject structure |
+| `data.object.name` | string | No | Local mark name | Max 64 characters |
+| `data.object.tags` | array | No | Tags array | String array |
+| `data.object.onChain` | boolean | No | Whether to mark on-chain | |
+| `data.object.replaceExistName` | boolean | No | Replace existing name | |
+| `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
+| `data.allocators.description` | string | Yes | Allocators description | Max 65535 characters |
+| `data.allocators.threshold` | number | Yes | Threshold amount in smallest units | No decimals or negatives |
+| `data.allocators.allocators` | array | Yes | Allocator list | 1-100 allocators |
+| `data.allocators.allocators[].guard` | string | Yes | Guard object for this allocator | Guard name or ID |
+| `data.allocators.allocators[].sharing` | array | Yes | Sharing items for this allocator | 1-100 sharing items |
+| `data.allocators.allocators[].sharing[].who` | object | Yes | Recipient type | `{ GuardIdentifier: number }`, `{ Entity: { name_or_address: string } }`, or `{ Signer: "signer" }` |
+| `data.allocators.allocators[].sharing[].sharing` | number | Yes | Sharing amount or rate in smallest units | No decimals or negatives |
+| `data.allocators.allocators[].sharing[].mode` | string | Yes | Allocation mode | "Amount", "Rate", or "Surplus" |
+| `data.allocators.allocators[].max` | number or null | No | Maximum allocation amount | No decimals or negatives |
+| `data.coin` | object or string | Yes | Initial deposit coin | CoinParam structure |
+| `data.coin.balance` | number | No | Balance amount | No decimals or negatives |
+| `data.payment_info.remark` | string | Yes | Payment record remark | |
+| `data.payment_info.index` | number or string | Yes | Payment record index | |
+| `data.payment_info.for_object` | string or null | No | Payment for specific object | |
+| `data.payment_info.for_guard` | string or null | No | Payment for specific guard | |
 
 ### Important Notes
 
-⚠️ **The sum of ratios should equal 10000 (i.e., 100%)**.
+⚠️ **Sum of all sharing rates should be ≤ 10000 (100%).**
+
+⚠️ **When mode is "Surplus", the sharing field is ignored.**
+
+---
 
 ### Examples
 
-#### Example 1.1: Create Simple Allocation
+#### Example 1.1: Create Simple Rate-based Allocation
+
+**Prompt**: Create a new allocation named "profit_sharing" with: 1) Description "Monthly profit distribution", 2) Threshold at 5000000000 (5 WOW), 3) One allocator with "distribution_guard" guard, 4) Sharing items: 50% to founder, 30% to developer, 20% to marketing, 5) Initial deposit of 10000000000 (10 WOW), 6) Payment info with remark "Initial deposit" and index 1.
 
 ```json
 {
@@ -58,57 +88,131 @@ Create a new Allocation object for automatic fund distribution.
   "data": {
     "object": {
       "name": "profit_sharing",
-      "type": "Allocation"
+      "type_parameter": "0x2::wow::WOW",
+      "tags": ["profit", "distribution"],
+      "onChain": false
     },
     "allocators": {
+      "description": "Monthly profit distribution",
+      "threshold": 5000000000,
       "allocators": [
         {
-          "to": "founder_address",
-          "ratio": "500000000"
-        },
-        {
-          "to": "developer_address",
-          "ratio": "300000000"
-        },
-        {
-          "to": "marketing_address",
-          "ratio": "200000000"
+          "guard": "distribution_guard",
+          "sharing": [
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "founder"
+                }
+              },
+              "sharing": 5000,
+              "mode": "Rate"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "developer"
+                }
+              },
+              "sharing": 3000,
+              "mode": "Rate"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "marketing"
+                }
+              },
+              "sharing": 2000,
+              "mode": "Rate"
+            }
+          ],
+          "max": null
         }
       ]
+    },
+    "coin": {
+      "balance": 10000000000
+    },
+    "payment_info": {
+      "remark": "Initial deposit",
+      "index": 1
     }
   }
 }
 ```
 
-#### Example 1.2: Create Allocation with Initial Deposit
+#### Example 1.2: Create Allocation with Mixed Modes
+
+**Prompt**: Create allocation "team_payouts" with: 1) Description "Team weekly payouts", 2) Threshold at 2000000000 (2 WOW), 3) Two allocators: first with "weekly_guard" (fixed amount to alice, rate to bob, surplus to charlie), second with "bonus_guard" (rate-based), 4) Initial deposit of 5000000000 (5 WOW), 5) Payment info with remark "Team payout initial" and index 2.
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
     "object": {
-      "name": "monthly_profit",
-      "type": "Allocation"
+      "name": "team_payouts",
+      "type_parameter": "0x2::wow::WOW"
     },
     "allocators": {
+      "description": "Team weekly payouts",
+      "threshold": 2000000000,
       "allocators": [
         {
-          "to": "ceo_address",
-          "ratio": "400000000"
+          "guard": "weekly_guard",
+          "sharing": [
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "alice"
+                }
+              },
+              "sharing": 1000000000,
+              "mode": "Amount"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "bob"
+                }
+              },
+              "sharing": 4000,
+              "mode": "Rate"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "charlie"
+                }
+              },
+              "sharing": 0,
+              "mode": "Surplus"
+            }
+          ],
+          "max": 10000000000
         },
         {
-          "to": "cto_address",
-          "ratio": "300000000"
-        },
-        {
-          "to": "coo_address",
-          "ratio": "300000000"
+          "guard": "bonus_guard",
+          "sharing": [
+            {
+              "who": {
+                "Signer": "signer"
+              },
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ],
+          "max": null
         }
       ]
     },
-    "coin": "100000000000",
+    "coin": {
+      "balance": 5000000000
+    },
     "payment_info": {
-      "payment_remark": "Monthly profit sharing"
+      "remark": "Team payout initial",
+      "index": 2,
+      "for_guard": "weekly_guard"
     }
   }
 }
@@ -116,52 +220,69 @@ Create a new Allocation object for automatic fund distribution.
 
 ---
 
-## Sub-function 2: Operate Existing Allocation - Receive Funds
+## Sub-feature 2: Operate Existing Allocation - Receive Funds
 
-### Function Description
+### Feature Description
 
 Receive CoinWrapper objects sent to the Allocation object and deposit them into the pending distribution balance.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `object` | string/object | Yes | Allocation object ID or name |
-| `received_coins` | object | No | Receive funds configuration |
-| `received_coins.balance` | string | No | Specify balance |
-| `received_coins.object` | string | No | Specify object |
-| `received_coins.recent` | boolean | No | Whether to receive recent objects |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "allocation" |
+| `data.object` | string | Yes | Reference existing Allocation | Allocation name or ID |
+| `data.received_coins` | string or object | No | Receive funds configuration | "recently" or ReceivedBalance object |
+
+### Important Notes
+
+⚠️ **Use "recently" to receive all recently received coins.**
+
+---
 
 ### Example
+
+#### Example 2.1: Receive Recently Received Coins
+
+**Prompt**: Receive all recently received coins into the "profit_sharing" allocation object.
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
     "object": "profit_sharing",
-    "received_coins": {
-      "recent": true
-    }
+    "received_coins": "recently"
   }
 }
 ```
 
 ---
 
-## Sub-function 3: Operate Existing Allocation - Execute Distribution
+## Sub-feature 3: Operate Existing Allocation - Execute Distribution
 
-### Function Description
+### Feature Description
 
-Verify the specified Guard and execute the corresponding fund distribution.
+Verify the specified Guard and execute the corresponding fund distribution based on the configured allocators.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `object` | string/object | Yes | Allocation object ID or name |
-| `alloc_by_guard` | string | Yes | Guard object ID or name |
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "allocation" |
+| `data.object` | string | Yes | Reference existing Allocation | Allocation name or ID |
+| `data.alloc_by_guard` | string | Yes | Guard object to verify and execute | Guard name or ID |
+
+### Important Notes
+
+⚠️ **The Guard must be configured in the allocators to execute distribution.**
+
+---
 
 ### Example
+
+#### Example 3.1: Execute Distribution by Guard
+
+**Prompt**: Execute fund distribution for "profit_sharing" allocation by verifying "distribution_guard".
 
 ```json
 {
@@ -175,23 +296,36 @@ Verify the specified Guard and execute the corresponding fund distribution.
 
 ---
 
-## Sub-function 4: Combined Operations
+## Sub-feature 4: Combined Operations
 
-### Function Description
+### Feature Description
 
-Execute multiple operations in a single call.
+Execute multiple operations in a single call: receive funds and execute distribution.
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "allocation" |
+| `data.object` | string | Yes | Reference existing Allocation | Allocation name or ID |
+| `data.received_coins` | string or object | No | Receive funds configuration | "recently" or ReceivedBalance object |
+| `data.alloc_by_guard` | string | No | Guard object to execute | Guard name or ID |
+
+---
 
 ### Example
+
+#### Example 4.1: Receive and Distribute in One Call
+
+**Prompt**: For "team_payouts" allocation: 1) Receive all recently received coins, 2) Execute distribution using "weekly_guard".
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
-    "object": "profit_sharing",
-    "received_coins": {
-      "recent": true
-    },
-    "alloc_by_guard": "distribution_guard"
+    "object": "team_payouts",
+    "received_coins": "recently",
+    "alloc_by_guard": "weekly_guard"
   }
 }
 ```
@@ -200,18 +334,21 @@ Execute multiple operations in a single call.
 
 ## Important Notes
 
-⚠️ **The sum of ratios should equal 10000 (i.e., 100%)**.
+⚠️ **Sum of all sharing rates should be ≤ 10000 (100%) when no Surplus mode is used.**
 
-⚠️ **Automatic distribution can be initiated after deposit**.
+⚠️ **Automatic distribution can be initiated after deposit reaches the threshold.**
 
-⚠️ **Distribution records are permanently public**.
+⚠️ **Distribution records are permanently public on-chain.**
+
+⚠️ **After creating an Allocation, you cannot modify the allocators configuration.**
 
 ---
 
 ## Related Components
 
+- **Service**: Service marketplace - can use Allocation for order fund distribution
+- **Reward**: Reward pool - similar distribution mechanism
 - **Treasury**: Fund management
-- **Reward**: Reward pool
-- **Service**: Service marketplace
 - **Permission**: Permission management
-- **Guard**: Validation rules
+- **Guard**: Validation rules - required for executing distributions
+
