@@ -175,7 +175,7 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 | `description` | string | Yes | Policy rule description |
 | `write_guard` | array | Yes | Guard object list for write verification |
 | `quote_guard` | string or null | No | Guard for on-chain reference verification |
-| `id_from` | enum | Yes | ID source: "None", "Clock", "Signer" |
+| `id_from` | enum or number | Yes | ID source: can be string ("None", "Clock", "Signer", case-insensitive) or number (0=None, 1=Clock, 2=Signer) |
 | `value_type` | enum | Yes | Value type: "string", "number", "boolean", etc. |
 
 ### Operation Types
