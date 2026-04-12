@@ -51,7 +51,8 @@ wowok_buildin_info (Build-in Information Operations)
 │   │       ├── id (optional, number[])
 │   │       ├── returnType (optional, ValueType)
 │   │       ├── paramCount (optional, number)
-│   │       └── scope (optional, "instruct"/"object query"/"all")
+│   │       ├── scope (optional, "instruct"/"object query"/"all")
+│   │       └── objectType (optional, ObjectType, only for "object query" scope)
 │   ├── "current network"
 │   └── "value types"
 └── (no other top-level fields)
@@ -221,6 +222,22 @@ Get reference information for Guard instructions and object queries, including t
     "returnType": "Bool",
     "paramCount": 2,
     "scope": "all"
+  }
+}
+```
+
+---
+
+#### Example 3.7: Filter by Object Type
+
+**Prompt**: Show only object query instructions that operate on Permission objects.
+
+```json
+{
+  "info": "guard instructions",
+  "filter": {
+    "scope": "object query",
+    "objectType": "Permission"
   }
 }
 ```
