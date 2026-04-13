@@ -88,8 +88,10 @@ messenger_operation (Messenger Operations)
 │   │   └── outputDir (required, string)
 │   ├── "generate_wts"
 │   │   └── params (required, WtsGenerationParams)
-│   │       ├── myAccount (required, string)
-│   │       ├── peerAccount (required, string)
+│   │       ├── myAccount (required, string) - Account name or address
+│   │       ├── peerAccount (required)
+│   │       │   ├── name_or_address (required, Address/Name, string)
+│   │       │   └── local_mark_first (optional, boolean)
 │   │       ├── range (optional, Range)
 │   │       │   ├── type (required, "time"/"messageId"/"seqIndex")
 │   │       │   ├── start (required, number/string)
@@ -425,7 +427,9 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": "peer_account",
+    "peerAccount": {
+      "name_or_address": "peer_account"
+    },
     "outputDir": "./wts/"
   }
 }
@@ -442,7 +446,9 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": "peer_account",
+    "peerAccount": {
+      "name_or_address": "peer_account"
+    },
     "range": {
       "type": "time",
       "start": 1704067200000,
@@ -465,7 +471,9 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": "peer_account",
+    "peerAccount": {
+      "name_or_address": "peer_account"
+    },
     "range": {
       "type": "messageId",
       "start": "msg_100",
