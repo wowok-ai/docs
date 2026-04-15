@@ -576,7 +576,27 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ---
 
-#### Example 9.2: Convert Directory
+#### Example 9.2: Convert and Save to File
+
+**Prompt**: Convert "./wts/chat_history.wts" to HTML and save to "./html/" directory.
+
+```json
+{
+  "operation": "wts2html",
+  "wtsPath": "./wts/chat_history.wts",
+  "options": {
+    "title": "Chat History with Alice",
+    "theme": "light",
+    "outputPath": "./html/"
+  }
+}
+```
+
+**Response**: Returns the saved HTML file path (e.g., `"./html/chat_history.html"`).
+
+---
+
+#### Example 9.3: Convert Directory
 
 **Prompt**: Convert all WTS files in "./wts/" directory, save to "./html/", use dark theme.
 
@@ -590,6 +610,8 @@ Convert WTS file to HTML format for easy viewing and sharing.
   }
 }
 ```
+
+**Response**: Returns an array of saved HTML file paths.
 
 ---
 
