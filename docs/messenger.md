@@ -25,6 +25,7 @@ The Messenger component is used for WoWok encrypted message management, includin
 | **Blacklist Management** | Manage blocked users | Prevent spam, block unwanted contacts | Controls who can message you |
 | **Friendslist Management** | Manage trusted contacts | Filter messages, organize contacts | Enables friend-based message filtering |
 | **Guardlist Management** | Manage Guard verifiers | Message verification, access control | Provides message security layer |
+| **Settings Management** | Manage messenger settings | Configure inbox size, stranger message preferences | Customizes messaging experience |
 
 ---
 
@@ -50,7 +51,7 @@ messenger_operation (Messenger Operations)
 │   │   └── account (optional, string)
 │   ├── "send_message"
 │   │   ├── from (optional, string)
-│   │   ├── to (required, Address/Name)
+│   │   ├── to (required, string | Address/Name) - Recipient can be simple string (name/address) or full object
 │   │   ├── content (required, string)
 │   │   └── options (optional, SendMessageOptions)
 │   │       ├── guardAddress (optional, string)
@@ -59,7 +60,7 @@ messenger_operation (Messenger Operations)
 │   │       └── new_messenger_name (optional, string)
 │   ├── "send_file"
 │   │   ├── from (optional, string)
-│   │   ├── to (required, Address/Name)
+│   │   ├── to (required, string | Address/Name) - Recipient can be simple string (name/address) or full object
 │   │   ├── filePath (required, string)
 │   │   └── options (optional, SendFileOptions)
 │   │       ├── fileName (optional, string)
@@ -72,7 +73,7 @@ messenger_operation (Messenger Operations)
 │   │   └── filter (optional, MessageFilter)
 │   │       ├── direction (optional, "sent"/"received")
 │   │       ├── status (optional, "pending"/"confirmed"/"read"/"failed"/"rejected")
-│   │       ├── peerAddress (optional, Address/Name)
+│   │       ├── peerAddress (optional, string | Address/Name) - Can be simple string (name/address) or full object
 │   │       ├── msgType (optional, 1/3)
 │   │       ├── contentType (optional, "text"/"zip"/"wts"/"wip")
 │   │       ├── decryptedOnly (optional, boolean)
@@ -81,6 +82,9 @@ messenger_operation (Messenger Operations)
 │   │       ├── sortOrder (optional, "asc"/"desc")
 │   │       ├── limit (optional, number)
 │   │       ├── offset (optional, number)
+│   │       ├── hasLastReceivedIndexOnly (optional, boolean) - Only return messages with lastReceivedLeafIndex
+│   │       ├── lastReceivedIndexMin (optional, number) - Min lastReceivedLeafIndex
+│   │       ├── lastReceivedIndexMax (optional, number) - Max lastReceivedLeafIndex
 │   │       └── account (optional, string)
 │   ├── "extract_zip_messages"
 │   │   ├── account (optional, string)
@@ -89,9 +93,7 @@ messenger_operation (Messenger Operations)
 │   ├── "generate_wts"
 │   │   └── params (required, WtsGenerationParams)
 │   │       ├── myAccount (required, string) - Account name or address
-│   │       ├── peerAccount (required)
-│   │       │   ├── name_or_address (required, Address/Name, string)
-│   │       │   └── local_mark_first (optional, boolean)
+│   │       ├── peerAccount (required, string | Address/Name) - Can be simple string (name/address) or full object
 │   │       ├── range (optional, Range)
 │   │       │   ├── type (required, "time"/"messageId"/"seqIndex")
 │   │       │   ├── start (required, number/string)
@@ -118,20 +120,12 @@ messenger_operation (Messenger Operations)
 │   │   ├── account (optional, string)
 │   │   └── blacklist (required, BlacklistOperation)
 │   │       ├── op (required, "add"/"remove"/"clear"/"get"/"exist")
-│   │       └── users (optional, ManyAccountOrMark_Address)
-│   │           ├── entities (required, AccountOrMark_Address[])
-│   │           │   ├── name_or_address (optional, string)
-│   │           │   └── local_mark_first (optional, boolean)
-│   │           └── check_all_founded (optional, boolean)
+│   │       └── users (optional, string[] | ManyAccountOrMark_Address) - Can be array of strings (names/addresses) or full object
 │   ├── "friendslist"
 │   │   ├── account (optional, string)
 │   │   └── friendslist (required, FriendslistOperation)
 │   │       ├── op (required, "add"/"remove"/"clear"/"get"/"exist")
-│   │       └── users (optional, ManyAccountOrMark_Address)
-│   │           ├── entities (required, AccountOrMark_Address[])
-│   │           │   ├── name_or_address (optional, string)
-│   │           │   └── local_mark_first (optional, boolean)
-│   │           └── check_all_founded (optional, boolean)
+│   │       └── users (optional, string[] | ManyAccountOrMark_Address) - Can be array of strings (names/addresses) or full object
 │   └── "guardlist"
 │       ├── account (optional, string)
 │       └── guardlist (required, GuardlistOperation)
@@ -139,6 +133,12 @@ messenger_operation (Messenger Operations)
 │           └── guards (optional, GuardParam[])
 │               ├── guard (required, string)
 │               └── passportValiditySeconds (required, number)
+│   └── "settings"
+│       ├── account (optional, string)
+│       └── settings (required, SettingsOperation)
+│           ├── op (required, "get"/"set")
+│           ├── allowStrangerMessages (optional, boolean) - for "set" operation
+│           └── maxInboxSize (optional, number) - Maximum number of server-staged messages per user, for "set" operation
 └── (no other top-level fields)
 ```
 
@@ -192,8 +192,23 @@ Send encrypted text message to specified recipient.
 ```json
 {
   "operation": "send_message",
+  "to": "friend_account",
+  "content": "Hello! How are you?"
+}
+```
+
+---
+
+#### Example 2.1b: Send Using Full Object Format
+
+**Prompt**: Send message using full object format with explicit local_mark_first control.
+
+```json
+{
+  "operation": "send_message",
   "to": {
-    "name_or_address": "friend_account"
+    "name_or_address": "friend_account",
+    "local_mark_first": true
   },
   "content": "Hello! How are you?"
 }
@@ -240,6 +255,24 @@ Send encrypted text message to specified recipient.
 }
 ```
 
+**Response**: Returns send result including message ID, status, Merkle proof data, and last received leaf index.
+
+```json
+{
+  "messageId": "msg_abc123",
+  "status": "confirmed",
+  "merkleData": {
+    "leafIndex": 5,
+    "prevRoot": "0xabc...",
+    "newRoot": "0xdef...",
+    "serverSignature": "0x123...",
+    "serverTimestamp": 1704067200000,
+    "serverPublicKey": "0x456..."
+  },
+  "lastReceivedLeafIndex": 4
+}
+```
+
 ---
 
 ## Example 3: Send File
@@ -257,9 +290,7 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 ```json
 {
   "operation": "send_file",
-  "to": {
-    "name_or_address": "friend_account"
-  },
+  "to": "friend_account",
   "filePath": "./report.pdf"
 }
 ```
@@ -273,9 +304,7 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 ```json
 {
   "operation": "send_file",
-  "to": {
-    "name_or_address": "alice"
-  },
+  "to": "alice",
   "filePath": "./service.wip",
   "options": {
     "fileName": "service_description.wip",
@@ -293,9 +322,7 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 ```json
 {
   "operation": "send_file",
-  "to": {
-    "name_or_address": "bob"
-  },
+  "to": "bob",
   "filePath": "./contract.docx",
   "options": {
     "guardAddress": "file_guard",
@@ -334,9 +361,7 @@ View message history, supporting various filter conditions.
 {
   "operation": "watch_messages",
   "filter": {
-    "peerAddress": {
-      "name_or_address": "alice"
-    },
+    "peerAddress": "alice",
     "direction": "received",
     "sortOrder": "desc",
     "limit": 50
@@ -435,9 +460,7 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": {
-      "name_or_address": "peer_account"
-    },
+    "peerAccount": "peer_account",
     "outputDir": "./wts/"
   }
 }
@@ -454,9 +477,7 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": {
-      "name_or_address": "peer_account"
-    },
+    "peerAccount": "peer_account",
     "range": {
       "type": "time",
       "start": 1704067200000,
@@ -479,9 +500,7 @@ Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files con
   "operation": "generate_wts",
   "params": {
     "myAccount": "my_account",
-    "peerAccount": {
-      "name_or_address": "peer_account"
-    },
+    "peerAccount": "peer_account",
     "range": {
       "type": "messageId",
       "start": "msg_100",
@@ -722,6 +741,28 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ---
 
+#### Example 11.5: Add Multiple Users with Full Object Format
+
+**Prompt**: Add multiple users to blacklist using full object format with explicit control.
+
+```json
+{
+  "operation": "blacklist",
+  "blacklist": {
+    "op": "add",
+    "users": {
+      "entities": [
+        { "name_or_address": "user1", "local_mark_first": true },
+        { "name_or_address": "user2", "local_mark_first": false }
+      ],
+      "check_all_founded": true
+    }
+  }
+}
+```
+
+---
+
 ## Example 12: Friendslist Management
 
 ### Feature Description
@@ -777,11 +818,118 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ---
 
+#### Example 12.4: Add Multiple Friends with Full Object Format
+
+**Prompt**: Add multiple friends using full object format with explicit control.
+
+```json
+{
+  "operation": "friendslist",
+  "friendslist": {
+    "op": "add",
+    "users": {
+      "entities": [
+        { "name_or_address": "alice", "local_mark_first": true },
+        { "name_or_address": "bob", "local_mark_first": true }
+      ],
+      "check_all_founded": true
+    }
+  }
+}
+```
+
+---
+
 ## Example 13: Guardlist Management
 
 ### Feature Description
 
 Manage Guard list, including adding, removing, and viewing Guards. Guard list is used for message verification.
+
+---
+
+## Example 14: Settings Management
+
+### Feature Description
+
+Manage messenger settings, including viewing and updating inbox size limits and stranger message preferences.
+
+### Examples
+
+#### Example 14.1: Get Current Settings
+
+**Prompt**: View current messenger settings.
+
+```json
+{
+  "operation": "settings",
+  "settings": {
+    "op": "get"
+  }
+}
+```
+
+**Response**: Returns current settings including server limits.
+
+```json
+{
+  "allowStrangerMessages": true,
+  "maxInboxSize": 20,
+  "serverMinInboxSizeLimit": 20,
+  "serverMaxInboxSizeLimit": 200,
+  "serverDefaultAllowStrangerMessages": false
+}
+```
+
+---
+
+#### Example 14.2: Update Settings
+
+**Prompt**: Set max inbox size to 500 and disable messages from strangers.
+
+```json
+{
+  "operation": "settings",
+  "settings": {
+    "op": "set",
+    "maxInboxSize": 500,
+    "allowStrangerMessages": false
+  }
+}
+```
+
+---
+
+#### Example 14.3: Update Single Setting
+
+**Prompt**: Only update max inbox size to 2000.
+
+```json
+{
+  "operation": "settings",
+  "account": "my_account",
+  "settings": {
+    "op": "set",
+    "maxInboxSize": 2000
+  }
+}
+```
+
+---
+
+#### Example 14.4: Enable Stranger Messages
+
+**Prompt**: Allow receiving messages from strangers.
+
+```json
+{
+  "operation": "settings",
+  "settings": {
+    "op": "set",
+    "allowStrangerMessages": true
+  }
+}
+```
 
 ### Examples
 
