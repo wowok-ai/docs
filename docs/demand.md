@@ -79,44 +79,35 @@ Demand Component
 │   │   ├── op: "remove"
 │   │   │   └── guard (array of strings)
 │   │   └── op: "clear"
-│   ├── owner_receive (optional)
-│   │   ├── Option 1: "recently" (string)
-│   │   ├── Option 2: Array of Received Objects
-│   │   │   └── [object]
-│   │   │       ├── id (string)
-│   │   │       └── type (string)
-│   │   └── Option 3: Received Balance Object
+│   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recent objects
+│   │   ├── Option 2: Array of received objects
+│   │   │   └── [{ id: "object_id", type: "object_type" }]
+│   │   └── Option 3: Received balance object
 │   │       ├── balance (number or string)
 │   │       ├── token_type (string)
-│   │       └── received (array)
-│   │           └── [item]
-│   │               ├── id (string)
-│   │               ├── balance (number or string)
-│   │               └── payment (string)
-│   └── um (string or null, optional)
-├── env (optional)
-│   ├── account (string, optional)
-│   ├── permission_guard (array of strings, optional)
-│   ├── no_cache (boolean, optional)
-│   ├── network (string, optional: "localnet", "testnet")
-│   └── referrer (string, optional)
-└── submission (optional)
-    ├── type: "submission"
-    ├── guard (array)
-    │   └── [guard_item]
-    │       ├── object (string)
-    │       └── impack (boolean)
-    └── submission (array)
-        └── [submission_item]
-            ├── guard (string)
-            └── submission (array)
-                └── [guard_table_item]
-                    ├── identifier (number, 0-255)
-                    ├── b_submission (boolean)
-                    ├── value_type (string or number)
-                    ├── value (optional)
-                    ├── name (string, optional)
-                    └── object_type (optional)
+│   │       └── received (array of received items)
+│   └── um (Contact object, optional)
+│       ├── Option 1: Contact object name or ID (string)
+│       └── Option 2: null (to unbind contact)
+├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
+└── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
 ```
 
 ---

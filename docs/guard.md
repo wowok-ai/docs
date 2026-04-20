@@ -271,15 +271,80 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
 
 ### Important Notes
 
-⚠️ **Guards are immutable once created!** Ensure your validation logic is correct before creating.
+#### ⚠️ Network and Account Configuration
 
-⚠️ **Root must return Bool type**, otherwise validation will fail.
+All examples in this document use the **testnet** network and **default account** (empty string `""`). When using in production, please configure according to your actual environment:
 
-⚠️ **Identifier range is 0-255**, values outside this range will cause errors.
+```json
+{
+  "operation_type": "guard",
+  "data": { ... },
+  "env": {
+    "account": "",              // Empty string for default account, or use account name/address
+    "network": "testnet"        // Options: "testnet" | "mainnet"
+  }
+}
+```
 
-⚠️ **Dependent Guards must already exist**, otherwise creation will fail.
+**Note**: If the `env` field is not specified, the operation will use the **default account** and the **last used network** for execution.
+
+#### ⚠️ Guard Creation Constraints
+
+- **Guards are immutable once created!** Ensure your validation logic is correct before creating.
+- **Root must return Bool type**, otherwise validation will fail.
+- **Identifier range is 0-255**, values outside this range will cause errors.
+- **Dependent Guards must already exist**, otherwise creation will fail.
 
 ### Examples
+
+#### Example 1.0: Always True Guard (Simplest Guard)
+
+**Prompt**: Create the simplest Guard that always returns true. This Guard has no validation logic and always passes. Useful for testing or as a placeholder Guard.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "always_true_guard",
+      "onChain": true
+    },
+    "description": "A simple guard that always returns true for testing purposes",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": false,
+        "value_type": "Bool",
+        "value": true
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "identifier",
+        "identifier": 0
+      }
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x3d0e02...6a5ad",
+  "type": "Guard",
+  "version": "10316067",
+  "change": "created"
+}
+```
+
+---
 
 #### Example 1.1: Minimal Guard (root only, no naming)
 
@@ -314,6 +379,10 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
 }
 ```
@@ -358,6 +427,10 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
 }
 ```
@@ -420,6 +493,10 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
 }
 ```
@@ -466,6 +543,10 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
       "guards": ["order_validation", "public_age_check"],
       "logic_or": false
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
 }
 ```
@@ -512,6 +593,10 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
       "guards": ["order_validation", "public_age_check"],
       "logic_or": true
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
 }
 ```

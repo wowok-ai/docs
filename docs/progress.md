@@ -51,13 +51,24 @@ progress
 │       │   └── message (string, optional)
 │       └── hold: false
 │           └── message (string, optional)
-├── env (object, optional)
-│   ├── account (string, optional)
-│   ├── permission_guard (array of strings, optional)
-│   ├── no_cache (boolean, optional)
-│   ├── network (string, optional)
-│   └── referrer (string, optional)
-└── submission (object, optional)
+├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
+└── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
 ```
 
 ---

@@ -63,12 +63,12 @@ personal
 │   │   ├── op: "replace"
 │   │   │   └── new_mark_object (New mark object ID)
 │   │   └── op: "destroy"
-└── env (optional)
-    ├── account (Account name/address)
-    ├── permission_guard (Permission Guard array)
-    ├── no_cache (Disable cache)
-    ├── network (Network: localnet/testnet)
-    └── referrer (Referrer ID)
+└── env (optional, execution environment)
+    ├── account (string, optional) - account name or address, empty string for default
+    ├── network (string, optional) - "testnet" or "mainnet"
+    ├── permission_guard (array, optional) - list of permission guard IDs
+    ├── no_cache (boolean, optional) - disable caching
+    └── referrer (string, optional) - referrer ID
 ```
 
 ---

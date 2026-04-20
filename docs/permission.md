@@ -187,11 +187,50 @@ permission (Permission Object)
 │   │   └── addresses (admin addresses)
 │   ├── apply (apply to objects, optional)
 │   ├── builder (transfer ownership, optional)
-│   ├── owner_receive (unwrap and send to owner, optional)
+│   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recent objects
+│   │   ├── Option 2: Array of received objects
+│   │   │   └── [{ id: "object_id", type: "object_type" }]
+│   │   └── Option 3: Received balance object
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string)
+│   │       └── received (array of received items)
 │   └── um (Contact object, optional)
+│       ├── Option 1: Contact object name or ID (string)
+│       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
 └── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
 ```
+
+---
+
+### ⚠️ Important Note About Submission
+
+If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+
+1. Complete all required submission data within the `submission` structure
+2. Resubmit the operation with the completed submission data
+3. **Do not modify any other parts of the structure** - only fill in the required submission values
+
+The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
+
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -232,7 +271,22 @@ Create a new Permission object. You can set the name, description, and tags. The
     "object": {
       "name": "my_permission"
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x414d0d...88eb0c",
+  "type": "Permission",
+  "version": "10316068",
+  "change": "created"
 }
 ```
 
@@ -250,7 +304,22 @@ Create a new Permission object. You can set the name, description, and tags. The
       "name": "service_team_permission"
     },
     "description": "Service team permission management - responsible for service creation, sales, and customer operations"
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x43f904...0df93",
+  "type": "Permission",
+  "version": "10316069",
+  "change": "created"
 }
 ```
 
@@ -268,7 +337,22 @@ Create a new Permission object. You can set the name, description, and tags. The
       "name": "design_team_permission",
       "tags": ["design", "team", "internal", "creative"]
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x0bfbcf...c8295",
+  "type": "Permission",
+  "version": "10316070",
+  "change": "created"
 }
 ```
 
@@ -311,7 +395,22 @@ Add, remove, or set administrators for the Permission object. Only the object ow
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x414d0d...88eb0c",
+  "type": "Permission",
+  "version": "10316071",
+  "change": "mutated"
 }
 ```
 
@@ -334,7 +433,22 @@ Add, remove, or set administrators for the Permission object. Only the object ow
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x414d0d...88eb0c",
+  "type": "Permission",
+  "version": "10316072",
+  "change": "mutated"
 }
 ```
 
@@ -358,7 +472,22 @@ Add, remove, or set administrators for the Permission object. Only the object ow
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x414d0d...88eb0c",
+  "type": "Permission",
+  "version": "10316073",
+  "change": "mutated"
 }
 ```
 
@@ -402,7 +531,22 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10318774",
+  "change": "mutated"
 }
 ```
 
@@ -428,7 +572,22 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10319086",
+  "change": "mutated"
 }
 ```
 
@@ -452,7 +611,22 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
         ]
       }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10319087",
+  "change": "mutated"
 }
 ```
 
@@ -492,7 +666,22 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
       "entity": { "name_or_address": "product_manager" },
       "index": [300]
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10319645",
+  "change": "mutated"
 }
 ```
 
@@ -512,7 +701,22 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
       "entity": { "name_or_address": "marketing_manager" },
       "index": [300, 301, 305]
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10319887",
+  "change": "mutated"
 }
 ```
 
@@ -532,7 +736,22 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
       "entity": { "name_or_address": "marketing_manager" },
       "index": [305]
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10319888",
+  "change": "mutated"
 }
 ```
 
@@ -572,7 +791,22 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
       "index": 1001,
       "remark": "Machine Node 'order confirm': confirm operation"
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x030c79...9b5faa",
+  "type": "Permission",
+  "version": "10319890",
+  "change": "mutated"
 }
 ```
 
@@ -591,7 +825,22 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
       "op": "remove",
       "index": 1001
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x030c79...9b5faa",
+  "type": "Permission",
+  "version": "10319891",
+  "change": "mutated"
 }
 ```
 
@@ -609,7 +858,22 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
     "remark": {
       "op": "clear"
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x030c79...9b5faa",
+  "type": "Permission",
+  "version": "10319892",
+  "change": "mutated"
 }
 ```
 
@@ -650,7 +914,22 @@ Perform advanced operations on entity permissions, including swapping permission
       "entity1": { "name_or_address": "senior_marketer" },
       "entity2": { "name_or_address": "junior_marketer" }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10321162",
+  "change": "mutated"
 }
 ```
 
@@ -670,7 +949,22 @@ Perform advanced operations on entity permissions, including swapping permission
       "entity1": { "name_or_address": "role_a" },
       "entity2": { "name_or_address": "role_b" }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10321754",
+  "change": "mutated"
 }
 ```
 
@@ -690,7 +984,22 @@ Perform advanced operations on entity permissions, including swapping permission
       "entity1": { "name_or_address": "old_manager" },
       "entity2": { "name_or_address": "new_manager" }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10322233",
+  "change": "mutated"
 }
 ```
 
@@ -709,7 +1018,22 @@ Perform advanced operations on entity permissions, including swapping permission
       "op": "del",
       "entity": { "name_or_address": "former_employee" }
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10322234",
+  "change": "mutated"
 }
 ```
 
@@ -743,7 +1067,22 @@ Apply the current Permission object to other WoWok objects so that these objects
   "data": {
     "object": "marketing_team_permission",
     "apply": ["service_marketing_workflow"]
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x40cfa6...35e653",
+  "type": "Repository",
+  "version": "10322920",
+  "change": "mutated"
 }
 ```
 
@@ -759,7 +1098,22 @@ Apply the current Permission object to other WoWok objects so that these objects
   "data": {
     "object": "marketing_team_permission",
     "apply": ["service_marketing_workflow", "customer_service_workflow", "campaign_management_repo"]
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    { "object": "0x40cfa6...35e653", "type": "Repository", "change": "mutated" },
+    { "object": "0xc44fbd...c2046", "type": "Repository", "change": "mutated" }
+  ]
 }
 ```
 
@@ -793,13 +1147,186 @@ Transfer ownership of the Permission object to another user. Only the current ow
   "data": {
     "object": "my_permission",
     "builder": { "name_or_address": "new_owner" }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x030c79...9b5faa",
+  "type": "Permission",
+  "version": "10323203",
+  "change": "mutated"
 }
 ```
 
 ---
 
-## Sub-feature 9: Combined Operations
+## Sub-feature 9: Set Contact Object (um)
+
+### Feature Description
+
+Bind a Contact object to the Permission object. The Contact object is used for instant messaging and communication. **Only the object owner (builder) can perform this operation**.
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
+| `data.um` | string/null | Yes | Contact object name or ID | Set to `null` to unbind |
+
+---
+
+### Examples
+
+#### Example 9.1: Bind Contact Object
+
+**Prerequisites**: Before binding a Contact object, you need to create a Contact object first.
+
+**Step 1: Create Contact Object**
+
+See [Contact Documentation](contact.md) for more details.
+
+```json
+{
+  "operation_type": "contact",
+  "data": {
+    "object": {
+      "name": "test_contact_um"
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Step 2: Bind Contact to Permission**
+
+**Prompt**: Bind Contact object "test_contact_um" to Permission object "test_permission_for_table".
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "test_permission_for_table",
+    "um": "test_contact_um"
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10355080",
+  "change": "mutated"
+}
+```
+
+---
+
+## Sub-feature 10: Receive Objects (owner_receive)
+
+### Feature Description
+
+Receive objects (such as CoinWrapper) sent to the Permission object and unwrap them to transfer to the Permission owner (builder). This is typically used to collect payments or funds sent to the Permission object. **Only the object owner (builder) can perform this operation**.
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------|------|------|------|------|
+| `operation_type` | string | Yes | Operation type | Fixed value "permission" |
+| `data.object` | string/object | Yes | Existing Permission object name or ID | |
+| `data.owner_receive` | string/array/object | Yes | Objects to receive | `"recently"` for all recent objects, or array of specific objects |
+
+---
+
+### Examples
+
+#### Example 10.1: Receive All Recent Objects
+
+**Prerequisites**: Before using `owner_receive`, you need to create a Payment object to send funds to the Permission object.
+
+**Step 1: Create Payment Object**
+
+See [Payment Documentation](payment.md) for more details.
+
+```json
+{
+  "operation_type": "payment",
+  "data": {
+    "object": {
+      "name": "test_payment_for_perm"
+    },
+    "revenue": [
+      {
+        "recipient": {
+          "name_or_address": "test_permission_for_table"
+        },
+        "amount": {
+          "balance": 1000000
+        }
+      }
+    ],
+    "info": {
+      "remark": "Test payment",
+      "index": 1
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Step 2: Receive Objects**
+
+**Prompt**: Receive all recently sent objects to Permission object "test_permission_for_table" and transfer them to the owner.
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "test_permission_for_table",
+    "owner_receive": "recently"
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x9233e7...1699de",
+  "type": "Permission",
+  "version": "10356781",
+  "change": "mutated"
+}
+```
+
+---
+
+## Sub-feature 11: Combined Operations
 
 ### Feature Description
 
@@ -845,7 +1372,22 @@ Perform multiple operations in a single call, such as creating an object while c
       "index": 1001,
       "remark": "Machine Node 'order confirm': confirm operation"
     }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x19f825...e7eb5",
+  "type": "Permission",
+  "version": "10323983",
+  "change": "created"
 }
 ```
 
@@ -853,19 +1395,45 @@ Perform multiple operations in a single call, such as creating an object while c
 
 ## Important Notes
 
-⚠️ **Built-in permissions (0-999)**: Reserved for WoWok core system objects.
+### ⚠️ Network and Account Configuration
 
-⚠️ **User-defined permissions (1000-65535)**: For your custom business needs.
+All examples in this document use the **testnet** network and **default account** (empty string `""`). When using in production, please configure according to your actual environment:
 
-⚠️ **All object operations use these permissions**: Every WoWok object's operations are controlled by these permission indexes.
+```json
+{
+  "operation_type": "permission",
+  "data": { ... },
+  "env": {
+    "account": "",              // Empty string for default account, or use account name/address
+    "network": "testnet"        // Options: "testnet" | "mainnet"
+  }
+}
+```
 
-⚠️ **Use `wowok_buildin_info`**: Query the tool for the most up-to-date permission list and detailed descriptions.
+**Note**: If the `env` field is not specified, the operation will use the **default account** and the **last used network** for execution.
+```
 
-⚠️ **table and entity operations require administrator permission!**
+### ⚠️ Permission Index Ranges
 
-⚠️ **Only the object owner (builder) can manage admin!**
+- **Built-in permissions (0-999)**: Reserved for WoWok core system objects.
+- **User-defined permissions (1000-65535)**: For your custom business needs.
 
-⚠️ **After transferring ownership, the original owner no longer has permissions!**
+### ⚠️ Permission Requirements
+
+- **table and entity operations require administrator permission!**
+- **Only the object owner (builder) can manage admin!**
+- **After transferring ownership, the original owner no longer has permissions!**
+
+### ⚠️ Data Format Notes
+
+- `addresses` field must use object format: `{"entities": [{"name_or_address": "..."}]}`
+- `entity`, `entity1`, `entity2`, `builder` fields must use object format: `{"name_or_address": "..."}`
+- `table.op` must use full operation names: `"add perm by index"`, `"remove perm by entity"`, etc.
+- `index` field in entity-centric operations must be an array: `[300, 301]`
+
+### ⚠️ Tool Reference
+
+- Use `wowok_buildin_info` tool to query the most up-to-date permission list and detailed descriptions.
 ---
 
 ## Related Components

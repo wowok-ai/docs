@@ -53,11 +53,50 @@ repository (Repository Object)
 │   ├── data_add (add data items, optional)
 │   ├── data_remove (remove data items, optional)
 │   ├── rewards (reward objects, optional)
-│   ├── owner_receive (unwrap and send to owner, optional)
+│   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recent objects
+│   │   ├── Option 2: Array of received objects
+│   │   │   └── [{ id: "object_id", type: "object_type" }]
+│   │   └── Option 3: Received balance object
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string)
+│   │       └── received (array of received items)
 │   └── um (Contact object, optional)
+│       ├── Option 1: Contact object name or ID (string)
+│       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
 └── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
 ```
+
+---
+
+### ⚠️ Important Note About Submission
+
+If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+
+1. Complete all required submission data within the `submission` structure
+2. Resubmit the operation with the completed submission data
+3. **Do not modify any other parts of the structure** - only fill in the required submission values
+
+The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
+
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 

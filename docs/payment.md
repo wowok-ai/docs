@@ -51,6 +51,11 @@ payment (Payment Object)
 │       ├── for_object (optional, related object)
 │       └── for_guard (optional, Guard verification)
 └── env (optional, execution environment)
+    ├── account (string, optional) - account name or address, empty string for default
+    ├── network (string, optional) - "testnet" or "mainnet"
+    ├── permission_guard (array, optional) - list of permission guard IDs
+    ├── no_cache (boolean, optional) - disable caching
+    └── referrer (string, optional) - referrer ID
 ```
 
 ---
