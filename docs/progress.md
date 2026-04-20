@@ -73,6 +73,20 @@ progress
 
 ---
 
+### ⚠️ Important Note About Submission
+
+If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+
+1. Complete all required submission data within the `submission` structure
+2. Resubmit the operation with the completed submission data
+3. **Do not modify any other parts of the structure** - only fill in the required submission values
+
+The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
+
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+
+---
+
 ## Complete Tool Call Structure
 
 Progress operations use the following top-level structure:

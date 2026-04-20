@@ -36,6 +36,135 @@ Arbitration operations use the following top-level structure:
 
 ---
 
+## Schema Tree
+
+```
+arbitration (Arbitration Object)
+├── operation_type: "arbitration" (fixed value)
+├── data (Arbitration data definition)
+│   ├── object (object definition, required)
+│   │   ├── Option 1: Reference existing object (string) - object name or ID
+│   │   └── Option 2: Create new object (object)
+│   │       ├── name (string, optional) - local mark name, max 64 characters
+│   │       ├── tags (array, optional) - tags array
+│   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
+│   │       ├── replaceExistName (boolean, optional) - force claim existing name
+│   │       ├── type_parameter (string, optional) - token type, default: 0x2::wow::WOW
+│   │       └── permission (string | object, optional) - Permission object ID/name or new permission object
+│   │           ├── Option 1: Existing permission ID/name (string)
+│   │           └── Option 2: New permission object (object)
+│   │               ├── name (string, optional) - permission name
+│   │               ├── tags (array, optional) - tags array
+│   │               ├── onChain (boolean, optional) - whether to sync name to blockchain
+│   │               └── replaceExistName (boolean, optional) - force claim existing name
+│   ├── description (string, optional) - arbitration description, max 65535 characters
+│   ├── location (string, optional) - arbitration location, max 256 characters
+│   ├── fee (number, optional) - arbitration fee in smallest units
+│   ├── pause (boolean, optional) - whether to pause arbitration
+│   ├── dispute (object, optional) - create dispute for order
+│   │   ├── order (string, required) - order object ID or name
+│   │   ├── description (string, optional) - dispute description, max 65535 characters
+│   │   ├── proposition (array, required) - list of dispute propositions, each max 256 characters
+│   │   ├── fee (object | string, required) - dispute processing fee
+│   │   │   ├── Option 1: Balance object (object)
+│   │   │   │   └── balance (number) - balance amount
+│   │   │   └── Option 2: Coin object ID (string)
+│   │   └── namedArb (object, optional) - name for the newly created Arb object
+│   │       ├── name (string, optional) - arb object name
+│   │       ├── tags (array, optional) - tags array
+│   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
+│   │       └── replaceExistName (boolean, optional) - force claim existing name
+│   ├── confirm (object, optional) - confirm arbitration materials
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   └── voting_deadline (number | null, required) - voting deadline in milliseconds
+│   ├── voting_deadline_change (object, optional) - change voting deadline
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   └── voting_deadline (number | null, required) - new voting deadline in milliseconds
+│   ├── vote (object, optional) - vote on propositions
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   ├── votes (array, required) - vote list, each value 0-255
+│   │   └── voting_guard (string, optional) - voting Guard object ID/name
+│   ├── feedback (object, optional) - provide arbitration feedback
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
+│   ├── arbitration (object, optional) - provide final arbitration result
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   ├── feedback (string, required) - arbitration feedback, max 65535 characters
+│   │   └── indemnity (number, required) - compensation amount in smallest units
+│   ├── reset (object, optional) - apply to restart arbitration
+│   │   ├── arb (string, required) - Arb object ID or name
+│   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
+│   ├── arb_withdraw (object, optional) - withdraw arbitration fees
+│   │   └── arb (string, required) - Arb object ID or name
+│   ├── fees_transfer (object, optional) - distribute arbitration fees
+│   │   ├── to (object, required) - receiving object
+│   │   │   ├── Option 1: Allocation object (object)
+│   │   │   │   └── allocation (string) - Allocation object ID/name
+│   │   │   └── Option 2: Treasury object (object)
+│   │   │       └── treasury (string) - Treasury object ID/name
+│   │   ├── payment_remark (string, required) - payment remark, max 64 characters
+│   │   ├── payment_index (number, required) - payment index
+│   │   └── newPayment (object, optional) - name for new Payment object
+│   │       ├── name (string, optional) - payment name
+│   │       ├── tags (array, optional) - tags array
+│   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
+│   │       └── replaceExistName (boolean, optional) - force claim existing name
+│   ├── usage_guard (string | null, optional) - Guard for user verification, null to unbind
+│   ├── voting_guard (object, optional) - manage voting Guards
+│   │   ├── op (string, required) - operation type: "add", "set", "remove", "clear"
+│   │   └── guards (array, required for add/set/remove) - list of VotingGuard objects or Guard names
+│   │       └── VotingGuard object (for add/set)
+│   │           ├── guard (string) - Guard object ID or name
+│   │           └── vote_weight (object) - vote weight
+│   │               ├── Option 1: FixedValue (object)
+│   │               │   └── FixedValue (number) - fixed weight value 0-65535
+│   │               └── Option 2: GuardIdentifier (object)
+│   │                   └── GuardIdentifier (number) - Guard table identifier 0-255
+│   ├── owner_receive (string | object | array, optional) - receive objects to owner
+│   │   ├── Option 1: "recently" (string) - receive all recent objects
+│   │   ├── Option 2: ReceivedBalance object (object)
+│   │   │   ├── balance (number or string)
+│   │   │   ├── token_type (string)
+│   │   │   └── received (array of received items)
+│   │   └── Option 3: Array of received objects
+│   │       └── [{ id: "object_id", type: "object_type" }]
+│   └── um (string | null, optional) - Contact object ID/name, null to unbind
+├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
+└── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
+```
+
+---
+
+### ⚠️ Important Note About Submission
+
+If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+
+1. Complete all required submission data within the `submission` structure
+2. Resubmit the operation with the completed submission data
+3. **Do not modify any other parts of the structure** - only fill in the required submission values
+
+The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
+
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+
+---
+
 ## Sub-feature 1: Create New Arbitration
 
 ### Feature Description
@@ -52,7 +181,6 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 | `data.object.tags` | array | No | Tags array | String array |
 | `data.object.onChain` | boolean | No | Whether to mark on-chain | |
 | `data.object.replaceExistName` | boolean | No | Replace existing name | |
-| `data.object.type` | string | Yes | Object type | Must be "Arbitration" |
 | `data.object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
 | `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
 | `data.description` | string | No | Arbitration description | Max 65535 characters |
@@ -65,7 +193,7 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 
 #### Example 1.1: Create Simple Arbitration
 
-**Prompt**: Create a new arbitration named "service_arbitration" with: 1) Type "Arbitration", 2) Permission "existing_permission", 3) Description "Service dispute resolution", 4) Location "Global online arbitration", 5) Fee at 1000000000 (1 WOW).
+**Prompt**: Create a new arbitration named "service_arbitration" with: 1) Permission "existing_permission", 2) Description "Service dispute resolution", 3) Location "Global online arbitration", 4) Fee at 1000000000 (1 WOW).
 
 ```json
 {
@@ -73,7 +201,6 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
   "data": {
     "object": {
       "name": "service_arbitration",
-      "type": "Arbitration",
       "permission": "existing_permission",
       "type_parameter": "0x2::wow::WOW",
       "tags": ["arbitration", "service"],
@@ -88,7 +215,7 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 
 #### Example 1.2: Create Arbitration with New Permission and Guards
 
-**Prompt**: Create arbitration "product_arbitration" with: 1) Type "Arbitration", 2) New permission named "arb_permission", 3) Description "Product quality arbitration", 4) Usage guard "eligibility_guard", 5) Voting guards: "senior_judge" with FixedValue 100, "junior_judge" with GuardIdentifier 5.
+**Prompt**: Create arbitration "product_arbitration" with: 1) New permission named "arb_permission", 2) Description "Product quality arbitration", 3) Usage guard "eligibility_guard", 4) Voting guards: "senior_judge" with FixedValue 100, "junior_judge" with GuardIdentifier 5.
 
 ```json
 {
@@ -96,7 +223,6 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
   "data": {
     "object": {
       "name": "product_arbitration",
-      "type": "Arbitration",
       "permission": {
         "name": "arb_permission"
       }
@@ -777,8 +903,7 @@ Receive objects sent to this Arbitration object and unpack them to send to the p
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
-| `data.owner_receive.objects` | array | No | List of object IDs to receive | |
-| `data.owner_receive.recent` | boolean | No | Whether to receive recent objects | |
+| `data.owner_receive` | string/object/array | No | Receive objects configuration | "recently" or ReceivedBalance object or array |
 
 ---
 
@@ -793,25 +918,7 @@ Receive objects sent to this Arbitration object and unpack them to send to the p
   "operation_type": "arbitration",
   "data": {
     "object": "service_arbitration",
-    "owner_receive": {
-      "recent": true
-    }
-  }
-}
-```
-
-#### Example 15.2: Receive Specific Objects
-
-**Prompt**: For "service_arbitration", receive specific objects by ID.
-
-```json
-{
-  "operation_type": "arbitration",
-  "data": {
-    "object": "service_arbitration",
-    "owner_receive": {
-      "objects": ["0xabc123...def456", "0x123abc...456def"]
-    }
+    "owner_receive": "recently"
   }
 }
 ```
@@ -830,7 +937,7 @@ Execute multiple operations in a single call.
 
 #### Example 16.1: Complete Arbitration Setup
 
-**Prompt**: Create "complete_arbitration" with: 1) Type "Arbitration", 2) Permission "arbitration_permission", 3) Description "Full-featured arbitration", 4) Location "Online", 5) Fee 1000000000 (1 WOW), 6) Usage guard "eligibility_guard", 7) Add voting guard "head_judge" with FixedValue 100, 8) Bind contact "arb_support".
+**Prompt**: Create "complete_arbitration" with: 1) Permission "arbitration_permission", 2) Description "Full-featured arbitration", 3) Location "Online", 4) Fee 1000000000 (1 WOW), 5) Usage guard "eligibility_guard", 6) Add voting guard "head_judge" with FixedValue 100, 7) Bind contact "arb_support".
 
 ```json
 {
@@ -838,7 +945,6 @@ Execute multiple operations in a single call.
   "data": {
     "object": {
       "name": "complete_arbitration",
-      "type": "Arbitration",
       "permission": "arbitration_permission",
       "type_parameter": "0x2::wow::WOW"
     },

@@ -35,6 +35,94 @@ Allocation operations use the following top-level structure:
 
 ---
 
+## Schema Tree
+
+```
+allocation (Allocation Object)
+├── operation_type: "allocation" (fixed value)
+├── data (Allocation data definition)
+│   ├── object (object definition, required)
+│   │   ├── Option 1: Reference existing object (string) - object name or ID
+│   │   └── Option 2: Create new object (object)
+│   │       ├── name (string, optional) - local mark name, max 64 characters
+│   │       ├── tags (array, optional) - tags array
+│   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
+│   │       ├── replaceExistName (boolean, optional) - force claim existing name
+│   │       └── type_parameter (string, optional) - token type, default: 0x2::wow::WOW
+│   ├── allocators (object, required for create) - fund allocator list
+│   │   ├── description (string, required) - allocators description, max 65535 characters
+│   │   ├── threshold (number, required) - threshold amount in smallest units
+│   │   └── allocators (array, required) - allocator list (1-100 allocators)
+│   │       └── Allocator object
+│   │           ├── guard (string, required) - Guard object ID or name
+│   │           ├── sharing (array, required) - sharing items (1-100 items)
+│   │           │   └── Sharing object
+│   │           │       ├── who (object, required) - recipient type
+│   │           │       │   ├── Option 1: GuardIdentifier (object)
+│   │           │       │   │   └── GuardIdentifier (number) - Guard table identifier 0-255
+│   │           │       │   ├── Option 2: Entity (object)
+│   │           │       │   │   └── Entity (object)
+│   │           │       │   │       └── name_or_address (string) - entity name or address
+│   │           │       │   └── Option 3: Signer (object)
+│   │           │       │       └── Signer (string) - fixed value "signer"
+│   │           │       ├── sharing (number, required) - sharing amount/rate in smallest units
+│   │           │       └── mode (string, required) - allocation mode: "Amount", "Rate", or "Surplus"
+│   │           └── max (number | null, optional) - maximum allocation amount
+│   ├── coin (object | string, required for create) - initial deposit coin
+│   │   ├── Option 1: Balance object (object)
+│   │   │   └── balance (number) - balance amount
+│   │   └── Option 2: Coin object ID (string)
+│   ├── payment_info (object, required for create) - payment info
+│   │   ├── remark (string, required) - payment remark
+│   │   ├── index (number | string, required) - payment record index
+│   │   ├── for_object (string | null, optional) - payment for specific object
+│   │   └── for_guard (string | null, optional) - payment for specific guard
+│   ├── received_coins (string | object, optional) - receive funds configuration
+│   │   ├── Option 1: "recently" (string) - receive all recent coins
+│   │   └── Option 2: ReceivedBalance object (object)
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string)
+│   │       └── received (array of received items)
+│   │           └── Received item
+│   │               ├── id (string) - CoinWrapper object ID
+│   │               └── payment (string) - Payment object ID
+│   └── alloc_by_guard (string, optional) - Guard object ID/name to verify and execute distribution
+├── env (optional, execution environment)
+│   ├── account (string, optional) - account name or address, empty string for default
+│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
+└── submission (optional, submission data)
+    ├── type (string) - fixed value "submission"
+    ├── guard (array) - list of guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - submission data for guards
+        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255) - Guard table item identifier
+                ├── b_submission (boolean) - whether this item requires submission
+                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                ├── **value (any) - submitted value**
+                └── name (string, optional) - item name
+```
+
+---
+
+### ⚠️ Important Note About Submission
+
+If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+
+1. Complete all required submission data within the `submission` structure
+2. Resubmit the operation with the completed submission data
+3. **Do not modify any other parts of the structure** - only fill in the required submission values
+
+The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
+
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+
+---
+
 ## Sub-feature 1: Create New Allocation
 
 ### Feature Description
