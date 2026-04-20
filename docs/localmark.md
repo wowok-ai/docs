@@ -74,16 +74,29 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 #### Example 1.1: Add Minimal Mark (Address Only)
 
-**Prompt:** Add a mark for an address without a name or tags. Use abbreviated address format for display.
+**Prompt:** Add a mark for an address without a name or tags.
 
 ```json
 {
   "add": {
     "op": "add",
     "data": [
-      { "address": "0x1234567890abcdef...def1234567890abcdef" }
+      { "address": "0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82" }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "address": "0xe639...2e82",
+      "createdAt": 1776658023742,
+      "updatedAt": 1776658023742
+    }
+  ]
 }
 ```
 
@@ -98,10 +111,24 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice" },
-        "address": "0x1234567890abcdef...def1234567890abcdef"
+        "address": "0x531a921e6ec7ea894ee293f94ae03d586b167ed53ff4877599e41522ad92be66"
       }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "name": "alice",
+      "address": "0x531a...be66",
+      "createdAt": 1776658030346,
+      "updatedAt": 1776658030346
+    }
+  ]
 }
 ```
 
@@ -115,7 +142,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "address": "0x1234567890abcdef...def1234567890abcdef",
+        "address": "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
         "tags": ["friend", "designer"]
       }
     ]
@@ -123,9 +150,23 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "address": "0x2400...e3b3",
+      "tags": ["friend", "designer"],
+      "createdAt": 1776658033799,
+      "updatedAt": 1776658033799
+    }
+  ]
+}
+```
+
 #### Example 1.4: Add Complete Mark (Name + Address + Tags)
 
-**Prompt:** Add a complete mark with name "alice", address, and tags ["friend", "designer", "colleague"].
+**Prompt:** Add a complete mark with name "bob", address, and tags ["friend", "designer", "colleague"].
 
 ```json
 {
@@ -133,12 +174,27 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "name": { "value": "alice" },
-        "address": "0x1234567890abcdef...def1234567890abcdef",
+        "name": { "value": "bob" },
+        "address": "0x2bce0d2c3060e426ed93f65d0a7afbc7a0653e2813b972c088faaab9ce504937",
         "tags": ["friend", "designer", "colleague"]
       }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "name": "bob",
+      "address": "0x2bce...4937",
+      "tags": ["friend", "designer", "colleague"],
+      "createdAt": 1776658036962,
+      "updatedAt": 1776658036962
+    }
+  ]
 }
 ```
 
@@ -153,7 +209,7 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "data": [
       {
         "name": { "value": "alice", "replaceExistName": true },
-        "address": "0x1234567890abcdef...def1234567890abcdef",
+        "address": "0x03174f2f61766b2135c9822039fddd1ec0f5e11661e0805f1618fca08288b606",
         "tags": ["vip"]
       }
     ]
@@ -161,9 +217,24 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "name": "alice",
+      "address": "0x0317...b606",
+      "tags": ["vip"],
+      "createdAt": 1776658040182,
+      "updatedAt": 1776658040182
+    }
+  ]
+}
+```
+
 #### Example 1.6: Batch Add Multiple Marks
 
-**Prompt:** Add three marks in one call: 1) name "alice" with tags ["friend"], 2) name "bob" with tags ["colleague", "developer"], 3) address-only without name or tags.
+**Prompt:** Add three marks in one call: 1) name "charlie" with tags ["friend"], 2) name "dave" with tags ["colleague", "developer"], 3) address-only without name or tags.
 
 ```json
 {
@@ -171,20 +242,47 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "name": { "value": "alice" },
-        "address": "0x1234567890abcdef...def1234567890abcdef",
+        "name": { "value": "charlie" },
+        "address": "0x499773f65060e35c1b8acee9452083b2ee078155f02c39b30ec12ab4692bbb7a",
         "tags": ["friend"]
       },
       {
-        "name": { "value": "bob" },
-        "address": "0xabcdef1234567890...90abcdef1234567890",
+        "name": { "value": "dave" },
+        "address": "0xef686f7f13ce876f498b4fb293046620bf3754cc82541d7b06909ec53b479b3d",
         "tags": ["colleague", "developer"]
       },
       {
-        "address": "0x1111111111111111...111111111111111111111"
+        "address": "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f"
       }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "name": "charlie",
+      "address": "0x4997...bb7a",
+      "tags": ["friend"],
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    },
+    {
+      "name": "dave",
+      "address": "0xef68...9b3d",
+      "tags": ["colleague", "developer"],
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    },
+    {
+      "address": "0xa539...063f",
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    }
+  ]
 }
 ```
 
@@ -198,11 +296,25 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
     "op": "add",
     "data": [
       {
-        "address": "0x1234567890abcdef...def1234567890abcdef",
+        "address": "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35",
         "tags": ["contract", "important"]
       }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "add": [
+    {
+      "address": "0xfe92...aa35",
+      "tags": ["contract", "important"],
+      "createdAt": 1776658047449,
+      "updatedAt": 1776658047449
+    }
+  ]
 }
 ```
 
@@ -236,62 +348,152 @@ Remove one or more local marks by name or address.
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "remove": [
+    {
+      "name": "alice",
+      "address": "0x0317...b606",
+      "tags": ["vip"],
+      "createdAt": 1776658040182,
+      "updatedAt": 1776658040182
+    }
+  ]
+}
+```
+
 #### Example 2.2: Remove Single Mark by Address
 
-**Prompt:** Remove the mark with abbreviated address.
+**Prompt:** Remove the mark by address.
 
 ```json
 {
   "remove": {
     "op": "remove",
-    "names": ["0x1234567890abcdef...def1234567890abcdef"]
+    "names": ["0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82"]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "remove": [
+    {
+      "address": "0xe639...2e82",
+      "createdAt": 1776658023742,
+      "updatedAt": 1776658023742
+    }
+  ]
 }
 ```
 
 #### Example 2.3: Batch Remove Multiple Marks (Mixed Names and Addresses)
 
-**Prompt:** Remove three marks in one call: "alice", abbreviated address, and "bob".
+**Prompt:** Remove three marks in one call: "bob", address, and "charlie".
 
 ```json
 {
   "remove": {
     "op": "remove",
     "names": [
-      "alice",
-      "0xabcdef1234567890...90abcdef1234567890",
-      "bob"
+      "bob",
+      "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
+      "charlie"
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "remove": [
+    {
+      "address": "0x2400...e3b3",
+      "tags": ["friend", "designer"],
+      "createdAt": 1776658033799,
+      "updatedAt": 1776658033799
+    },
+    {
+      "name": "bob",
+      "address": "0x2bce...4937",
+      "tags": ["friend", "designer", "colleague"],
+      "createdAt": 1776658036962,
+      "updatedAt": 1776658036962
+    },
+    {
+      "name": "charlie",
+      "address": "0x4997...bb7a",
+      "tags": ["friend"],
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    }
+  ]
 }
 ```
 
 #### Example 2.4: Batch Remove Multiple Names
 
-**Prompt:** Remove three marks by their names: "alice", "bob", and "charlie".
+**Prompt:** Remove the mark by name "dave".
 
 ```json
 {
   "remove": {
     "op": "remove",
-    "names": ["alice", "bob", "charlie"]
+    "names": ["dave"]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "remove": [
+    {
+      "name": "dave",
+      "address": "0xef68...9b3d",
+      "tags": ["colleague", "developer"],
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    }
+  ]
 }
 ```
 
 #### Example 2.5: Batch Remove Multiple Addresses
 
-**Prompt:** Remove two marks by their abbreviated addresses.
+**Prompt:** Remove two marks by their addresses.
 
 ```json
 {
   "remove": {
     "op": "remove",
     "names": [
-      "0x1234567890abcdef...def1234567890abcdef",
-      "0xabcdef1234567890...90abcdef1234567890"
+      "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f",
+      "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35"
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "remove": [
+    {
+      "address": "0xa539...063f",
+      "createdAt": 1776658044403,
+      "updatedAt": 1776658044403
+    },
+    {
+      "address": "0xfe92...aa35",
+      "tags": ["contract", "important"],
+      "createdAt": 1776658047449,
+      "updatedAt": 1776658047449
+    }
+  ]
 }
 ```
 
@@ -320,6 +522,13 @@ Remove all local marks. This operation is irreversible, use with caution.
   "clear": {
     "op": "clear"
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "clear": true
 }
 ```
 

@@ -96,6 +96,13 @@ Add one or more local info entries. Each info entry includes name, default value
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "success": true
+}
+```
+
 #### Example 1.2: Add Info with Additional Contents
 
 **Prompt:** Add a shipping address info entry with name "shipping_address", default value "123 Main St, New York, NY 10001", and additional contents ["10001", "Contact: Alice Smith", "Phone: +1-234-567-8900"].
@@ -112,6 +119,12 @@ Add one or more local info entries. Each info entry includes name, default value
       }
     ]
   }
+}
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -131,6 +144,13 @@ Add one or more local info entries. Each info entry includes name, default value
       }
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -160,6 +180,12 @@ Add one or more local info entries. Each info entry includes name, default value
     ]
   }
 }
+
+**Execution Result:**
+```json
+{
+  "success": true
+}
 ```
 
 #### Example 1.5: Add Contact Info (Multiple Content Items)
@@ -183,6 +209,12 @@ Add one or more local info entries. Each info entry includes name, default value
       }
     ]
   }
+}
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -216,16 +248,30 @@ Remove one or more local info entries by name.
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "success": true
+}
+```
+
 #### Example 2.2: Batch Remove Multiple Info Entries
 
-**Prompt:** Remove three info entries in one call: "home_address", "work_address", and "old_phone_number".
+**Prompt:** Remove two info entries in one call: "home_address" and "phone_number".
 
 ```json
 {
   "remove": {
     "op": "remove",
-    "data": ["home_address", "work_address", "old_phone_number"]
+    "data": ["home_address", "phone_number"]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -249,29 +295,43 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 #### Example 3.1: Reset Info Contents
 
-**Prompt:** Reset the contents of "shipping_address" to ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"].
+**Prompt:** Reset the contents of "work_address" to ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"].
 
 ```json
 {
   "reset": {
     "op": "reset",
-    "name": "shipping_address",
+    "name": "work_address",
     "contents": ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"]
   }
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "success": true
+}
+```
+
 #### Example 3.2: Clear Info Content List (Keep Name and Default Value)
 
-**Prompt:** Clear the contents of "shipping_address", but keep the name and default value. Set the new contents to an empty array.
+**Prompt:** Clear the contents of "emergency_contact", but keep the name and default value. Set the new contents to an empty array.
 
 ```json
 {
   "reset": {
     "op": "reset",
-    "name": "shipping_address",
+    "name": "emergency_contact",
     "contents": []
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -290,6 +350,13 @@ Reset the content list of a specified info entry. This completely replaces the e
       "Address: 456 New St, Boston, MA 02101"
     ]
   }
+}
+```
+
+**Execution Result:**
+```json
+{
+  "success": true
 }
 ```
 
@@ -321,6 +388,13 @@ Remove all local info entries. This operation is irreversible, use with caution.
 }
 ```
 
+**Execution Result:**
+```json
+{
+  "success": true
+}
+```
+
 ---
 
 ## Query Local Info List
@@ -335,8 +409,8 @@ Remove all local info entries. This operation is irreversible, use with caution.
 
 ## Best Practices
 
-### 1. Use Encrypted Device
-Store local information on an encrypted device.
+### 1. Use Secure Sandbox or Encrypted Device
+Store local information on a secure sandbox environment or encrypted device.
 
 ### 2. Don't Share Device
 Don't store sensitive information on shared devices.
@@ -346,9 +420,6 @@ Don't store sensitive information on shared devices.
 ## Important Notes
 
 ⚠️ **Only stored on local device!**
-
-⚠️ **Never uploaded to chain!**
-
 
 ---
 

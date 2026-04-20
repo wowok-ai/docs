@@ -85,44 +85,97 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
 { "gen": {} }
 ```
 
-#### Example 1.2: Generate Account with Name
-
-**Prompt**: Generate a new account with the name "my_account". Do not replace an existing name if it already exists - this will throw an error if the name is already taken.
-
+**Execution Result**:
 ```json
-{ "gen": { "name": "my_account" } }
+{
+  "gen": {
+    "address": "0xd836...d681",
+    "name": ""
+  }
+}
 ```
 
-#### Example 1.3: Generate Account and Replace Existing Name
+#### Example 1.2: Generate Account with Name (Alice)
 
-**Prompt**: Generate a new account with the name "my_account", and if this name already exists, replace the existing name assignment. This ensures the new account gets the name even if it was previously used.
+**Prompt**: Generate a new account with the name "alice". Do not replace an existing name if it already exists - this will throw an error if the name is already taken.
 
 ```json
-{ "gen": { "name": "my_account", "replaceExistName": true } }
+{ "gen": { "name": "alice" } }
 ```
 
-#### Example 1.4: Generate Account and Enable Messenger
-
-**Prompt**: Generate a new account with the name "my_account" and enable messenger functionality with the messenger name "my_messenger". This account will be ready for encrypted messaging.
-
+**Execution Result**:
 ```json
-{ "gen": { "name": "my_account", "m": "my_messenger" } }
+{
+  "gen": {
+    "address": "0x0596...4b7d",
+    "name": "alice"
+  }
+}
 ```
 
-#### Example 1.5: Generate Account and Disable Messenger
+#### Example 1.3: Generate Account with Name (Bob)
 
-**Prompt**: Generate a new account with the name "my_account" and explicitly disable messenger functionality. This ensures the account cannot send or receive encrypted messages.
+**Prompt**: Generate a new account with the name "bob".
 
 ```json
-{ "gen": { "name": "my_account", "m": null } }
+{ "gen": { "name": "bob" } }
 ```
 
-#### Example 1.6: Complete Parameter Generation
+**Execution Result**:
+```json
+{
+  "gen": {
+    "address": "0x56bf...b5d7",
+    "name": "bob",
+    "m": "bob_messenger"
+  }
+}
+```
 
-**Prompt**: Generate a new account with all parameters configured: set the account name to "my_account", do not replace an existing name (so it will error if name exists), and enable messenger with the name "my_messenger".
+#### Example 1.4: Generate Account with Name (Grace)
+
+**Prompt**: Generate a new account with the name "grace".
 
 ```json
-{ "gen": { "name": "my_account", "replaceExistName": false, "m": "my_messenger" } }
+{ "gen": { "name": "grace" } }
+```
+
+**Execution Result**:
+```json
+{
+  "gen": {
+    "address": "0xbc11...b0b0",
+    "name": "grace"
+  }
+}
+```
+
+#### Example 1.5: Generate Account and Enable Messenger
+
+**Prompt**: Generate a new account with the name "test_messenger" and enable messenger functionality with the messenger name "my_messenger". This account will be ready for encrypted messaging.
+
+```json
+{ "gen": { "name": "test_messenger", "m": "my_messenger" } }
+```
+
+**Execution Result**:
+```json
+{
+  "gen": {
+    "address": "0xb580...f4f4",
+    "name": "test_messenger",
+    "m": "my_messenger"
+  }
+}
+```
+
+#### Example 1.6: Generate Account with Replace Existing Name
+
+**Prompt**: Generate a new account with the name "alice", and if this name already exists, replace the existing name assignment. This ensures the new account gets the name even if it was previously used.
+
+```json
+{ "gen": { "name": "alice", "replaceExistName": true } }
+```
 ```
 
 ---
@@ -166,20 +219,58 @@ Get test coins from the faucet to a specified account. Only supports localnet an
 { "faucet": { "network": "testnet" } }
 ```
 
-#### Example 2.2: Get Test Coins for Named Account
-
-**Prompt**: Get test coins from the faucet for the account named "my_account" on the testnet network. This is useful when you want to fund a specific named account instead of the default one.
-
+**Execution Result**:
 ```json
-{ "faucet": { "name_or_address": "my_account", "network": "testnet" } }
+{
+  "faucet": {
+    "network": "testnet",
+    "result": [
+      { "amount": 1000000000, "id": "0x0a74...f9b0", "transferTxDigest": "83Xaah4ArwMa8xMGDQbTDTe4W4m8gwjpYXJgTDFG3BY5" }
+    ]
+  }
+}
 ```
 
-#### Example 2.3: Get Test Coins for Address
+#### Example 2.2: Get Test Coins for Named Account
 
-**Prompt**: Get test coins from the faucet for the specific address "0xabc123...def456" on the localnet network. This is useful when you need to fund an account by its address directly.
+**Prompt**: Get test coins from the faucet for the account named "bob" on the testnet network. This is useful when you want to fund a specific named account instead of the default one.
 
 ```json
-{ "faucet": { "name_or_address": "0xabc123...def456", "network": "localnet" } }
+{ "faucet": { "name_or_address": "bob", "network": "testnet" } }
+```
+
+**Execution Result**:
+```json
+{
+  "faucet": {
+    "name_or_address": "bob",
+    "network": "testnet",
+    "result": [
+      { "amount": 1000000000, "id": "0x0a74...f9b0", "transferTxDigest": "83Xaah4ArwMa8xMGDQbTDTe4W4m8gwjpYXJgTDFG3BY5" }
+    ]
+  }
+}
+```
+
+#### Example 2.3: Get Test Coins for Named Account (Charlie)
+
+**Prompt**: Get test coins from the faucet for the account named "charlie" on the testnet network.
+
+```json
+{ "faucet": { "name_or_address": "charlie", "network": "testnet" } }
+```
+
+**Execution Result**:
+```json
+{
+  "faucet": {
+    "name_or_address": "charlie",
+    "network": "testnet",
+    "result": [
+      { "amount": 1000000000, "id": "0x1849...fda8", "transferTxDigest": "13f1D7WRXm4zPUP2GhuQXe5MkMfMcUJumBsKnpV3eDnq" }
+    ]
+  }
+}
 ```
 
 ---
@@ -219,20 +310,51 @@ Remove an account from the active account list. After suspension, the account ca
 { "suspend": {"name_or_address": "" } }
 ```
 
-#### Example 3.2: Suspend Named Account
-
-**Prompt**: Suspend the account named "my_account". This will remove it from active accounts, delete its name, and prevent it from signing transactions.
-
+**Execution Result**:
 ```json
-{ "suspend": { "name_or_address": "my_account" } }
+{
+  "suspend": {
+    "name_or_address": "",
+    "success": true
+  }
+}
 ```
 
-#### Example 3.3: Suspend Account by Address
+#### Example 3.2: Suspend Named Account (Grace)
 
-**Prompt**: Suspend the account with address "0xabc123...def456". This is useful when you need to suspend an account by its address rather than by name.
+**Prompt**: Suspend the account named "grace". This will remove it from active accounts, delete its name, and prevent it from signing transactions.
 
 ```json
-{ "suspend": { "name_or_address": "0xabc123...def456" } }
+{ "suspend": { "name_or_address": "grace" } }
+```
+
+**Execution Result**:
+```json
+{
+  "suspend": {
+    "name_or_address": "grace",
+    "success": true
+  }
+}
+```
+
+#### Example 3.3: Suspend Named Account (Eve)
+
+**Prompt**: Suspend the account named "eve". This will remove it from active accounts.
+
+```json
+{ "suspend": { "name_or_address": "eve" } }
+```
+
+**Execution Result**:
+```json
+{
+  "suspend": {
+    "name_or_address": "eve",
+    "success": true
+  }
+}
+```
 ```
 
 ---
@@ -266,20 +388,43 @@ Add a suspended account back to the active account list, optionally specifying a
 
 ### Examples
 
-#### Example 4.1: Resume Account Only (No Name)
+#### Example 4.1: Resume Account with New Name
 
-**Prompt**: Resume the account with address "0xabc123...def456" without assigning a name. This will add the account back to active accounts but leave it unnamed.
+**Prompt**: Resume the account with address "0xbe60...a7c7" and assign it the new name "resumed_account". This will add the account back to active accounts with the specified name.
 
 ```json
-{ "resume": { "address": "0xabc123...def456" } }
+{ "resume": { "address": "0xbe60d74b6a4e3e42d3959a48e5a01ce2896a5384efa75e38a7fba89fe50aa7c7", "name": "resumed_account" } }
 ```
 
-#### Example 4.2: Resume Account with New Name
+**Execution Result**:
+```json
+{
+  "resume": {
+    "address": "0xbe60d74b6a4e3e42d3959a48e5a01ce2896a5384efa75e38a7fba89fe50aa7c7",
+    "name": "resumed_account",
+    "success": true
+  }
+}
+```
 
-**Prompt**: Resume the account with address "0xabc123...def456" and assign it the new name "alice". This will add the account back to active accounts with the specified name.
+#### Example 4.2: Resume Account with New Name (Second Account)
+
+**Prompt**: Resume the account with address "0xd903...34a2" and assign it the new name "resumed_acc2".
 
 ```json
-{ "resume": { "address": "0xabc123...def456", "name": "alice" } }
+{ "resume": { "address": "0xd903a1b6f06b01f7f47d7bad8a9cea94054e6882daf85ed2c6d0fc2e859434a2", "name": "resumed_acc2" } }
+```
+
+**Execution Result**:
+```json
+{
+  "resume": {
+    "address": "0xd903a1b6f06b01f7f47d7bad8a9cea94054e6882daf85ed2c6d0fc2e859434a2",
+    "name": "resumed_acc2",
+    "success": true
+  }
+}
+```
 ```
 
 ---
@@ -315,26 +460,59 @@ Change an account's name. If the new name already exists, an error will be throw
 
 #### Example 5.1: Rename Default Account
 
-**Prompt**: Rename the default account to "alice". This will assign the new name to the default account that was previously unnamed or had a different name.
+**Prompt**: Rename the default account to "alice2". This will assign the new name to the default account that was previously unnamed or had a different name.
 
 ```json
-{ "rename": { "new_name": "alice" } }
+{ "rename": { "new_name": "alice2" } }
+```
+
+**Execution Result**:
+```json
+{
+  "rename": {
+    "new_name": "alice2",
+    "success": true
+  }
+}
 ```
 
 #### Example 5.2: Rename by Name
 
-**Prompt**: Rename the account currently named "old_account" to "bob". This operation will fail if "bob" is already being used by another account.
+**Prompt**: Rename the account currently named "alice2" to "alice3". This operation will fail if "alice3" is already being used by another account.
 
 ```json
-{ "rename": { "name_or_address": "old_account", "new_name": "bob" } }
+{ "rename": { "name_or_address": "alice2", "new_name": "alice3" } }
+```
+
+**Execution Result**:
+```json
+{
+  "rename": {
+    "name_or_address": "alice2",
+    "new_name": "alice3",
+    "success": true
+  }
+}
 ```
 
 #### Example 5.3: Rename by Address
 
-**Prompt**: Rename the account with address "0xabc123...def456" to "charlie". This is useful when you want to rename an account by referencing its address directly.
+**Prompt**: Rename the account with address "0x34d2...a470" to "alice4". This is useful when you want to rename an account by referencing its address directly.
 
 ```json
-{ "rename": { "name_or_address": "0xabc123...def456", "new_name": "charlie" } }
+{ "rename": { "name_or_address": "0x34d209f8c7083b4ba719ecd7159fb015c7aad94c352307a909aea3131594a470", "new_name": "alice4" } }
+```
+
+**Execution Result**:
+```json
+{
+  "rename": {
+    "name_or_address": "0x34d209f8c7083b4ba719ecd7159fb015c7aad94c352307a909aea3131594a470",
+    "new_name": "alice4",
+    "success": true
+  }
+}
+```
 ```
 
 ---
@@ -349,16 +527,16 @@ Swap the names of two accounts.
 
 | Parameter Name | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `name_or_address1` | string | No | First account name or address | Empty string '' uses default account |
-| `name_or_address2` | string | No | Second account name or address | Empty string '' uses default account |
+| `name1` | string | No | First account name | Empty string '' uses default account |
+| `name2` | string | No | Second account name | Empty string '' uses default account |
 
 ### Return Result
 
 ```json
 {
   "swap_name": {
-    "name_or_address1": "account1",
-    "name_or_address2": "account2",
+    "name1": "account1",
+    "name2": "account2",
     "success": true
   }
 }
@@ -370,34 +548,42 @@ Swap the names of two accounts.
 
 #### Example 6.1: Swap Default Account and Specified Account Names
 
-**Prompt**: Swap the names between the default account and the account named "alice". After this operation, the default account will have the name "alice" and vice versa.
+**Prompt**: Swap the names between the default account and the account named "bob". After this operation, the default account will have the name "bob" and vice versa.
 
 ```json
-{ "swap_name": { "name_or_address2": "alice" } }
+{ "swap_name": { "name2": "bob" } }
+```
+
+**Execution Result**:
+```json
+{
+  "swap_name": {
+    "name2": "bob",
+    "success": true
+  }
+}
 ```
 
 #### Example 6.2: Swap Two Named Accounts
 
-**Prompt**: Swap the names between the accounts named "alice" and "bob". This is useful when you want to exchange the identifiers of two existing accounts.
+**Prompt**: Swap the names between the accounts named "bob" and "charlie". This is useful when you want to exchange the identifiers of two existing accounts.
 
 ```json
-{ "swap_name": { "name_or_address1": "alice", "name_or_address2": "bob" } }
+{ "swap_name": { "name1": "bob", "name2": "charlie" } }
 ```
 
-#### Example 6.3: Swap Two Address Accounts
-
-**Prompt**: Swap the names between two accounts specified by their addresses: "0xabc123...def456" and "0xdef456...abc123". This allows you to swap names without referencing existing names.
-
+**Execution Result**:
 ```json
-{ "swap_name": { "name_or_address1": "0xabc123...def456", "name_or_address2": "0xdef456...abc123" } }
+{
+  "swap_name": {
+    "name1": "bob",
+    "name2": "charlie",
+    "success": true
+  }
+}
 ```
 
-#### Example 6.4: Mixed Usage of Name and Address
-
-**Prompt**: Swap names between the account named "alice" and the account with address "0xdef456...abc123". This demonstrates flexible referencing using both name and address formats.
-
-```json
-{ "swap_name": { "name_or_address1": "alice", "name_or_address2": "0xdef456...abc123" } }
+**Note**: The `swap_name` function only accepts account names (not addresses) for both parameters, as it swaps the name identifiers between two accounts.
 ```
 
 ---
@@ -428,85 +614,56 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 #### Example 7.1: Transfer Between Default Accounts (Using Default Token)
 
-**Prompt**: Transfer 1000000000 WOW tokens from the default sender account to the default recipient account using the default token type (0x2::wow::WOW). This is the simplest transfer configuration.
+**Prompt**: Transfer 100000000 WOW tokens from the default sender account to the default recipient account using the default token type (0x2::wow::WOW) on testnet. This is the simplest transfer configuration.
 
 ```json
-{ "transfer": { "amount": 1000000000 } }
+{ "transfer": { "amount": 100000000, "network": "testnet" } }
 ```
 
-#### Example 7.2: Transfer from Default Account to Specified Account
-
-**Prompt**: Transfer 1000000000 WOW tokens from the default account to the account named "bob". The sender uses the default account, while the recipient is explicitly specified by name.
-
-```json
-{ "transfer": { "name_or_address_to": "bob", "amount": 1000000000 } }
-```
-
-#### Example 7.3: Transfer from Specified Account to Default Account
-
-**Prompt**: Transfer 1000000000 WOW tokens from the account named "alice" to the default account. This reverses the direction, specifying the sender and using the default as recipient.
-
-```json
-{ "transfer": { "name_or_address_from": "alice", "amount": 1000000000 } }
-```
-
-#### Example 7.4: Specify Both Sender and Recipient
-
-**Prompt**: Transfer 1000000000 WOW tokens from the account named "alice" to the account named "bob". Both accounts are explicitly specified by their names for maximum clarity.
-
+**Execution Result**:
 ```json
 {
   "transfer": {
-    "name_or_address_from": "alice",
-    "name_or_address_to": "bob",
-    "amount": 1000000000
+    "digest": "DGrvr9s7o6DwccoDoTPQN9DmddiinN14t1WbqpeAaohN",
+    "objectChanges": [...],
+    "confirmedLocalExecution": false
   }
 }
 ```
 
-#### Example 7.5: Transfer Using Addresses
+#### Example 7.2: Transfer from Default Account to Named Account
 
-**Prompt**: Transfer 1000000000 WOW tokens between two accounts specified by their addresses: sender "0xabc123...def456" and recipient "0xdef456...abc123". This is useful when accounts don't have names assigned.
+**Prompt**: Transfer 100000000 WOW tokens from the default account to the account named "bob" on testnet. The sender uses the default account, while the recipient is explicitly specified by name.
 
 ```json
-{
-  "transfer": {
-    "name_or_address_from": "0xabc123...def456",
-    "name_or_address_to": "0xdef456...abc123",
-    "amount": 1000000000
-  }
-}
+{ "transfer": { "name_or_address_to": "bob", "amount": 100000000, "network": "testnet" } }
 ```
 
-#### Example 7.6: Specify Token Type
+#### Example 7.3: Transfer Between Named Accounts
 
-**Prompt**: Transfer 1000000000 SUI tokens from the account named "alice" to the account named "bob". Instead of using the default WOW token, this specifies SUI (0x2::sui::SUI) as the token type.
-
-```json
-{
-  "transfer": {
-    "name_or_address_from": "alice",
-    "name_or_address_to": "bob",
-    "amount": 1000000000,
-    "token_type": "0x2::sui::SUI"
-  }
-}
-```
-
-#### Example 7.7: Complete Parameter Transfer
-
-**Prompt**: Complete transfer with all parameters configured: use sender "alice", recipient "bob", transfer amount "1000000000" (specified as a string), token type "0x2::wow::WOW", and network "testnet". This demonstrates all available options.
+**Prompt**: Transfer 100000000 WOW tokens from the account named "bob" to the account named "charlie" on testnet. Both sender and recipient are explicitly specified.
 
 ```json
 {
   "transfer": {
-    "name_or_address_from": "alice",
-    "name_or_address_to": "bob",
-    "amount": "1000000000",
-    "token_type": "0x2::wow::WOW",
+    "name_or_address_from": "bob",
+    "name_or_address_to": "charlie",
+    "amount": 100000000,
     "network": "testnet"
   }
 }
+```
+
+**Execution Result**:
+```json
+{
+  "transfer": {
+    "digest": "6y2gjCKX1xuVu5sM8LuU1Xk4ktuUvQdGkjVrQnFDVWgC",
+    "objectChanges": [...],
+    "confirmedLocalExecution": false
+  }
+}
+```
 ```
 
 ---
@@ -546,53 +703,39 @@ Query account information and generate a new coin object based on the required b
 
 #### Example 8.1: Query Default Account (Get Default Token)
 
-**Prompt**: Query the default account and generate a coin object with 1000000000 WOW balance using the default token type. This will return a new coin object ID with the specified balance.
+**Prompt**: Query the default account and generate a coin object with 100000000 WOW balance using the default token type on testnet. This will return a new coin object ID with the specified balance.
 
 ```json
-{ "get": { "balance_required": 1000000000 } }
+{ "get": { "balance_required": 100000000, "network": "testnet" } }
 ```
 
-#### Example 8.2: Query Named Account
-
-**Prompt**: Query the account named "alice" and generate a coin object with 1000000000 WOW balance. This specifies which account to use by name rather than using the default.
-
-```json
-{ "get": { "name_or_address": "alice", "balance_required": 1000000000 } }
-```
-
-#### Example 8.3: Query by Address
-
-**Prompt**: Query the account with address "0xabc123...def456" and generate a coin object with 1000000000 WOW balance. This references the account directly by its address.
-
-```json
-{ "get": { "name_or_address": "0xabc123...def456", "balance_required": 1000000000 } }
-```
-
-#### Example 8.4: Specify Token Type
-
-**Prompt**: Query the account named "alice" and generate a coin object with 1000000000 SUI balance. Instead of using the default WOW token, this specifies SUI (0x2::sui::SUI) as the token type.
-
+**Execution Result**:
 ```json
 {
   "get": {
-    "name_or_address": "alice",
-    "balance_required": 1000000000,
-    "token_type": "0x2::sui::SUI"
+    "balance_required": 100000000,
+    "network": "testnet",
+    "coin_address": "0x890e...182e"
   }
 }
 ```
 
-#### Example 8.5: Complete Parameter Query
+#### Example 8.2: Query Named Account
 
-**Prompt**: Complete query with all parameters configured: use account "alice", balance required "1000000000" (specified as a string), token type "0x2::wow::WOW", and network "testnet". This demonstrates all available options.
+**Prompt**: Query the account named "bob" and generate a coin object with 100000000 WOW balance on testnet. This specifies which account to use by name rather than using the default.
 
+```json
+{ "get": { "name_or_address": "bob", "balance_required": 100000000, "network": "testnet" } }
+```
+
+**Execution Result**:
 ```json
 {
   "get": {
-    "name_or_address": "alice",
-    "balance_required": "1000000000",
-    "token_type": "0x2::wow::WOW",
-    "network": "testnet"
+    "name_or_address": "bob",
+    "balance_required": 100000000,
+    "network": "testnet",
+    "coin_address": "0x9435...6493"
   }
 }
 ```
@@ -632,80 +775,39 @@ Sign data using the account's private key.
 
 #### Example 9.1: Default Account Sign UTF-8 String
 
-**Prompt**: Sign the UTF-8 encoded string "Hello World" using the default account. Since no encoding is specified, it defaults to UTF-8 format.
+**Prompt**: Sign the UTF-8 encoded string "Hello, WoWok!" using the default account. Since no encoding is specified, it defaults to UTF-8 format.
 
 ```json
-{ "signData": { "data": "Hello World" } }
+{ "signData": { "data": "Hello, WoWok!" } }
+```
+
+**Execution Result**:
+```json
+{
+  "signData": {
+    "signature": "0x0cf31462edd1f41b37d301b91c7b83301cf4a2e5dcaacecf64efb78121c91c91db9611d39d4ea05cec4e72c26410c8729957480e5bec883dd5a45cff13599c00",
+    "publicKey": "AMsf6kj8V9m2jmTZbjM0F1oNlAGFnM90OuCmp/I+YDp2",
+    "address": "0x0596...4b7d"
+  }
+}
 ```
 
 #### Example 9.2: Sign with Named Account
 
-**Prompt**: Sign the UTF-8 string "Hello World" using the account named "alice". This explicitly specifies which account to use for signing by name.
+**Prompt**: Sign the UTF-8 string "Hello, WoWok!" using the account named "bob". This explicitly specifies which account to use for signing by name.
 
 ```json
-{ "signData": { "name_or_address": "alice", "data": "Hello World" } }
+{ "signData": { "name_or_address": "bob", "data": "Hello, WoWok!" } }
 ```
 
-#### Example 9.3: Sign with Address
-
-**Prompt**: Sign the UTF-8 string "Hello World" using the account with address "0xabc123...def456". This references the account directly by its address.
-
-```json
-{ "signData": { "name_or_address": "0xabc123...def456", "data": "Hello World" } }
-```
-
-#### Example 9.4: Sign Hex Encoded Data
-
-**Prompt**: Sign the hex encoded data "48656c6c6f20576f726c64" (which represents "Hello World") using the account named "alice". Specify data_encoding as "hex" to indicate the input format.
-
+**Execution Result**:
 ```json
 {
   "signData": {
-    "name_or_address": "alice",
-    "data": "48656c6c6f20576f726c64",
-    "data_encoding": "hex"
-  }
-}
-```
-
-#### Example 9.5: Sign Base64 Encoded Data
-
-**Prompt**: Sign the base64 encoded data "SGVsbG8gV29ybGQ=" (which represents "Hello World") using the account named "alice". Specify data_encoding as "base64" to indicate the input format.
-
-```json
-{
-  "signData": {
-    "name_or_address": "alice",
-    "data": "SGVsbG8gV29ybGQ=",
-    "data_encoding": "base64"
-  }
-}
-```
-
-#### Example 9.6: Explicitly Specify UTF-8 Encoding
-
-**Prompt**: Sign the string "Hello World" using the account named "alice", explicitly specifying the encoding as UTF-8. While this is the default, it's shown here for clarity and explicitness.
-
-```json
-{
-  "signData": {
-    "name_or_address": "alice",
-    "data": "Hello World",
-    "data_encoding": "utf8"
-  }
-}
-```
-
-#### Example 9.7: Complete Parameter Signing
-
-**Prompt**: Complete signing with all parameters configured: use account "alice", sign the hex data "48656c6c6f", and specify encoding as "hex". This demonstrates all available options for the signData operation.
-
-```json
-{
-  "signData": {
-    "name_or_address": "alice",
-    "data": "48656c6c6f",
-    "data_encoding": "hex"
+    "name_or_address": "bob",
+    "signature": "0x35b98fff8f5a1607d8172f7a7db0fea8f71f41b1b9aeaf70cd91c39876da1392fb141b0aa31c59a651321bb7e6e4b9ba3816c60c37b44fd386ad4f007d588d07",
+    "publicKey": "AIh+RJAmFU9HrHYsHql0LNkdbH3c6031ZiMIwsJOHb7l",
+    "address": "0xd836...d681"
   }
 }
 ```
@@ -742,29 +844,40 @@ Enable or disable messenger functionality for an account.
 
 #### Example 10.1: Enable Messenger for Default Account
 
-**Prompt**: Enable messenger functionality for the default account with the messenger name "alice_messenger". This will allow the account to send and receive encrypted messages using the specified messenger identifier.
+**Prompt**: Enable messenger functionality for the default account with the messenger name "my_messenger". This will allow the account to send and receive encrypted messages using the specified messenger identifier.
 
 ```json
-{ "messenger": { "m": "alice_messenger" } }
+{ "messenger": { "m": "my_messenger" } }
+```
+
+**Execution Result**:
+```json
+{
+  "messenger": {
+    "m": "my_messenger"
+  }
+}
 ```
 
 #### Example 10.2: Enable Messenger for Named Account
 
-**Prompt**: Enable messenger functionality for the account named "alice" with the messenger name "alice_messenger". This explicitly specifies which account to configure by name.
+**Prompt**: Enable messenger functionality for the account named "bob" with the messenger name "bob_messenger_updated". This explicitly specifies which account to configure by name.
 
 ```json
-{ "messenger": { "name_or_account": "alice", "m": "alice_messenger" } }
+{ "messenger": { "name_or_account": "bob", "m": "bob_messenger_updated" } }
 ```
 
-#### Example 10.3: Enable Messenger for Address
-
-**Prompt**: Enable messenger functionality for the account with address "0xabc123...def456" with the messenger name "alice_messenger". This references the account directly by its address.
-
+**Execution Result**:
 ```json
-{ "messenger": { "name_or_account": "0xabc123...def456", "m": "alice_messenger" } }
+{
+  "messenger": {
+    "name_or_account": "bob",
+    "m": "bob_messenger_updated"
+  }
+}
 ```
 
-#### Example 10.4: Disable Default Account Messenger
+#### Example 10.3: Disable Default Account Messenger
 
 **Prompt**: Disable messenger functionality for the default account. Set "m" to null to indicate that messenger should be turned off, preventing the account from sending or receiving encrypted messages.
 
@@ -772,168 +885,12 @@ Enable or disable messenger functionality for an account.
 { "messenger": { "m": null } }
 ```
 
-#### Example 10.5: Disable Named Account Messenger
+#### Example 10.4: Disable Named Account Messenger
 
 **Prompt**: Disable messenger functionality for the account named "alice". Set "m" to null to turn off messenger for this specific account.
 
 ```json
 { "messenger": { "name_or_account": "alice", "m": null } }
-```
-
----
-
-## Comprehensive Combined Examples
-
-### Example 1: Complete Account Setup Workflow
-
-**Prompt**: Generate a new account named "alice", enable messenger for it with messenger name "alice_chat", then get test coins from the faucet on testnet. This covers multiple account operations in sequence.
-
-```json
-{ "gen": { "name": "alice", "m": "alice_chat" } }
-```
-
-After creating the account, follow with:
-
-```json
-{ "faucet": { "name_or_address": "alice", "network": "testnet" } }
-```
-
----
-
-### Example 2: Transfer with Multiple Preparations
-
-**Prompt**: First rename the account from "old_name" to "bob", then transfer 500000000000 WOW tokens from "bob" to "alice", and finally sign a transaction confirmation message with "bob". This demonstrates a complete transfer workflow with account management.
-
-Step 1: Rename account
-
-```json
-{ "rename": { "name_or_address": "old_name", "new_name": "bob" } }
-```
-
-Step 2: Transfer tokens
-
-```json
-{ "transfer": { "name_or_address_from": "bob", "name_or_address_to": "alice", "amount": 500000000000, "network": "testnet" } }
-```
-
-Step 3: Sign confirmation
-
-```json
-{ "signData": { "name_or_address": "bob", "data": "Transfer confirmed: 500000000000 WOW to alice" } }
-```
-
----
-
-### Example 3: Multi-User Token Exchange
-
-**Prompt**: Set up two accounts ("alice" and "bob"), fund both with test coins, enable messengers for both, then have alice transfer SUI tokens to bob and bob transfer WOW tokens to alice. This covers a complete token exchange scenario.
-
-Step 1: Generate alice's account
-
-```json
-{ "gen": { "name": "alice", "m": "alice_messenger" } }
-```
-
-Step 2: Generate bob's account
-
-```json
-{ "gen": { "name": "bob", "m": "bob_messenger" } }
-```
-
-Step 3: Fund alice with testnet coins
-
-```json
-{ "faucet": { "name_or_address": "alice", "network": "testnet" } }
-```
-
-Step 4: Fund bob with testnet coins
-
-```json
-{ "faucet": { "name_or_address": "bob", "network": "testnet" } }
-```
-
-Step 5: Alice transfers SUI to bob (if available)
-
-```json
-{ "transfer": { "name_or_address_from": "alice", "name_or_address_to": "bob", "amount": 2000000000, "token_type": "0x2::sui::SUI", "network": "testnet" } }
-```
-
-Step 6: Bob transfers WOW to alice
-
-```json
-{ "transfer": { "name_or_address_from": "bob", "name_or_address_to": "alice", "amount": 100000000000, "token_type": "0x2::wow::WOW", "network": "testnet" } }
-```
-
----
-
-### Example 4: Account Recovery and Security Workflow
-
-**Prompt**: Suspend a compromised account, resume it with a new name, transfer remaining funds to a safe account, then suspend the original address again. This demonstrates security-focused account management.
-
-Step 1: Suspend the compromised account
-
-```json
-{ "suspend": { "name_or_address": "compromised_account" } }
-```
-
-Step 2: Resume with a temporary name
-
-```json
-{ "resume": { "address": "0xabc123...def456", "name": "temp_recovery" } }
-```
-
-Step 3: Transfer all funds to safe account "alice"
-
-```json
-{ "transfer": { "name_or_address_from": "temp_recovery", "name_or_address_to": "alice", "amount": 1000000000000, "network": "testnet" } }
-```
-
-Step 4: Get coin object for exact amount (optional)
-
-```json
-{ "get": { "name_or_address": "temp_recovery", "balance_required": 1000000000000, "network": "testnet" } }
-```
-
-Step 5: Suspend the recovery account after funds are secure
-
-```json
-{ "suspend": { "name_or_address": "temp_recovery" } }
-```
-
----
-
-### Example 5: Business Payment Workflow
-
-**Prompt**: Create a business account, rename it to "merchant", enable messenger for customer support, fund with test coins, then generate a coin object for a specific payment amount and sign an invoice. This demonstrates business operations.
-
-Step 1: Generate business account
-
-```json
-{ "gen": { "name": "temp_business", "m": "merchant_support" } }
-```
-
-Step 2: Rename to proper business name
-
-```json
-{ "rename": { "name_or_address": "temp_business", "new_name": "merchant" } }
-```
-
-Step 3: Fund the merchant account
-
-```json
-{ "faucet": { "name_or_address": "merchant", "network": "testnet" } }
-```
-
-Step 4: Generate coin object for invoice amount (250000000000 WOW)
-
-```json
-{ "get": { "name_or_address": "merchant", "balance_required": 250000000000, "token_type": "0x2::wow::WOW", "network": "testnet" } }
-```
-
-Step 5: Sign the invoice message
-
-```json
-{ "signData": { "name_or_address": "merchant", "data": "Invoice #1234: 250000000000 WOW - Product Purchase", "data_encoding": "utf8" } }
 ```
 
 ---

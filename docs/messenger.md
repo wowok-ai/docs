@@ -162,6 +162,12 @@ View all conversation list, including peer address, last message time, total mes
 }
 ```
 
+**Response**: Returns list of conversations (empty if no conversations exist).
+
+```json
+[]
+```
+
 ---
 
 #### Example 1.2: View Specified Account Conversations
@@ -175,6 +181,8 @@ View all conversation list, including peer address, last message time, total mes
 }
 ```
 
+**Response**: Returns list of conversations for the specified account.
+
 ---
 
 ## Example 2: Send Message
@@ -187,13 +195,30 @@ Send encrypted text message to specified recipient.
 
 #### Example 2.1: Send Simple Message
 
-**Prompt**: Send message "Hello! How are you?" from default account to "friend_account".
+**Prompt**: Send message "Hello! How are you?" from default account to "bob".
 
 ```json
 {
   "operation": "send_message",
-  "to": "friend_account",
+  "to": "bob",
   "content": "Hello! How are you?"
+}
+```
+
+**Response**: Returns message ID, status, and Merkle proof data.
+
+```json
+{
+  "messageId": "059655cb_d83609a0_0_b347",
+  "status": "confirmed",
+  "merkleData": {
+    "leafIndex": 0,
+    "prevRoot": "0x0000...0000",
+    "newRoot": "0x0de5...fdf6",
+    "serverSignature": "0x6750...f806",
+    "serverTimestamp": 1776658637646,
+    "serverPublicKey": "0xa723...3790"
+  }
 }
 ```
 
@@ -349,6 +374,31 @@ View message history, supporting various filter conditions.
 {
   "operation": "watch_messages"
 }
+```
+
+**Response**: Returns array of messages with full details.
+
+```json
+[
+  {
+    "messageId": "059655cb_d83609a0_0_b347",
+    "fromAddress": "0x0596...b7d",
+    "toAddress": "0xd836...681",
+    "plaintextHash": "0x6c5e...986c",
+    "plaintext": "Hello! How are you?",
+    "lastReceivedLeafIndex": -1,
+    "direction": "sent",
+    "status": "confirmed",
+    "msgType": 3,
+    "leafIndex": 0,
+    "prevRoot": "0x0000...0000",
+    "newRoot": "0x0de5...fdf6",
+    "serverSignature": "0x6750...f806",
+    "serverPublicKey": "0xa723...3790",
+    "serverTimestamp": 1776658637646,
+    "createdAt": 1776658639063
+  }
+]
 ```
 
 ---
@@ -680,15 +730,28 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 #### Example 11.1: Add to Blacklist
 
-**Prompt**: Add "spam_user" to blacklist.
+**Prompt**: Add an address to blacklist.
 
 ```json
 {
   "operation": "blacklist",
   "blacklist": {
     "op": "add",
-    "users": ["spam_user"]
+    "users": ["0xe639...2e82"]
   }
+}
+```
+
+**Response**: Returns operation result with success status.
+
+```json
+{
+  "success": true,
+  "operation": "add",
+  "modifiedCount": 1,
+  "currentCount": 1,
+  "maxCount": 500,
+  "message": "Successfully added 1 addresses"
 }
 ```
 
@@ -713,7 +776,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 #### Example 11.3: View and Check Blacklist
 
-**Prompt**: View current blacklist and check if "some_address" is in blacklist.
+**Prompt**: View current blacklist.
 
 ```json
 {
@@ -722,6 +785,12 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
     "op": "get"
   }
 }
+```
+
+**Response**: Returns array of blacklisted addresses.
+
+```json
+["0xe639...2e82"]
 ```
 
 ---
@@ -773,15 +842,28 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 #### Example 12.1: Add Friend
 
-**Prompt**: Add "alice" to friends list.
+**Prompt**: Add "bob" to friends list.
 
 ```json
 {
   "operation": "friendslist",
   "friendslist": {
     "op": "add",
-    "users": ["alice"]
+    "users": ["0xd836...681"]
   }
+}
+```
+
+**Response**: Returns operation result with success status.
+
+```json
+{
+  "success": true,
+  "operation": "add",
+  "modifiedCount": 1,
+  "currentCount": 1,
+  "maxCount": 1000,
+  "message": "Successfully added 1 addresses"
 }
 ```
 
@@ -814,6 +896,12 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
     "op": "get"
   }
 }
+```
+
+**Response**: Returns array of friend addresses.
+
+```json
+["0xd836...681"]
 ```
 
 ---
@@ -875,9 +963,9 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 {
   "allowStrangerMessages": true,
   "maxInboxSize": 20,
-  "serverMinInboxSizeLimit": 20,
-  "serverMaxInboxSizeLimit": 200,
-  "serverDefaultAllowStrangerMessages": false
+  "minUserInboxSize": 20,
+  "maxUserInboxSize": 200,
+  "defaultAllowStrangerMessages": false
 }
 ```
 
@@ -895,6 +983,16 @@ Manage messenger settings, including viewing and updating inbox size limits and 
     "maxInboxSize": 500,
     "allowStrangerMessages": false
   }
+}
+```
+
+**Response**: Returns success status.
+
+```json
+{
+  "operation": "settings",
+  "op": "set",
+  "result": true
 }
 ```
 
