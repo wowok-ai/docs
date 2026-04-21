@@ -8,33 +8,6 @@ The Machine component is WoWok's workflow automation engine, used to design and 
 
 > **Note**: Use the `machineNode2file` tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly build new workflows from existing ones.
 
-### Permission Index Guide for Forward Operations
-
-When defining forward operations in Machine nodes, the `permissionIndex` field specifies who can execute that forward. **Important**: The permission index for forward operations is NOT the same as Machine management permissions (200-208).
-
-**Valid permissionIndex values for forward operations:**
-
-1. **User-defined permissions (1000-65535)** - Recommended for business-specific workflow operations
-   - Must be granted to operators via the Permission component before use
-   - Each Progress instance shares the same operators
-   - Example: Use 1000 for "confirm_order", 1001 for "deliver_goods"
-
-2. **Built-in permissions (100-450+)** - Use appropriate built-in permissions for common operations
-   - Repository: 100-105 (repository.new, repository.description, etc.)
-   - Reward: 150-157 (reward.new, reward.description, etc.)
-   - Service: 300-320 (service.new, service.description, etc.)
-   - And more...
-
-**NOT for forward operations:**
-- Machine management permissions (200-208): These control Machine object operations (create, modify nodes, publish), NOT workflow transitions
-- Progress management permissions (220-225): These control Progress object operations, NOT workflow transitions
-
-**Alternative to permissionIndex:**
-- Use `namedOperator` instead of `permissionIndex` for Progress-specific operator assignments
-- Each Progress instance can have different operators for the same namedOperator namespace
-
----
-
 ## Function List
 
 | Function Name | Purpose | Usage Scenario | Significance |
@@ -236,6 +209,31 @@ A Machine consists of nodes and their connections:
 **Forward Permissions (MUST specify ONE):**
 - `namedOperator`: Namespace (for Progress-specific operators)
 - `permissionIndex`: Permission index (shared across all Progress objects)
+
+### Permission Index Guide for Forward Operations
+
+When defining forward operations in Machine nodes, the `permissionIndex` field specifies who can execute that forward. **Important**: The permission index for forward operations is NOT the same as Machine management permissions (200-208).
+
+**Valid permissionIndex values for forward operations:**
+
+1. **User-defined permissions (1000-65535)** - Recommended for business-specific workflow operations
+   - Must be granted to operators via the Permission component before use
+   - Each Progress instance shares the same operators
+   - Example: Use 1000 for "confirm_order", 1001 for "deliver_goods"
+
+2. **Built-in permissions (100-450+)** - Use appropriate built-in permissions for common operations
+   - Repository: 100-105 (repository.new, repository.description, etc.)
+   - Reward: 150-157 (reward.new, reward.description, etc.)
+   - Service: 300-320 (service.new, service.description, etc.)
+   - And more...
+
+**NOT for forward operations:**
+- Machine management permissions (200-208): These control Machine object operations (create, modify nodes, publish), NOT workflow transitions
+- Progress management permissions (220-225): These control Progress object operations, NOT workflow transitions
+
+**Alternative to permissionIndex:**
+- Use `namedOperator` instead of `permissionIndex` for Progress-specific operator assignments
+- Each Progress instance can have different operators for the same namedOperator namespace
 
 ---
 
