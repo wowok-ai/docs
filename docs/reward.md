@@ -130,16 +130,40 @@ Create a new Reward object for managing rewards.
 
 #### Example 1.1: Create Minimal Reward
 
-**Prompt**: Create a Reward named "new_user_reward", use default account and network, no other configuration specified.
+**Prompt**: Create a Reward named "reward_test_1", use default account and testnet network.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
     "object": {
-      "name": "new_user_reward"
+      "name": "reward_test_1"
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x11a5...b44e",
+      "version": "214214",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0xb991...16cd",
+      "version": "214214",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -147,66 +171,99 @@ Create a new Reward object for managing rewards.
 
 #### Example 1.2: Create Reward with Tags
 
-**Prompt**: Create a Reward named "referral_reward", add tags "referral", "incentive", description "Referral reward program", and set guard expiration time to 30 days.
+**Prompt**: Create a Reward named "reward_test_2", add tags "referral", "incentive", description "Referral reward program".
 
 ```json
 {
   "operation_type": "reward",
   "data": {
     "object": {
-      "name": "referral_reward",
+      "name": "reward_test_2",
       "tags": ["referral", "incentive"]
     },
-    "description": "Referral reward program",
-    "guard_expiration_time": 2592000000
+    "description": "Referral reward program"
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x85cb...ab07",
+      "version": "214844",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0xe6cc...1508",
+      "version": "214844",
+      "change": "created"
+    }
+  ]
 }
 ```
 
 ---
 
-#### Example 1.3: Create Complete Reward with Guards and Funds
+#### Example 1.3: Create Reward with Funds
 
-**Prompt**: Create a Reward named "complete_reward": 1) Add tags "incentive", "promotion", 2) Add description "Complete reward pool example", 3) Add 100 WOW initial funds, 4) Add two RewardGuards: one for new users (fixed amount to signer), one for referrals (fixed amount to entity "referral_recipient").
+**Prompt**: Create a Reward named "reward_test_3": 1) Add tags "incentive", "promotion", 2) Add description "Complete reward pool example", 3) Add 100 WOW initial funds.
+
+> **Prerequisite**: Need to create Guard object first for subsequent reward rules
+> ```json
+> {
+>   "operation_type": "guard",
+>   "data": {
+>     "namedNew": {"name": "new_user_guard"},
+>     "description": "New user reward guard",
+>     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>     "root": {
+>       "type": "node",
+>       "node": {
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>       }
+>     }
+>   },
+>   "env": {"network": "testnet"}
+> }
+> ```
 
 ```json
 {
   "operation_type": "reward",
   "data": {
     "object": {
-      "name": "complete_reward",
+      "name": "reward_test_3",
       "tags": ["incentive", "promotion"]
     },
     "description": "Complete reward pool example",
     "coin_add": {
       "balance": 100000000000
-    },
-    "guard_add": [
-      {
-        "guard": "new_user_guard",
-        "recipient": {
-          "Signer": "signer"
-        },
-        "amount": {
-          "type": "Fixed",
-          "value": 1000000000
-        },
-        "expiration_time": 1735689600000
-      },
-      {
-        "guard": "referral_guard",
-        "recipient": {
-          "Entity": "referral_recipient"
-        },
-        "amount": {
-          "type": "Fixed",
-          "value": 500000000
-        }
-      }
-    ]
+    }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": []
+}
+```
+
+> **Note**: When creating object and adding funds simultaneously, the returned object list may be empty. You can confirm successful creation through query.
 
 ---
 
@@ -230,36 +287,71 @@ Add assets to the Reward object's balance.
 
 #### Example 2.1: Add Fixed Amount
 
-**Prompt**: Add 500 WOW to "new_user_reward" pool.
+**Prompt**: Add 500 WOW to "reward_test_1" pool.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "new_user_reward",
+    "object": "reward_test_1",
     "coin_add": {
       "balance": 500000000000
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x11a5...b44e",
+      "version": "216638",
+      "change": "modified"
+    }
+  ]
 }
 ```
 
 ---
 
-#### Example 2.2: Add Funds and Process Received Balance
+#### Example 2.2: Add Funds with Multiple Operations
 
-**Prompt**: For "referral_reward": 1) Add 200 WOW, 2) Process recently received CoinWrapper objects.
+**Prompt**: For "reward_test_2": Add 200 WOW funds.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "referral_reward",
+    "object": "reward_test_2",
     "coin_add": {
       "balance": 200000000000
-    },
-    "receive": "recently"
+    }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x85cb...ab07",
+      "version": "217xxx",
+      "change": "modified"
+    }
+  ]
 }
 ```
 
@@ -328,7 +420,27 @@ Add RewardGuard objects to the reward pool, remove expired guards, and set guard
 | `guard` | string | Yes | Guard object ID or name |
 | `recipient` | object | Yes | Recipient specification |
 | `amount` | object | Yes | Reward amount |
-| `expiration_time` | number | No | Expiration time in milliseconds |
+| `expiration_time` | number | No | Expiration time in milliseconds (Unix timestamp) |
+
+#### ⚠️ Important Notes About `expiration_time`
+
+**Timestamp Format**: `expiration_time` is a Unix timestamp in milliseconds, representing the expiration deadline for the reward rule.
+
+**Key Constraints**:
+1. **Must be future time**: `expiration_time` must be greater than the current blockchain time, otherwise the transaction will fail (error code: E_GUARD_EXPIRED)
+2. **Unit is milliseconds**: Not seconds! For example, `1876000000000` represents around year 2029
+3. **Permanent if not set**: If `expiration_time` is not set, the reward rule will be valid permanently
+
+**How to Calculate**:
+- Current timestamp (ms): `Date.now()`
+- Future time: `Date.now() + 30 * 24 * 60 * 60 * 1000` (30 days later)
+- Online tool: https://www.unixtimestamp.com/ (remember to multiply by 1000 to convert to milliseconds)
+
+**Common Error**:
+```
+Error: E_GUARD_EXPIRED (error code 2)
+```
+This indicates that the set `expiration_time` is less than or equal to the current blockchain time.
 
 ### Recipient Types
 
@@ -346,13 +458,15 @@ Add RewardGuard objects to the reward pool, remove expired guards, and set guard
 
 #### Example 4.1: Add Single RewardGuard
 
-**Prompt**: Add a RewardGuard to "new_user_reward": 1) Guard "new_user_guard", 2) Recipient is signer, 3) Fixed amount 10 WOW, 4) Expires in 30 days.
+**Prompt**: Add a RewardGuard to "reward_test_1": 1) Guard "new_user_guard", 2) Recipient is signer, 3) Fixed amount 10 WOW, 4) Expires in 30 days (from current time).
+
+> **Note**: `expiration_time` must be a future timestamp (milliseconds) and must be greater than the current blockchain time.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "new_user_reward",
+    "object": "reward_test_1",
     "guard_add": [
       {
         "guard": "new_user_guard",
@@ -363,10 +477,28 @@ Add RewardGuard objects to the reward pool, remove expired guards, and set guard
           "type": "Fixed",
           "value": 1000000000
         },
-        "expiration_time": 1735689600000
+        "expiration_time": 1876000000000
       }
     ]
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x11a5...b44e",
+      "version": "218xxx",
+      "change": "modified"
+    }
+  ]
 }
 ```
 
@@ -427,15 +559,33 @@ Add RewardGuard objects to the reward pool, remove expired guards, and set guard
 
 #### Example 4.4: Set Guard Expiration Lock
 
-**Prompt**: Set guard expiration lock on "campaign_reward" for 7 days, preventing new guards from being added during that time.
+**Prompt**: Set guard expiration lock on "reward_test_2" for 7 days, preventing new guards from being added during that time.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "campaign_reward",
-    "guard_expiration_time": 604800000
+    "object": "reward_test_2",
+    "guard_expiration_time": 1876000000000
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x85cb...ab07",
+      "version": "228609",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -500,15 +650,86 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 
 #### Example 5.2: Unwrap and Send to Owner
 
-**Prompt**: Unwrap recently received CoinWrapper and other objects of "new_user_reward", send to permission owner.
+**Prompt**: First send Coin to "reward_test_1" via Payment, then unwrap and send to permission owner.
+
+**Step 1: Send Coin to Reward via Payment**
+
+```json
+{
+  "operation_type": "payment",
+  "data": {
+    "object": {
+      "type_parameter": "0x2::wow::WOW"
+    },
+    "revenue": [
+      {
+        "recipient": {"name_or_address": "reward_test_1"},
+        "amount": {"balance": "5000000000"}
+      }
+    ],
+    "info": {
+      "remark": "Send coin to reward object",
+      "index": 1
+    }
+  },
+  "env": {
+    "network": "testnet"
+  }
+}
+```
+
+**Step 1 Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "WReceivedObject",
+      "object": "0x3b5e...af84",
+      "change": "created"
+    },
+    {
+      "type": "Payment",
+      "object": "0x4fa5...b21e",
+      "change": "created"
+    }
+  ]
+}
+```
+
+**Step 2: Unwrap and Send to Owner**
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "new_user_reward",
+    "object": "reward_test_1",
     "owner_receive": "recently"
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Step 2 Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Reward",
+      "object": "0x11a5...b44e",
+      "version": "233053",
+      "change": "mutated"
+    },
+    {
+      "type": "WReceivedObject",
+      "object": "0x3b5e...af84",
+      "version": "233053",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 

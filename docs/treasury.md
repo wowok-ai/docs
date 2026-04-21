@@ -110,6 +110,42 @@ The submission structure will specify which Guard objects need verification and 
 
 ---
 
+## ⚠️ Critical Constraints and Error Codes
+
+### Error Code Reference
+
+| Error Code | Constant | Description | Solution |
+|------------|----------|-------------|----------|
+| 5 | `E_IDENTIFIER_NOT_NUMBER_TYPE` | Guard identifier is not a numeric type | Ensure Guard table identifier uses U64 type, not Bool or other types |
+| 6 | `E_DEPOSIT_INSUFFICIENT_AMOUNT` | Deposit amount is less than Guard required minimum | Deposit amount must be >= Guard identifier value |
+| 7 | `E_WITHDRAW_INSUFFICIENT_AMOUNT` | Treasury balance is insufficient for withdrawal | Ensure Treasury has sufficient balance before withdrawal |
+
+### External Guard Requirements
+
+When using external Guards for deposit/withdrawal:
+
+1. **Guard Type Requirements**:
+   - Guard's table identifier **must be U64 type** (not Bool, String, etc.)
+   - The identifier value represents the **maximum allowed amount** for the operation
+
+2. **Guard Creation Example**:
+   ```json
+   {
+     "operation_type": "guard",
+     "data": {
+       "namedNew": { "name": "my_guard" },
+       "table": [{ "identifier": 0, "b_submission": false, "value_type": "U64", "value": 1000000000 }],
+       "root": { "type": "node", "node": { "type": "logic_as_u256_greater_or_equal", "nodes": [...] } }
+     }
+   }
+   ```
+
+3. **Amount Constraints**:
+   - For deposit: `deposit.coin.balance` must be **>=** Guard's identifier value
+   - For withdrawal: Guard's identifier value specifies the **exact** withdrawal amount
+
+---
+
 ## Sub-feature 1: Create New Treasury
 
 ### Feature Description
@@ -147,7 +183,31 @@ Create a new Treasury object, can simultaneously create a new Permission object 
     "object": {
       "name": "team_treasury"
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Permission",
+      "object": "0x53ad...08e7",
+      "version": "244384",
+      "change": "created"
+    },
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "244384",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -166,7 +226,31 @@ Create a new Treasury object, can simultaneously create a new Permission object 
       "tags": ["project", "finance"]
     },
     "description": "Project fund treasury for managing team finances"
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0x20fd...393a",
+      "version": "251892",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0x677f...0767",
+      "version": "251892",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -189,7 +273,7 @@ Create a new Treasury object, can simultaneously create a new Permission object 
       "op": "add",
       "guards": [
         {
-          "guard": "deposit_guard",
+          "guard": "deposit_guard_u64",
           "identifier": 0
         }
       ]
@@ -198,14 +282,42 @@ Create a new Treasury object, can simultaneously create a new Permission object 
       "op": "add",
       "guards": [
         {
-          "guard": "withdraw_guard",
-          "identifier": 1
+          "guard": "withdraw_guard_u64",
+          "identifier": 0
         }
       ]
     }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Permission",
+      "object": "0x163e...c6a8",
+      "version": "258393",
+      "change": "created"
+    },
+    {
+      "type": "Treasury",
+      "object": "0x5b1a...3dbf",
+      "version": "258393",
+      "change": "created"
+    }
+  ]
+}
+```
+
+> **Important Constraints**:
+> - Guard's table identifier must be **U64 type** . Error code 5 (`E_IDENTIFIER_NOT_NUMBER_TYPE`) will be returned if using non-numeric types
+> - The identifier value in Guard table represents the **maximum allowed amount** for deposit/withdrawal
 
 ---
 
@@ -254,7 +366,25 @@ Deposit assets into Treasury, supports verification through Permission or extern
         "index": 1
       }
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "244617",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -262,7 +392,7 @@ Deposit assets into Treasury, supports verification through Permission or extern
 
 #### Example 2.2: Deposit through External Guard
 
-**Prompt**: Deposit 50 WOW into "community_fund", verify through external Guard "deposit_guard", simultaneously create a Payment object named "deposit_payment".
+**Prompt**: Deposit 10 WOW into "community_fund", verify through external Guard "deposit_guard_u64", simultaneously create a Payment object named "deposit_payment".
 
 ```json
 {
@@ -271,9 +401,9 @@ Deposit assets into Treasury, supports verification through Permission or extern
     "object": "community_fund",
     "deposit": {
       "coin": {
-        "balance": 50000000000
+        "balance": 1000000000
       },
-      "by_external_deposit_guard": "deposit_guard",
+      "by_external_deposit_guard": "deposit_guard_u64",
       "payment_info": {
         "remark": "treasury operation",
         "index": 1
@@ -282,9 +412,37 @@ Deposit assets into Treasury, supports verification through Permission or extern
         "name": "deposit_payment"
       }
     }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0x5b1a...3dbf",
+      "version": "259562",
+      "change": "mutated"
+    },
+    {
+      "type": "Payment",
+      "object": "0x53a4...f121",
+      "change": "created"
+    }
+  ]
+}
+```
+
+> **Important Constraints**:
+> - Deposit amount **must be >=** the value specified in Guard's identifier. Error code 6 (`E_DEPOSIT_INSUFFICIENT_AMOUNT`) will be returned if amount is insufficient
+> - Guard verification creates a Payment object as transaction record
+> - The `namedNewPayment` field allows naming the Payment object for later reference
 
 ---
 
@@ -307,9 +465,14 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 
 ### Important Notes
 
-⚠️ **Two Withdrawal Methods**: 
+⚠️ **Two Withdrawal Methods**:
 - Fixed amount withdrawal: Set through `amount.fixed`, must go through Permission
 - Guard verification withdrawal: Set through `amount.by_external_withdraw_guard`, amount obtained from Guard table data
+
+⚠️ **Balance Requirements**:
+- **Deposit**: Ensure account has sufficient WOW token balance to deposit
+- **Withdraw**: Ensure Treasury has sufficient balance (greater than withdrawal amount). Error code 7 (`E_WITHDRAW_INSUFFICIENT_AMOUNT`) indicates insufficient Treasury balance
+- Use `faucet` to obtain testnet WOW tokens for testing
 
 ---
 
@@ -336,15 +499,46 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
         "index": 1
       }
     }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result** (after faucet and deposit):
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "249816",
+      "change": "mutated"
+    },
+    {
+      "type": "WReceivedObject",
+      "object": "0x7de4...7f82",
+      "change": "created",
+      "owner": "alice_address"
+    },
+    {
+      "type": "Payment",
+      "object": "0xfd7c...816e",
+      "change": "created"
+    }
+  ]
+}
+```
+
+> **Note**: Withdrawal creates a Payment object containing the withdrawn funds. The recipient needs to call `owner_receive` on the Treasury or query their received objects to access the funds.
 
 ---
 
 #### Example 3.2: Withdrawal through External Guard
 
-**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard", send to bob, simultaneously create Payment object.
+**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard_u64", send to bob, simultaneously create Payment object.
 
 ```json
 {
@@ -353,7 +547,7 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
     "object": "community_fund",
     "withdraw": {
       "amount": {
-        "by_external_withdraw_guard": "withdraw_guard"
+        "by_external_withdraw_guard": "withdraw_guard_u64"
       },
       "recipient": {
         "name_or_address": "bob"
@@ -366,9 +560,43 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
         "name": "withdraw_payment"
       }
     }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0x5b1a...3dbf",
+      "version": "264087",
+      "change": "mutated"
+    },
+    {
+      "type": "WReceivedObject",
+      "object": "0x1094...a712",
+      "change": "created",
+      "owner": "bob_address"
+    },
+    {
+      "type": "Payment",
+      "object": "0x3198...b46e",
+      "change": "created"
+    }
+  ]
+}
+```
+
+> **Important Constraints**:
+> - Withdrawal amount is **determined by Guard's identifier value**, not specified in the request
+> - The Guard's identifier value (e.g., 500000000) becomes the exact withdrawal amount
+> - Treasury must have sufficient balance to cover the Guard-specified amount
 
 ---
 
@@ -399,23 +627,41 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 #### Example 4.1: Add External Deposit Guard
 
-**Prompt**: Add external deposit Guard "public_deposit_guard" to "community_fund", identifier is 0, meaning depositable amount obtained from Guard table index 0.
+**Prompt**: Add external deposit Guard "deposit_guard_u64" to "team_treasury", identifier is 0, meaning depositable amount obtained from Guard table index 0.
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": "community_fund",
+    "object": "team_treasury",
     "external_deposit_guard": {
       "op": "add",
       "guards": [
         {
-          "guard": "public_deposit_guard",
+          "guard": "deposit_guard_u64",
           "identifier": 0
         }
       ]
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "265240",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -471,7 +717,7 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 #### Example 4.4: Remove External Deposit Guard
 
-**Prompt**: Remove external deposit Guard named "old_deposit_guard" from "community_fund".
+**Prompt**: Remove external deposit Guard named "deposit_guard_u64" from "community_fund".
 
 ```json
 {
@@ -480,9 +726,27 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
     "object": "community_fund",
     "external_deposit_guard": {
       "op": "remove",
-      "guards": ["old_deposit_guard"]
+      "guards": ["deposit_guard_u64"]
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0x5b1a...3dbf",
+      "version": "265243",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -490,17 +754,35 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 #### Example 4.5: Clear External Deposit Guard
 
-**Prompt**: Clear all external deposit Guards of "community_fund".
+**Prompt**: Clear all external deposit Guards of "team_treasury".
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": "community_fund",
+    "object": "team_treasury",
     "external_deposit_guard": {
       "op": "clear"
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "265241",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -581,7 +863,7 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 #### Example 5.3: Remove External Withdrawal Guard
 
-**Prompt**: Remove external withdrawal Guard named "old_withdraw_guard" from "community_fund".
+**Prompt**: Remove external withdrawal Guard named "withdraw_guard_u64" from "community_fund".
 
 ```json
 {
@@ -590,9 +872,27 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
     "object": "community_fund",
     "external_withdraw_guard": {
       "op": "remove",
-      "guards": ["old_withdraw_guard"]
+      "guards": ["withdraw_guard_u64"]
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0x5b1a...3dbf",
+      "version": "265244",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -600,17 +900,35 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 #### Example 5.4: Clear External Withdrawal Guard
 
-**Prompt**: Clear all external withdrawal Guards of "community_fund".
+**Prompt**: Clear all external withdrawal Guards of "team_treasury".
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
-    "object": "community_fund",
+    "object": "team_treasury",
     "external_withdraw_guard": {
       "op": "clear"
     }
+  },
+  "env": {
+    "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "265242",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -689,17 +1007,16 @@ Perform multiple operations on existing Treasury in a single transaction, such a
 
 #### Example 7.1: Combined Deposit and Withdrawal
 
-**Prompt**: For "team_treasury": 1) Deposit 200 WOW, 2) Withdraw 50 WOW to alice, 3) Simultaneously process received assets.
+**Prompt**: For "team_treasury": 1) Deposit 10 WOW, 2) Withdraw 0.5 WOW to alice, in the same transaction.
 
 ```json
 {
   "operation_type": "treasury",
   "data": {
     "object": "team_treasury",
-    "receive": "recently",
     "deposit": {
       "coin": {
-        "balance": 200000000000
+        "balance": 1000000000
       },
       "payment_info": {
         "remark": "treasury operation",
@@ -708,7 +1025,7 @@ Perform multiple operations on existing Treasury in a single transaction, such a
     },
     "withdraw": {
       "amount": {
-        "fixed": 50000000000
+        "fixed": 500000000
       },
       "recipient": {
         "name_or_address": "alice"
@@ -718,9 +1035,45 @@ Perform multiple operations on existing Treasury in a single transaction, such a
         "index": 1
       }
     }
+  },
+  "env": {
+    "network": "testnet"
   }
 }
 ```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Treasury",
+      "object": "0xbf0f...6249",
+      "version": "254284",
+      "change": "mutated"
+    },
+    {
+      "type": "Payment",
+      "object": "0x45d6...fccd",
+      "change": "created"
+    },
+    {
+      "type": "WReceivedObject",
+      "object": "0xb74b...81d1",
+      "change": "created",
+      "owner": "alice_address"
+    },
+    {
+      "type": "Payment",
+      "object": "0xc462...16ac",
+      "change": "created"
+    }
+  ]
+}
+```
+
+> **Note**: Combined operations execute atomically. If any operation fails, the entire transaction is rolled back.
 
 ---
 

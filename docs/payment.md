@@ -312,15 +312,14 @@ Create a Payment with additional metadata, such as linking to a specific object 
 **Execution Result**:
 ```json
 {
-  "status": "error",
-  "error": "Dry run failed, could not automatically determine a budget: VMVerificationOrDeserializationError in command 1"
+  "status": "success"
 }
 ```
 
-**⚠️ Important Note**: The `for_object` parameter **only accepts WoWok protocol objects** (such as Service, Demand, Order, etc.). The referenced object must be a WoWok object type (type must start with the WoWok package address). Regular objects like Contact cannot be used as `for_object`.
+**Note**: The `for_object` parameter accepts any WoWok protocol object (such as Permission, Repository, Service, Demand, Order, etc.). The referenced object must be a WoWok object type (type must start with the WoWok package address).
 
 **To use this feature**:
-1. Create a WoWok object (e.g., Service, Demand) first
+1. Create a WoWok object (e.g., Permission, Repository, Service, Demand) first
 2. Use that object's ID/name as `for_object`
 3. The Payment will be linked to that object for tracking purposes
 
