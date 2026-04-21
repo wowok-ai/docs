@@ -6,7 +6,7 @@
 
 The Machine component is WoWok's workflow automation engine, used to design and deploy automated workflow templates that define how services are delivered. Machines consist of nodes (workflow states) and forwards (operations that move the workflow forward), with permission checks and optional Guard validations.
 
-> **Note**: Use the `machineNode2file` tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly build new workflows from existing ones.
+> **Note**: Use the `machineNode2file` tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file) to quickly build new workflows from existing ones.
 
 ## Function List
 
@@ -109,7 +109,6 @@ machine
 │   └── um (Contact object, optional)
 │       ├── Option 1: Contact object name or ID (string)
 │       └── Option 2: null (to unbind contact)
-├── json_or_markdown_file (string, optional)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
 │   ├── network (string, optional) - "testnet" or "mainnet"
@@ -154,13 +153,12 @@ Machine operations use the following top-level structure:
 {
   "operation_type": "machine",
   "data": { ... },
-  "json_or_markdown_file": "string (optional)",
   "env": { ... },
   "submission": { ... }
 }
 ```
 
-**Important**: The `json_or_markdown_file` field is at the top level, not inside `data`. This is a file path containing node definitions for complete replacement of all nodes.
+**Important**: To replace all nodes from a file, use `data.node.json_or_markdown_file` field (see Sub-feature 11).
 
 ---
 
@@ -379,6 +377,108 @@ Returns transaction block information.
     },
     "description": "Public design workflow template - can be referenced by any service"
   }
+}
+```
+
+#### Example 1.6: Create Machine with Nodes from File
+
+**Prompt**: Create a Machine named "file_based_workflow" and load all node definitions from a JSON file. The file should contain a complete workflow with multiple nodes.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": {
+      "name": "file_based_workflow",
+      "permission": {
+        "name": "file_workflow_perm"
+      }
+    },
+    "node": {
+      "json_or_markdown_file": "/path/to/workflow_nodes.json"
+    }
+  }
+}
+```
+
+**File Content** (`workflow_nodes.json`):
+```json
+[
+  {
+    "name": "created",
+    "pairs": [
+      {
+        "prev_node": "",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "start",
+            "permissionIndex": 1000,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "in_progress",
+    "pairs": [
+      {
+        "prev_node": "created",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "complete",
+            "permissionIndex": 1000,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "completed",
+    "pairs": [
+      {
+        "prev_node": "in_progress",
+        "threshold": 1,
+        "forwards": []
+      }
+    ]
+  }
+]
+```
+
+**Execution Result**:
+```json
+{
+  "message": "Transaction completed successfully",
+  "result": [
+    {
+      "type": "Permission",
+      "type_raw": "0x2::permission::Permission",
+      "object": "0x8fd49ffe18acb15d8aa5501e93cbfb24ced6b914dc57c759c13f7b0674017671",
+      "version": "1172268",
+      "owner": {
+        "Shared": {
+          "initial_shared_version": 1172268
+        }
+      },
+      "change": "created"
+    },
+    {
+      "type": "Machine",
+      "type_raw": "0x2::machine::Machine",
+      "object": "0xd45bb45481fcb2aa13884acf55bf6f4f52fd94625cae8dcd808c748eefb535ff",
+      "version": "1172268",
+      "owner": {
+        "Shared": {
+          "initial_shared_version": 1172268
+        }
+      },
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -1059,7 +1159,7 @@ Remove specific forward operations from node connections.
 
 ---
 
-## Sub-feature 11: Complete Node Replacement via File (json_or_markdown_file)
+## Sub-feature 11: Complete Node Replacement via File
 
 ### Feature Description
 
@@ -1106,6 +1206,14 @@ The file must contain a JSON array of node objects:
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "message": "Transaction completed successfully",
+  "result": []
+}
+```
+
 #### Example 11.2: Replace Nodes from Markdown File
 
 **Prompt**: Replace all nodes using a Markdown file that contains the node definitions in a JSON code block.
@@ -1119,6 +1227,14 @@ The file must contain a JSON array of node objects:
       "json_or_markdown_file": "/path/to/workflow_doc.md"
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "message": "Transaction completed successfully",
+  "result": []
 }
 ```
 
