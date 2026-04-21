@@ -135,12 +135,12 @@ Create a new Allocation object with predefined distribution rules. Newly created
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "allocation" |
 | `data.object` | object | Yes | Create new Allocation | TypeNamedObject structure |
-| `data.object.name` | string | No | Local mark name | Max 64 characters |
+| `data.object.name` | string | No | Local mark name | Max 64 BCS bytes, cannot start with "0x" |
 | `data.object.tags` | array | No | Tags array | String array |
 | `data.object.onChain` | boolean | No | Whether to mark on-chain | |
 | `data.object.replaceExistName` | boolean | No | Replace existing name | |
 | `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
-| `data.allocators.description` | string | Yes | Allocators description | Max 65535 characters |
+| `data.allocators.description` | string | Yes | Allocators description | Max 4000 BCS bytes |
 | `data.allocators.threshold` | number | Yes | Threshold amount in smallest units | No decimals or negatives |
 | `data.allocators.allocators` | array | Yes | Allocator list | 1-100 allocators |
 | `data.allocators.allocators[].guard` | string | Yes | Guard object for this allocator | Guard name or ID |
@@ -148,6 +148,7 @@ Create a new Allocation object with predefined distribution rules. Newly created
 | `data.allocators.allocators[].sharing[].who` | object | Yes | Recipient type | `{ GuardIdentifier: number }`, `{ Entity: { name_or_address: string } }`, or `{ Signer: "signer" }` |
 | `data.allocators.allocators[].sharing[].sharing` | number | Yes | Sharing amount or rate in smallest units | No decimals or negatives |
 | `data.allocators.allocators[].sharing[].mode` | string | Yes | Allocation mode | "Amount", "Rate", or "Surplus" |
+| `data.allocators.allocators[].fix` | number | No | Fixed allocation amount for all recipients | No decimals or negatives |
 | `data.allocators.allocators[].max` | number or null | No | Maximum allocation amount | No decimals or negatives |
 | `data.coin` | object or string | Yes | Initial deposit coin | CoinParam structure |
 | `data.coin.balance` | number | No | Balance amount | No decimals or negatives |
@@ -162,13 +163,17 @@ Create a new Allocation object with predefined distribution rules. Newly created
 
 ⚠️ **When mode is "Surplus", the sharing field is ignored.**
 
+⚠️ **Rate Mode Requirements**: When using pure Rate mode (without any Amount mode items), the total rate must equal 10000 (100%). The sharing amounts will be calculated as percentages of the available balance during execution.
+
+⚠️ **Threshold Check**: For Amount mode allocations, the sum of all amounts must be greater than or equal to the threshold. For Rate mode allocations, the threshold check is performed during execution based on the actual balance.
+
 ---
 
 ### Examples
 
-#### Example 1.1: Create Simple Rate-based Allocation
+#### Example 1.1: Create Simple Amount-based Allocation
 
-**Prompt**: Create a new allocation named "profit_sharing" with: 1) Description "Monthly profit distribution", 2) Threshold at 5000000000 (5 WOW), 3) One allocator with "distribution_guard" guard, 4) Sharing items: 50% to founder, 30% to developer, 20% to marketing, 5) Initial deposit of 10000000000 (10 WOW), 6) Payment info with remark "Initial deposit" and index 1.
+**Prompt**: Create a new allocation named "profit_sharing" with: 1) Description "Monthly profit distribution", 2) Threshold at 1000000000 (1 WOW), 3) One allocator with "always_true_guard" guard, 4) Sharing items: 1000000000 to alice, 500000000 to testuser1, 500000000 to bob using Amount mode, 5) Initial deposit of 2000000000 (2 WOW), 6) Payment info with remark "Initial deposit" and index 1.
 
 ```json
 {
@@ -182,72 +187,10 @@ Create a new Allocation object with predefined distribution rules. Newly created
     },
     "allocators": {
       "description": "Monthly profit distribution",
-      "threshold": 5000000000,
+      "threshold": 1000000000,
       "allocators": [
         {
-          "guard": "distribution_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "founder"
-                }
-              },
-              "sharing": 5000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "developer"
-                }
-              },
-              "sharing": 3000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "marketing"
-                }
-              },
-              "sharing": 2000,
-              "mode": "Rate"
-            }
-          ],
-          "max": null
-        }
-      ]
-    },
-    "coin": {
-      "balance": 10000000000
-    },
-    "payment_info": {
-      "remark": "Initial deposit",
-      "index": 1
-    }
-  }
-}
-```
-
-#### Example 1.2: Create Allocation with Mixed Modes
-
-**Prompt**: Create allocation "team_payouts" with: 1) Description "Team weekly payouts", 2) Threshold at 2000000000 (2 WOW), 3) Two allocators: first with "weekly_guard" (fixed amount to alice, rate to bob, surplus to charlie), second with "bonus_guard" (rate-based), 4) Initial deposit of 5000000000 (5 WOW), 5) Payment info with remark "Team payout initial" and index 2.
-
-```json
-{
-  "operation_type": "allocation",
-  "data": {
-    "object": {
-      "name": "team_payouts",
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "allocators": {
-      "description": "Team weekly payouts",
-      "threshold": 2000000000,
-      "allocators": [
-        {
-          "guard": "weekly_guard",
+          "guard": "always_true_guard",
           "sharing": [
             {
               "who": {
@@ -261,32 +204,166 @@ Create a new Allocation object with predefined distribution rules. Newly created
             {
               "who": {
                 "Entity": {
+                  "name_or_address": "testuser1"
+                }
+              },
+              "sharing": 500000000,
+              "mode": "Amount"
+            },
+            {
+              "who": {
+                "Entity": {
                   "name_or_address": "bob"
                 }
               },
-              "sharing": 4000,
+              "sharing": 500000000,
+              "mode": "Amount"
+            }
+          ],
+          "max": null
+        }
+      ]
+    },
+    "coin": {
+      "balance": 2000000000
+    },
+    "payment_info": {
+      "remark": "Initial deposit",
+      "index": 1
+    }
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x8a63...331b",
+  "type": "Allocation",
+  "version": "100983",
+  "change": "created"
+}
+```
+
+#### Example 1.2: Create Allocation with Amount Mode
+
+**Prompt**: Create allocation "team_payouts" with: 1) Description "Team weekly payouts", 2) Threshold at 500000000 (0.5 WOW), 3) One allocator with "weekly_guard" (fixed amount to alice, testuser1, and bob), 4) Initial deposit of 2000000000 (2 WOW), 5) Payment info with remark "Team payout initial" and index 2.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": {
+      "name": "team_payouts",
+      "type_parameter": "0x2::wow::WOW"
+    },
+    "allocators": {
+      "description": "Team weekly payouts",
+      "threshold": 500000000,
+      "allocators": [
+        {
+          "guard": "weekly_guard",
+          "sharing": [
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "alice"
+                }
+              },
+              "sharing": 500000000,
+              "mode": "Amount"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "testuser1"
+                }
+              },
+              "sharing": 300000000,
+              "mode": "Amount"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "bob"
+                }
+              },
+              "sharing": 200000000,
+              "mode": "Amount"
+            }
+          ],
+          "max": 10000000000
+        }
+      ]
+    },
+    "coin": {
+      "balance": 2000000000
+    },
+    "payment_info": {
+      "remark": "Team payout initial",
+      "index": 2,
+      "for_guard": "weekly_guard"
+    }
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xa223...3a4e",
+  "type": "Allocation",
+  "version": "101677",
+  "change": "created"
+}
+```
+
+#### Example 1.3: Create Rate-based Allocation
+
+**Prompt**: Create a new allocation named "profit_sharing_rate" with: 1) Description "Monthly profit distribution by rate", 2) Threshold at 1000000000 (1 WOW), 3) One allocator with "always_true_guard" guard, 4) Sharing items: 50% to alice, 30% to testuser1, 20% to bob using Rate mode (total must be 10000 = 100%), 5) Initial deposit of 2000000000 (2 WOW), 6) Payment info with remark "Rate mode deposit" and index 3.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": {
+      "name": "profit_sharing_rate",
+      "type_parameter": "0x2::wow::WOW"
+    },
+    "allocators": {
+      "description": "Monthly profit distribution by rate",
+      "threshold": 1000000000,
+      "allocators": [
+        {
+          "guard": "always_true_guard",
+          "sharing": [
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "alice"
+                }
+              },
+              "sharing": 5000,
               "mode": "Rate"
             },
             {
               "who": {
                 "Entity": {
-                  "name_or_address": "charlie"
+                  "name_or_address": "testuser1"
                 }
               },
-              "sharing": 0,
-              "mode": "Surplus"
-            }
-          ],
-          "max": 10000000000
-        },
-        {
-          "guard": "bonus_guard",
-          "sharing": [
+              "sharing": 3000,
+              "mode": "Rate"
+            },
             {
               "who": {
-                "Signer": "signer"
+                "Entity": {
+                  "name_or_address": "bob"
+                }
               },
-              "sharing": 10000,
+              "sharing": 2000,
               "mode": "Rate"
             }
           ],
@@ -295,14 +372,24 @@ Create a new Allocation object with predefined distribution rules. Newly created
       ]
     },
     "coin": {
-      "balance": 5000000000
+      "balance": 2000000000
     },
     "payment_info": {
-      "remark": "Team payout initial",
-      "index": 2,
-      "for_guard": "weekly_guard"
+      "remark": "Rate mode deposit",
+      "index": 3
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xb071...650c",
+  "type": "Allocation",
+  "version": "992",
+  "change": "created"
 }
 ```
 
@@ -332,6 +419,37 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
 
 #### Example 2.1: Receive Recently Received Coins
 
+**Prerequisites**: Before receiving funds, you need to send a Payment to the Allocation object. Here are the steps:
+
+**Step 1**: Create and send a Payment to the Allocation object
+
+```json
+{
+  "operation_type": "payment",
+  "data": {
+    "object": {
+      "name": "payment_to_allocation"
+    },
+    "revenue": [
+      {
+        "recipient": {
+          "name_or_address": "profit_sharing"
+        },
+        "amount": {
+          "balance": 1000000000
+        }
+      }
+    ],
+    "info": {
+      "remark": "Payment to profit sharing allocation",
+      "index": 5
+    }
+  }
+}
+```
+
+**Step 2**: Receive the funds into the Allocation object
+
 **Prompt**: Receive all recently received coins into the "profit_sharing" allocation object.
 
 ```json
@@ -340,6 +458,46 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
   "data": {
     "object": "profit_sharing",
     "received_coins": "recently"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x8a63...331b",
+  "type": "Allocation",
+  "version": "102109",
+  "change": "mutated",
+  "received": [
+    {
+      "id": "0xd9fe...1f70",
+      "type": "0x2::payment::CoinWrapper<0x2::wow::WOW>",
+      "amount": 1000000000
+    }
+  ]
+}
+```
+
+⚠️ **Note**: You can also use the detailed format for `received_coins` with specific object details:
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "profit_sharing",
+    "received_coins": {
+      "balance": 1000000000,
+      "token_type": "0x2::wow::WOW",
+      "received": [
+        {
+          "id": "0xd9fed2a4b98b8125dd252775e5954d6db4be7bc8c9e53d176fa76ba1a5721f70",
+          "payment": "0x2197a9421d457c45bdec487a3e506c89861a2935806493615028994f1b8794ac",
+          "balance": 1000000000
+        }
+      ]
+    }
   }
 }
 ```
@@ -370,15 +528,26 @@ Verify the specified Guard and execute the corresponding fund distribution based
 
 #### Example 3.1: Execute Distribution by Guard
 
-**Prompt**: Execute fund distribution for "profit_sharing" allocation by verifying "distribution_guard".
+**Prompt**: Execute fund distribution for "profit_sharing" allocation by verifying "always_true_guard".
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
     "object": "profit_sharing",
-    "alloc_by_guard": "distribution_guard"
+    "alloc_by_guard": "always_true_guard"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x8a63...331b",
+  "type": "Allocation",
+  "version": "102951",
+  "change": "mutated"
 }
 ```
 
@@ -412,9 +581,30 @@ Execute multiple operations in a single call: receive funds and execute distribu
   "operation_type": "allocation",
   "data": {
     "object": "team_payouts",
-    "received_coins": "recently",
+    "received_coins": {
+      "balance": 1000000000,
+      "token_type": "0x2::wow::WOW",
+      "received": [
+        {
+          "id": "0x7857681fd9b9eeced363dfcf05750d6fa37178995fe88ab6cddd008b7e11365c",
+          "payment": "0xdde7c6c1906bbd0592b742b2772b5fc81fa1d1deb400a2ef3e59a644e9dd84bf",
+          "balance": 1000000000
+        }
+      ]
+    },
     "alloc_by_guard": "weekly_guard"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xa223...3a4e",
+  "type": "Allocation",
+  "version": "103485",
+  "change": "mutated"
 }
 ```
 

@@ -119,6 +119,28 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xc8e8...1bb4",
+  "type": "Payment",
+  "version": "30128",
+  "change": "created",
+  "objects": [
+    {
+      "type": "WReceivedObject",
+      "object": "0x1a88...9649",
+      "change": "created"
+    },
+    {
+      "type": "Payment",
+      "object": "0xc8e8...1bb4",
+      "change": "created"
+    }
+  ]
+}
 ```
 
 ---
@@ -147,6 +169,16 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
       "index": 2
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x...",
+  "type": "Payment",
+  "version": "...",
+  "change": "created"
 }
 ```
 
@@ -189,6 +221,12 @@ Create a Payment object to send tokens to multiple recipients in a single transa
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success"
+}
 ```
 
 ---
@@ -225,6 +263,12 @@ Create a Payment object to send tokens to multiple recipients in a single transa
       "index": 15
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success"
 }
 ```
 
@@ -264,7 +308,21 @@ Create a Payment with additional metadata, such as linking to a specific object 
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "error",
+  "error": "Dry run failed, could not automatically determine a budget: VMVerificationOrDeserializationError in command 1"
+}
 ```
+
+**⚠️ Important Note**: The `for_object` parameter **only accepts WoWok protocol objects** (such as Service, Demand, Order, etc.). The referenced object must be a WoWok object type (type must start with the WoWok package address). Regular objects like Contact cannot be used as `for_object`.
+
+**To use this feature**:
+1. Create a WoWok object (e.g., Service, Demand) first
+2. Use that object's ID/name as `for_object`
+3. The Payment will be linked to that object for tracking purposes
 
 ---
 
@@ -292,6 +350,12 @@ Create a Payment with additional metadata, such as linking to a specific object 
       "for_guard": "purchase_guard"
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success"
 }
 ```
 
@@ -323,6 +387,12 @@ Create a Payment with additional metadata, such as linking to a specific object 
       "for_guard": "service_guard"
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success"
 }
 ```
 
@@ -364,6 +434,12 @@ Create a Payment with custom environment settings, such as specifying network or
     "network": "testnet"
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success"
+}
 ```
 
 ---
@@ -393,6 +469,12 @@ Create a Payment with custom environment settings, such as specifying network or
   "env": {
     "account": "payment_manager"
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success"
 }
 ```
 

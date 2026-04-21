@@ -143,6 +143,21 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "72768",
+      "change": "mutated"
+    }
+  ]
+}
+```
+
 ---
 
 ## Function 2: Manage Personal Information (information)
@@ -192,15 +207,32 @@ Returns transaction block information (WowTransactionBlockSchema).
       "data": [
         {
           "name": "github",
-          "default": "https://github.com/devuser"
+          "value_type": "String",
+          "value": "https://github.com/devuser"
         },
         {
           "name": "twitter",
-          "default": "@devuser"
+          "value_type": "String",
+          "value": "@devuser"
         }
       ]
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "75363",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -222,6 +254,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": []
+}
+```
+
 ---
 
 #### Example 2.3: Clear All Personal Information
@@ -236,6 +276,21 @@ Returns transaction block information (WowTransactionBlockSchema).
       "op": "clear"
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "75365",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -255,11 +310,27 @@ Returns transaction block information (WowTransactionBlockSchema).
       "data": [
         {
           "name": "website",
-          "default": "https://myproject.io"
+          "value_type": "String",
+          "value": "https://myproject.io"
         }
       ]
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "76707",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -319,6 +390,27 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Resource",
+      "object": "0x6db5...efbe",
+      "version": "76708",
+      "change": "mutated"
+    },
+    {
+      "type": "TableItem_AddressMark",
+      "object": "0xed10...9f66",
+      "version": "76708",
+      "change": "created"
+    }
+  ]
+}
+```
+
 ---
 
 #### Example 3.2: Remove On-Chain Mark Tags
@@ -342,6 +434,27 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Resource",
+      "object": "0x6db5...efbe",
+      "version": "76709",
+      "change": "mutated"
+    },
+    {
+      "type": "TableItem_AddressMark",
+      "object": "0xed10...9f66",
+      "version": "76709",
+      "change": "mutated"
+    }
+  ]
+}
+```
+
 ---
 
 #### Example 3.3: Clear On-Chain Marks
@@ -357,6 +470,27 @@ Returns transaction block information (WowTransactionBlockSchema).
       "address": ["wallet_1", "wallet_2"]
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Resource",
+      "object": "0x6db5...efbe",
+      "version": "76710",
+      "change": "mutated"
+    },
+    {
+      "type": "TableItem_AddressMark",
+      "object": "0xed10...9f66",
+      "version": "76710",
+      "change": "deleted"
+    }
+  ]
 }
 ```
 
@@ -378,6 +512,27 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "Resource",
+      "object": "0x6db5...efbe",
+      "version": "76712",
+      "change": "mutated"
+    },
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "76712",
+      "change": "mutated"
+    }
+  ]
+}
+```
+
 ---
 
 #### Example 3.5: Replace On-Chain Mark
@@ -396,6 +551,21 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "172994",
+      "change": "mutated"
+    }
+  ]
+}
+```
+
 ---
 
 #### Example 3.6: Destroy On-Chain Mark
@@ -410,6 +580,21 @@ Returns transaction block information (WowTransactionBlockSchema).
       "op": "destroy"
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "172995",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -441,7 +626,8 @@ Execute multiple Personal operations in one transaction, such as adding personal
       "data": [
         {
           "name": "github",
-          "default": "https://github.com/devbuilder"
+          "value_type": "String",
+          "value": "https://github.com/devbuilder"
         }
       ]
     },
@@ -456,6 +642,21 @@ Execute multiple Personal operations in one transaction, such as adding personal
       ]
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "172993",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 
@@ -476,11 +677,13 @@ Execute multiple Personal operations in one transaction, such as adding personal
       "data": [
         {
           "name": "website",
-          "default": "https://myprofile.io"
+          "value_type": "String",
+          "value": "https://myprofile.io"
         },
         {
           "name": "twitter",
-          "default": "@myprofile"
+          "value_type": "String",
+          "value": "@myprofile"
         }
       ]
     },
@@ -499,6 +702,21 @@ Execute multiple Personal operations in one transaction, such as adding personal
     "account": "",
     "network": "testnet"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "objects": [
+    {
+      "type": "TableItem_EntityRegistrar",
+      "object": "0xe597...d5f4",
+      "version": "173106",
+      "change": "mutated"
+    }
+  ]
 }
 ```
 

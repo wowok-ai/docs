@@ -15,7 +15,7 @@ The Contact component is used to manage on-chain instant messaging contact profi
 | **Create Contact** | Set up IM contact profile | Establish team communication, service support | Enables secure on-chain messaging |
 | **Manage IM List** | Add/remove contact entries | Update communication partners | Maintains current contact information |
 | **Set Status** | Update availability message | Indicate online presence, response times | Improves communication efficiency |
-| **Receive Objects** | Collect assets sent to contact | Accept payments, documents | Facilitates value transfer to contact owners |
+
 
 ---
 
@@ -56,16 +56,12 @@ Contact Component
 │   │   │       └── description (string, optional)
 │   │   ├── op: "remove"
 │   │   │   └── im (array of strings)
-│   │   └── op: "clear"
-│   └── owner_receive (transfer received coins or NFT objects to owner, optional)
-│       ├── Option 1: "recently" (string) - receive all recent objects
-│       ├── Option 2: Array of received objects
-│       │   └── [{ id: "object_id", type: "object_type" }]
-│       └── Option 3: Received balance object
-│           ├── balance (number or string)
-│           ├── token_type (string)
-│           └── received (array of received items)
-├── env (optional, execution environment)
+│   │   ├── op: "clear"
+   └── owner_receive (transfer received coins or NFT objects to owner, optional)
+   │       ├── Option 1: "recently" (string) - receive all recent objects
+   │       ├── Option 2: Array of received objects
+   │       │   └── [{ id: "object_id", type: "object_type" }]
+   ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
 │   ├── network (string, optional) - "testnet" or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
@@ -111,7 +107,7 @@ Create a new Contact object for managing instant messaging contacts.
 
 | Parameter | Type | Required | Description | Constraints |
 |-----------|------|----------|-------------|-------------|
-| `object.name` | string | No | Local mark name | Max 64 characters |
+| `object.name` | string | No | Local mark name | Max 64 BCS bytes, cannot start with "0x" |
 | `object.id` | string | No | Object ID | 0x prefix + 64 hex characters |
 | `object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
 | `description` | string | No | Contact object description or public information | Max 4000 characters |
@@ -138,9 +134,20 @@ Create a new Contact object for managing instant messaging contacts.
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xb607...190c",
+  "type": "Contact",
+  "version": "93060",
+  "change": "created"
+}
+```
+
 #### Example 1.2: Create Contact with New Permission
 
-**Prompt:** Create a new contact named "team_contact", create a new permission object named "team_permission", set description to "Team contact information", and add "team_member_1" with description "Product Manager" to the IM list.
+**Prompt:** Create a new contact named "team_contact", create a new permission object named "team_permission", set description to "Team contact information", and add "alice" with description "Product Manager" to the IM list.
 
 ```json
 {
@@ -157,12 +164,23 @@ Create a new Contact object for managing instant messaging contacts.
       "op": "add",
       "im": [
         {
-          "at": "team_member_1",
+          "at": "alice",
           "description": "Product Manager"
         }
       ]
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x3c06...c965",
+  "type": "Contact",
+  "version": "93537",
+  "change": "created"
 }
 ```
 
@@ -183,6 +201,10 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 | `ims.im[].at` | string | Yes | Contact account address or name |
 | `ims.im[].description` | string | No | Contact note or description |
 
+### Constraints
+
+⚠️ **Maximum IM Contact Limit**: 200 contacts per Contact object. 
+
 ### Operation Type Description
 
 | Operation Type | Description |
@@ -200,7 +222,7 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 #### Example 2.1: Add Contacts
 
-**Prompt:** Use the existing contact "service_support" and add two new contacts: "support_agent_1" with description "Technical Support" and "support_agent_2" with description "Business Consulting".
+**Prompt:** Use the existing contact "service_support" and add a new contact: "testuser1" with description "Technical Support".
 
 ```json
 {
@@ -211,12 +233,8 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
       "op": "add",
       "im": [
         {
-          "at": "support_agent_1",
+          "at": "testuser1",
           "description": "Technical Support"
-        },
-        {
-          "at": "support_agent_2",
-          "description": "Business Consulting"
         }
       ]
     }
@@ -224,9 +242,20 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xb607...190c",
+  "type": "Contact",
+  "version": "94028",
+  "change": "mutated"
+}
+```
+
 #### Example 2.2: Set Contact List (Replace)
 
-**Prompt:** Use the existing contact "team_contact" and replace the entire IM list with "designer" (description: "Designer") and "developer" (description: "Development Engineer").
+**Prompt:** Use the existing contact "team_contact" and replace the entire IM list with "alice" (description: "Designer") and "testuser1" (description: "Developer").
 
 ```json
 {
@@ -237,12 +266,12 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
       "op": "set",
       "im": [
         {
-          "at": "designer",
+          "at": "alice",
           "description": "Designer"
         },
         {
-          "at": "developer",
-          "description": "Development Engineer"
+          "at": "testuser1",
+          "description": "Developer"
         }
       ]
     }
@@ -250,9 +279,20 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x3c06...c965",
+  "type": "Contact",
+  "version": "94531",
+  "change": "mutated"
+}
+```
+
 #### Example 2.3: Remove Contacts
 
-**Prompt:** Use the existing contact "service_support" and remove the contact named "old_agent" from the IM list.
+**Prompt:** Use the existing contact "service_support" and remove the contact named "testuser1" from the IM list.
 
 ```json
 {
@@ -261,25 +301,47 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
     "object": "service_support",
     "ims": {
       "op": "remove",
-      "im": ["old_agent"]
+      "im": ["testuser1"]
     }
   }
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xb607...190c",
+  "type": "Contact",
+  "version": "94532",
+  "change": "mutated"
+}
+```
+
 #### Example 2.4: Clear Contacts
 
-**Prompt:** Use the existing contact "service_support" and clear all contacts from the IM list.
+**Prompt:** Use the existing contact "team_contact" and clear all contacts from the IM list.
 
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": "service_support",
+    "object": "team_contact",
     "ims": {
       "op": "clear"
     }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x3c06...c965",
+  "type": "Contact",
+  "version": "94533",
+  "change": "mutated"
 }
 ```
 
@@ -293,9 +355,9 @@ Set your status message in this contact list.
 
 ### Parameter Description
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `my_status` | string | Yes | Status message |
+| Parameter | Type | Required | Description | Constraints |
+|-----------|------|----------|-------------|-------------|
+| `my_status` | string | Yes | Status message | Max 64 BCS bytes, cannot start with "0x" |
 
 ### Important Notes
 
@@ -303,15 +365,26 @@ Set your status message in this contact list.
 
 ### Example
 
-**Prompt:** Use the existing contact "team_contact" and set your personal status to "Online, available for contact".
+**Prompt:** Use the existing contact "service_support" and set your personal status to "Online, available for contact".
 
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": "team_contact",
+    "object": "service_support",
     "my_status": "Online, available for contact"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xb607...190c",
+  "type": "Contact",
+  "version": "95965",
+  "change": "mutated"
 }
 ```
 
@@ -323,24 +396,119 @@ Set your status message in this contact list.
 
 Receive objects sent to this Contact object and unwrap them to send to the permission owner.
 
+This function allows the Contact object owner to receive objects (including CoinWrapper from Payment) that were sent to the Contact object address.
+
 ### Parameter Description
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `owner_receive.objects` | array | No | List of object IDs to receive |
-| `owner_receive.recent` | boolean | No | Whether to receive recent objects |
+| `owner_receive` | string or array | Yes | Receive configuration: "recently" to receive all recent objects, or array of received object IDs |
 
-### Example
+### Important Notes
 
-**Prompt:** Use the existing contact "service_support" and receive all recently sent objects.
+⚠️ **The Contact object must have a Permission object associated with it** to use owner_receive.
+
+⚠️ **Only the Permission owner can execute owner_receive**.
+
+### Examples
+
+#### Example 4.1: Receive All Recently Received Objects
+
+**Prerequisites**: Before receiving objects, you need to send a Payment to the Contact object. Here are the steps:
+
+**Step 1**: Create a Contact object
 
 ```json
 {
   "operation_type": "contact",
   "data": {
-    "object": "service_support",
+    "object": {
+      "name": "contact_receive_test_v3"
+    },
+    "description": "Contact for testing owner receive functionality"
+  }
+}
+```
+
+**Step 2**: Send a Payment to the Contact object
+
+```json
+{
+  "operation_type": "payment",
+  "data": {
+    "object": {
+      "name": "payment_to_contact_v3"
+    },
+    "revenue": [
+      {
+        "recipient": {
+          "name_or_address": "contact_receive_test_v3"
+        },
+        "amount": {
+          "balance": 1000000000
+        }
+      }
+    ],
+    "info": {
+      "remark": "Test payment to contact",
+      "index": 11
+    }
+  }
+}
+```
+
+**Step 3**: Receive the objects from the Contact object
+
+**Prompt:** Use the existing contact "contact_receive_test_v3" and receive all recently sent objects.
+
+```json
+{
+  "operation_type": "contact",
+  "data": {
+    "object": "contact_receive_test_v3",
     "owner_receive": "recently"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xaee9...1db7",
+  "type": "Contact",
+  "version": "14541",
+  "change": "mutated"
+}
+```
+
+#### Example 4.2: Receive Specific Objects
+
+**Prompt:** Use the existing contact "contact_receive_test_v3" and receive specific objects by their IDs.
+
+```json
+{
+  "operation_type": "contact",
+  "data": {
+    "object": "contact_receive_test_v3",
+    "owner_receive": [
+      {
+        "id": "0xaee9b75f7903d05dbfb4ee2abe9e036503c66f4bc552d835543b9b49d3851db7",
+        "type": "0x2::payment::CoinWrapper<0x2::wow::WOW>"
+      }
+    ]
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xaee9...1db7",
+  "type": "Contact",
+  "version": "14542",
+  "change": "mutated"
 }
 ```
 
@@ -356,7 +524,7 @@ Execute multiple operations in a single call.
 
 #### Example 5.1: Create Contact and Add Contacts
 
-**Prompt:** Create a new contact named "customer_service" with existing permission "service_permission", set description to "Customer service team contact information", set location to "7x24 Online Support", add "cs_agent_1" (Pre-sales Consulting) and "cs_agent_2" (After-sales Support) to IM list, and set status to "Online".
+**Prompt:** Create a new contact named "customer_service" with existing permission "service_permission", set description to "Customer service team contact information", set location to "7x24 Online Support", add "alice" (Pre-sales Consulting) and "testuser1" (After-sales Support) to IM list.
 
 ```json
 {
@@ -372,17 +540,27 @@ Execute multiple operations in a single call.
       "op": "add",
       "im": [
         {
-          "at": "cs_agent_1",
+          "at": "alice",
           "description": "Pre-sales Consulting"
         },
         {
-          "at": "cs_agent_2",
+          "at": "testuser1",
           "description": "After-sales Support"
         }
       ]
-    },
-    "my_status": "Online"
+    }
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x7a22...080b",
+  "type": "Contact",
+  "version": "96881",
+  "change": "created"
 }
 ```
 

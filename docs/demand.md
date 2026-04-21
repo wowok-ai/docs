@@ -160,6 +160,28 @@ Create a new Demand object for posting service requests.
     "location": "Online service"
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "33729",
+  "change": "created",
+  "objects": [
+    {
+      "type": "Demand",
+      "object": "0x2d49...f414",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0xfe50...c914",
+      "change": "created"
+    }
+  ]
+}
 ```
 
 #### Example 1.2: Create Demand with Existing Permission
@@ -177,6 +199,28 @@ Create a new Demand object for posting service requests.
     "description": "Need a modern corporate website design",
     "location": "Online service"
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xfe82...45d9",
+  "type": "Demand",
+  "version": "33940",
+  "change": "created",
+  "objects": [
+    {
+      "type": "Demand",
+      "object": "0xfe82...45d9",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0x32f1...52e6",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -198,6 +242,28 @@ Create a new Demand object for posting service requests.
     "location": "Online service"
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xa8b4...107e",
+  "type": "Demand",
+  "version": "34144",
+  "change": "created",
+  "objects": [
+    {
+      "type": "Demand",
+      "object": "0xa8b4...107e",
+      "change": "created"
+    },
+    {
+      "type": "Permission",
+      "object": "0xece8...601b",
+      "change": "created"
+    }
+  ]
+}
 ```
 
 #### Example 1.4: Operate Existing Demand
@@ -211,6 +277,16 @@ Create a new Demand object for posting service requests.
     "object": "logo_design_demand",
     "description": "Updated description for the demand"
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "34145",
+  "change": "mutated"
 }
 ```
 
@@ -244,6 +320,69 @@ Recommend a Service to the Demand object.
       "service": "design_service"
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "error",
+  "error": "Dry run failed: MoveAbort in command 0"
+}
+```
+
+**⚠️ Important Prerequisites**: Before using `present`, you must:
+
+1. **Add a Guard to the Demand object first** (see Example 3.1 below)
+2. **Use the same Guard** in the `by_guard` parameter when calling `present`
+3. **Ensure the Guard validation passes** (use `always_true_guard_v4` for testing)
+
+**Complete workflow**:
+```json
+// Step 1: Add Guard to Demand
+{
+  "operation_type": "demand",
+  "data": {
+    "object": "logo_design_demand",
+    "guards": {
+      "op": "add",
+      "guard": [{"guard": "always_true_guard_v4"}]
+    }
+  }
+}
+
+// Step 2: Present service with the same Guard
+{
+  "operation_type": "demand",
+  "data": {
+    "object": "logo_design_demand",
+    "present": {
+      "recommend": "This design service is very suitable for your needs",
+      "by_guard": "always_true_guard_v4",
+      "service": "design_service"
+    }
+  }
+}
+
+**Execution Result (Complete workflow)**:
+```json
+{
+  "status": "success",
+  "object": "0xbf55...02b9",
+  "type": "Demand",
+  "version": "63619",
+  "change": "mutated",
+  "objects": [
+    {
+      "type": "Demand",
+      "object": "0xbf55...02b9",
+      "change": "mutated"
+    },
+    {
+      "type": "TableItem_DemandPresenter",
+      "object": "0x9eda...2665",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -295,6 +434,16 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "34485",
+  "change": "mutated"
+}
 ```
 
 #### Example 3.2: Set Guard List (Replace)
@@ -333,6 +482,16 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "...",
+  "change": "mutated"
+}
 ```
 
 #### Example 3.4: Clear Guards
@@ -348,6 +507,16 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
       "op": "clear"
     }
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "...",
+  "change": "mutated"
 }
 ```
 
@@ -386,6 +555,16 @@ Bind Reward, Contact and other components to Demand.
     "um": "demand_contact"
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "34762",
+  "change": "mutated"
+}
 ```
 
 #### Example 4.2: Set Rewards (Replace)
@@ -420,6 +599,16 @@ Bind Reward, Contact and other components to Demand.
     }
   }
 }
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "...",
+  "change": "mutated"
+}
 ```
 
 #### Example 4.4: Clear Rewards
@@ -452,6 +641,17 @@ Bind Reward, Contact and other components to Demand.
 }
 ```
 
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "34762",
+  "change": "mutated"
+}
+```
+
 #### Example 4.6: Unbind Contact
 
 **Prompt:** Use the existing demand "logo_design_demand" and unbind the contact.
@@ -463,6 +663,17 @@ Bind Reward, Contact and other components to Demand.
     "object": "logo_design_demand",
     "um": null
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "...",
+  "change": "mutated"
 }
 ```
 
@@ -504,6 +715,16 @@ Provide user feedback information for the Demand object.
       }
     ]
   }
+}
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0x2d49...f414",
+  "type": "Demand",
+  "version": "35008",
+  "change": "mutated"
 }
 ```
 
@@ -564,6 +785,13 @@ When `owner_receive` is a balance object:
     "object": "logo_design_demand",
     "owner_receive": "recently"
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success"
 }
 ```
 
