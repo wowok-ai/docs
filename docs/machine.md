@@ -6,7 +6,32 @@
 
 The Machine component is WoWok's workflow automation engine, used to design and deploy automated workflow templates that define how services are delivered. Machines consist of nodes (workflow states) and forwards (operations that move the workflow forward), with permission checks and optional Guard validations.
 
-> **Note**: Use the `machineNode2file` tool (see [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly build new workflows from existing ones.
+> **Note**: Use the `machineNode2file` tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly build new workflows from existing ones.
+
+### Permission Index Guide for Forward Operations
+
+When defining forward operations in Machine nodes, the `permissionIndex` field specifies who can execute that forward. **Important**: The permission index for forward operations is NOT the same as Machine management permissions (200-208).
+
+**Valid permissionIndex values for forward operations:**
+
+1. **User-defined permissions (1000-65535)** - Recommended for business-specific workflow operations
+   - Must be granted to operators via the Permission component before use
+   - Each Progress instance shares the same operators
+   - Example: Use 1000 for "confirm_order", 1001 for "deliver_goods"
+
+2. **Built-in permissions (100-450+)** - Use appropriate built-in permissions for common operations
+   - Repository: 100-105 (repository.new, repository.description, etc.)
+   - Reward: 150-157 (reward.new, reward.description, etc.)
+   - Service: 300-320 (service.new, service.description, etc.)
+   - And more...
+
+**NOT for forward operations:**
+- Machine management permissions (200-208): These control Machine object operations (create, modify nodes, publish), NOT workflow transitions
+- Progress management permissions (220-225): These control Progress object operations, NOT workflow transitions
+
+**Alternative to permissionIndex:**
+- Use `namedOperator` instead of `permissionIndex` for Progress-specific operator assignments
+- Each Progress instance can have different operators for the same namedOperator namespace
 
 ---
 
@@ -198,7 +223,9 @@ A Machine consists of nodes and their connections:
           "namedOperator": "namespace_name",
           "permissionIndex": 300,
           "weight": 1,
-          "guard": "guard_object_id"
+          "guard": {
+            "guard": "guard_object_id"
+          }
         }
       ]
     }
@@ -272,9 +299,35 @@ Returns transaction block information.
   "data": {
     "object": {
       "name": "design_workflow",
-      "tags": ["design", "service", "workflow"]
+      "tags": ["design", "service", "workflow"],
+      "onChain": false
     },
     "description": "Design service workflow - manages the complete lifecycle from order creation to delivery"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "message": "Transaction completed successfully",
+  "result": {
+    "type": "transaction",
+    "digest": "...",
+    "objectChanges": [
+      {
+        "type": "Machine",
+        "object": "0xec7a...0d51",
+        "version": "301932",
+        "change": "created"
+      },
+      {
+        "type": "Permission",
+        "object": "0x4203...1097",
+        "version": "301932",
+        "change": "created"
+      }
+    ]
   }
 }
 ```
@@ -365,6 +418,36 @@ Add nodes to a Machine. Each node represents a state in the workflow, with conne
 - **`permissionIndex`**: Uses Permission object's permission indexes. All Progress instances share the same operators (recommended for fixed workflows). First define the permissionIndex in the Permission object.
 - **`namedOperator`**: Uses named operator spaces. Each Progress instance can set different operators independently (recommended for flexible workflows). Use `progress_namedOperator` to manage operators for specific Progress instances.
 
+#### Understanding the Init Node (Empty String "")
+
+When designing workflow nodes, you need to understand how the **init node** (empty string `""`) works:
+
+- **What is the init node?** The empty string `""` represents the initial/starting state of a workflow. It does not need to be defined as a separate node in the nodes table.
+- **How to use it?** When defining the first node of your workflow, set `prev_node: ""` to indicate that this node can be reached from the initial state.
+- **How does Progress start?** When a Progress object is created, its `current` field is set to `""` (init node). To advance to the first actual node, you need a forward defined with `prev_node: ""`.
+
+**Example**: If your first node is "requirement", define it like this:
+```json
+{
+  "name": "requirement",
+  "pairs": [
+    {
+      "prev_node": "",  // Connects from init node
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "start_project",
+          "permissionIndex": 1000,
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Common Mistake**: Defining a node with `"pairs": []` means no node can transition to it, making it unreachable from the init state. Always ensure your starting node has at least one pair with `prev_node: ""`.
+
 ### Return Result
 
 Returns transaction block information.
@@ -373,9 +456,9 @@ Returns transaction block information.
 
 ### Examples
 
-#### Example 2.1: Add Single Node with No Connections
+#### Example 2.1: Add Starting Node with Init Connection
 
-**Prompt**: Add a node named "created" to "design_workflow". This is the starting node, so it has no previous node connections.
+**Prompt**: Add a starting node named "created" to "design_workflow". Connect it from the init node (empty string) so Progress can reach it when starting.
 
 ```json
 {
@@ -387,7 +470,19 @@ Returns transaction block information.
       "nodes": [
         {
           "name": "created",
-          "pairs": []
+          "pairs": [
+            {
+              "prev_node": "",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "start",
+                  "permissionIndex": 1000,
+                  "weight": 1
+                }
+              ]
+            }
+          ]
         }
       ]
     }
@@ -395,9 +490,26 @@ Returns transaction block information.
 }
 ```
 
+> **Note**: The `prev_node: ""` indicates this node can be reached from the init node. Without this, the node would be unreachable when Progress starts.
+
 #### Example 2.2: Add Node with Single Forward
 
-**Prompt**: Add a node named "confirmed" to "design_workflow". Connect it from "created" with a forward called "confirm_order" using permission index 300, weight 1, threshold 1.
+**Prompt**: Add a node named "confirmed" to "design_workflow". Connect it from "created" with a forward called "confirm_order" using permission index 1000 (user-defined permission), weight 1, threshold 1.
+
+> **Note**: Permission index for forward operations can be:
+> - **User-defined permissions**: 1000-65535 (recommended for business-specific operations)
+> - **Built-in permissions**: Any valid `BuiltinPermissionIndex` value (100-450+)
+> 
+> **Important**: Built-in permission index 200-208 are for **Machine management operations** (like creating machines, modifying nodes), NOT for forward operations within a workflow. For forward operations, use user-defined permissions (1000+) or other appropriate built-in permissions.
+> 
+> **Common Built-in Permission Indexes**:
+> - Repository: 100-105
+> - Reward: 150-157
+> - Machine (management): 200-208
+> - Progress (management): 220-225
+> - Service: 300-320
+> - Arbitration: 350-368
+> - Demand: 400-408
 
 ```json
 {
@@ -416,7 +528,7 @@ Returns transaction block information.
               "forwards": [
                 {
                   "name": "confirm_order",
-                  "permissionIndex": 300,
+                  "permissionIndex": 1000,
                   "weight": 1
                 }
               ]
@@ -429,9 +541,9 @@ Returns transaction block information.
 }
 ```
 
-#### Example 2.3: Add Multiple Nodes at Once
+#### Example 2.3: Add Node with Guard Validation
 
-**Prompt**: Add three nodes to "design_workflow" in one call: "designing", "reviewing", and "completed". Connect them sequentially with appropriate forwards.
+**Prompt**: Add a "delivered" node with a forward that requires Guard validation. Use the "delivery_guard" Guard object.
 
 ```json
 {
@@ -442,47 +554,52 @@ Returns transaction block information.
       "op": "add",
       "nodes": [
         {
-          "name": "designing",
+          "name": "delivered",
           "pairs": [
             {
               "prev_node": "confirmed",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "start_design",
-                  "permissionIndex": 300,
-                  "weight": 1
+                  "name": "confirm_delivery",
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "delivery_guard"
+                  }
                 }
               ]
             }
           ]
-        },
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Example 2.4: Add Node with Named Operator
+
+**Prompt**: Add a "processing" node using namedOperator "operator" instead of permissionIndex. This allows each Progress instance to have different operators.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "node": {
+      "op": "add",
+      "nodes": [
         {
-          "name": "reviewing",
+          "name": "processing",
           "pairs": [
             {
-              "prev_node": "designing",
+              "prev_node": "confirmed",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "submit_for_review",
-                  "permissionIndex": 300,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "completed",
-          "pairs": [
-            {
-              "prev_node": "reviewing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "approve_and_complete",
-                  "permissionIndex": 300,
+                  "name": "start_processing",
+                  "namedOperator": "operator",
                   "weight": 1
                 }
               ]
@@ -495,9 +612,9 @@ Returns transaction block information.
 }
 ```
 
-#### Example 2.4: Add Node with Multiple Forwards (Branch)
+#### Example 2.5: Add Multiple Nodes at Once
 
-**Prompt**: Add a "reviewing" node with two forwards: "approve" going to "completed" and "request_revision" going to "revising". Use permission index 300 for both.
+**Prompt**: Add three nodes ("preparing", "shipping", "completed") in a single operation to create a complete delivery workflow.
 
 ```json
 {
@@ -508,15 +625,15 @@ Returns transaction block information.
       "op": "add",
       "nodes": [
         {
-          "name": "revising",
+          "name": "preparing",
           "pairs": [
             {
-              "prev_node": "reviewing",
+              "prev_node": "confirmed",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "request_revision",
-                  "permissionIndex": 300,
+                  "name": "start_preparing",
+                  "permissionIndex": 1002,
                   "weight": 1
                 }
               ]
@@ -524,20 +641,15 @@ Returns transaction block information.
           ]
         },
         {
-          "name": "reviewing",
+          "name": "shipping",
           "pairs": [
             {
-              "prev_node": "designing",
+              "prev_node": "preparing",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "approve",
-                  "permissionIndex": 300,
-                  "weight": 1
-                },
-                {
-                  "name": "request_revision",
-                  "permissionIndex": 300,
+                  "name": "start_shipping",
+                  "permissionIndex": 1003,
                   "weight": 1
                 }
               ]
@@ -548,82 +660,13 @@ Returns transaction block information.
           "name": "completed",
           "pairs": [
             {
-              "prev_node": "reviewing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "approve",
-                  "permissionIndex": 300,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-```
-
-#### Example 2.5: Add Node with NamedOperator (Progress-specific)
-
-**Prompt**: Add a "delivering" node connected from "reviewing", using a namedOperator "delivery_team" instead of a permission index. This allows each Progress to have different operators.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "delivering",
-          "pairs": [
-            {
-              "prev_node": "reviewing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_delivery",
-                  "namedOperator": "delivery_team",
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-```
-
-#### Example 2.6: Add Node with Guard Validation
-
-**Prompt**: Add a "completed" node that requires Guard verification. Use the Guard "payment_verified" to ensure payment is received before completing.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "completed",
-          "pairs": [
-            {
-              "prev_node": "delivering",
+              "prev_node": "shipping",
               "threshold": 1,
               "forwards": [
                 {
                   "name": "complete_order",
-                  "permissionIndex": 300,
-                  "weight": 1,
-                  "guard": "payment_verified"
+                  "permissionIndex": 1004,
+                  "weight": 1
                 }
               ]
             }
@@ -641,27 +684,21 @@ Returns transaction block information.
 
 ### Feature Description
 
-Set nodes, similar to "add" but with semantic difference indicating intentional setting rather than incremental adding.
+Set (replace) existing nodes in a Machine. Use `bReplace` flag to control whether to replace or merge.
 
 ### Parameter Description
 
-Same as "add" operation.
-
-### Important Notes
-
-Same as "add" operation.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| Parameter Path | Type | Required | Description | Constraints |
+|----------------|------|----------|-------------|-------------|
+| `data.node.op` | string | Yes | Operation type | Fixed value "set" |
+| `data.node.nodes` | array | Yes | Node array | MachineNode array |
+| `data.node.bReplace` | boolean | No | Replace mode | true=replace existing; false=merge (default) |
 
 ### Examples
 
-#### Example 3.1: Set Nodes with bReplace=true
+#### Example 3.1: Replace Existing Node
 
-**Prompt**: Completely replace the "reviewing" node definition with a new version. Set bReplace=true to ensure the old node is replaced.
+**Prompt**: Replace the "confirmed" node with updated forward configuration. Set bReplace to true.
 
 ```json
 {
@@ -672,25 +709,20 @@ Returns transaction block information.
       "op": "set",
       "nodes": [
         {
-          "name": "reviewing",
+          "name": "confirmed",
           "pairs": [
             {
-              "prev_node": "designing",
-              "threshold": 1,
+              "prev_node": "created",
+              "threshold": 2,
               "forwards": [
                 {
-                  "name": "approve",
-                  "permissionIndex": 300,
+                  "name": "confirm_order",
+                  "permissionIndex": 1000,
                   "weight": 1
                 },
                 {
-                  "name": "minor_revision",
-                  "permissionIndex": 300,
-                  "weight": 1
-                },
-                {
-                  "name": "major_revision",
-                  "permissionIndex": 300,
+                  "name": "admin_confirm",
+                  "permissionIndex": 1005,
                   "weight": 1
                 }
               ]
@@ -710,33 +742,20 @@ Returns transaction block information.
 
 ### Feature Description
 
-Remove nodes from a Machine by name.
+Remove one or more nodes from a Machine by their names.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "remove" |
 | `data.node.nodes` | array | Yes | Node names to remove | Array of strings |
-
-### Important Notes
-
-⚠️ **Removing nodes may break the workflow!** Ensure remaining nodes still form a valid workflow.
-
-⚠️ **Connections to/from removed nodes are also removed!** You may need to reconfigure remaining nodes.
-
-### Return Result
-
-Returns transaction block information.
-
----
 
 ### Examples
 
 #### Example 4.1: Remove Single Node
 
-**Prompt**: Remove the node named "temporary_node" from "design_workflow".
+**Prompt**: Remove the "temp_node" node from "design_workflow".
 
 ```json
 {
@@ -745,7 +764,7 @@ Returns transaction block information.
     "object": "design_workflow",
     "node": {
       "op": "remove",
-      "nodes": ["temporary_node"]
+      "nodes": ["temp_node"]
     }
   }
 }
@@ -753,7 +772,7 @@ Returns transaction block information.
 
 #### Example 4.2: Remove Multiple Nodes
 
-**Prompt**: Remove nodes named "old_step1" and "old_step2" from "design_workflow" in one call.
+**Prompt**: Remove "temp_node1" and "temp_node2" from "design_workflow".
 
 ```json
 {
@@ -762,7 +781,7 @@ Returns transaction block information.
     "object": "design_workflow",
     "node": {
       "op": "remove",
-      "nodes": ["old_step1", "old_step2"]
+      "nodes": ["temp_node1", "temp_node2"]
     }
   }
 }
@@ -774,32 +793,19 @@ Returns transaction block information.
 
 ### Feature Description
 
-Remove ALL nodes from a Machine, leaving it empty.
+Remove all nodes from a Machine. Use with caution!
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "clear" |
-
-### Important Notes
-
-⚠️ **This deletes ALL nodes!** Only use when you want to completely rebuild the workflow.
-
-⚠️ **Published Machines cannot clear nodes!** This operation only works on unpublished Machines.
-
-### Return Result
-
-Returns transaction block information.
-
----
 
 ### Examples
 
 #### Example 5.1: Clear All Nodes
 
-**Prompt**: Remove ALL nodes from "design_workflow" to start fresh with a new workflow design.
+**Prompt**: Clear all nodes from "design_workflow". This will remove the entire workflow structure.
 
 ```json
 {
@@ -815,36 +821,25 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 6: Exchange Node Positions (op: "exchange")
+## Sub-feature 6: Exchange Nodes (op: "exchange")
 
 ### Feature Description
 
-Exchange the positions of two nodes in the Machine's internal ordering.
+Swap the positions of two nodes in the workflow. This exchanges all their connections and forwards.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "exchange" |
 | `data.node.node_one` | string | Yes | First node name | - |
 | `data.node.node_other` | string | Yes | Second node name | - |
-
-### Important Notes
-
-⚠️ **This only affects internal ordering!** Workflow logic (connections) remains unchanged.
-
-### Return Result
-
-Returns transaction block information.
-
----
 
 ### Examples
 
 #### Example 6.1: Exchange Two Nodes
 
-**Prompt**: Exchange the positions of "reviewing" and "designing" nodes in "design_workflow".
+**Prompt**: Exchange the positions of "preparing" and "shipping" nodes in "design_workflow".
 
 ```json
 {
@@ -853,8 +848,8 @@ Returns transaction block information.
     "object": "design_workflow",
     "node": {
       "op": "exchange",
-      "node_one": "reviewing",
-      "node_other": "designing"
+      "node_one": "preparing",
+      "node_other": "shipping"
     }
   }
 }
@@ -866,34 +861,21 @@ Returns transaction block information.
 
 ### Feature Description
 
-Rename a node while preserving all its connections and configuration.
+Rename a node while preserving all its connections and forwards.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "rename" |
-| `data.node.node_name_old` | string | Yes | Old node name | Must exist |
-| `data.node.node_name_new` | string | Yes | New node name | Must not exist |
-
-### Important Notes
-
-⚠️ **All references are automatically updated!** Connections pointing to the old name will point to the new name.
-
-⚠️ **New name must not conflict!** If the new name already exists, the operation will fail.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.node.node_name_old` | string | Yes | Current node name | - |
+| `data.node.node_name_new` | string | Yes | New node name | Max 64 BCS characters |
 
 ### Examples
 
-#### Example 7.1: Rename a Node
+#### Example 7.1: Rename Node
 
-**Prompt**: Rename the node "reviewing" to "client_review" in "design_workflow".
+**Prompt**: Rename "confirmed" node to "validated" in "design_workflow".
 
 ```json
 {
@@ -902,8 +884,8 @@ Returns transaction block information.
     "object": "design_workflow",
     "node": {
       "op": "rename",
-      "node_name_old": "reviewing",
-      "node_name_new": "client_review"
+      "node_name_old": "confirmed",
+      "node_name_new": "validated"
     }
   }
 }
@@ -911,35 +893,24 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 8: Remove Prior Node Connections (op: "remove prior node")
+## Sub-feature 8: Remove Prior Node (op: "remove prior node")
 
 ### Feature Description
 
-Remove the connection from a previous node to a node, while keeping the node itself.
+Remove specific previous node connections from a node. This removes the edge between two nodes without deleting the nodes themselves.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "remove prior node" |
-| `data.node.pairs` | array | Yes | Pairs to remove | Array of {prior_node_name array, node_name} |
-
-### Important Notes
-
-⚠️ **This removes connections, not nodes!** The target node remains, but loses connections from specified previous nodes.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.node.pairs` | array | Yes | Pairs to remove | Array of {prior_node_name, node_name} |
 
 ### Examples
 
-#### Example 8.1: Remove Single Prior Node Connection
+#### Example 8.1: Remove Single Prior Connection
 
-**Prompt**: Remove the connection from "created" to "confirmed" in "design_workflow". The "confirmed" node should remain.
+**Prompt**: Remove the connection from "created" to "confirmed" in "design_workflow".
 
 ```json
 {
@@ -959,63 +930,26 @@ Returns transaction block information.
 }
 ```
 
-#### Example 8.2: Remove Multiple Prior Node Connections
-
-**Prompt**: Remove connections from both "reviewing" and "revising" to "completed" node.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove prior node",
-      "pairs": [
-        {
-          "prior_node_name": ["reviewing", "revising"],
-          "node_name": "completed"
-        }
-      ]
-    }
-  }
-}
-```
-
 ---
 
-## Sub-feature 9: Add Forwards (op: "add forward")
+## Sub-feature 9: Add Forward (op: "add forward")
 
 ### Feature Description
 
-Add forward operations to existing node connections without recreating the entire node.
+Add forward operations to existing node connections. This adds new transition options without removing existing ones.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "add forward" |
-| `data.node.data` | array | Yes | Forward data array | See structure below |
-| `data.node.data[].prior_node_name` | string | Yes | Previous node name | - |
-| `data.node.data[].node_name` | string | Yes | Target node name | - |
-| `data.node.data[].forward` | array | Yes | Forwards to add | Array of {name, permission, weight} |
-| `data.node.data[].threshold` | number | Conditional | New threshold | Required if changing threshold |
-
-### Important Notes
-
-⚠️ **This adds to existing forwards!** It doesn't replace them. Use "remove forward" first if needed.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.node.data` | array | Yes | Forward data | Array of {prior_node_name, node_name, forward, threshold} |
 
 ### Examples
 
-#### Example 9.1: Add Single Forward to Existing Connection
+#### Example 9.1: Add Single Forward
 
-**Prompt**: Add a new forward "cancel" from "created" to "cancelled" node. Use permission index 300, weight 1, threshold 1.
+**Prompt**: Add a new forward "urgent_confirm" from "created" to "confirmed" with permission index 1006.
 
 ```json
 {
@@ -1027,11 +961,11 @@ Returns transaction block information.
       "data": [
         {
           "prior_node_name": "created",
-          "node_name": "cancelled",
+          "node_name": "confirmed",
           "forward": [
             {
-              "name": "cancel",
-              "permissionIndex": 300,
+              "name": "urgent_confirm",
+              "permissionIndex": 1006,
               "weight": 1
             }
           ],
@@ -1043,9 +977,9 @@ Returns transaction block information.
 }
 ```
 
-#### Example 9.2: Add Multiple Forwards at Once
+#### Example 9.2: Add Multiple Forwards
 
-**Prompt**: Add two forwards to the "reviewing" node: "minor_revision" going to "revising", and "escalate" going to "manager_review".
+**Prompt**: Add forwards to multiple node connections at once.
 
 ```json
 {
@@ -1056,24 +990,24 @@ Returns transaction block information.
       "op": "add forward",
       "data": [
         {
-          "prior_node_name": "reviewing",
-          "node_name": "revising",
+          "prior_node_name": "created",
+          "node_name": "confirmed",
           "forward": [
             {
-              "name": "minor_revision",
-              "permissionIndex": 300,
+              "name": "standard_confirm",
+              "permissionIndex": 1000,
               "weight": 1
             }
           ],
           "threshold": 1
         },
         {
-          "prior_node_name": "reviewing",
-          "node_name": "manager_review",
+          "prior_node_name": "confirmed",
+          "node_name": "processing",
           "forward": [
             {
-              "name": "escalate",
-              "permissionIndex": 300,
+              "name": "auto_process",
+              "permissionIndex": 1007,
               "weight": 1
             }
           ],
@@ -1087,7 +1021,7 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 10: Remove Forwards (op: "remove forward")
+## Sub-feature 10: Remove Forward (op: "remove forward")
 
 ### Feature Description
 
@@ -1097,28 +1031,14 @@ Remove specific forward operations from node connections.
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
 | `data.node.op` | string | Yes | Operation type | Fixed value "remove forward" |
-| `data.node.data` | array | Yes | Forward removal data | See structure below |
-| `data.node.data[].prior_node_name` | string | Yes | Previous node name | - |
-| `data.node.data[].node_name` | string | Yes | Target node name | - |
-| `data.node.data[].forward_name` | array | Yes | Forward names to remove | Array of strings |
-
-### Important Notes
-
-⚠️ **Only removes specified forwards!** Other forwards on the same connection remain.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.node.data` | array | Yes | Forward data to remove | Array of {prior_node_name, node_name, forward_name} |
 
 ### Examples
 
 #### Example 10.1: Remove Single Forward
 
-**Prompt**: Remove the forward named "old_operation" from the connection between "created" and "confirmed".
+**Prompt**: Remove the "urgent_confirm" forward from the connection between "created" and "confirmed".
 
 ```json
 {
@@ -1131,30 +1051,7 @@ Returns transaction block information.
         {
           "prior_node_name": "created",
           "node_name": "confirmed",
-          "forward_name": ["old_operation"]
-        }
-      ]
-    }
-  }
-}
-```
-
-#### Example 10.2: Remove Multiple Forwards
-
-**Prompt**: Remove forwards named "option_a" and "option_b" from the connection between "reviewing" and "revising".
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove forward",
-      "data": [
-        {
-          "prior_node_name": "reviewing",
-          "node_name": "revising",
-          "forward_name": ["option_a", "option_b"]
+          "forward_name": ["urgent_confirm"]
         }
       ]
     }
@@ -1168,26 +1065,18 @@ Returns transaction block information.
 
 ### Feature Description
 
-Completely replace ALL nodes by loading from a JSON or Markdown file. This is equivalent to "clear" followed by "add" with bReplace=true.
-
-**Two ways to use:**
-1. **Top-level field**: `json_or_markdown_file` at the same level as `data`
-2. **Inside data**: `data.node.json_or_markdown_file`
-
-> **Tip**: Use [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file) to export node definitions from existing Machines, then import them here to quickly build new workflows!
+Replace all nodes in a Machine by loading node definitions from a JSON or Markdown file. This is useful for bulk updates and template reuse.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `operation_type` | string | Yes | Operation type | Fixed value "machine" |
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `json_or_markdown_file` | string | Conditional | File path (TOP LEVEL) | Alternative to data.node |
-| `data.node.json_or_markdown_file` | string | Conditional | File path (inside data) | Either this OR top-level |
+| `data.node.json_or_markdown_file` | string | Yes | File path | Path to JSON or Markdown file containing node array |
 
-### File Format Requirements
+### File Format
 
-**JSON File (RECOMMENDED):**
+The file must contain a JSON array of node objects:
+
 ```json
 [
   {
@@ -1201,51 +1090,11 @@ Completely replace ALL nodes by loading from a JSON or Markdown file. This is eq
 ]
 ```
 
-**Markdown File:**
-```markdown
-```json
-[
-  {
-    "name": "node1",
-    "pairs": [...]
-  }
-]
-```
-```
-
-### Important Notes
-
-⚠️ **THIS COMPLETELY REPLACES ALL NODES!** This is a destructive operation - all existing nodes are removed and replaced with the file content.
-
-⚠️ **File must contain a node ARRAY!** Not an operation object with "op" field.
-
-⚠️ **Published Machines cannot use this!** Only works on unpublished Machines.
-
-### Return Result
-
-Returns transaction block information.
-
----
-
 ### Examples
 
-#### Example 11.1: Replace Nodes via Top-Level File
+#### Example 11.1: Replace Nodes from JSON File
 
-**Prompt**: Completely replace all nodes in "design_workflow" by loading from the file "d:/wowok/design_workflow_nodes.json". Use the top-level json_or_markdown_file field.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow"
-  },
-  "json_or_markdown_file": "d:/wowok/design_workflow_nodes.json"
-}
-```
-
-#### Example 11.2: Replace Nodes via data.node Field
-
-**Prompt**: Completely replace all nodes in "design_workflow" using the file "design_nodes.md" specified inside the data.node field.
+**Prompt**: Replace all nodes in "design_workflow" with nodes defined in "workflow_v2.json".
 
 ```json
 {
@@ -1253,7 +1102,23 @@ Returns transaction block information.
   "data": {
     "object": "design_workflow",
     "node": {
-      "json_or_markdown_file": "design_nodes.md"
+      "json_or_markdown_file": "/path/to/workflow_v2.json"
+    }
+  }
+}
+```
+
+#### Example 11.2: Replace Nodes from Markdown File
+
+**Prompt**: Replace all nodes using a Markdown file that contains the node definitions in a JSON code block.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "node": {
+      "json_or_markdown_file": "/path/to/workflow_doc.md"
     }
   }
 }
@@ -1261,35 +1126,54 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 12: Set Repository List
+## Sub-feature 12: Set Description
 
 ### Feature Description
 
-Set, add, remove, or clear the list of consensus repositories for the Machine.
+Add or update the description of a Machine object.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.repository.op` | string | Yes | Operation type | "add" \| "set" \| "remove" \| "clear" |
-| `data.repository.objects` | array | Conditional | Object IDs/names | Required for add/set/remove |
-
-### Important Notes
-
-⚠️ **Repositories store consensus data!** Used for storing workflow state that requires agreement.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.description` | string | Yes | Description text | Max description length |
 
 ### Examples
 
-#### Example 12.1: Add Repository
+#### Example 12.1: Set Description
 
-**Prompt**: Add the repository "design_data_repo" to "design_workflow".
+**Prompt**: Update the description of "design_workflow" to explain its purpose.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "description": "Design service workflow - manages the complete lifecycle from order creation to delivery, including confirmation, preparation, shipping, and completion stages."
+  }
+}
+```
+
+---
+
+## Sub-feature 13: Manage Repository
+
+### Feature Description
+
+Attach or detach Repository objects to a Machine for consensus data management.
+
+### Parameter Description
+
+| Parameter Path | Type | Required | Description | Constraints |
+|----------------|------|----------|-------------|-------------|
+| `data.repository.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
+| `data.repository.objects` | array | Conditional | Repository IDs | Required for add/set/remove |
+
+### Examples
+
+#### Example 13.1: Add Repositories
+
+**Prompt**: Add "config_repo" and "data_repo" to "design_workflow" for consensus data storage.
 
 ```json
 {
@@ -1298,15 +1182,15 @@ Returns transaction block information.
     "object": "design_workflow",
     "repository": {
       "op": "add",
-      "objects": ["design_data_repo"]
+      "objects": ["config_repo", "data_repo"]
     }
   }
 }
 ```
 
-#### Example 12.2: Set Repository List (Replace)
+#### Example 13.2: Set Repositories (Replace All)
 
-**Prompt**: Set the complete repository list for "design_workflow" to ["design_repo", "assets_repo"], replacing any existing repositories.
+**Prompt**: Replace all repositories with just "new_config_repo".
 
 ```json
 {
@@ -1315,15 +1199,15 @@ Returns transaction block information.
     "object": "design_workflow",
     "repository": {
       "op": "set",
-      "objects": ["design_repo", "assets_repo"]
+      "objects": ["new_config_repo"]
     }
   }
 }
 ```
 
-#### Example 12.3: Remove Repository
+#### Example 13.3: Remove Repositories
 
-**Prompt**: Remove "old_repo" from "design_workflow's" repository list.
+**Prompt**: Remove "config_repo" from "design_workflow".
 
 ```json
 {
@@ -1332,13 +1216,13 @@ Returns transaction block information.
     "object": "design_workflow",
     "repository": {
       "op": "remove",
-      "objects": ["old_repo"]
+      "objects": ["config_repo"]
     }
   }
 }
 ```
 
-#### Example 12.4: Clear All Repositories
+#### Example 13.4: Clear All Repositories
 
 **Prompt**: Remove all repositories from "design_workflow".
 
@@ -1356,81 +1240,132 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 13: Publish Machine
+## Sub-feature 14: Create Progress
 
 ### Feature Description
 
-Publish the Machine, making it available for creating Progress objects. After publishing, nodes can no longer be modified.
+Create a new Progress instance from a published Machine. Progress represents an active execution of the workflow template.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.publish` | boolean | Yes | Publish flag | Must be true |
+| `data.progress_new` | object | Yes | Progress creation config | - |
+| `data.progress_new.task` | string/null | No | Task object to bind | Optional task binding |
+| `data.progress_new.repository` | object | No | Context repositories | Repository configuration |
+| `data.progress_new.progress_namedOperator` | object | No | Named operators | Operator assignment |
+| `data.progress_new.namedNew` | object | No | Name for new Progress | Naming configuration |
 
 ### Important Notes
 
-⚠️ **PUBLISHING IS IRREVERSIBLE!** After publishing, you cannot modify nodes, add/remove forwards, etc.
+⚠️ **Machine must be published!** Only published Machines can create Progress objects.
 
-⚠️ **Verify workflow before publishing!** Check all nodes, connections, permissions, and Guards.
-
-⚠️ **Progress objects can only be created after publishing!** You must publish before the Machine is usable.
-
-### Return Result
-
-Returns transaction block information.
-
----
+⚠️ **Named operators are Progress-specific!** Each Progress can have different operators for the same namedOperator namespace.
 
 ### Examples
 
-#### Example 13.1: Publish Machine
+#### Example 14.1: Create Simple Progress
 
-**Prompt**: Publish "design_workflow" so that Progress objects can be created. This locks the node definitions.
+**Prompt**: Create a new Progress from "design_workflow" without any special configuration.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": "design_workflow",
-    "publish": true
+    "progress_new": {}
+  }
+}
+```
+
+#### Example 14.2: Create Named Progress
+
+**Prompt**: Create a Progress named "order_12345" with tags ["urgent", "vip"].
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "progress_new": {
+      "namedNew": {
+        "name": "order_12345",
+        "tags": ["urgent", "vip"]
+      }
+    }
+  }
+}
+```
+
+#### Example 14.3: Create Progress with Named Operators
+
+**Prompt**: Create a Progress and assign "alice" and "bob" as operators for the "operator" namespace.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "progress_new": {
+      "namedNew": {
+        "name": "order_12346"
+      },
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "operator",
+        "operators": {
+          "entities": [
+            {"name_or_address": "alice"},
+            {"name_or_address": "bob"}
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+#### Example 14.4: Create Progress with Context Repositories
+
+**Prompt**: Create a Progress and attach "order_data_repo" as context repository.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "design_workflow",
+    "progress_new": {
+      "namedNew": {
+        "name": "order_12347"
+      },
+      "repository": {
+        "op": "add",
+        "objects": ["order_data_repo"]
+      }
+    }
   }
 }
 ```
 
 ---
 
-## Sub-feature 14: Pause/Resume Machine
+## Sub-feature 15: Pause Machine
 
 ### Feature Description
 
-Pause or resume the generation of new Progress objects. When paused, no new Progress can be created, but existing Progress continues to work.
+Pause or resume a Machine to control whether new Progress instances can be created.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.pause` | boolean | Yes | Pause flag | true=pause; false=resume |
-
-### Important Notes
-
-⚠️ **Only affects NEW Progress objects!** Existing Progress objects continue to operate normally.
-
-⚠️ **This can be toggled!** Unlike publishing, pausing can be undone by setting pause=false.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.pause` | boolean | Yes | Pause state | true=pause; false=resume |
 
 ### Examples
 
-#### Example 14.1: Pause Machine
+#### Example 15.1: Pause Machine
 
-**Prompt**: Pause "design_workflow" to temporarily prevent creation of new Progress objects.
+**Prompt**: Pause "design_workflow" to temporarily stop new Progress creation.
 
 ```json
 {
@@ -1442,9 +1377,9 @@ Returns transaction block information.
 }
 ```
 
-#### Example 14.2: Resume Machine
+#### Example 15.2: Resume Machine
 
-**Prompt**: Resume "design_workflow" to allow creation of new Progress objects again.
+**Prompt**: Resume "design_workflow" to allow new Progress creation again.
 
 ```json
 {
@@ -1458,128 +1393,59 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 15: Generate New Progress Object
+## Sub-feature 16: Publish Machine
 
 ### Feature Description
 
-Create a new Progress object from the Machine. Progress represents an active execution of the workflow.
+Publish a Machine to lock its nodes and enable Progress creation. **Warning**: After publishing, nodes cannot be modified!
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | Must be PUBLISHED |
-| `data.progress_new` | object | Yes | Progress configuration | - |
-| `data.progress_new.task` | string | No | Task object ID/name | - |
-| `data.progress_new.repository` | object | No | Repository operations | Same format as data.repository |
-| `data.progress_new.namedNew` | object | No | Progress naming | {name, tags, onChain, replaceExistName} |
-| `data.progress_new.progress_namedOperator` | object | No | Named operator management | {op, name, operators} |
+| `data.publish` | boolean | Yes | Publish state | Must be true to publish |
 
 ### Important Notes
 
-⚠️ **Machine must be PUBLISHED!** You cannot create Progress from an unpublished Machine.
+⚠️ **IRREVERSIBLE OPERATION!** Once published, nodes cannot be modified. Make sure your workflow is complete.
 
-⚠️ **Progress has its own lifecycle!** Progress objects track the active state of a workflow execution.
-
-### Return Result
-
-Returns transaction block information.
-
----
+⚠️ **Required for Progress creation!** Only published Machines can create Progress objects.
 
 ### Examples
 
-#### Example 15.1: Create Minimal Progress
+#### Example 16.1: Publish Machine
 
-**Prompt**: Create a new Progress object from "design_workflow" without additional configuration.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "progress_new": {}
-  }
-}
-```
-
-#### Example 15.2: Create Named Progress with Task
-
-**Prompt**: Create a Progress object named "order_123_progress", bind it to task "order_123", and add tags ["active", "design"].
+**Prompt**: Publish "design_workflow" to finalize the workflow and enable Progress creation.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": "design_workflow",
-    "progress_new": {
-      "task": "order_123",
-      "namedNew": {
-        "name": "order_123_progress",
-        "tags": ["active", "design"]
-      }
-    }
-  }
-}
-```
-
-#### Example 15.3: Create Progress with Named Operators
-
-**Prompt**: Create a Progress and add "delivery_team" named operators: "delivery_person_1" and "delivery_person_2".
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "design_workflow",
-    "progress_new": {
-      "progress_namedOperator": {
-        "op": "add",
-        "name": "delivery_team",
-        "operators": {
-          "entities": [
-            { "name_or_address": "delivery_person_1" },
-            { "name_or_address": "delivery_person_2" }
-          ]
-        }
-      }
-    }
+    "publish": true
   }
 }
 ```
 
 ---
 
-## Sub-feature 16: Owner Receive Assets
+## Sub-feature 17: Owner Receive
 
 ### Feature Description
 
-Unwrap CoinWrapper objects and other received objects, sending them to the Permission object's owner.
+Receive and unwrap objects (coins, NFTs) that have been sent to the Machine object.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.owner_receive` | object | Yes | Receive configuration | {recent: true} OR {objects: [...]} |
-| `data.owner_receive.recent` | boolean | Conditional | Receive recent objects | Either this OR objects |
-| `data.owner_receive.objects` | array | Conditional | Specific object IDs | Either this OR recent |
-
-### Important Notes
-
-⚠️ **Assets go to Permission owner!** Not the Machine operator.
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.owner_receive` | string/array/object | Yes | Receive configuration | "recently" or object list |
 
 ### Examples
 
-#### Example 16.1: Receive Recent Objects
+#### Example 17.1: Receive All Recent Objects
 
-**Prompt**: Receive all recently received objects for "design_workflow" and send them to the owner.
+**Prompt**: Receive all recently sent objects to "design_workflow".
 
 ```json
 {
@@ -1591,9 +1457,9 @@ Returns transaction block information.
 }
 ```
 
-#### Example 16.2: Receive Specific Normal Objects
+#### Example 17.2: Receive Specific Objects
 
-**Prompt**: Receive specific objects with IDs ["0xabc123...", "0xdef456..."] from "design_workflow".
+**Prompt**: Receive specific objects by their IDs.
 
 ```json
 {
@@ -1601,14 +1467,8 @@ Returns transaction block information.
   "data": {
     "object": "design_workflow",
     "owner_receive": [
-      {
-        "id": "0xabc123...",
-        "type": "object"
-      },
-      {
-        "id": "0xdef456...",
-        "type": "object"
-      }
+      {"id": "0x1234...", "type": "0x2::coin::Coin<0x2::wow::WOW>"},
+      {"id": "0x5678...", "type": "0x2::nft::NFT"}
     ]
   }
 }
@@ -1616,44 +1476,37 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 17: Set Contact Object
+## Sub-feature 18: Manage Contact (UM)
 
 ### Feature Description
 
-Set or clear the contact object (um) for the Machine.
+Set or remove a Contact object reference for the Machine. Contact objects enable messaging and coordination for the workflow.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.um` | string/null | Yes | Contact object | String (ID/name) or null to clear |
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `data.um` | string/null | Yes | Contact object reference | Contact object name/ID, or null to remove |
 
 ### Examples
 
-#### Example 17.1: Set Contact Object
+#### Example 18.1: Set Contact Object
 
-**Prompt**: Set the contact object for "design_workflow" to "team_messenger".
+**Prompt**: Set "dev_team_contact" as the contact object for "design_workflow".
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": "design_workflow",
-    "um": "team_messenger"
+    "um": "dev_team_contact"
   }
 }
 ```
 
-#### Example 17.2: Clear Contact Object
+#### Example 18.2: Remove Contact Object
 
-**Prompt**: Remove the contact object from "design_workflow" by setting um to null.
+**Prompt**: Remove the contact object reference from "design_workflow".
 
 ```json
 {
@@ -1667,114 +1520,532 @@ Returns transaction block information.
 
 ---
 
-## Sub-feature 18: Set Description
+## Sub-feature 19: Export Node Definitions with machineNode2file
 
 ### Feature Description
 
-Set or update the Machine's description.
+Export a Machine object's node definitions from the blockchain to a local JSON or Markdown file. This allows you to backup, document, or reuse workflow definitions.
 
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `data.object` | string/object | Yes | Machine name or ID | - |
-| `data.description` | string | Yes | Description text | - |
-
-### Return Result
-
-Returns transaction block information.
-
----
+| `operation_type` | string | Yes | Operation type | Fixed value "machineNode2file" |
+| `machine` | string | Yes | Machine name or ID | - |
+| `file_path` | string | Yes | Output file path | Absolute or relative path |
+| `format` | string | No | Output format | "json" (default) or "markdown" |
+| `env.account` | string | No | Account to use | Empty string for default |
+| `env.network` | string | No | Network | "localnet" or "testnet" |
 
 ### Examples
 
-#### Example 18.1: Set Description
+#### Example 19.1: Export to JSON File
 
-**Prompt**: Update the description of "design_workflow" to explain it's a complete design service workflow with 8 nodes and client review steps.
+**Prompt**: Export node definitions from "software_dev_workflow" to a JSON file.
 
 ```json
 {
-  "operation_type": "machine",
+  "operation_type": "machineNode2file",
+  "machine": "software_dev_workflow",
+  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+  "format": "json",
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+  "format": "json",
+  "machine_object": "software_dev_workflow",
+  "node_count": 8
+}
+```
+
+#### Example 19.2: Export to Markdown File
+
+**Prompt**: Export node definitions to a Markdown file for documentation.
+
+```json
+{
+  "operation_type": "machineNode2file",
+  "machine": "software_dev_workflow",
+  "file_path": "d:\\wowok\\docs\\workflow_nodes.md",
+  "format": "markdown",
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+
+### Important Notes
+
+⚠️ **File format**: JSON files contain the raw node array. Markdown files wrap the JSON in a code block for documentation purposes.
+
+⚠️ **Reuse**: Exported files can be used with `json_or_markdown_file` (Sub-feature 11) to quickly create new workflows based on existing ones.
+
+---
+
+## Real-World Example: Software Development Lifecycle (SDLC) Workflow
+
+This section demonstrates a complete, real-world implementation of a software development workflow using the Machine component. All examples have been tested and executed on the WoWok testnet.
+
+### Project Overview
+
+**Project Name**: Software Development Lifecycle Workflow  
+**Use Case**: Managing the complete process from requirements gathering to production deployment  
+**Team Structure**:
+- Product Manager (pm_alice) - Requirements approval
+- Architect (arch_bob) - Design approval  
+- Development Lead (dev_lead_carol) - Code review and deployment
+- Test Lead (test_lead_dave) - Testing approval
+- Customer (customer_eve) - UAT approval
+
+### Workflow Design
+
+```
+requirement → design → development → code_review → testing → uat → deployment → completed
+```
+
+**8 Nodes, 7 Transitions**:
+1. **requirement** - Starting state, connects from init node (empty string `prev_node: ""`)
+2. **design** - Architecture design phase (requires PM approval)
+3. **development** - Implementation phase (requires Architect approval)
+4. **code_review** - Code review phase (uses namedOperator for flexible developer assignment)
+5. **testing** - QA testing phase (requires Dev Lead approval)
+6. **uat** - User Acceptance Testing (requires Test Lead approval)
+7. **deployment** - Production deployment (requires Customer approval)
+8. **completed** - Final state (requires Dev Lead approval)
+
+> **Note on Init Node**: The empty string `""` represents the initial node in a workflow. When creating the first node in your workflow, use `prev_node: ""` to indicate it can be reached from the initial state. Progress objects start at the init node (`current: ""`) when created.
+
+### Prerequisites
+
+Before creating the Machine workflow, you need to:
+
+1. **Create Team Accounts** (see [Account Operations](../account.md))
+2. **Create Permission Object** with custom permission indexes (see [Permission Component](permission.md))
+3. **Create Guard Objects** for validation (see [Guard Component](guard.md))
+
+---
+
+## Step-by-Step Implementation
+
+### Step 1: Create Team Accounts
+
+Create accounts for each team member:
+
+```json
+{
+  "operation_type": "account",
   "data": {
-    "object": "design_workflow",
-    "description": "Complete design service workflow - includes order creation, confirmation, design, client review, revisions, delivery, and completion. Supports both approval and revision paths."
+    "gen": {
+      "name": "pm_alice"
+    }
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "gen": {
+    "address": "0xd3a1e00fb2401dadf0f5c229f8993b5a8934552b1dc2b1cd719f5d9e2aeff33d",
+    "name": "pm_alice"
+  }
+}
+```
+
+Repeat for other team members:
+- `arch_bob` → `0xf6f8...ed15`
+- `dev_lead_carol` → `0xad42...7220`
+- `test_lead_dave` → `0x3102...0b09`
+- `customer_eve` → `0xfa01...dbcd`
+
+> **Note**: Get test coins from the faucet for each account using the `faucet` operation.
+
+---
+
+### Step 2: Create Permission Object
+
+Create a Permission object to manage workflow access control:
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": {
+      "name": "dev_team_permission",
+      "tags": ["development", "team", "workflow"]
+    },
+    "description": "Permission object for software development team workflow"
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "type": "Permission",
+  "object": "0x24828d09b0e5f9ca8ce899420952399ad40b722185a57669cb6792012d68174c",
+  "version": "5",
+  "change": "created"
+}
+```
+
+---
+
+### Step 3: Assign Custom Permission Indexes
+
+Assign user-defined permission indexes (1000-1004) to team members:
+
+**Permission 1000 - Product Manager (Requirement Approval)**:
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "dev_team_permission",
+    "table": {
+      "op": "add perm by index",
+      "index": 1000,
+      "entity": {
+        "entities": [{"name_or_address": "pm_alice"}]
+      }
+    },
+    "remark": {
+      "op": "set",
+      "index": 1000,
+      "remark": "Product Manager - Requirement approval permission"
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission 1001 - Architect (Design Approval)**:
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "dev_team_permission",
+    "table": {
+      "op": "add perm by index",
+      "index": 1001,
+      "entity": {
+        "entities": [{"name_or_address": "arch_bob"}]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission 1002 - Development Lead (Code Review & Deployment)**:
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "dev_team_permission",
+    "table": {
+      "op": "add perm by index",
+      "index": 1002,
+      "entity": {
+        "entities": [{"name_or_address": "dev_lead_carol"}]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission 1003 - Test Lead (Testing Approval)**:
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "dev_team_permission",
+    "table": {
+      "op": "add perm by index",
+      "index": 1003,
+      "entity": {
+        "entities": [{"name_or_address": "test_lead_dave"}]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission 1004 - Customer (UAT Approval)**:
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "dev_team_permission",
+    "table": {
+      "op": "add perm by index",
+      "index": 1004,
+      "entity": {
+        "entities": [{"name_or_address": "customer_eve"}]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
   }
 }
 ```
 
 ---
 
-## Sub-feature 19: Combined Operations
+### Step 4: Create Guard Object
 
-### Feature Description
+Create an always-true Guard for workflow transitions:
 
-Perform multiple operations in a single call, such as creating a Machine, adding nodes, setting repositories, and publishing in one transaction.
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "dev_workflow_guard",
+      "tags": ["guard", "workflow", "development"]
+    },
+    "description": "Always true guard for development workflow transitions",
+    "table": [
+      {
+        "identifier": 0,
+        "value_type": "Bool",
+        "b_submission": false,
+        "value": true
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {"type": "identifier", "identifier": 0},
+          {"type": "identifier", "identifier": 0}
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
 
-### Important Notes
-
-⚠️ **Order matters!** Operations are executed in the order they appear in the schema.
-
-⚠️ **Can't publish and modify nodes together!** Once you set publish=true, node modifications in the same call may fail or be ignored.
-
-### Return Result
-
-Returns transaction block information.
+**Execution Result**:
+```json
+{
+  "type": "Guard",
+  "object": "0x6ee9163dd90aaf44402674100d136d86eeea0e42e68036db2ed41d61a27ce48a",
+  "version": "519377",
+  "change": "created"
+}
+```
 
 ---
 
-### Examples
+### Step 5: Create Machine Object
 
-#### Example 19.1: Complete Workflow Setup in One Call
-
-**Prompt**: Create a complete workflow in one call: 1) Create Machine named "full_design_flow", 2) Add 4 nodes (created, confirmed, designing, completed), 3) Add repository "design_repo", 4) Set description.
+Create the Machine with the Permission object:
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "full_design_flow",
-      "tags": ["complete", "design", "workflow"]
+      "name": "software_dev_workflow",
+      "permission": "dev_team_permission",
+      "tags": ["development", "workflow", "sdlc"],
+      "onChain": true
     },
-    "description": "Complete design workflow with all essential steps",
-    "repository": {
-      "op": "add",
-      "objects": ["design_repo"]
-    },
+    "description": "Software Development Lifecycle Workflow - manages the complete process from requirements to deployment"
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "type": "Machine",
+  "object": "0xb494336e61f4de62bc646fdb9612ec200d268f4e9407dc71127983ee0cff4324",
+  "version": "519690",
+  "change": "created"
+}
+```
+
+---
+
+### Step 6: Add Workflow Nodes
+
+Add all 8 nodes with their connections:
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "software_dev_workflow",
     "node": {
       "op": "add",
       "nodes": [
         {
-          "name": "created",
-          "pairs": []
-        },
-        {
-          "name": "confirmed",
+          "name": "requirement",
           "pairs": [
             {
-              "prev_node": "created",
+              "prev_node": "",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "confirm",
-                  "permissionIndex": 300,
-                  "weight": 1
+                  "name": "start_project",
+                  "permissionIndex": 1000,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
                 }
               ]
             }
           ]
         },
         {
-          "name": "designing",
+          "name": "design",
           "pairs": [
             {
-              "prev_node": "confirmed",
+              "prev_node": "requirement",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "start_design",
-                  "permissionIndex": 300,
-                  "weight": 1
+                  "name": "submit_design",
+                  "permissionIndex": 1000,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "development",
+          "pairs": [
+            {
+              "prev_node": "design",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "start_development",
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "code_review",
+          "pairs": [
+            {
+              "prev_node": "development",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "submit_code",
+                  "namedOperator": "developer",
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "testing",
+          "pairs": [
+            {
+              "prev_node": "code_review",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "approve_code",
+                  "permissionIndex": 1002,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "uat",
+          "pairs": [
+            {
+              "prev_node": "testing",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "pass_testing",
+                  "permissionIndex": 1003,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "deployment",
+          "pairs": [
+            {
+              "prev_node": "uat",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "approve_uat",
+                  "permissionIndex": 1004,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
                 }
               ]
             }
@@ -1784,13 +2055,16 @@ Returns transaction block information.
           "name": "completed",
           "pairs": [
             {
-              "prev_node": "designing",
+              "prev_node": "deployment",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "complete",
-                  "permissionIndex": 300,
-                  "weight": 1
+                  "name": "deploy_production",
+                  "permissionIndex": 1002,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "dev_workflow_guard"
+                  }
                 }
               ]
             }
@@ -1798,211 +2072,288 @@ Returns transaction block information.
         }
       ]
     }
-  }
-}
-```
-
----
-
-## Sub-feature 20: Export Node Definitions with machineNode2file
-
-### Feature Description
-
-Use the `machineNode2file` tool to export a Machine object's node definition from the blockchain to a local JSON or Markdown file. The exported file can be edited and used to create new Machine objects, enabling workflow reuse and rapid template creation.
-
-**Core Benefits:**
-- Quickly extract node definitions from ANY on-chain Machine
-- Edit and refine exported files offline
-- Use exported files with "Node File Replacement" to build new workflows
-- Create workflow templates and backups
-
-### Schema Tree (4-Level Structure)
-
-```
-machineNode2file (Machine Node to File)
-├── machine (required)
-│   └── [Machine name or Address/ID]
-├── file_path (required)
-│   └── [Output file path]
-├── format (optional)
-│   ├── "json" (default)
-│   └── "markdown"
-└── env (optional)
-    ├── account (optional)
-    ├── permission_guard (optional)
-    ├── no_cache (optional)
-    ├── network (optional)
-    └── referrer (optional)
-```
-
-### Parameter Description
-
-| Parameter Path | Type | Required | Description | Constraints |
-|----------------|------|----------|-------------|-------------|
-| `machine` | string | Yes | Machine object ID or name to export | Use name (preferred) or ID |
-| `file_path` | string | Yes | Output file path | Absolute or relative path |
-| `format` | enum | No | Output format | "json" (default) or "markdown" |
-| `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
-| `env.no_cache` | boolean | No | Disable caching | true=bypass cache |
-
-### Important Notes
-
-⚠️ **This is a read-only operation!** Does not modify any on-chain state.
-
-⚠️ **Use names instead of 0x addresses!** Reference Machines by name for clarity.
-
-⚠️ **Exported file matches node structure!** The output format is compatible with "Node File Replacement" (Sub-feature 11).
-
-### Return Result
-
-Returns the exported file path, format, Machine object, and node count:
-
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "file_path": "d:/wowok/exported_nodes.json",
-      "format": "json",
-      "machine_object": "design_workflow",
-      "node_count": 8
-    }
-  }
-}
-```
-
----
-
-### Examples
-
-#### Example 20.1: Export to JSON (Default Format)
-
-**Prompt**: Export the node definition from "design_workflow" to the file "d:/wowok/exported_nodes.json".
-
-```json
-{
-  "machine": "design_workflow",
-  "file_path": "d:/wowok/exported_nodes.json"
-}
-```
-
-#### Example 20.2: Export to Markdown Format
-
-**Prompt**: Export "design_workflow" nodes to "design_nodes.md" in Markdown format for documentation and sharing.
-
-```json
-{
-  "machine": "design_workflow",
-  "file_path": "design_nodes.md",
-  "format": "markdown"
-}
-```
-
-#### Example 20.3: Export with Custom Network
-
-**Prompt**: Export "public_template" Machine from testnet to "template_backup.json".
-
-```json
-{
-  "machine": "public_template",
-  "file_path": "template_backup.json",
-  "format": "json",
+  },
   "env": {
+    "account": "pm_alice",
     "network": "testnet"
   }
 }
 ```
 
-#### Example 20.4: Workflow Reuse Pattern
-
-**Prompt**: Export "proven_workflow" nodes, edit to create a new variant, then use Sub-feature 11 to import into a new Machine.
-
-Step 1: Export
+**Execution Result**:
 ```json
 {
-  "machine": "proven_workflow",
-  "file_path": "workflow_template.json"
+  "type": "Machine",
+  "object": "0xb494336e61f4de62bc646fdb9612ec200d268f4e9407dc71127983ee0cff4324",
+  "version": "519691",
+  "change": "mutated",
+  "nodes_created": 8
 }
 ```
 
-Step 2: Edit `workflow_template.json` (modify nodes as needed)
+---
 
-Step 3: Import into new Machine (see Sub-feature 11)
+### Step 7: Export Node Definitions to File
+
+Export the node definitions for reuse:
+
+```json
+{
+  "operation_type": "machineNode2file",
+  "machine": "software_dev_workflow",
+  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+  "format": "json",
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+  "format": "json",
+  "machine_object": "software_dev_workflow",
+  "node_count": 8
+}
+```
+
+The exported file contains the complete node array:
+```json
+[
+  {
+    "name": "requirement",
+    "pairs": [
+      {
+        "prev_node": "",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "start_project",
+            "permissionIndex": 1000,
+            "weight": 1,
+            "guard": {
+              "guard": "0x6ee9...e48a",
+              "retained_submission": []
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "design",
+    "pairs": [
+      {
+        "prev_node": "requirement",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "submit_design",
+            "permissionIndex": 1000,
+            "weight": 1,
+            "guard": {
+              "guard": "0x6ee9...e48a",
+              "retained_submission": []
+            }
+          }
+        ]
+      }
+    ]
+  }
+  // ... more nodes
+]
+```
+
+---
+
+### Step 8: Create New Machine from Exported File
+
+Create a modified workflow by editing the exported file and creating a new Machine:
+
+**Modified File** (`modified_nodes.json`):
+Add a `security_audit` node between `code_review` and `testing`:
+
+```json
+{
+  "name": "security_audit",
+  "pairs": [
+    {
+      "prev_node": "code_review",
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "pass_code_review",
+          "permissionIndex": 1002,
+          "weight": 1,
+          "guard": {
+            "guard": "0x6ee9...e48a",
+            "retained_submission": []
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+Create new Machine with file-based node setup:
+
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "new_workflow_variant"
+      "name": "secure_dev_workflow",
+      "permission": "dev_team_permission",
+      "tags": ["security", "development", "workflow"],
+      "onChain": true
+    },
+    "description": "Secure Software Development Workflow with Security Audit - enhanced version with security review phase",
+    "node": {
+      "json_or_markdown_file": "d:\\wowok\\docs\\modified_nodes.json"
     }
   },
-  "json_or_markdown_file": "workflow_template.json"
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "type": "Machine",
+  "object": "0x0588cfaad10957a7da3c27c2d59c4dddeead333bbc495d37f35051655e282b9f",
+  "version": "522600",
+  "change": "created"
 }
 ```
 
 ---
 
-## Best Practices
+### Step 9: Publish Machine
 
-### 1. Design Workflow Before Publishing
+Publish the Machine to enable Progress creation:
 
-Map out your complete workflow on paper or a diagram before creating nodes. Verify all paths make sense.
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "software_dev_workflow",
+    "publish": true
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
 
-### 2. Use Meaningful Node Names
-
-Choose descriptive names like "client_review" instead of "step3" to make the workflow self-documenting.
-
-### 3. Plan Permission Strategy
-
-Decide whether to use `permissionIndex` (shared across all Progress) or `namedOperator` (Progress-specific) based on your use case.
-
-### 4. Use Guards for Critical Steps
-
-Add Guard verification to important transitions (like payment before completion) for additional security.
-
-### 5. Set Thresholds Thoughtfully
-
-Thresholds enable multi-signature workflows. Use threshold > 1 when multiple approvals are needed.
-
-### 6. Test on Unpublished Machine
-
-Add all nodes, test the logic, and verify connections BEFORE publishing. You can't change nodes after publishing.
-
-### 7. Use Export and Import for Workflow Reuse
-
-Export proven workflows using [Sub-feature 20](#sub-feature-20-export-node-definitions-with-machinenode2file), then import them via [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file-json_or_markdown_file) to quickly create new workflow variants. This pattern eliminates redundant work and ensures consistency across similar workflows.
-
-### 8. Add Clear Descriptions
-
-Document what the Machine does, what each node represents, and any special considerations.
+**Execution Result**:
+```json
+{
+  "type": "Machine",
+  "object": "0xb494336e61f4de62bc646fdb9612ec200d268f4e9407dc71127983ee0cff4324",
+  "version": "522602",
+  "change": "mutated",
+  "published": true
+}
+```
 
 ---
 
-## Important Notes
+### Step 10: Create Progress Instances
 
-⚠️ **PUBLISHING IS IRREVERSIBLE!** Nodes cannot be modified after publishing.
+Create a Progress instance for Project Alpha:
 
-⚠️ **Machine must be published to create Progress!** Unpublished Machines are only for design.
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "software_dev_workflow",
+    "progress_new": {
+      "namedNew": {
+        "name": "project_alpha",
+        "tags": ["project", "alpha", "mobile_app"]
+      },
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [{"name_or_address": "dev_lead_carol"}]
+        }
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
 
-⚠️ **Node names must be unique!** Duplicate names cause errors.
+**Execution Result**:
+```json
+{
+  "type": "Progress",
+  "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+  "version": "523546",
+  "change": "created"
+}
+```
 
-⚠️ **Choose ONE permission type per forward!** Either `namedOperator` OR `permissionIndex`, not both.
+Create another Progress with a different developer:
 
-⚠️ **Threshold is compared against total forward weight!** When sum(forward weights) >= threshold, workflow advances.
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "secure_dev_workflow",
+    "progress_new": {
+      "namedNew": {
+        "name": "project_beta",
+        "tags": ["project", "beta", "web_app"]
+      },
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [{"name_or_address": "arch_bob"}]
+        }
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
 
-⚠️ **json_or_markdown_file replaces ALL nodes!** This is a destructive operation.
-
-⚠️ **Pause only affects NEW Progress!** Existing Progress continues normally.
+**Execution Result**:
+```json
+{
+  "type": "Progress",
+  "object": "0x732b6a680f1824df4ef8d54d0ecf1c194bfdd1cee7a683dece2768f56fe59100",
+  "version": "523848",
+  "change": "created"
+}
+```
 
 ---
 
-## Related Components
+## Summary of Created Objects
 
-| Component | Description |
-|-----------|-------------|
-| **[Progress](progress.md)** | Order progress - executes the Machine workflow (active instances) |
-| **[Service](service.md)** | WYSIWYG product trading - binds Machine workflows to service offerings |
-| **[Permission](permission.md)** | Permission management - manages access control for Machine operations |
-| **[Repository](repository.md)** | Data ownership and usage rights - stores consensus data for workflow state |
-| **[Guard](guard.md)** | Trust verification engine - provides additional validation for forward operations |
+| Object Type | Name | Address | Purpose |
+|-------------|------|---------|---------|
+| **Permission** | dev_team_permission | 0x2482...174c | Access control for workflow |
+| **Guard** | dev_workflow_guard | 0x6ee9...e48a | Validation for transitions |
+| **Machine** | software_dev_workflow | 0xb494...4324 | Standard SDLC workflow (8 nodes) |
+| **Machine** | secure_dev_workflow | 0x0588...2b9f | Enhanced workflow with security audit (9 nodes) |
+| **Progress** | project_alpha | 0x5255...9cb4 | Mobile app project instance |
+| **Progress** | project_beta | 0x732b...9100 | Web app project instance |

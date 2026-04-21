@@ -897,11 +897,12 @@ Enable or disable messenger functionality for an account.
 
 ## Important Notes
 
+⚠️ **Confirm sufficient balance before transferring!**
+
 ⚠️ **All account data exists only on local device! We recommend using WoWok in a sandbox environment!**
 
 ⚠️ **Private keys will never be exposed to AI! We recommend using WoWok wallet as your personal hot wallet!**
 
-⚠️ **Confirm sufficient balance before transferring!**
 ---
 
 ## Related Components
