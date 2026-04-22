@@ -6,15 +6,66 @@
 
 The Contact component is used to manage on-chain instant messaging contact profiles, serving as the core for secure IM address management.
 
+**Key Role in Secure Communication:**
+
+The Contact component is the **foundation of end-to-end encrypted messaging** in the WoWok protocol. It serves as the bridge between on-chain identity and off-chain secure communication through the [Messenger](messenger.md) system.
+
+**How Contact Enables Secure Messaging:**
+
+1. **On-Chain Identity**: Contact objects are published on-chain, providing a verifiable public identity that anyone can look up
+2. **Messenger Integration**: Each Contact object can be linked to a Messenger account, enabling encrypted communication
+3. **Privacy Protection**: While the Contact identity is public, all actual communication is **end-to-end encrypted** and **never stored on-chain**
+4. **Service Communication**: In [Service](service.md) transactions, Contact objects enable customers and service providers to exchange sensitive information (shipping addresses, phone numbers, etc.) securely without exposing this data on the blockchain
+
+**Typical Usage Flow:**
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Create Contact │────▶│  Enable Messenger │────▶│  Secure Chat   │
+│   (On-chain)    │     │  (Encrypted IM)   │     │  (E2E Encrypted)│
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                                               │
+         │                                               │
+         ▼                                               ▼
+┌─────────────────┐                          ┌─────────────────┐
+│ Share Contact   │                          │  Exchange Info  │
+│ with Others     │                          │  (Private)      │
+└─────────────────┘                          └─────────────────┘
+```
+
+**Important Links:**
+- **[Messenger](messenger.md)** - End-to-end encrypted messaging system
+- **[Service](service.md)** - Uses Contact for secure customer-service provider communication
+- **[Order](order.md)** - Uses Contact via `required_info` field for private information exchange
+
+---
+
+## Why Contact is Essential
+
+| Scenario | Without Contact | With Contact |
+|----------|----------------|--------------|
+| **Service Purchase** | No way to send shipping address privately | Customer sends encrypted address via Messenger linked to Contact |
+| **Dispute Resolution** | No verifiable communication history | WTS (Witness Timestamped Snapshot) provides cryptographic proof of conversations |
+| **Team Collaboration** | No secure team communication channel | Team members communicate via encrypted channels linked to Contact identities |
+| **Customer Support** | Public on-chain messages expose sensitive data | Private end-to-end encrypted support conversations |
+
+**Privacy & Security Guarantees:**
+- ✅ **End-to-end encryption** - Only conversation participants can read messages
+- ✅ **No on-chain storage** - Message content is never published to the blockchain
+- ✅ **Verifiable identity** - Contact provides cryptographic proof of who you're communicating with
+- ✅ **WTS support** - Generate cryptographically verifiable conversation records for [Arbitration](arbitration.md) if needed
+
 ---
 
 ## Function List
 
 | Function Name | Purpose | Usage Scenario | Significance |
 |---------------|---------|----------------|-------------|
-| **Create Contact** | Set up IM contact profile | Establish team communication, service support | Enables secure on-chain messaging |
-| **Manage IM List** | Add/remove contact entries | Update communication partners | Maintains current contact information |
+| **Create Contact** | Set up IM contact profile | Establish team communication, service support | Creates on-chain identity for [Messenger](messenger.md) encrypted messaging |
+| **Manage IM List** | Add/remove contact entries | Update communication partners | Controls who can initiate encrypted conversations with you |
 | **Set Status** | Update availability message | Indicate online presence, response times | Improves communication efficiency |
+| **Enable Messenger** | Link Contact to encrypted messaging | Enable end-to-end encrypted chat | Foundation for secure private communication |
+| **Service Integration** | Connect Contact to Service/Order | Allow customers to send private info | Enables secure exchange of shipping addresses, phone numbers, etc. |
 
 
 ---
@@ -566,11 +617,77 @@ Execute multiple operations in a single call.
 
 ---
 
+## Contact + Messenger Integration Guide
+
+### Step 1: Create Your Contact Object
+
+Create a Contact object that will serve as your public identity for secure messaging.
+
+```json
+{
+  "operation_type": "contact",
+  "data": {
+    "object": {
+      "name": "my_contact",
+      "onChain": true
+    },
+    "description": "My secure contact for encrypted messaging"
+  }
+}
+```
+
+### Step 2: Enable Messenger for Your Account
+
+Use the [account operation](account.md) to enable Messenger for your account, linking it to your Contact object:
+
+```json
+{
+  "operation": "account_operation",
+  "account": "my_account",
+  "messenger": "my_contact"
+}
+```
+
+See [account.md](account.md) for detailed messenger configuration.
+
+### Step 3: Start Secure Conversations
+
+Once Messenger is enabled, you can send encrypted messages to any Contact object:
+
+```json
+{
+  "operation": "send_message",
+  "from": "my_account",
+  "to": "recipient_contact",
+  "content": "Hello! This message is end-to-end encrypted."
+}
+```
+
+See [Messenger Documentation](messenger.md) for full messaging capabilities.
+
+### Step 4: Use Contact in Service/Order (For Private Information Exchange)
+
+When purchasing from a Service that requires private information:
+
+**For Customers:**
+1. Attach your Contact to the order via `required_info` field (see [Order](order.md#function-2-set-required-information-required_info))
+2. Use Messenger to send shipping address, phone number, etc. to the service's Contact
+
+**For Service Providers:**
+1. Configure your Service with a Contact object (see [Service](service.md#sub-feature-7-configure-contact-um))
+2. Customers will use this Contact to send you encrypted private information
+
+---
+
 ## Important Notes
 
 ⚠️ **my_status is only valid when your account is already in the IM list**.
 
-⚠️ **Contact information is publicly visible on-chain**, please set carefully.
+⚠️ **Contact information is publicly visible on-chain**, please set carefully. Never include sensitive personal information in the Contact description or location fields.
+
+⚠️ **Messenger encryption**: While your Contact identity is public, all messages sent via Messenger are **end-to-end encrypted** and **never stored on-chain**. Only conversation participants can read the message content.
+
+⚠️ **WTS for Arbitration**: If you need to prove what was discussed in a conversation (e.g., for dispute resolution), use [Messenger's WTS feature](messenger.md#generate-wts) to create a cryptographically verifiable record.
 
 ---
 
@@ -578,8 +695,11 @@ Execute multiple operations in a single call.
 
 | Component | Description |
 |-----------|-------------|
-| **[Service](service.md)** | WYSIWYG product trading |
+| **[Service](service.md)** | WYSIWYG product trading - uses Contact for secure customer communication |
+| **[Order](order.md)** | Order management - uses `required_info` field for private information exchange |
+| **[Messenger](messenger.md)** | Secure end-to-end encrypted chat system |
+| **[Account](account.md)** | Account management - includes Messenger enablement |
 | **[Personal](personal.md)** | Personal on-chain portal |
-| **[Messenger](messenger.md)** | Secure end-to-end encrypted chat |
 | **[LocalInfo](localinfo.md)** | Private information management |
 | **[Permission](permission.md)** | Permission management |
+| **[Arbitration](arbitration.md)** | Dispute resolution - can use WTS from Messenger as evidence |

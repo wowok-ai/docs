@@ -42,11 +42,11 @@ Arbitration operations use the following top-level structure:
 arbitration (Arbitration Object)
 ├── operation_type: "arbitration" (fixed value)
 ├── data (Arbitration data definition)
-│   ├── object (object definition, required)
+│   ├── object (TypedPermissionObject, required) - Arbitration object reference or creation
 │   │   ├── Option 1: Reference existing object (string) - object name or ID
 │   │   └── Option 2: Create new object (object)
 │   │       ├── name (string, optional) - local mark name, max 64 characters
-│   │       ├── tags (array, optional) - tags array
+│   │       ├── tags (array of string, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       ├── replaceExistName (boolean, optional) - force claim existing name
 │   │       ├── type_parameter (string, optional) - token type, default: 0x2::wow::WOW
@@ -54,63 +54,63 @@ arbitration (Arbitration Object)
 │   │           ├── Option 1: Existing permission ID/name (string)
 │   │           └── Option 2: New permission object (object)
 │   │               ├── name (string, optional) - permission name
-│   │               ├── tags (array, optional) - tags array
+│   │               ├── tags (array of string, optional) - tags array
 │   │               ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │               └── replaceExistName (boolean, optional) - force claim existing name
 │   ├── description (string, optional) - arbitration description, max 65535 characters
 │   ├── location (string, optional) - arbitration location, max 256 characters
 │   ├── fee (number, optional) - arbitration fee in smallest units
 │   ├── pause (boolean, optional) - whether to pause arbitration
-│   ├── dispute (object, optional) - create dispute for order
+│   ├── dispute (Dispute object, optional) - create dispute for order
 │   │   ├── order (string, required) - order object ID or name
 │   │   ├── description (string, optional) - dispute description, max 65535 characters
-│   │   ├── proposition (array, required) - list of dispute propositions, each max 256 characters
-│   │   ├── fee (object | string, required) - dispute processing fee
+│   │   ├── proposition (array of string, required) - list of dispute propositions, each max 256 characters
+│   │   ├── fee (CoinParam, required) - dispute processing fee
 │   │   │   ├── Option 1: Balance object (object)
 │   │   │   │   └── balance (number) - balance amount
 │   │   │   └── Option 2: Coin object ID (string)
-│   │   └── namedArb (object, optional) - name for the newly created Arb object
+│   │   └── namedArb (NamedObject, optional) - name for the newly created Arb object
 │   │       ├── name (string, optional) - arb object name
-│   │       ├── tags (array, optional) - tags array
+│   │       ├── tags (array of string, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       └── replaceExistName (boolean, optional) - force claim existing name
-│   ├── confirm (object, optional) - confirm arbitration materials
+│   ├── confirm (Confirm object, optional) - confirm arbitration materials
 │   │   ├── arb (string, required) - Arb object ID or name
 │   │   └── voting_deadline (number | null, required) - voting deadline in milliseconds
-│   ├── voting_deadline_change (object, optional) - change voting deadline
+│   ├── voting_deadline_change (VotingDeadlineChange object, optional) - change voting deadline
 │   │   ├── arb (string, required) - Arb object ID or name
 │   │   └── voting_deadline (number | null, required) - new voting deadline in milliseconds
-│   ├── vote (object, optional) - vote on propositions
+│   ├── vote (Vote object, optional) - vote on propositions
 │   │   ├── arb (string, required) - Arb object ID or name
-│   │   ├── votes (array, required) - vote list, each value 0-255
+│   │   ├── votes (array of number, required) - vote list, each value 0-255
 │   │   └── voting_guard (string, optional) - voting Guard object ID/name
-│   ├── feedback (object, optional) - provide arbitration feedback
+│   ├── feedback (Feedback object, optional) - provide arbitration feedback
 │   │   ├── arb (string, required) - Arb object ID or name
 │   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
-│   ├── arbitration (object, optional) - provide final arbitration result
+│   ├── arbitration (ArbitrationAction object, optional) - provide final arbitration result
 │   │   ├── arb (string, required) - Arb object ID or name
 │   │   ├── feedback (string, required) - arbitration feedback, max 65535 characters
 │   │   └── indemnity (number, required) - compensation amount in smallest units
-│   ├── reset (object, optional) - apply to restart arbitration
+│   ├── reset (Reset object, optional) - apply to restart arbitration
 │   │   ├── arb (string, required) - Arb object ID or name
 │   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
-│   ├── arb_withdraw (object, optional) - withdraw arbitration fees
+│   ├── arb_withdraw (ArbWithdraw object, optional) - withdraw arbitration fees
 │   │   └── arb (string, required) - Arb object ID or name
-│   ├── fees_transfer (object, optional) - distribute arbitration fees
-│   │   ├── to (object, required) - receiving object
-│   │   │   ├── Option 1: Allocation object (object)
+│   ├── fees_transfer (FeesTransfer object, optional) - distribute arbitration fees
+│   │   ├── to (FeesTransferTo object, required) - receiving object
+│   │   │   ├── Option 1: Allocation reference (object)
 │   │   │   │   └── allocation (string) - Allocation object ID/name
-│   │   │   └── Option 2: Treasury object (object)
+│   │   │   └── Option 2: Treasury reference (object)
 │   │   │       └── treasury (string) - Treasury object ID/name
 │   │   ├── payment_remark (string, required) - payment remark, max 64 characters
 │   │   ├── payment_index (number, required) - payment index
-│   │   └── newPayment (object, optional) - name for new Payment object
+│   │   └── newPayment (NamedObject, optional) - name for new Payment object
 │   │       ├── name (string, optional) - payment name
-│   │       ├── tags (array, optional) - tags array
+│   │       ├── tags (array of string, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       └── replaceExistName (boolean, optional) - force claim existing name
 │   ├── usage_guard (string | null, optional) - Guard for user verification, null to unbind
-│   ├── voting_guard (object, optional) - manage voting Guards
+│   ├── voting_guard (VotingGuardAction object, optional) - manage voting Guards
 │   │   ├── op (string, required) - operation type: "add", "set", "remove", "clear"
 │   │   └── guards (array, required for add/set/remove) - list of VotingGuard objects or Guard names
 │   │       └── VotingGuard object (for add/set)
@@ -120,33 +120,40 @@ arbitration (Arbitration Object)
 │   │               │   └── FixedValue (number) - fixed weight value 0-65535
 │   │               └── Option 2: GuardIdentifier (object)
 │   │                   └── GuardIdentifier (number) - Guard table identifier 0-255
-│   ├── owner_receive (string | object | array, optional) - receive objects to owner
+│   ├── owner_receive (ReceivedObjectsOrRecently, optional) - receive objects to owner
 │   │   ├── Option 1: "recently" (string) - receive all recent objects
 │   │   ├── Option 2: ReceivedBalance object (object)
-│   │   │   ├── balance (number or string)
-│   │   │   ├── token_type (string)
-│   │   │   └── received (array of received items)
+│   │   │   ├── balance (number or string) - balance amount
+│   │   │   ├── token_type (string) - token type
+│   │   │   └── received (array of ReceivedItem) - received items list
+│   │   │       └── ReceivedItem object
+│   │   │           ├── id (string) - object ID
+│   │   │           └── type (string) - object type
 │   │   └── Option 3: Array of received objects
 │   │       └── [{ id: "object_id", type: "object_type" }]
 │   └── um (string | null, optional) - Contact object ID/name, null to unbind
-├── env (optional, execution environment)
+├── env (CallEnv, optional) - execution environment
 │   ├── account (string, optional) - account name or address, empty string for default
 │   ├── network (string, optional) - "testnet" or "mainnet"
-│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── permission_guard (array of string, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
-└── submission (optional, submission data)
+└── submission (SubmissionCall, optional) - submission data
     ├── type (string) - fixed value "submission"
-    ├── guard (array) - list of guards to verify
-    │   └── [{ object: "guard_id", impack: boolean }]
-    └── submission (array) - submission data for guards
-        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
-            └── guard_submission_items
-                ├── identifier (number, 0-255) - Guard table item identifier
-                ├── b_submission (boolean) - whether this item requires submission
-                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
-                ├── **value (any) - submitted value**
-                └── name (string, optional) - item name
+    ├── guard (array of GuardInfo) - list of guards to verify
+    │   └── GuardInfo object
+    │       ├── object (string) - guard object ID
+    │       └── impack (boolean) - impact flag
+    └── submission (array of GuardSubmission) - submission data for guards
+        └── GuardSubmission object
+            ├── guard (string) - guard object ID
+            └── submission (array of GuardSubmissionItem) - submission items
+                └── GuardSubmissionItem object
+                    ├── identifier (number, 0-255) - Guard table item identifier
+                    ├── b_submission (boolean) - whether this item requires submission
+                    ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
+                    ├── value (any) - submitted value
+                    └── name (string, optional) - item name
 ```
 
 ---
@@ -193,23 +200,39 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 
 #### Example 1.1: Create Simple Arbitration
 
-**Prompt**: Create a new arbitration named "service_arbitration" with: 1) Permission "existing_permission", 2) Description "Service dispute resolution", 3) Location "Global online arbitration", 4) Fee at 1000000000 (1 WOW).
+**Prompt**: Create a new arbitration named "doc_test_arbitration" with: 1) Permission "arb_test_permission", 2) Description "Arbitration for documentation testing", 3) Location "Online arbitration system", 4) Fee at 1000000000 (1 WOW).
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
     "object": {
-      "name": "service_arbitration",
-      "permission": "existing_permission",
+      "name": "doc_test_arbitration",
+      "permission": "arb_test_permission",
       "type_parameter": "0x2::wow::WOW",
-      "tags": ["arbitration", "service"],
+      "tags": ["arbitration", "test", "doc"],
       "onChain": false
     },
-    "description": "Service dispute resolution",
-    "location": "Global online arbitration",
+    "description": "Arbitration for documentation testing",
+    "location": "Online arbitration system",
     "fee": 1000000000
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+  "type": "Arbitration",
+  "version": "1413284",
+  "change": "created"
 }
 ```
 
@@ -276,25 +299,58 @@ Create a new Arb object for an order to initiate dispute arbitration.
 
 #### Example 2.1: Create Dispute
 
-**Prompt**: Create a dispute for "service_arbitration" with: 1) Order "my_order", 2) Description "Product does not match description", 3) Propositions ["Full refund", "Partial refund", "No refund"], 4) Fee 1000000000 (1 WOW), 5) Name new dispute "order_123_dispute".
+**Prompt**: Create a dispute for "doc_test_arbitration" with: 1) Order "arb_test_order", 2) Description "Product quality does not match description", 3) Propositions ["Full refund", "Partial refund 50%", "No refund"], 4) Fee 1000000000 (1 WOW), 5) Name new dispute "test_dispute_2026".
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
-    "object": "service_arbitration",
+    "object": "doc_test_arbitration",
     "dispute": {
-      "order": "my_order",
-      "description": "Product does not match description",
-      "proposition": ["Full refund", "Partial refund", "No refund"],
+      "order": "arb_test_order",
+      "description": "Product quality does not match description",
+      "proposition": ["Full refund", "Partial refund 50%", "No refund"],
       "fee": {
         "balance": 1000000000
       },
       "namedArb": {
-        "name": "order_123_dispute"
+        "name": "test_dispute_2026",
+        "onChain": false
       }
     }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "results": [
+    {
+      "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
+      "type": "Order",
+      "version": "1415870",
+      "change": "mutated"
+    },
+    {
+      "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+      "type": "Arbitration",
+      "version": "1415870",
+      "change": "mutated"
+    },
+    {
+      "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+      "type": "Arb",
+      "version": "1415870",
+      "change": "created"
+    }
+  ]
 }
 ```
 
@@ -321,18 +377,34 @@ Confirm the arbitration materials submitted by the user.
 
 #### Example 3.1: Confirm Materials with Voting Deadline
 
-**Prompt**: For "service_arbitration", confirm materials for "order_123_dispute" with voting deadline at 1738000000000.
+**Prompt**: For "doc_test_arbitration", confirm materials for "test_dispute_2026" with voting deadline at 1777830400000.
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
-    "object": "service_arbitration",
+    "object": "doc_test_arbitration",
     "confirm": {
-      "arb": "order_123_dispute",
-      "voting_deadline": 1738000000000
+      "arb": "test_dispute_2026",
+      "voting_deadline": 1777830400000
     }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+  "type": "Arb",
+  "version": "1415871",
+  "change": "mutated"
 }
 ```
 
@@ -437,18 +509,34 @@ Provide arbitration feedback for an Arb object.
 
 #### Example 6.1: Provide Feedback
 
-**Prompt**: For "service_arbitration", provide feedback on "order_123_dispute" that "All materials have been reviewed, ready for final decision".
+**Prompt**: For "doc_test_arbitration", provide feedback on "test_dispute_2026" that "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
-    "object": "service_arbitration",
+    "object": "doc_test_arbitration",
     "feedback": {
-      "arb": "order_123_dispute",
-      "feedback": "All materials have been reviewed, ready for final decision"
+      "arb": "test_dispute_2026",
+      "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
     }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
   }
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+  "type": "Arb",
+  "version": "1415872",
+  "change": "mutated"
 }
 ```
 
@@ -970,11 +1058,348 @@ Execute multiple operations in a single call.
 
 ---
 
+## Complete Arbitration Workflow Example
+
+This example demonstrates a complete arbitration workflow using existing Service and Order objects.
+
+### Prerequisites
+
+Before starting the arbitration process, ensure you have:
+1. A **Permission** object for the Arbitration
+2. A **Service** with arbitration support and published
+3. An **Order** created from the Service
+4. Sufficient WOW tokens for dispute fees
+
+### Step 1: Create Arbitration Object
+
+Create an Arbitration object that will handle disputes:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": {
+      "name": "doc_test_arbitration",
+      "permission": "arb_test_permission",
+      "type_parameter": "0x2::wow::WOW",
+      "tags": ["arbitration", "test", "doc"],
+      "onChain": false
+    },
+    "description": "Arbitration for documentation testing",
+    "location": "Online arbitration system",
+    "fee": 1000000000
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Returns**:
+```json
+{
+  "status": "success",
+  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+  "type": "Arbitration",
+  "version": "1413284",
+  "change": "created"
+}
+```
+
+### Step 2: Create Service with Arbitration Support
+
+Create a Service that includes the Arbitration object:
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "arb_test_service",
+      "permission": "arb_test_permission",
+      "type_parameter": "0x2::wow::WOW",
+      "tags": ["service", "arbitration", "test"],
+      "onChain": false
+    },
+    "description": "Service for arbitration testing",
+    "sales": {
+      "op": "add",
+      "sales": [{
+        "name": "test_product",
+        "price": 1000000000,
+        "stock": 100,
+        "suspension": false,
+        "wip": "https://example.com/wip",
+        "wip_hash": ""
+      }]
+    },
+    "arbitrations": {
+      "op": "add",
+      "objects": ["doc_test_arbitration"]
+    },
+    "order_allocators": {
+      "description": "Order fund allocators",
+      "threshold": 100000000,
+      "allocators": [{
+        "guard": "test_guard_arb",
+        "sharing": [{
+          "who": {"Signer": "signer"},
+          "sharing": 10000,
+          "mode": "Rate"
+        }]
+      }]
+    },
+    "publish": true
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Returns**:
+```json
+{
+  "status": "success",
+  "object": "0x50ca67dfb163b8bbab3d3ed59052d28a8859de167ea101b19e012bc4a258f708",
+  "type": "Service",
+  "version": "1415003",
+  "change": "created"
+}
+```
+
+### Step 3: Create Order
+
+Create an Order from the Service:
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "arb_test_service",
+    "order_new": {
+      "buy": {
+        "items": [{
+          "name": "test_product",
+          "stock": 1,
+          "wip_hash": ""
+        }],
+        "total_pay": {"balance": 1000000000}
+      },
+      "order_required_info": "test_contact_2026",
+      "namedNewOrder": {
+        "name": "arb_test_order",
+        "onChain": false
+      }
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Returns**:
+```json
+{
+  "status": "success",
+  "results": [
+    {
+      "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
+      "type": "Order",
+      "version": "1415346",
+      "change": "created"
+    },
+    {
+      "object": "0x4488b2f85a3869b5c480d194c35270b1a449518f2bdd8a3641872cbc47d45dc2",
+      "type": "Allocation",
+      "version": "1415346",
+      "change": "created"
+    }
+  ]
+}
+```
+
+### Step 4: Resume Arbitration (if paused)
+
+Ensure the Arbitration is active:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "doc_test_arbitration",
+    "pause": false
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Returns**:
+```json
+{
+  "status": "success",
+  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+  "type": "Arbitration",
+  "version": "1415347",
+  "change": "mutated"
+}
+```
+
+### Step 5: Initiate Dispute
+
+Create a dispute for the Order:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "doc_test_arbitration",
+    "dispute": {
+      "order": "arb_test_order",
+      "description": "Product quality does not match description",
+      "proposition": ["Full refund", "Partial refund 50%", "No refund"],
+      "fee": {"balance": 1000000000},
+      "namedArb": {
+        "name": "test_dispute_2026",
+        "onChain": false
+      }
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Returns**:
+```json
+{
+  "status": "success",
+  "results": [
+    {
+      "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+      "type": "Arb",
+      "version": "1415870",
+      "change": "created"
+    }
+  ]
+}
+```
+
+### Step 6: Confirm Materials
+
+Confirm the dispute materials and set voting deadline:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "doc_test_arbitration",
+    "confirm": {
+      "arb": "test_dispute_2026",
+      "voting_deadline": 1777830400000
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+### Step 7: Provide Feedback
+
+Add arbitration feedback:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "doc_test_arbitration",
+    "feedback": {
+      "arb": "test_dispute_2026",
+      "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+### Step 8: Issue Final Ruling
+
+Provide the final arbitration result with compensation:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "doc_test_arbitration",
+    "arbitration": {
+      "arb": "test_dispute_2026",
+      "feedback": "Based on all evidence provided, the buyer's claim is valid. The product quality does not match the description.",
+      "indemnity": 500000000
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Note**: The `indemnity` amount requires sufficient compensation fund in the Service. If insufficient funds exist, the transaction will fail with error code 4.
+
+### Step 9: Claim Compensation (by Order Owner)
+
+After arbitration is finalized, the order owner can claim compensation:
+
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "arb_test_order",
+    "arb_claim_compensation": {
+      "arb": "test_dispute_2026"
+    }
+  },
+  "env": {
+    "account": "arbitration_test_account",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+---
+
 ## Important Notes
 
 ⚠️ **Dispute fees are required to initiate arbitration.**
 
 ⚠️ **Voting weights must be either FixedValue (0-65535) or GuardIdentifier (0-255).**
+
+⚠️ **Compensation fund must be sufficient in the Service to cover the indemnity amount.**
+
+⚠️ **Arbitration must be unpaused (pause: false) to accept disputes.**
 
 ---
 
