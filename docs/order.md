@@ -541,7 +541,15 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Description
 
-Specify adjudicated Arb object to obtain order compensation.
+Specify adjudicated Arb object to obtain order compensation. This is the **final step** in the arbitration workflow where the order owner receives the awarded compensation.
+
+👉 **For complete arbitration workflow, see [Arbitration - Complete Workflow](arbitration.md#complete-arbitration-workflow-example)**
+
+**Quick Overview:**
+1. Service provider adds compensation fund
+2. Buyer creates dispute via Arbitration
+3. Arbitration process completes with ruling
+4. **Buyer claims compensation via this operation** ← You are here
 
 ### Parameters
 
@@ -799,6 +807,163 @@ Execute multiple Order operations in one transaction, such as setting agents and
   }
 }
 ```
+
+---
+
+## 👤 User Operations Guide
+
+This section provides a quick reference for order owners (buyers). For detailed arbitration state machine and process, see [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine).
+
+### Common Scenarios
+
+#### Scenario 1: Order Has Issues
+
+**Step 1**: Contact service provider via [Messenger](messenger.md)  
+**Step 2**: If unresolved, file a dispute:
+
+```json
+{
+  "operation_type": "arbitration",
+  "data": {
+    "object": "arbitration_object_id",
+    "dispute": {
+      "order": "your_order_id",
+      "description": "Issue description",
+      "proposition": ["Full refund", "Partial refund"],
+      "fee": {"balance": 1000000000}
+    }
+  }
+}
+```
+
+👉 **See [Arbitration - File Dispute](arbitration.md#sub-feature-2-create-dispute-dispute) for complete guide**
+
+#### Scenario 2: Claim Compensation After Ruling
+
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "your_order_id",
+    "arb_claim_compensation": {
+      "arb": "your_arb_object_id"
+    }
+  }
+}
+```
+
+#### Scenario 3: Object to Ruling (Appeal)
+
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "your_order_id",
+    "arb_objection": {
+      "arb": "your_arb_object_id",
+      "objection": "Reason for objection with new evidence"
+    }
+  }
+}
+```
+
+### Time Limits Summary
+
+| Stage | Time Limit | Consequence If Missed |
+|-------|------------|----------------------|
+| File Dispute | Before order completion | Cannot dispute |
+| Object to Ruling | Within objection window | Lose appeal right |
+
+👉 **See [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine) for complete state transitions and time constraints**
+
+### Scenario 4: Submitting Personal Information Securely
+
+When the service needs your personal information (shipping address, phone number, ID for verification):
+
+**⚠️ NEVER submit personal information directly on-chain!**
+
+Instead, use the secure Contact/Messenger system:
+
+#### Method 1: Via Order required_info (Recommended)
+
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "your_order_id",
+    "required_info": "your_contact_object_id"
+  },
+  "env": {"account": "your_account", "network": "testnet"}
+}
+```
+
+**How it works:**
+1. Create a Contact object with your information (stored locally, not on-chain)
+2. Reference it in the order via `required_info`
+3. Service provider receives notification via Messenger
+4. Information is transmitted end-to-end encrypted
+
+#### Method 2: Direct Messenger Communication
+
+```json
+{
+  "operation_type": "messenger",
+  "data": {
+    "action": "send_message",
+    "conversation_id": "service_conversation_id",
+    "content": "Order #12345 - Delivery Information",
+    "attachments": [
+      {
+        "type": "contact_info",
+        "data": {
+          "name": "John Doe",
+          "address": "123 Main St, City, Country",
+          "phone": "+1234567890"
+        }
+      }
+    ]
+  }
+}
+```
+
+**Security Features:**
+- End-to-end encryption
+- Only you and service staff can decrypt
+- Not stored on public blockchain
+- Message hash can be referenced in disputes as evidence
+
+### Complete Arbitration Timeline Example
+
+```
+Day 0: Order created and paid
+Day 3: Issue discovered, contacted service provider
+Day 5: No resolution, filed dispute (Status 0 → 1)
+Day 6: Arbitrator confirmed case (Status 1 → 2)
+Day 6-13: Voting period (7 days)
+Day 14: Arbitrator issued ruling (Status 2 → 3)
+Day 14: Claimed compensation (Status 3 → 5)
+Day 14: Process complete, received funds
+```
+
+### User Action Checklist
+
+**Before Filing Dispute:**
+- [ ] Attempted to resolve with service provider
+- [ ] Gathered evidence (photos, screenshots, communication logs)
+- [ ] Verified service has arbitration and compensation fund
+- [ ] Prepared dispute fee
+
+**During Arbitration:**
+- [ ] Submitted clear description and propositions
+- [ ] Provided evidence via Messenger
+- [ ] Monitored voting deadline
+- [ ] Responded to arbitrator requests
+
+**After Ruling:**
+- [ ] Reviewed ruling and compensation amount
+- [ ] Decision: Accept or Object
+- [ ] If accepting: Claimed compensation immediately
+- [ ] If objecting: Filed within objection window with new evidence
 
 ---
 

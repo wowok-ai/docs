@@ -1223,6 +1223,14 @@ Destroy existing discount objects.
 
 Add funds to the compensation fund pool. These funds are used for arbitration compensation when resolving order disputes.
 
+👉 **For complete arbitration workflow, see [Arbitration - Complete Workflow](arbitration.md#complete-arbitration-workflow-example)**
+
+**Quick Overview:**
+1. Service provider adds compensation funds (this operation)
+2. Buyer creates dispute via Arbitration
+3. Arbitration process completes with ruling
+4. Buyer claims compensation via Order
+
 ### Parameter Description
 
 | Parameter Path | Type | Required | Description | Constraints |
@@ -1622,6 +1630,71 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 | **[Allocation](allocation.md)** | Automatic fund distribution |
 | **[Order](order.md)** | Order management |
 | **[Payment](payment.md)** | Direct coin transfers |
+
+---
+
+## ⚖️ Service Fairness and Arbitration Integration
+
+The Service component integrates with the Arbitration system to ensure fair dispute resolution. For detailed arbitration state machine and process, see [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine).
+
+### Service Fairness Principles
+
+| Principle | Implementation | User Benefit |
+|-----------|----------------|--------------|
+| **Transparent Terms** | WIP files hash product descriptions immutably | Buyers know exactly what they're purchasing |
+| **Escrow Protection** | Order payments held securely until fulfillment | Both parties protected from fraud |
+| **Dispute Resolution** | Arbitration objects bound to services | Fair third-party resolution available |
+| **Compensation Guarantee** | Compensation funds locked in service | Buyers assured of refund capability |
+| **Immutable Records** | All actions recorded on-chain | Complete audit trail of transactions |
+
+### Quick Setup Guide
+
+To enable arbitration for your service:
+
+1. **Create Arbitration Object**: Set up dispute resolution rules
+   ```json
+   {
+     "operation_type": "arbitration",
+     "data": {
+       "object": {"name": "my_arbitration"},
+       "description": "Dispute resolution for my service"
+     }
+   }
+   ```
+
+2. **Bind to Service**: Link arbitration to service
+   ```json
+   {
+     "operation_type": "service",
+     "data": {
+       "object": "my_service",
+       "arbitrations": {"objects": ["my_arbitration"]}
+     }
+   }
+   ```
+
+3. **Add Compensation Fund**: Ensure funds available for disputes
+   ```json
+   {
+     "operation_type": "service",
+     "data": {
+       "object": "my_service",
+       "compensation_fund_add": {"balance": 100000000000}
+     }
+   }
+   ```
+
+👉 **See [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine) for complete dispute resolution flow and state transitions**
+
+### Key Arbitration Links
+
+| Resource | Link | Description |
+|----------|------|-------------|
+| **State Machine** | [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine) | Complete state transitions and flow |
+| **Create Arbitration** | [Arbitration - Create](arbitration.md#sub-feature-1-create-arbitration) | Set up dispute resolution system |
+| **File Dispute** | [Arbitration - Dispute](arbitration.md#sub-feature-2-create-dispute-dispute) | Buyer initiates dispute |
+| **Complete Workflow** | [Arbitration - Full Example](arbitration.md#complete-arbitration-workflow-example) | End-to-end arbitration process |
+| **Transparency** | [Arbitration - Transparency](arbitration.md#transparent-arbitration-process) | How transparency is ensured |
 
 ---
 
