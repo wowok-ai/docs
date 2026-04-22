@@ -4,7 +4,18 @@
 
 ## Component Overview
 
-The Order Component manages the complete lifecycle of an order. Usually created automatically by Service, but can also be operated directly. Order supports setting agents, managing order information, advancing workflows, handling arbitration, receiving funds, and transferring ownership.
+The Order Component manages the complete lifecycle of an order. **Orders are usually created automatically by the [Service](service.md) component** when customers make purchases. Once created, orders can be operated directly to manage agents, required information, workflow progress, arbitration, fund receipt, and ownership transfer.
+
+**Key Relationship with Service:**
+- Orders are created through Service's `order_new` operation
+- Each Order is linked to a Service and inherits its configuration (Machine, Arbitration, etc.)
+- Order operations often require understanding the parent Service's setup
+
+See [Service Component](service.md) for:
+- Creating Services with products
+- Configuring Machines for order workflows
+- Setting up Arbitration for dispute resolution
+- Creating orders via `order_new` operation
 
 ---
 
@@ -13,7 +24,7 @@ The Order Component manages the complete lifecycle of an order. Usually created 
 | Name | Purpose | Usage Scenario | Significance |
 |------|---------|----------------|--------------|
 | **Set Order Agents** | Assign agents to an order who can operate it but not receive funds | Delegating order management to team members without sharing financial access | Provides secure delegation of operational rights while keeping financial control with the owner |
-| **Set Required Info** | Attach Contact or WTS Proof object to order | Adding delivery address, contact information, or delivery proof to an order | Ensures order has necessary recipient information and proof of delivery |
+| **Set Required Info** | Attach Contact object for private communication with service provider | Sending sensitive information (delivery address, phone, etc.) via encrypted Messenger to service staff | Enables secure end-to-end encrypted transmission of private information without exposing it on-chain |
 | **Advance Progress** | Move order workflow from current node to next node | Processing order through defined stages (e.g., from "pending" to "in_progress") | Enforces structured workflow and tracks order progression through stages |
 | **Submit Arbitration** | Request arbitration for order disputes | When buyer and seller cannot resolve a dispute amicably | Provides formal dispute resolution mechanism with defined rules and compensation |
 | **Object to Arbitration** | Appeal arbitration decision | When disagreeing with arbitration outcome | Allows challenging arbitration results with new evidence or arguments |
@@ -26,49 +37,59 @@ The Order Component manages the complete lifecycle of an order. Usually created 
 ## Schema Tree
 
 ```
-order
-├── operation_type: "order"
-├── data
-│   ├── object (Order ID or name)
-│   ├── agents (Array of agent names/addresses)
-│   ├── required_info (Contact/WTS Proof ID or null)
-│   ├── progress
-│   │   ├── operation
-│   │   │   ├── next_node_name (Next node name)
-│   │   │   └── forward (Forward direction)
-│   │   ├── hold (Lock operation)
-│   │   ├── adminUnhold (Admin unlock, optional)
-│   │   └── message (Result message, optional)
-│   ├── arb_confirm
-│   │   ├── arb (Arb ID or name)
-│   │   ├── confirm (Confirm arbitration materials)
-│   │   ├── description (Compensation description, optional)
-│   │   └── proposition (Compensation claims array, optional)
-│   ├── arb_objection
-│   │   ├── arb (Arb ID or name)
-│   │   └── objection (Objection description)
-│   ├── arb_claim_compensation
-│   │   └── arb (Arb ID or name)
-│   ├── receive (Received objects or balance)
-│   └── transfer_to (New owner name/address)
+order (Order Object)
+├── operation_type: "order" (fixed value)
+├── data (Order operation data)
+│   ├── object (NameOrAddress, required) - Order object ID or name
+│   ├── agents (ManyAccountOrMark_Address, optional) - Order agents
+│   │   └── entities (AccountOrMark_Address[]) - Array of agent references
+│   │       └── Each item: string (name/address) or { name_or_address, local_mark_first }
+│   ├── required_info (NameOrAddress | null, optional) - Contact object ID for secure messaging with service staff
+│   ├── progress (OperateSchema, optional) - Advance order workflow
+│   │   ├── operation (ProgressNext, required)
+│   │   │   ├── next_node_name (string, required) - Target node name
+│   │   │   └── forward (string, required) - Forward transition name
+│   │   ├── hold (boolean, optional) - Lock operation permission
+│   │   ├── adminUnhold (boolean, optional) - Allow admin unlock
+│   │   └── message (string, optional) - Operation result message
+│   ├── arb_confirm (ArbConfirmSchema, optional) - Submit arbitration request
+│   │   ├── arb (NameOrAddress, required) - Arb object ID or name
+│   │   ├── confirm (boolean, required) - Confirm materials valid
+│   │   ├── description (string, optional) - Compensation description (max 4000 chars)
+│   │   └── proposition (string[], optional) - Compensation claims array
+│   ├── arb_objection (ArbObjectionSchema, optional) - Appeal arbitration result
+│   │   ├── arb (NameOrAddress, required) - Arb object ID or name
+│   │   └── objection (string, required) - Objection description (max 4000 chars)
+│   ├── arb_claim_compensation (ArbClaimCompensationSchema, optional) - Claim compensation
+│   │   └── arb (NameOrAddress, required) - Adjudicated Arb object ID or name
+│   ├── receive (ReceivedObjectsOrRecently, optional) - Receive funds/objects
+│   │   ├── Option 1: "recently" (string) - Receive all recent objects
+│   │   ├── Option 2: ReceivedObject[] - Specific objects to receive
+│   │   │   └── [{ id: string, type: string }]
+│   │   └── Option 3: ReceivedBalance - Token balance to receive
+│   │       ├── balance (number|string)
+│   │       ├── token_type (string)
+│   │       └── received (array of { id, balance, payment })
+│   └── transfer_to (AccountOrMark_Address, optional) - New owner
+│       └── string (name/address) or { name_or_address, local_mark_first }
 ├── env (optional, execution environment)
-│   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
-│   ├── permission_guard (array, optional) - list of permission guard IDs
+│   ├── account (string, optional) - account name/address, "" for default
+│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── permission_guard (string[], optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
 └── submission (optional, submission data)
-    ├── type (string) - fixed value "submission"
-    ├── guard (array) - list of guards to verify
+    ├── type: "submission" (fixed)
+    ├── guard (array) - guards to verify
     │   └── [{ object: "guard_id", impack: boolean }]
-    └── submission (array) - submission data for guards
-        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
+    └── submission (array) - guard submissions
+        └── [{ guard: "guard_id", submission: [items] }]
             └── guard_submission_items
-                ├── identifier (number, 0-255) - Guard table item identifier
-                ├── b_submission (boolean) - whether this item requires submission
-                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
-                ├── **value (any) - submitted value**
-                └── name (string, optional) - item name
+                ├── identifier (number, 0-255)
+                ├── b_submission (boolean)
+                ├── value_type (number|string)
+                ├── value (any)
+                └── name (string, optional)
 ```
 
 ---
@@ -114,7 +135,7 @@ Set order agents. Agents can operate the order (such as canceling, modifying sta
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.agents` | array | Yes | Array of agent names/addresses |
+| `data.agents` | array | No | Array of agent names/addresses. Set to empty array [] to clear all agents |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
@@ -181,7 +202,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Description
 
-Set order required information, such as recipient Contact object or WTS Proof object for information delivered via Wowok Messenger.
+Set the Contact object for secure communication with service staff. When a service requires personal information (shipping address, phone number, email, etc.), customers use this field to specify their Contact object, which enables encrypted messaging with the service provider through [Messenger](messenger.md).
+
+**How it works:**
+1. Customer creates a Contact object (see [Contact](contact.md))
+2. Customer attaches their Contact to the order via `required_info`
+3. Customer uses [Messenger](messenger.md) to send private information directly to the service staff
+4. All communication is **end-to-end encrypted** - information is never exposed on-chain and remains private between the parties
 
 ### Parameters
 
@@ -189,12 +216,28 @@ Set order required information, such as recipient Contact object or WTS Proof ob
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.required_info` | string/null | Yes | Contact object ID, WTS Proof object ID, or null |
+| `data.required_info` | string/null | No | Contact object ID for secure messaging, or null to clear |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
 
-⚠️ **required_info can be Contact object or WTS Proof object!** Ensure you provide the correct object type.
+⚠️ **Privacy & Security:**
+- All sensitive information is transmitted through **end-to-end encrypted** [Messenger](messenger.md) channels
+- Information is **never stored on-chain** - only the Contact object reference is recorded
+- Customers retain full control over their private information
+- Service staff can only access the information through secure Messenger conversations
+- **Verifiable Communication**: Messenger supports [WTS (Witness Timestamped Snapshot)](messenger.md#generate-wts) generation, which creates cryptographically verifiable records of conversations that can prove the authenticity and integrity of chat content
+
+⚠️ **Arbitration Evidence:**
+- In case of disputes, WTS files from Messenger conversations can serve as **legal evidence** in [Arbitration](arbitration.md)
+- WTS provides cryptographic proof that messages were sent/received at specific times and have not been tampered with
+- Both parties can sign WTS files to create non-repudiable records (see [Sign WTS](messenger.md#sign-wts))
+- This ensures fair dispute resolution based on verifiable communication history
+
+⚠️ **Prerequisites:**
+- Service must have configured a Contact object (see [Service Configuration](service.md#sub-feature-7-configure-contact-um))
+- Customer must have created their own Contact object (see [Contact](contact.md))
+- Both parties must have enabled Messenger functionality
 
 ### Return Value
 
@@ -204,9 +247,9 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Examples
 
-#### Example 2.1: Set Contact as Required Info
+#### Example 2.1: Set Contact for Secure Communication
 
-**Prompt**: Set Contact object "customer_contact" as required info for order "delivery_order_001".
+**Prompt**: Set Contact object "customer_contact" for order "delivery_order_001" to enable encrypted messaging with service staff for sharing shipping address.
 
 ```json
 {
@@ -218,21 +261,39 @@ Returns transaction block information (WowTransactionBlockSchema).
 }
 ```
 
+**Next Steps:**
+After setting the Contact, use [Messenger](messenger.md) to send your private information:
+1. Identify the service's Contact object from the Service configuration
+2. Send an encrypted message containing your shipping details, phone number, etc.
+3. The service staff will receive your information securely
+
 ---
 
-#### Example 2.2: Set WTS Proof Object
+#### Example 2.2: Send Private Information via Messenger
 
-**Prompt**: Attach WTS Proof object "delivery_proof" to order "package_order_002" as delivery verification.
+**Scenario**: After attaching your Contact to the order, send your shipping address to the service staff securely.
+
+**Step 1**: Query the Service to find its Contact object
+**Step 2**: Use Messenger to send encrypted message:
 
 ```json
 {
-  "operation_type": "order",
-  "data": {
-    "object": "package_order_002",
-    "required_info": "delivery_proof"
-  }
+  "operation": "send_message",
+  "from": "customer_account",
+  "to": "service_contact_object",
+  "content": "Order: order_123\nShipping Address: 123 Main St, City, Country\nPhone: +1234567890\nEmail: customer@example.com"
 }
 ```
+
+⚠️ **Security Note**: This message is end-to-end encrypted and only readable by you and the service staff. It is never stored on the blockchain.
+
+**WTS for Arbitration:**
+If a dispute arises, you can generate a WTS (Witness Timestamped Snapshot) of this conversation:
+1. Use [Generate WTS](messenger.md#generate-wts) to create a verifiable record of the chat history
+2. [Sign WTS](messenger.md#sign-wts) to add your cryptographic signature
+3. Submit the WTS as evidence in [Arbitration](arbitration.md) to prove what was agreed upon
+
+This ensures that all communication about order details (shipping address, delivery requirements, etc.) can be cryptographically verified during dispute resolution.
 
 ---
 
@@ -267,7 +328,7 @@ Advance the order's Progress workflow, moving from current node to next node.
 | `data.progress.operation` | object | Yes | Operation definition |
 | `data.progress.operation.next_node_name` | string | Yes | Next node name (defined in Machine) |
 | `data.progress.operation.forward` | string | Yes | Forward direction (defined in Machine) |
-| `data.progress.hold` | boolean | Yes | Whether to lock (true=lock, false=submit) |
+| `data.progress.hold` | boolean | No | Whether to lock (true=lock, false=submit). Defaults to false if omitted |
 | `data.progress.adminUnhold` | boolean | No | Allow admin unlock (when hold=true) |
 | `data.progress.message` | string | No | Operation result message |
 | `env` | object | No | Execution environment |
@@ -533,7 +594,7 @@ Unwrap CoinWrapper objects and other objects received by the order, transfer the
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.receive` | object/array | Yes | Received objects or balance |
+| `data.receive` | object/array/string | No | Received objects array, balance object, or "recently" to receive all recent objects |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
@@ -611,7 +672,7 @@ Set new owner of the order. Requires order owner permission to set.
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.transfer_to` | string | Yes | New owner name/address |
+| `data.transfer_to` | string/object | No | New owner name/address, or object with { name_or_address, local_mark_first } |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
@@ -679,9 +740,9 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ---
 
-#### Example 9.2: Set Required Info + Receive Funds
+#### Example 9.2: Set Contact + Receive Funds
 
-**Prompt**: Set required info and receive funds for order "fulfillment_order_702".
+**Prompt**: Set Contact object for secure communication and receive funds for order "fulfillment_order_702".
 
 ```json
 {
@@ -703,7 +764,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 #### Example 9.3: Full Parameters Example
 
-**Prompt**: On testnet network, set agents, set required info, advance Progress, and receive funds for order "full_order_703" using default account.
+**Prompt**: On testnet network, set agents, set Contact for secure messaging, advance Progress, and receive funds for order "full_order_703" using default account.
 
 ```json
 {
@@ -759,7 +820,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ⚠️ **Funds will be transferred to order owner!**
 
-⚠️ **Please use Wowok Messenger for information delivery - private, secure, and verifiable!**
+⚠️ **Use [Messenger](messenger.md) for sending private information - end-to-end encrypted, never stored on-chain, and only accessible to you and the service staff!**
 
 ---
 
@@ -771,4 +832,5 @@ Execute multiple Order operations in one transaction, such as setting agents and
 | **[Progress](progress.md)** | Order progress |
 | **[Machine](machine.md)** | Workflow template |
 | **[Arbitration](arbitration.md)** | Dispute resolution |
-| **[Contact](contact.md)** | Public contact information |
+| **[Contact](contact.md)** | Public contact information for secure communication |
+| **[Messenger](messenger.md)** | End-to-end encrypted messaging for private information exchange |

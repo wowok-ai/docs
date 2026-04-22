@@ -7,7 +7,12 @@
 
 The Service component is WoWok protocol's service/product publishing and sales management module, used to create and manage service or product listings in the marketplace. Service publishers can bind Machine (workflow templates), Repository (data warehouses), Arbitration (dispute resolution), and other components, configure Order Allocators, set up Discounts, manage Compensation Funds, and handle order creation and payment workflows.
 
-**Critical Integration with WIP**: Every sales item in a Service requires a `wip_hash` field referencing a WIP (Witness Information Promise) file. This ensures product/service descriptions are immutable and verifiable. See the WIP section below for details on generating, verifying, and signing WIP files.
+**Critical Integration with WIP**: Service sales items can optionally include a WIP (Witness Information Promise) file that provides immutable, verifiable product/service descriptions. 
+
+- **With WIP**: Set `wip` to a local file path or HTTPS URL. The hash is automatically extracted, and customers must provide matching `wip_hash` when purchasing.
+- **Without WIP**: Set `wip` to empty string `""` for simple products where WIP verification is not needed.
+
+See the [WIP section in Step-by-Step Guide](#step-4-configure-wip-files-for-products-optional-but-recommended) and [Messenger](messenger.md) for details on generating, verifying, and signing WIP files.
 
 ---
 
@@ -84,6 +89,413 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
+## Schema Tree
+
+```
+service (Service Object)
+├── operation_type: "service" (fixed value)
+├── data (Service data definition)
+│   ├── object (object definition, required)
+│   │   ├── Option 1: NameOrAddress (string) - reference existing object
+│   │   │   └── "object_name" or "0x..." (64 hex chars)
+│   │   └── Option 2: TypeNamedObjectWithPermission (object) - create new
+│   │       ├── name (string, optional) - object name, max 64 chars
+│   │       ├── tags (string[], optional) - object tags
+│   │       ├── onChain (boolean, optional) - sync name to chain
+│   │       ├── replaceExistName (boolean, optional) - overwrite existing
+│   │       ├── type_parameter (string, optional) - token type, default "0x2::wow::WOW"
+│   │       └── permission (PermissionObject, optional)
+│   │           ├── Option 1: NameOrAddress (string) - reference existing
+│   │           └── Option 2: NamedObjectWithDescription (object) - create new
+│   │               ├── name (string, optional)
+│   │               ├── tags (string[], optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
+│   ├── order_new (OrderNew, optional) - create new order
+│   │   ├── buy (Buy, required)
+│   │   │   ├── items (ServiceBuyItem[], required) - purchase items
+│   │   │   │   ├── name (string, required) - product name
+│   │   │   │   ├── stock (number/string, required) - quantity
+│   │   │   │   └── wip_hash (string, required) - WIP hash
+│   │   │   ├── total_pay (CoinParam, required) - payment
+│   │   │   │   ├── Option 1: { balance: number|string }
+│   │   │   │   └── Option 2: { coin: string } - coin object ID
+│   │   │   ├── discount (string, optional) - discount object ID/name
+│   │   │   ├── payment_remark (string, optional)
+│   │   │   └── payment_index (number, optional)
+│   │   ├── agents (ManyAccountOrMark_Address, optional) - order agents
+│   │   ├── order_required_info (string, required) - contact ID or WTS proof
+│   │   ├── transfer (AccountOrMark_Address, optional) - new owner
+│   │   ├── namedNewOrder (NamedObject, optional) - order name
+│   │   ├── namedNewAllocation (NamedObject, optional) - allocation name
+│   │   └── namedNewProgress (NamedObject, optional) - progress name
+│   ├── description (string, optional) - service description
+│   ├── location (string, optional) - service location
+│   ├── sales (Sales, optional) - manage products
+│   │   ├── op (enum, required) - "add"|"set"|"remove"|"clear"
+│   │   ├── sales (ServiceSale[], optional for add/set)
+│   │   │   ├── name (string, required) - product name
+│   │   │   ├── price (number/string, required) - price
+│   │   │   ├── stock (number/string, required) - inventory
+│   │   │   ├── suspension (boolean, required) - paused status
+│   │   │   ├── wip (string, required) - WIP URL/path
+│   │   │   └── wip_hash (string, optional) - WIP hash, default ""
+│   │   └── sales_name (string[], optional for remove) - names to remove
+│   ├── repositories (ObjectsOp, optional) - manage repositories
+│   ├── rewards (ObjectsOp, optional) - manage rewards
+│   ├── arbitrations (ObjectsOp, optional) - manage arbitrations
+│   ├── machine (NameOrAddress|null, optional) - bind machine
+│   ├── discount (Discount, optional) - issue discount
+│   │   ├── name (string, required)
+│   │   ├── discount_type (number, required) - 0=RATES, 1=FIXED
+│   │   ├── discount_value (number/string, required)
+│   │   ├── benchmark (number/string, optional)
+│   │   ├── time_ms_start (number, optional)
+│   │   ├── time_ms_end (number, optional)
+│   │   ├── count (number, optional)
+│   │   ├── recipient (ManyAccountOrMark_Address, required)
+│   │   └── transferable (boolean, optional)
+│   ├── discount_destroy (NameOrAddress[], optional) - destroy discounts
+│   ├── customer_required (string[], optional) - required customer info
+│   ├── order_allocators (Allocators|null, optional) - fund allocation
+│   │   ├── description (string, required)
+│   │   ├── threshold (number/string, required)
+│   │   └── allocators (Allocator[], required)
+│   │       ├── guard (NameOrAddress, required)
+│   │       ├── sharing (SharingItem[], required)
+│   │       │   ├── who (Recipient, required)
+│   │       │   │   ├── Option 1: { GuardIdentifier: number }
+│   │       │   │   ├── Option 2: { Entity: AccountOrMark_Address }
+│   │       │   │   └── Option 3: { Signer: "signer" }
+│   │       │   ├── sharing (number/string, required)
+│   │       │   └── mode (enum, required) - "Amount"|"Rate"|"Surplus"
+│   │       └── max (number/string, optional)
+│   ├── compensation_fund_add (CoinParam, optional) - add compensation
+│   ├── compensation_locked_time_add (number, optional) - lock time
+│   ├── compensation_fund_receive (ReceivedBalanceOrRecently, optional)
+│   ├── owner_receive (ReceivedObjectsOrRecently, optional)
+│   ├── um (NameOrAddress|null, optional) - contact object
+│   ├── pause (boolean, optional) - pause orders
+│   └── publish (boolean, optional) - publish service
+├── env (optional, execution environment)
+│   ├── account (string, optional) - account name/address, "" for default
+│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── permission_guard (string[], optional) - guard IDs
+│   ├── no_cache (boolean, optional) - disable caching
+│   └── referrer (string, optional) - referrer ID
+└── submission (optional, submission data)
+    ├── type: "submission" (fixed)
+    ├── guard (array) - guards to verify
+    │   └── [{ object: "guard_id", impack: boolean }]
+    └── submission (array) - guard submissions
+        └── [{ guard: "guard_id", submission: [items] }]
+            └── guard_submission_items
+                ├── identifier (number, 0-255)
+                ├── b_submission (boolean)
+                ├── value_type (number|string)
+                ├── value (any)
+                └── name (string, optional)
+```
+
+---
+
+## Creating a Sellable Service: Step-by-Step Guide
+
+Building a fully functional, sellable Service requires several components working together. Follow these steps to create a complete service marketplace listing:
+
+### Step 0: Prerequisites (Optional but Recommended)
+
+Before creating your Service, you may need to set up these foundational components:
+
+1. **Permission Object** - Controls who can manage the Service
+   - See [Permission](permission.md) for creating permission objects
+   - If not specified, a new Permission will be created automatically
+
+2. **Guard Objects** - Used in Order Allocators for conditional fund distribution
+   - See [Guard](guard.md) for creating Guard objects
+   - Example: Create an "always_true_guard" that always passes verification
+
+### Step 1: Create the Service Object
+
+Create a basic Service object with name, description, and optional configuration.
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "my_service",
+      "description": "My service description"
+    }
+  }
+}
+```
+
+### Step 2: Configure Machine (Order Processing Workflow)
+
+Bind a published Machine to define how orders are processed. The Machine represents your service delivery workflow.
+
+**Prerequisites:**
+- Create a Machine using [Machine](machine.md) operations
+- Publish the Machine before binding
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "my_service",
+    "machine": "my_published_machine"
+  }
+}
+```
+
+### Step 3: Configure Order Allocators (Fund Distribution)
+
+Set up how order payments are distributed among recipients.
+
+**Key Concepts:**
+- **Guard**: Validates allocation conditions (use "always_true_guard" for unconditional allocation)
+- **Sharing**: Defines who receives funds and how much
+- **Mode**: "Rate" (percentage), "Amount" (fixed), or "Surplus" (remaining)
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "my_service",
+    "order_allocators": {
+      "description": "Order fund allocation",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "always_true_guard",
+          "sharing": [
+            {
+              "who": { "Signer": "signer" },
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+### Step 4: Configure WIP Files for Products (Optional but Recommended)
+
+WIP (Witness Information Promise) files provide immutable, verifiable product/service descriptions. While optional, using WIP is strongly recommended for building trust.
+
+**Two approaches:**
+
+#### Approach A: No WIP (Simple Products)
+- Set `wip` to empty string `""`
+- Customers don't need to provide `wip_hash` when purchasing
+
+#### Approach B: With WIP (Recommended)
+1. **Generate WIP File** using the `wip_file` tool:
+   ```json
+   {
+     "operation_type": "wip_file",
+     "data": {
+       "operation": "generate",
+       "markdown_text": "# Product Name\n\n## Description\nDetailed product description here...",
+       "images": ["https://example.com/product-image.jpg"],
+       "account": "",
+       "output_path": "./product.wip"
+     }
+   }
+   ```
+
+2. **Upload WIP File** to your website or a publicly accessible HTTPS location
+   - The WIP file must be accessible via an HTTPS URL
+   - Example: `https://your-domain.com/product.wip`
+   - **Note**: When adding products to Service, you must provide a network-accessible HTTPS URL (local file paths are for testing only)
+
+3. **Extract Hash** from the generated WIP file (automatically handled when using local file path)
+
+4. **Add Product to Service**:
+   ```json
+   {
+     "operation_type": "service",
+     "data": {
+       "object": "my_service",
+       "sales": {
+         "op": "add",
+         "sales": [
+           {
+             "name": "Product Name",
+             "price": 50000000,
+             "stock": 50,
+             "suspension": false,
+             "wip": "https://your-domain.com/product.wip",
+             "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+           }
+         ]
+       }
+     }
+   }
+   ```
+
+**Important:** The `wip_hash` must match the hash extracted from your WIP file. Customers must provide the same hash when purchasing:
+```json
+{
+  "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+}
+```
+
+See [Messenger](messenger.md) for more details on WIP file operations.
+
+### Step 5: Configure Arbitration (Required if using Compensation Fund)
+
+If you plan to use compensation funds for dispute resolution, you must configure at least one Arbitration object.
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "my_service",
+    "arbitrations": {
+      "op": "add",
+      "objects": ["arbitration_object_id"]
+    }
+  }
+}
+```
+
+See [Arbitration](arbitration.md) for creating arbitration objects.
+
+### Step 6: Add More Products/Services (Optional)
+
+If you need to add more products after initial setup, use the same sales operation. See [Sub-feature 8: Manage Sales List](#sub-feature-8-manage-sales-list) for detailed examples including:
+- Adding products without WIP (simple products)
+- Adding products with WIP (verified products)
+- Removing or clearing products
+
+### Step 7: Configure Contact & Required User Information (Optional)
+
+If your service requires customers to provide personal information (shipping address, phone number, email, etc.), you need to:
+
+1. **Create a Contact Object** - Enables secure messaging between you and customers
+   - See [Contact](contact.md) for creating contact objects
+   - Contact allows encrypted communication for handling sensitive information
+
+2. **Bind Contact to Service**:
+   ```json
+   {
+     "operation_type": "service",
+     "data": {
+       "object": "my_service",
+       "contact": "my_contact_object"
+     }
+   }
+   ```
+
+3. **Set Required Information Fields** - Define what customer information is required when placing orders:
+   ```json
+   {
+     "operation_type": "service",
+     "data": {
+       "object": "my_service",
+       "order_required_info": "shipping_address,phone_number,email"
+     }
+   }
+   ```
+
+**Common Required Information Fields:**
+- `shipping_address` - Physical delivery address
+- `phone_number` - Contact phone
+- `email` - Email address
+- `real_name` - Customer's real name
+- `postal_code` - Postal/ZIP code
+
+**Privacy & Security:**
+- All sensitive information is transmitted through encrypted Messenger channels
+- See [Messenger](messenger.md) for secure communication features
+- Consider using WIP files to document your privacy policy
+
+### Step 8: Publish the Service
+
+Once all configurations are complete, publish the Service to make it available for customers.
+
+⚠️ **Warning:** After publishing, `machine`, `order_allocators`, and `arbitrations` become immutable!
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "my_service",
+    "publish": true
+  }
+}
+```
+
+### Complete Example: One-Step Service Creation
+
+You can also create a complete service in a single call:
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "complete_service"
+    },
+    "description": "A complete sellable service",
+    "machine": "my_published_machine",
+    "order_allocators": {
+      "description": "Default allocation",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "always_true_guard",
+          "sharing": [
+            {
+              "who": { "Signer": "signer" },
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    },
+    "arbitrations": {
+      "op": "add",
+      "objects": ["arbitration_id"]
+    },
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "Product with WIP",
+          "price": 50000000,
+          "stock": 50,
+          "suspension": false,
+          "wip": "https://your-domain.com/product.wip",
+          "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+        }
+      ]
+    },
+    "publish": true
+  },
+  "env": {
+    "network": "testnet"
+  }
+}
+```
+
+### Related Documentation
+
+- [Machine](machine.md) - Creating workflow templates
+- [Guard](guard.md) - Creating validation guards
+- [Arbitration](arbitration.md) - Dispute resolution
+- [Messenger](messenger.md) - WIP file operations
+- [Order](order.md) - Customer purchase flow
+
+---
+
 ### Examples
 
 #### Example 1.1: Basic Service Creation
@@ -146,6 +558,8 @@ Bind a Machine (workflow template) to the Service. The Machine must be in publis
 
 ⚠️ **After Service publication, `machine` field becomes immutable.**
 
+⚠️ **Machine must be created separately** before binding. See [Machine](machine.md) for how to create and publish a Machine.
+
 ---
 
 ### Examples
@@ -166,29 +580,9 @@ Bind a Machine (workflow template) to the Service. The Machine must be in publis
 
 ---
 
-#### Example 2.2: Create and Name Machine
+#### Example 2.2: Remove Machine
 
-**Prompt**: Create a new Machine with local name "service_workflow" and bind it to the Service.
-
-```json
-{
-  "operation_type": "service",
-  "data": {
-    "object": "web3_consulting_service",
-    "machine": {
-      "name": "service_workflow",
-      "tags": ["workflow", "automation"],
-      "onChain": false
-    }
-  }
-}
-```
-
----
-
-#### Example 2.3: Remove Machine
-
-**Prompt**: Remove the currently bound Machine from the Service.
+**Prompt**: Remove the currently bound Machine from the Service. Note: Only works if Service is not yet published.
 
 ```json
 {
@@ -500,7 +894,7 @@ Bind a Contact (instant messaging) object to the Service.
 
 ### Feature Description
 
-Add, set, remove, or clear sales products/services from the Service.
+Add, set, remove, or clear sales products/services from the Service. Each sales item can optionally include a WIP (Witness Information Promise) file that provides immutable, verifiable product/service descriptions.
 
 ### Parameter Description
 
@@ -510,21 +904,137 @@ Add, set, remove, or clear sales products/services from the Service.
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
 | `data.sales.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
 | `data.sales.sales` | array | No | Sales items list | Required for add/set |
-| `data.sales.sales[].name` | string | Yes | Product/service name | |
-| `data.sales.sales[].price` | number/string | Yes | Price | |
-| `data.sales.sales[].description` | string | Yes | Description | |
-| `data.sales.sales[].inventory` | number/string | No | Inventory quantity | |
-| `data.sales.sales[].wip_hash` | string | Yes | WIP file hash | |
-| `data.sales.sales[].suspension` | boolean | No | Pause sale | |
+| `data.sales.sales[].name` | string | Yes | Product/service name | Max 64 characters |
+| `data.sales.sales[].price` | number/string | Yes | Price in smallest token units | No decimals |
+| `data.sales.sales[].stock` | number/string | Yes | Inventory quantity | No decimals |
+| `data.sales.sales[].wip` | string | Yes | WIP file URL or local path | Empty string "" for no WIP |
+| `data.sales.sales[].wip_hash` | string | No | WIP file hash | Auto-extracted from local WIP files |
+| `data.sales.sales[].suspension` | boolean | Yes | Whether sale is suspended | |
 | `data.sales.sales_name` | string[] | No | Names to remove | Required for remove |
+
+### Important Notes About WIP
+
+**What is WIP?**
+WIP (Witness Information Promise) is a cryptographically signed JSON file that contains product/service descriptions, images, and metadata. It ensures:
+- **Immutability**: Once created, the content cannot be altered
+- **Verifiability**: Customers can verify the product description matches what was promised
+- **Trust**: Builds confidence between buyers and sellers
+
+**WIP Usage Modes:**
+
+1. **Without WIP** (Simple products):
+   - Set `wip` to empty string `""`
+   - No `wip_hash` required
+   - Customers purchase without WIP verification
+
+2. **With WIP** (Recommended for valuable products):
+   - Set `wip` to a local `.wip` file path or HTTPS URL
+   - Hash is automatically extracted from local WIP files
+   - Customers must provide matching `wip_hash` when purchasing
 
 ---
 
 ### Examples
 
-#### Example 8.1: Add Sales Items
+#### Example 8.1: Add Sales Item Without WIP (Simple Product)
 
-**Prompt**: Add two sales items: 1) "basic_consulting" priced at 100 WOW (price=100000000000) with WIP hash from "service_desc.wip", 2) "premium_consulting" priced at 500 WOW (price=500000000000) with WIP hash from "premium_service.wip". Note: Prices are in smallest token unit (9 decimals for WOW). See WIP section for how to generate WIP files.
+**Prompt**: Add a simple product without WIP verification. Customers can purchase without providing WIP hash.
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "web3_consulting_service",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "simple_product",
+          "price": 30000000,
+          "stock": 100,
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+#### Example 8.2: Add Sales Item With WIP (Recommended)
+
+**Prompt**: Add a product with WIP file. First generate the WIP file, then reference it when adding the product.
+
+**Step 1: Generate WIP File**
+```json
+{
+  "operation_type": "wip_file",
+  "data": {
+    "operation": "generate",
+    "markdown_text": "# Three-Body Problem (三体)\n\n## Book Information\n- **Author**: Liu Cixin\n- **Genre**: Science Fiction\n- **Pages**: 302\n\n## Description\nThe Three-Body Problem is a science fiction novel that explores humanity's first contact with an alien civilization...",
+    "images": ["https://example.com/three-body-cover.jpg"],
+    "account": "",
+    "output_path": "./three_body.wip"
+  }
+}
+```
+
+**Step 2: Add Product with WIP**
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "book_store_service",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "三体（带WIP）",
+          "price": 50000000,
+          "stock": 50,
+          "suspension": false,
+          "wip": "https://your-domain.com/three_body.wip",
+          "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Step 3: Customer Purchase (Must Provide WIP Hash)**
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "book_store_service",
+    "order_new": {
+      "buy": {
+        "items": [
+          {
+            "name": "三体（带WIP）",
+            "stock": 1,
+            "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+          }
+        ],
+        "total_pay": {
+          "balance": 50000000
+        }
+      },
+      "order_required_info": ""
+    }
+  }
+}
+```
+
+---
+
+#### Example 8.3: Add Multiple Sales Items (Mixed WIP and Non-WIP)
+
+**Prompt**: Add multiple products, some with WIP and some without.
 
 ```json
 {
@@ -536,19 +1046,19 @@ Add, set, remove, or clear sales products/services from the Service.
       "sales": [
         {
           "name": "basic_consulting",
-          "price": 100000000000,
-          "description": "Basic consulting service (1 hour)",
-          "inventory": 100,
-          "wip_hash": "sha256:abc123def456...",
-          "suspension": false
+          "price": 100000000,
+          "stock": 100,
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
         },
         {
           "name": "premium_consulting",
-          "price": 500000000000,
-          "description": "Premium consulting service (4 hours)",
-          "inventory": 20,
-          "wip_hash": "sha256:def456abc123...",
-          "suspension": false
+          "price": 500000000,
+          "stock": 20,
+          "suspension": false,
+          "wip": "https://your-domain.com/premium_service.wip",
+          "wip_hash": "abc123def456..."
         }
       ]
     }
@@ -558,7 +1068,7 @@ Add, set, remove, or clear sales products/services from the Service.
 
 ---
 
-#### Example 8.2: Remove Sales Item
+#### Example 8.4: Remove Sales Item
 
 **Prompt**: Remove the "old_product" sales item from the Service.
 
@@ -577,7 +1087,7 @@ Add, set, remove, or clear sales products/services from the Service.
 
 ---
 
-#### Example 8.3: Clear All Sales
+#### Example 8.5: Clear All Sales
 
 **Prompt**: Clear all sales items from the Service.
 
@@ -608,7 +1118,7 @@ Create and issue a new discount coupon for the Service.
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
 | `data.discount.name` | string | Yes | Discount name | |
-| `data.discount.discount_type` | string | Yes | Discount type | "RATES" or "FIXED" |
+| `data.discount.discount_type` | number | Yes | Discount type | 0 (RATES) or 1 (FIXED) |
 | `data.discount.discount_value` | number/string | Yes | Discount value | Rate: 0-10000 (e.g., 1000 means 10% discount); Fixed: amount in smallest token unit |
 | `data.discount.benchmark` | number/string | No | Minimum amount threshold | In smallest token unit | |
 | `data.discount.time_ms_start` | number | No | Start time (ms timestamp) | |
@@ -623,7 +1133,7 @@ Create and issue a new discount coupon for the Service.
 
 #### Example 9.1: Rate Discount (Percentage)
 
-**Prompt**: Issue a rate discount named "new_user_20off" with 20% off (discount_value=2000), minimum purchase of 100 WOW (benchmark=100000000000), valid for 30 days, limited to 1000 uses, eligible for alice and bob. Note: 20% discount uses 2000 (not 0.2) since rate discounts use 0-10000 scale where 10000 means 100%.
+**Prompt**: Issue a rate discount named "new_user_20off" with 20% off (discount_value=2000), minimum purchase of 100 WOW (benchmark=100000000000), valid for 30 days, limited to 1000 uses, eligible for alice and bob. Note: 20% discount uses 2000 (not 0.2) since rate discounts use 0-10000 scale where 10000 means 100%. Use discount_type=0 for rate discounts.
 
 ```json
 {
@@ -632,7 +1142,7 @@ Create and issue a new discount coupon for the Service.
     "object": "web3_consulting_service",
     "discount": {
       "name": "new_user_20off",
-      "discount_type": "RATES",
+      "discount_type": 0,
       "discount_value": 2000,
       "benchmark": 100000000000,
       "time_ms_start": 1735689600000,
@@ -651,7 +1161,7 @@ Create and issue a new discount coupon for the Service.
 
 #### Example 9.2: Fixed Amount Discount
 
-**Prompt**: Issue a fixed discount named "holiday_50off" with 50 WOW off (discount_value=50000000000), transferable, and eligible for everyone. Note: Fixed discount uses smallest token unit (not 50, but 50000000000 for 50 WOW with 9 decimals).
+**Prompt**: Issue a fixed discount named "holiday_50off" with 50 WOW off (discount_value=50000000000), transferable, and eligible for everyone. Note: Fixed discount uses smallest token unit (not 50, but 50000000000 for 50 WOW with 9 decimals). Use discount_type=1 for fixed discounts.
 
 ```json
 {
@@ -660,7 +1170,7 @@ Create and issue a new discount coupon for the Service.
     "object": "web3_consulting_service",
     "discount": {
       "name": "holiday_50off",
-      "discount_type": "FIXED",
+      "discount_type": 1,
       "discount_value": 50000000000,
       "recipient": {
         "entities": []
@@ -685,7 +1195,7 @@ Destroy existing discount objects.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.discount_destroy` | array | Yes | Discount objects to destroy | NamedObject array |
+| `data.discount_destroy` | string[] | Yes | Discount object names or IDs to destroy | Array of object names or addresses |
 
 ---
 
@@ -700,12 +1210,7 @@ Destroy existing discount objects.
   "operation_type": "service",
   "data": {
     "object": "web3_consulting_service",
-    "discount_destroy": [
-      {
-        "name": "expired_coupon",
-        "tags": ["expired"]
-      }
-    ]
+    "discount_destroy": ["expired_coupon"]
   }
 }
 ```
@@ -926,7 +1431,7 @@ Create a new order as a customer and make payment.
 
 #### Example 15.1: Create Order
 
-**Prompt**: Create an order for "basic_consulting" with quantity 1, pay 100 WOW (total_pay.balance=100000000000), use discount "new_user_20off", add payment remark, include the WIP hash from "service_desc.wip", and name the order "my_first_order". Note: Amount is in smallest token unit (9 decimals for WOW). See WIP section for how to verify the WIP file.
+**Prompt**: Create an order for "basic_consulting" with quantity 1, pay 100 WOW (total_pay.balance=100000000000), use discount "new_user_20off", add payment remark, include the WIP hash from "service_desc.wip", and name the order "my_first_order". Note: Amount is in smallest token unit (9 decimals for WOW). The wip_hash must match the hash of the sales item's WIP file. See WIP section for how to generate and verify WIP files.
 
 ```json
 {
@@ -980,10 +1485,7 @@ Receive compensation funds from orders.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.compensation_fund_receive.type` | string | Yes | Receive type | "recently" or "balance" |
-| `data.compensation_fund_receive.balance` | number/string | No | Amount | Required for type "balance" |
-| `data.compensation_fund_receive.time_ms_ago` | number | No | Time range (ms) | |
-| `data.compensation_fund_receive.token_type` | string | No | Token type | |
+| `data.compensation_fund_receive` | string/object | Yes | Receive configuration | "recently" or ReceivedBalance object |
 
 ---
 
@@ -991,17 +1493,14 @@ Receive compensation funds from orders.
 
 #### Example 16.1: Receive Recently Available Compensation
 
-**Prompt**: Receive compensation funds that became available in the last 24 hours.
+**Prompt**: Receive all compensation funds that became available recently.
 
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": "web3_consulting_service",
-    "compensation_fund_receive": {
-      "type": "recently",
-      "time_ms_ago": 86400000
-    }
+    "compensation_fund_receive": "recently"
   }
 }
 ```
@@ -1010,7 +1509,7 @@ Receive compensation funds from orders.
 
 #### Example 16.2: Receive Specific Amount
 
-**Prompt**: Receive 100 WOW tokens (balance=100000000000) from compensation funds. Note: Amount is in smallest token unit (9 decimals for WOW).
+**Prompt**: Receive specific amount from compensation funds using ReceivedBalance object. Note: Requires querying received balance records first.
 
 ```json
 {
@@ -1018,9 +1517,15 @@ Receive compensation funds from orders.
   "data": {
     "object": "web3_consulting_service",
     "compensation_fund_receive": {
-      "type": "balance",
       "balance": 100000000000,
-      "token_type": "0x2::wow::WOW"
+      "token_type": "0x2::wow::WOW",
+      "received": [
+        {
+          "id": "0x...",
+          "balance": 100000000000,
+          "payment": "0x..."
+        }
+      ]
     }
   }
 }
@@ -1100,7 +1605,7 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ⚠️ **`compensation_fund_add` adds funds for arbitration compensation** in order disputes.
 
-⚠️ **`discount_type` must be "RATES" or "FIXED" (uppercase).**
+⚠️ **`discount_type` must be 0 (RATES) or 1 (FIXED).**
 
 ---
 
