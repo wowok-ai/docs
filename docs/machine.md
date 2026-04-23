@@ -206,6 +206,8 @@ A Machine consists of nodes and their connections:
 
 **Forward Permissions (MUST specify ONE):**
 - `namedOperator`: Namespace (for Progress-specific operators)
+  - Use empty string `""` for **order permission** - allows order owner and agents to operate through Order object
+  - Use other names for custom operator namespaces
 - `permissionIndex`: Permission index (shared across all Progress objects)
 
 ### Permission Index Guide for Forward Operations
@@ -515,6 +517,7 @@ Add nodes to a Machine. Each node represents a state in the workflow, with conne
 ⚠️ **Two Permission Modes for Forwards:**
 - **`permissionIndex`**: Uses Permission object's permission indexes. All Progress instances share the same operators (recommended for fixed workflows). First define the permissionIndex in the Permission object.
 - **`namedOperator`**: Uses named operator spaces. Each Progress instance can set different operators independently (recommended for flexible workflows). Use `progress_namedOperator` to manage operators for specific Progress instances.
+  - **Special value `""` (empty string)**: Represents **order permission**. When a forward uses `namedOperator: ""`, the order owner and agents can execute this forward through the Order object without needing additional permissions.
 
 #### Understanding the Init Node (Empty String "")
 

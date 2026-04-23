@@ -1140,6 +1140,236 @@ Step 2: Use Passport in Messenger (see [messenger.md](messenger.md)) to verify s
 
 ---
 
+## Query Instructions and Witness Types
+
+### Overview
+
+Guards can access data from ANY on-chain object using `query` nodes! This is a powerful feature that allows you to build validation logic based on real-time on-chain state.
+
+### Query Node Structure
+
+```json
+{
+  "type": "query",
+  "query": 1253,
+  "object": {
+    "identifier": 0,
+    "convert_witness": 100
+  },
+  "parameters": []
+}
+```
+
+**Parameters:**
+- `query`: Query instruction ID (number) or name (string). Use the `wowok_buildin_info` tool with `'guard instructions'` to query all available IDs.
+- `object.identifier`: References the object ID from the Guard table (identifier 0-255).
+- `object.convert_witness` (optional): **Critical for cross-object queries!** When specified, the query retrieves data from an associated object instead of the object itself.
+
+### Witness Types for Cross-Object Queries
+
+When you submit one object type but need to query data from a related object, use `convert_witness`:
+
+| Witness Type | Value | Description | Use Case |
+|--------------|-------|-------------|----------|
+| `TypeOrderProgress` | 100 | Order → Progress | Query order's progress status |
+| `TypeOrderMachine` | 101 | Order → Machine | Query order's workflow machine |
+| `TypeOrderService` | 102 | Order → Service | Query order's service details |
+| `TypeProgressMachine` | 103 | Progress → Machine | Query progress's machine |
+| `TypeArbOrder` | 104 | Arbitration → Order | Query arbitration's order |
+| `TypeArbArbitration` | 105 | Arb → Arbitration | Query arb's arbitration |
+| `TypeArbProgress` | 106 | Arb → Progress | Query arb's progress |
+| `TypeArbMachine` | 107 | Arb → Machine | Query arb's machine |
+| `TypeArbService` | 108 | Arb → Service | Query arb's service |
+
+### Common Progress Query Instructions
+
+When querying Progress objects (directly or via witness), these instructions are frequently used:
+
+| ID | Name | Return Type | Description | Parameters |
+|----|------|-------------|-------------|------------|
+| 1253 | `progress.current` | String | Current node name | None |
+| 1271 | `progress.session.forward.time` | U64 | Timestamp of specific operation | [next_node_name, forward_name] |
+| 1254 | `progress.task some` | Bool | Whether task object is set | None |
+| 1255 | `progress.task` | Address | Task object ID | None |
+| 1272 | `progress.history count` | U64 | Number of history records | None |
+
+### Example: Query Order's Progress Status
+
+**Scenario**: Create a Guard that checks if an order has reached "Completed" status.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "order_completed_guard"
+    },
+    "description": "Verify order is in Completed node. Submit order object ID.",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "order_id"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Completed",
+        "name": "completed_node"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
+            },
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Key Points:**
+1. User submits `order_id` (identifier 0)
+2. Query uses `convert_witness: 100` (TypeOrderProgress) to access the order's Progress object
+3. Query ID `1253` (`progress.current`) retrieves the current node name
+4. Compares with "Completed" to verify order status
+
+### Example: Check Order Completion Time
+
+**Scenario**: Create a Guard that checks if an order was completed more than 15 days ago.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "withdraw_guard"
+    },
+    "description": "Verify order completed > 15 days ago. Submit order object ID.",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "order_id"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Completed",
+        "name": "completed_node"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Complete Order",
+        "name": "forward_name"
+      },
+      {
+        "identifier": 3,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": "1296000000",
+        "name": "15_days_ms"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": 1253,
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": 100
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_as_u256_greater_or_equal",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Clock"
+              },
+              {
+                "type": "calc_number_add",
+                "nodes": [
+                  {
+                    "type": "query",
+                    "query": 1271,
+                    "object": {
+                      "identifier": 0,
+                      "convert_witness": 100
+                    },
+                    "parameters": [
+                      {
+                        "type": "identifier",
+                        "identifier": 1
+                      },
+                      {
+                        "type": "identifier",
+                        "identifier": 2
+                      }
+                    ]
+                  },
+                  {
+                    "type": "identifier",
+                    "identifier": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Note**: The `context` node with `"Clock"` returns the current on-chain timestamp (U64).
+
+---
+
 ## Query Instructions and On-chain Object Access
 
 Guards can access data from ANY on-chain object using `query` nodes! Use the `wowok_buildin_info` tool with `'guard instructions'` to query the complete list of available operations.

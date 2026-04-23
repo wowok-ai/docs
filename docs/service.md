@@ -252,12 +252,126 @@ Bind a published Machine to define how orders are processed. The Machine represe
 
 ### Step 3: Configure Order Allocators (Fund Distribution)
 
-Set up how order payments are distributed among recipients.
+Set up how order payments are distributed among recipients. This is a **critical step** before publishing your Service.
 
-**Key Concepts:**
-- **Guard**: Validates allocation conditions (use "always_true_guard" for unconditional allocation)
-- **Sharing**: Defines who receives funds and how much
-- **Mode**: "Rate" (percentage), "Amount" (fixed), or "Surplus" (remaining)
+#### Understanding Order Allocators
+
+Order Allocators define how funds from customer orders are distributed. Each allocator consists of:
+
+| Component | Description | Required |
+|-----------|-------------|----------|
+| **Guard** | Validates allocation conditions | Yes |
+| **Sharing** | Defines who receives funds and how much | Yes |
+| **Mode** | "Rate" (percentage), "Amount" (fixed), or "Surplus" (remaining) | Yes |
+| **Threshold** | Minimum amount to trigger allocation | Yes |
+
+#### Step 3.1: Create Required Guards
+
+Before configuring allocators, you need to create Guards that will validate allocation conditions.
+
+**Option A: Simple Always-True Guard**
+
+For testing or simple services where funds should always be allocated:
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "always_true_guard",
+      "tags": ["allocation", "simple"]
+    },
+    "description": "Always returns true for unconditional fund allocation",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": false,
+        "value_type": "Bool",
+        "value": true
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "identifier",
+        "identifier": 0
+      }
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Option B: Order Completion Guard**
+
+For production services, create Guards that verify order status before allowing fund withdrawal:
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "order_completed_guard",
+      "tags": ["allocation", "withdraw"]
+    },
+    "description": "Verify order is in Completed status before allowing fund withdrawal. Submit order object ID.",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "order_id"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Completed",
+        "name": "completed_node"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
+            },
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "",
+    "network": "testnet"
+  }
+}
+```
+
+**Key Points for Order Completion Guard:**
+- Uses `convert_witness: 100` (TypeOrderProgress) to query the order's Progress object
+- Query ID `1253` retrieves the current node name from Progress
+- Validates that order has reached "Completed" status
+
+See [Guard Query Instructions](guard.md#query-instructions-and-witness-types) for more details on cross-object queries.
+
+#### Step 3.2: Configure Allocators in Service
+
+Now configure the order_allocators with your Guards:
 
 ```json
 {
@@ -265,11 +379,11 @@ Set up how order payments are distributed among recipients.
   "data": {
     "object": "my_service",
     "order_allocators": {
-      "description": "Order fund allocation",
+      "description": "Order fund allocation - 100% to merchant after completion",
       "threshold": 0,
       "allocators": [
         {
-          "guard": "always_true_guard",
+          "guard": "order_completed_guard",
           "sharing": [
             {
               "who": { "Signer": "signer" },
@@ -283,6 +397,63 @@ Set up how order payments are distributed among recipients.
   }
 }
 ```
+
+#### Advanced: Multiple Allocators for Complex Scenarios
+
+For e-commerce with both merchant withdrawal and customer refund scenarios:
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "my_service",
+    "order_allocators": {
+      "description": "E-commerce fund allocation with withdraw and refund",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "merchant_withdraw_guard",
+          "sharing": [
+            {
+              "who": { "Signer": "signer" },
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "customer_refund_guard",
+          "sharing": [
+            {
+              "who": { "Entity": { "address": "" } },
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+**Sharing Modes Explained:**
+
+| Mode | Description | Example |
+|------|-------------|---------|
+| **Rate** | Percentage of total (0-10000 = 0%-100%) | `10000` = 100% |
+| **Amount** | Fixed amount in token units | `50000000000` = 50 WOW |
+| **Surplus** | Remaining funds after other allocations | Use for final recipient |
+
+**Recipient Types:**
+
+| Type | Format | Description |
+|------|--------|-------------|
+| **Signer** | `{ "Signer": "signer" }` | Transaction sender (merchant) |
+| **Entity** | `{ "Entity": { "address": "..." } }` | Specific address |
+| **GuardIdentifier** | `{ "GuardIdentifier": 0 }` | Address from Guard table |
+
+⚠️ **Important:** After publishing the Service, `order_allocators` becomes **immutable**! Ensure your allocation logic is correct before publishing.
 
 ### Step 4: Configure WIP Files for Products (Optional but Recommended)
 
