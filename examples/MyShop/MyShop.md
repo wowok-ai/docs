@@ -84,16 +84,6 @@ Before starting, ensure you have:
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "gen": {
-    "address": "0xa773...18a0",
-    "name": "myshop_merchant"
-  }
-}
-```
-
 **Get test tokens:**
 
 **Prompt**: Request testnet WOW tokens for account "myshop_merchant".
@@ -103,23 +93,6 @@ Before starting, ensure you have:
   "faucet": {
     "network": "testnet",
     "name_or_address": "myshop_merchant"
-  }
-}
-```
-
-**Execution Result**:
-```json
-{
-  "faucet": {
-    "name_or_address": "myshop_merchant",
-    "result": [
-      {"amount": 1000000000, "id": "0x0485...8d00"},
-      {"amount": 1000000000, "id": "0x3554...fedf"},
-      {"amount": 1000000000, "id": "0x8cf4...8805"},
-      {"amount": 1000000000, "id": "0x968e...d214"},
-      {"amount": 1000000000, "id": "0xa790...f636"}
-    ],
-    "network": "testnet"
   }
 }
 ```
@@ -150,21 +123,6 @@ First, create a Permission object to manage access control for your store operat
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0x5ed8...6cf2",
-      "version": "24",
-      "change": "created"
-    }
-  ]
-}
-```
-
 ---
 
 ### Step 2: Create Machine (Order Workflow)
@@ -187,21 +145,6 @@ Create a Machine to define the order processing workflow. This includes nodes fo
     "account": "myshop_merchant",
     "network": "testnet"
   }
-}
-```
-
-**Execution Result**:
-```json
-{
-  "status": "success",
-  "objects": [
-    {
-      "type": "Machine",
-      "object": "0x580f...37ec",
-      "version": "3307018",
-      "change": "created"
-    }
-  ]
 }
 ```
 
@@ -407,46 +350,6 @@ Add the workflow nodes to the Machine for order processing.
   }
 }
 ```
-
-**Execution Result**:
-```json
-{
-  "status": "success",
-  "objects": [
-    {
-      "type": "Machine",
-      "object": "0x580f...37ec",
-      "version": "3307019",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_MachineNode",
-      "object": "0x4b0f...36c5",
-      "version": "3307019",
-      "change": "created"
-    },
-    {
-      "type": "TableItem_MachineNode",
-      "object": "0x6a61...cdf5",
-      "version": "3307019",
-      "change": "created"
-    },
-    {
-      "type": "TableItem_MachineNode",
-      "object": "0x859b...eec8",
-      "version": "3307019",
-      "change": "created"
-    },
-    {
-      "type": "TableItem_MachineNode",
-      "object": "0x9447...d76b",
-      "version": "3307019",
-      "change": "created"
-    }
-  ]
-}
-```
-
 ---
 
 ### Step 5: Publish the Machine
@@ -468,22 +371,6 @@ Publish the Machine to make it available for creating orders.
   }
 }
 ```
-
-**Execution Result**:
-```json
-{
-  "status": "success",
-  "objects": [
-    {
-      "type": "Machine",
-      "object": "0x580f...37ec",
-      "version": "3307020",
-      "change": "mutated"
-    }
-  ]
-}
-```
-
 ---
 
 ### Step 5.1: Create Contact Objects for Customer Service
@@ -887,16 +774,6 @@ Create a customer account:
 ```json
 {
   "gen": {
-    "name": "myshop_customer"
-  }
-}
-```
-
-**Execution Result**:
-```json
-{
-  "gen": {
-    "address": "0x3f8a...92c0",
     "name": "myshop_customer"
   }
 }
