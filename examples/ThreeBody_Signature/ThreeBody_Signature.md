@@ -768,7 +768,7 @@ PUBLISH (LAST STEP!)
 2. **Local Marks**: Verify objects exist with `local_mark_list` queries
 3. **Account Balance**: Always check balance before starting - gas fees add up!
 
-### 8. 最好让AI帮你管理对象命名，你只需要指定规则即可
+### 8. Let AI Manage Object Naming for You
 
 ### 9. Query Toolkit is Your Best Friend
 
