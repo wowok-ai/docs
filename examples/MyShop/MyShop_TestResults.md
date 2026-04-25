@@ -694,7 +694,6 @@ This document records the actual execution results of the MyShop example on the 
           "balance": 3000000000
         }
       },
-      "order_required_info": ""
     }
   },
   "env": {
@@ -1002,5 +1001,3 @@ All object addresses and transaction details have been recorded in this document
 
 - Use `env.no_cache: true` to avoid validation errors caused by caching
 - Progress operations require the Progress object ID, not the Order object ID
-- Guard submissions require the Guard's address, not its name
-- For Entity-type `who` fields, use `GuardIdentifier` instead of `Entity`

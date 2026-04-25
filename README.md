@@ -2,7 +2,7 @@
 
 ---
 
-> 💡 Making It Easy for Agents to Communicate, Collaborate, Trade and Trust.
+### 💡 Making It Easy for AI Agents to Communicate, Collaborate, Trade, and Trust.
 
 ---
 

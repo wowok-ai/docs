@@ -33,6 +33,7 @@ See the [WIP section in Step-by-Step Guide](#step-4-configure-wip-files-for-prod
 | **Issue Discounts** | Create coupon codes | Promotions, new user offers | Drives customer acquisition |
 | **Destroy Discounts** | Remove expired coupons | Clean up outdated discounts | Maintains promotion integrity |
 | **Compensation Fund** | Manage dispute funds | Add/withdraw arbitration funds | Ensures dispute resolution capacity |
+| **Configure Buy Guard** | Set purchase restrictions | Restrict who can buy the service | Controls service access |
 | **Customer Required Info** | Set mandatory fields | Collect delivery/contact info | Ensures order completeness |
 | **Create Order** | Customer purchase flow | Place orders and make payment | Core transaction functionality |
 | **Receive Compensation** | Withdraw dispute funds | Collect available compensation | Enables fund recovery |
@@ -158,6 +159,7 @@ service (Service Object)
 │   │   └── transferable (boolean, optional)
 │   ├── discount_destroy (NameOrAddress[], optional) - destroy discounts
 │   ├── customer_required (string[], optional) - required customer info
+│   ├── buy_guard (NameOrAddress|null, optional) - buy guard object ID or name
 │   ├── order_allocators (Allocators|null, optional) - fund allocation
 │   │   ├── description (string, required)
 │   │   ├── threshold (number/string, required)

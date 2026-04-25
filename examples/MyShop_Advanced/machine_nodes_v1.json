@@ -1,0 +1,222 @@
+[
+  {
+    "name": "Order Confirmed",
+    "pairs": []
+  },
+  {
+    "name": "Order Cancel",
+    "pairs": []
+  },
+  {
+    "name": "Shipping",
+    "pairs": [
+      {
+        "prev_node": "Order Confirmed",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Ship",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_service_signature_merkle_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Delivery Complete",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "ConfirmDelivery",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "guard_delivery_complete_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Wonderful",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "RateWonderful",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "guard_wonderful_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Order Complete",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "AutoComplete",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_order_complete_v1" }
+          }
+        ]
+      },
+      {
+        "prev_node": "Delivery Complete",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "CompleteFromDelivery",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_order_complete_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Lost",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "ConfirmLost",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "guard_lost_v1" }
+          },
+          {
+            "name": "MerchantConfirmLost",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_lost_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Non-receipt Return",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "RequestReturn",
+            "namedOperator": "",
+            "weight": 1
+          },
+          {
+            "name": "MerchantApproveReturn",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Receipt Return",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "RequestReceiptReturn",
+            "namedOperator": "",
+            "weight": 1
+          },
+          {
+            "name": "MerchantApproveReceiptReturn",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Return Fail",
+    "pairs": [
+      {
+        "prev_node": "Receipt Return",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "AutoReturnFail",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_return_fail_v1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Return Complete",
+    "pairs": [
+      {
+        "prev_node": "Non-receipt Return",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "ConfirmNonReceiptReturn",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "guard_return_complete_v1" }
+          },
+          {
+            "name": "MerchantConfirmNonReceiptReturn",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_return_complete_v1" }
+          }
+        ]
+      },
+      {
+        "prev_node": "Receipt Return",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "ConfirmReceiptReturnComplete",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "guard_return_complete_v1" }
+          },
+          {
+            "name": "MerchantConfirmReceiptReturnComplete",
+            "namedOperator": "",
+            "permissionIndex": 1011,
+            "weight": 1,
+            "guard": { "guard": "guard_return_complete_v1" }
+          }
+        ]
+      }
+    ]
+  }
+]

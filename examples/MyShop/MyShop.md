@@ -6,6 +6,27 @@ A complete e-commerce example demonstrating how to build an online store using W
 
 ---
 
+## Core Requirements & Features
+
+| Requirement | Description | Implementation |
+|-------------|-------------|----------------|
+| **Product Listing** | Create and manage product/service listings | Service object with pricing, inventory, and WIP integration |
+| **Order Workflow** | Automated order processing from creation to completion | Machine with nodes: Order Confirmation → Shipping → In Transit → Completed |
+| **Permission Control** | Role-based access for merchant and customer operations | Permission object with custom indexes for merchant operations |
+| **Arbitration Support** | Dispute resolution mechanism | Arbitration object for handling order conflicts |
+| **WIP Verification** | Product authenticity verification via WIP files | WIP hash stored in Service for customer verification |
+| **Discount System** | Coupon and promotional code support | Discount object with time-limited offers |
+| **Customer Communication** | Secure messaging between merchant and customer | Contact objects for pre-sales and after-sales support |
+
+### Key Design Decisions
+
+1. **Workflow-Driven Orders**: Order state transitions controlled by Machine workflow, ensuring predictable processing
+2. **Permission-Based Operations**: Merchant operations require specific permission indexes (1000-1002)
+3. **Customer Ownership**: Order owners can cancel orders and complete orders via `namedOperator: ""`
+4. **Modular Architecture**: Separate objects for Permission, Machine, Service, Arbitration, and Contact
+
+---
+
 ## Overview
 
 This example demonstrates a toy store e-commerce system with the following features:
@@ -103,14 +124,14 @@ Before starting, ensure you have:
 
 First, create a Permission object to manage access control for your store operations.
 
-**Prompt**: Create a Permission object named "myshop_permission" with tags ["ecommerce", "toys", "shop"] and description "Permission management for MyShop toy store".
+**Prompt**: Create a Permission object named "myshop_permission_v2" with tags ["ecommerce", "toys", "shop"] and description "Permission management for MyShop toy store".
 
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "myshop_permission",
+      "name": "myshop_permission_v2",
       "tags": ["ecommerce", "toys", "shop"],
       "onChain": false
     },
@@ -129,15 +150,15 @@ First, create a Permission object to manage access control for your store operat
 
 Create a Machine to define the order processing workflow. This includes nodes for order confirmation, shipping, delivery, and completion.
 
-**Prompt**: Create a Machine named "myshop_machine" with permission "myshop_permission" for the toy store workflow.
+**Prompt**: Create a Machine named "myshop_machine_v2" with permission "myshop_permission_v2" for the toy store workflow.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "myshop_machine",
-      "permission": "myshop_permission"
+      "name": "myshop_machine_v2",
+      "permission": "myshop_permission_v2"
     },
     "description": "Order processing workflow for MyShop toy store"
   },
@@ -262,13 +283,13 @@ Before adding nodes, let's understand the order processing workflow:
 
 Add the workflow nodes to the Machine for order processing.
 
-**Prompt**: Add workflow nodes to "myshop_machine" including Order Confirmation, Shipping, In Transit, and Completed nodes.
+**Prompt**: Add workflow nodes to "myshop_machine_v2" including Order Confirmation, Shipping, In Transit, and Completed nodes.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
-    "object": "myshop_machine",
+    "object": "myshop_machine_v2",
     "node": {
       "op": "add",
       "nodes": [
@@ -356,13 +377,13 @@ Add the workflow nodes to the Machine for order processing.
 
 Publish the Machine to make it available for creating orders.
 
-**Prompt**: Publish the Machine "myshop_machine" to enable order creation.
+**Prompt**: Publish the Machine "myshop_machine_v2" to enable order creation.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
-    "object": "myshop_machine",
+    "object": "myshop_machine_v2",
     "publish": true
   },
   "env": {
@@ -373,103 +394,36 @@ Publish the Machine to make it available for creating orders.
 ```
 ---
 
-### Step 5.1: Create Contact Objects for Customer Service
+### Step 5.1: Create Contact Object for Customer Service
 
-Create Contact objects to enable encrypted communication between customers and the store. We'll set up two accounts: one for pre-sales inquiries and one for after-sales support.
+Create a Contact object to enable encrypted communication between customers and the store for after-sales support.
 
-#### 5.1.1 Create Pre-Sales Contact Account
+#### 5.1.1 Enable Merchant Messenger
 
-**Prompt**: Create a new account named "myshop_presales" for handling pre-sales inquiries.
+**Prompt**: Enable messenger for the merchant account.
 
 ```json
 {
-  "gen": {
-    "name": "myshop_presales",
-    "m": "presales_messenger"
+  "messenger": {
+    "m": "myshop_merchant_messenger",
+    "name_or_account": "myshop_merchant"
   }
 }
 ```
 
-**Get test tokens:**
+#### 5.1.2 Create After-Sales Contact Object
 
-```json
-{
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "myshop_presales"
-  }
-}
-```
-
-#### 5.1.2 Create After-Sales Contact Account
-
-**Prompt**: Create a new account named "myshop_aftersales" for handling after-sales support.
-
-```json
-{
-  "gen": {
-    "name": "myshop_aftersales",
-    "m": "aftersales_messenger"
-  }
-}
-```
-
-**Get test tokens:**
-
-```json
-{
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "myshop_aftersales"
-  }
-}
-```
-
-#### 5.1.3 Create Pre-Sales Contact Object
-
-**Prompt**: Create a Contact object named "myshop_presales_contact" with permission "myshop_permission" for pre-sales inquiries.
+**Prompt**: Create a Contact object named "myshop_aftersales_contact_v2" with permission "myshop_permission_v2" for after-sales support.
 
 ```json
 {
   "operation_type": "contact",
   "data": {
     "object": {
-      "name": "myshop_presales_contact",
-      "permission": "myshop_permission"
-    },
-    "description": "MyShop pre-sales inquiry contact - ask us about products, pricing, and availability",
-    "my_status": "Online - Ready to help with your toy shopping questions!",
-    "ims": {
-      "op": "add",
-      "im": [
-        {
-          "at": "myshop_presales",
-          "description": "Primary pre-sales representative"
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### 5.1.4 Create After-Sales Contact Object
-
-**Prompt**: Create a Contact object named "myshop_aftersales_contact" with permission "myshop_permission" for after-sales support.
-
-```json
-{
-  "operation_type": "contact",
-  "data": {
-    "object": {
-      "name": "myshop_aftersales_contact",
-      "permission": "myshop_permission"
+      "name": "myshop_aftersales_contact_v2",
+      "permission": "myshop_permission_v2"
     },
     "description": "MyShop after-sales support contact - we're here to help with orders, shipping, and returns",
-    "my_status": "Online - Supporting your shopping experience!",
     "ims": {
       "op": "add",
       "im": [
@@ -497,14 +451,14 @@ Before creating the Service, you need Guards for order fund allocation. These Gu
 
 This Guard checks if the order has reached "Completed" status before allowing the merchant to withdraw funds.
 
-**Prompt**: Create a Guard named "myshop_withdraw_guard" that verifies the order is in "Completed" status.
+**Prompt**: Create a Guard named "myshop_withdraw_guard_v2" that verifies the order is in "Completed" status.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "myshop_withdraw_guard",
+      "name": "myshop_withdraw_guard_v2",
       "tags": ["ecommerce", "withdraw", "merchant"]
     },
     "description": "Verify order is completed before merchant can withdraw funds. Submit order object ID.",
@@ -557,18 +511,18 @@ This Guard checks if the order has reached "Completed" status before allowing th
 - Query ID `1253` (`progress.current`) retrieves the current node name
 - Compares with "Completed" to verify order status
 
-#### 6.2 Create Customer Refund Guard (Optional)
+#### 6.2 Create Customer Refund Guard
 
 For scenarios where customers need refunds before order completion.
 
-**Prompt**: Create a Guard named "myshop_refund_guard" for customer refund scenarios.
+**Prompt**: Create a Guard named "myshop_refund_guard_v2" for customer refund scenarios.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "myshop_refund_guard",
+      "name": "myshop_refund_guard_v2",
       "tags": ["ecommerce", "refund", "customer"]
     },
     "description": "Allow refund for orders not yet shipped. Submit order object ID.",
@@ -641,28 +595,28 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 #### 7.2 Create and Publish Service
 
-**Prompt**: Create and publish a Service named "myshop_service" with machine "myshop_machine", order allocation using Guards, after-sales contact, and toy products.
+**Prompt**: Create and publish a Service named "myshop_service_v2" with machine "myshop_machine_v2", order allocation using Guards, after-sales contact, and toy products.
 
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": {
-      "name": "myshop_service",
+      "name": "myshop_service_v2",
       "type_parameter": "0x2::wow::WOW",
-      "permission": "myshop_permission",
+      "permission": "myshop_permission_v2",
       "tags": ["ecommerce", "toys", "store"],
       "onChain": false
     },
     "description": "MyShop - Top quality toys for children",
     "location": "Online Store",
-    "machine": "myshop_machine",
+    "machine": "myshop_machine_v2",
     "order_allocators": {
       "description": "Order revenue allocation - merchant withdraw after completion",
       "threshold": 0,
       "allocators": [
         {
-          "guard": "myshop_withdraw_guard",
+          "guard": "myshop_withdraw_guard_v2",
           "sharing": [
             {
               "who": { "Signer": "signer" },
@@ -672,10 +626,10 @@ The `order_allocators` configuration defines how order payments are distributed:
           ]
         },
         {
-          "guard": "myshop_refund_guard",
+          "guard": "myshop_refund_guard_v2",
           "sharing": [
             {
-              "who": { "Entity": { "address": "" } },
+              "who": { "GuardIdentifier": 0 },
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -712,7 +666,7 @@ The `order_allocators` configuration defines how order payments are distributed:
         }
       ]
     },
-    "um": "myshop_aftersales_contact",
+    "um": "myshop_aftersales_contact_v2",
     "publish": true
   },
   "env": {
@@ -739,7 +693,7 @@ Create discount coupons for promotional campaigns.
 {
   "operation_type": "service",
   "data": {
-    "object": "myshop_service",
+    "object": "myshop_service_v2",
     "discount": {
       "name": "HOLIDAY20",
       "discount_type": 0,
@@ -796,15 +750,16 @@ Create a customer account:
 
 Customers can query the Service to see available products.
 
-**Prompt**: Query the Service "myshop_service" to view available products and their details.
+**Prompt**: Query the Service "myshop_service_v2" to view available products and their details.
 
 ```json
 {
   "query_type": "onchain_objects",
   "filter": {
     "objectType": "Service",
-    "objectName": "myshop_service"
-  }
+    "objectName": "myshop_service_v2"
+  },
+  "no_cache": true
 }
 ```
 
@@ -814,13 +769,13 @@ Customers can query the Service to see available products.
 
 Customer creates an order by purchasing products from the Service.
 
-**Prompt**: Create an order for customer "myshop_customer" to purchase "Play Purse Set 35PCS" from "myshop_service" with payment of 3WOW.
+**Prompt**: Create an order for customer "myshop_customer" to purchase "Play Purse Set 35PCS" from "myshop_service_v2" with payment of 3WOW.
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "myshop_service",
+    "object": "myshop_service_v2",
     "order_new": {
       "buy": {
         "items": [
@@ -833,8 +788,7 @@ Customer creates an order by purchasing products from the Service.
         "total_pay": {
           "balance": 3000000000
         }
-      },
-      "order_required_info": ""
+      }
     }
   },
   "env": {
@@ -1113,26 +1067,26 @@ First, activate the Allocation by submitting the Guard verification with the Ord
 {
   "operation_type": "allocation",
   "data": {
-    "object": "0xdef0...1234",
-    "alloc_by_guard": "myshop_withdraw_guard"
+    "object": "0x248f01d944de8f6712ec06f9b4c54f93fe4132e5323488b2d24c83d7487069de",
+    "alloc_by_guard": "myshop_withdraw_guard_v2"
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "myshop_withdraw_guard",
+        "object": "myshop_withdraw_guard_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "myshop_withdraw_guard",
+        "guard": "myshop_withdraw_guard_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "0x5678...9abc"
+            "value": "0x497ea4f7a5bb098802c23deedd8ed7122d6b501979394ce111aa66432d2ba0ca"
           }
         ]
       }
@@ -1140,7 +1094,8 @@ First, activate the Allocation by submitting the Guard verification with the Ord
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1149,13 +1104,13 @@ First, activate the Allocation by submitting the Guard verification with the Ord
 
 After the Allocation is activated, withdraw the funds from the Service.
 
-**Prompt**: Withdraw funds from service "myshop_service" to the merchant account.
+**Prompt**: Withdraw funds from service "myshop_service_v2" to the merchant account.
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "myshop_service",
+    "object": "myshop_service_v2",
     "owner_receive": "recently"
   },
   "env": {
@@ -1204,16 +1159,16 @@ Customer can cancel the order before it's confirmed.
 
 First, create an Arbitration object for handling order disputes.
 
-**Prompt**: Create an Arbitration object named "myshop_arbitration" with permission "myshop_permission" for dispute resolution.
+**Prompt**: Create an Arbitration object named "myshop_arbitration_v2" with permission "myshop_permission_v2" for dispute resolution.
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
     "object": {
-      "name": "myshop_arbitration",
+      "name": "myshop_arbitration_v2",
       "type_parameter": "0x2::wow::WOW",
-      "permission": "myshop_permission",
+      "permission": "myshop_permission_v2",
       "tags": ["ecommerce", "dispute", "toys"],
       "onChain": false
     },
@@ -1364,21 +1319,19 @@ The Progress object ID can be obtained from:
 
 | Object Type | Name | Example Address | Purpose |
 |-------------|------|-----------------|---------|
-| Account | myshop_merchant | 0xa773...18a0 | Store owner account |
-| Account | myshop_customer | 0x3f8a...92c0 | Customer account |
-| Account | myshop_presales | 0x1234...5678 | Pre-sales support account |
-| Account | myshop_aftersales | 0xabcd...ef01 | After-sales support account |
-| Permission | myshop_permission | 0x5ed8...6cf2 | Access control management |
-| Guard | myshop_withdraw_guard | 0x7a8b...9c0d | Merchant withdrawal validation (order completed) |
-| Guard | myshop_refund_guard | 0x1e2f...3a4b | Customer refund validation (order not shipped) |
-| Machine | myshop_machine | 0x580f...37ec | Order processing workflow |
-| Contact | myshop_presales_contact | 0x9876...5432 | Pre-sales inquiry contact |
-| Contact | myshop_aftersales_contact | 0xfedc...ba98 | After-sales support contact |
-| Service | myshop_service | 0x9abc...def0 | Online store with products |
-| Arbitration | myshop_arbitration | (to be created) | Dispute resolution |
+| Account | myshop_merchant | 0x73e1...708a | Store owner account |
+| Account | myshop_customer | 0x6e95...d94d | Customer account |
+| Permission | myshop_permission_v2 | 0x0e01...9862 | Access control management |
+| Guard | myshop_withdraw_guard_v2 | 0x7fe6...91ea | Merchant withdrawal validation (order completed) |
+| Guard | myshop_refund_guard_v2 | 0x6147...bda4 | Customer refund validation (order not shipped) |
+| Machine | myshop_machine_v2 | 0x923b...6aac | Order processing workflow |
+| Contact | myshop_aftersales_contact_v2 | 0x855a...f53b | After-sales support contact |
+| Service | myshop_service_v2 | 0xc02e...9755 | Online store with products |
+| Arbitration | myshop_arbitration_v2 | (to be created) | Dispute resolution |
 | Discount | HOLIDAY20 | (to be created) | Promotional coupon |
-| Order | (dynamic) | (dynamic) | Customer purchase order |
-| Progress | (dynamic) | (dynamic) | Order workflow progress |
+| Order | (dynamic) | 0x497e...a0ca | Customer purchase order |
+| Progress | (dynamic) | 0xf7ec...472f | Order workflow progress |
+| Allocation | (dynamic) | 0x248f...69de | Order fund allocation |
 | Arb | (dynamic) | (dynamic) | Arbitration case |
 
 ---
