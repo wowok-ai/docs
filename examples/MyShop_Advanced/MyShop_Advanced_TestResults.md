@@ -1,6 +1,6 @@
-# MyShop Advanced - 测试结果
+# MyShop Advanced - Test Results
 
-## 执行日期
+## Execution Date
 2026-04-25
 
 ---
@@ -9,7 +9,7 @@
 
 ### Step 1: Create Permission Object
 
-**请求:**
+**Request:**
 ```json
 {
   "operation_type": "permission",
@@ -25,7 +25,7 @@
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Permission","type_raw":"0x2::permission::Permission","object":"0xa2dc...3a85","version":"438759","owner":{"Shared":{"initial_shared_version":438759}},"change":"created"}]
@@ -35,7 +35,7 @@ Transaction completed successfully
 
 ### Step 2: Add Custom Permissions
 
-**请求 1 (Permission Index 1010):**
+**Request 1 (Permission Index 1010):**
 ```json
 {
   "operation_type": "permission",
@@ -61,13 +61,13 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Permission","object":"0xc2fa...bad2","change":"mutated"},{"type":"TableItem_PermissionPerm","change":"created"}]
 ```
 
-**请求 2 (Permission Index 1011):**
+**Request 2 (Permission Index 1011):**
 ```json
 {
   "operation_type": "permission",
@@ -93,7 +93,7 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"TableItem_PermissionPerm","change":"mutated"},{"type":"Permission","object":"0xc2fa...bad2","change":"mutated"}]
@@ -103,7 +103,7 @@ Transaction completed successfully
 
 ### Step 3: Create Machine (Multi-Path Workflow)
 
-**请求:**
+**Request:**
 ```json
 {
   "operation_type": "machine",
@@ -121,7 +121,7 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Machine","object":"0xd5a0...abc0","version":"454106","change":"created"}]
@@ -133,7 +133,7 @@ Transaction completed successfully
 
 ### Step 4: Create Empty Service (Get Address First)
 
-**请求:**
+**Request:**
 ```json
 {
   "operation_type": "service",
@@ -152,19 +152,19 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Service","object":"0xc10c...a7db","version":"455988","change":"created"}]
 ```
 
-**重要记录:** Service 地址是 `0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92` - 这个地址将在后续的 Guard 创建中使用
+**Important Record:** Service address is `0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92` - this address will be used in subsequent Guard creation
 
 ---
 
 ### Step 5: Create Guards
 
-**请求 1 (guard_merkle_root_v1):**
+**Request 1 (guard_merkle_root_v1):**
 ```json
 {
   "operation_type": "guard",
@@ -216,13 +216,13 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Guard","object":"0xd173...239a","version":"520692","change":"created"}]
 ```
 
-**请求 2 (guard_service_signature_merkle_v1):**
+**Request 2 (guard_service_signature_merkle_v1):**
 ```json
 {
   "operation_type": "guard",
@@ -334,7 +334,7 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Guard","object":"0xf7d4...9d9d","version":"520823","change":"created"}]
@@ -344,7 +344,7 @@ Transaction completed successfully
 
 ### Step 10: Add Reward Guards
 
-**请求 1 (guard_wonderful_v1):**
+**Request 1 (guard_wonderful_v1):**
 ```json
 {
   "operation_type": "reward",
@@ -370,13 +370,13 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Reward","object":"0x0d54...ed8a","version":"525946","change":"mutated"}]
 ```
 
-**请求 2 (guard_lost_v1):**
+**Request 2 (guard_lost_v1):**
 ```json
 {
   "operation_type": "reward",
@@ -402,13 +402,13 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Reward","object":"0x0d54...ed8a","version":"526337","change":"mutated"}]
 ```
 
-**请求 3 (guard_shipping_timeout_v1):**
+**Request 3 (guard_shipping_timeout_v1):**
 ```json
 {
   "operation_type": "reward",
@@ -434,7 +434,7 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Reward","object":"0x0d54...ed8a","version":"526720","change":"mutated"}]
@@ -446,7 +446,7 @@ Transaction completed successfully
 
 ### Step 1: Create Order
 
-**请求:**
+**Request:**
 ```json
 {
   "operation_type": "service",
@@ -474,7 +474,7 @@ Transaction completed successfully
 }
 ```
 
-**结果:**
+**Result:**
 ```
 Transaction completed successfully
 [{"type":"Service","object":"0x1a9f...2611","version":"527930","change":"mutated"}]
@@ -486,9 +486,9 @@ Transaction completed successfully
 
 ### Merchant Wins (Order Complete, Wonderful, Return Fail)
 
-当订单到达 Order Complete、Wonderful 或 Return Fail 节点时，商家可以提取资金。
+When the order reaches Order Complete, Wonderful, or Return Fail node, the merchant can withdraw funds.
 
-**请求（商家提取资金）:
+**Request (Merchant Withdrawal):**
 ```json
 {
   "operation_type": "order",
@@ -528,18 +528,18 @@ Transaction completed successfully
 }
 ```
 
-**结果**:
+**Result:**
 ```
-Transaction completed successfully - 商家成功提取资金
+Transaction completed successfully - Merchant successfully withdrew funds
 ```
 
 ---
 
 ### Customer Wins (Lost, Return Complete)
 
-当订单到达 Lost 或 Return Complete 节点时，客户可以提取资金。
+When the order reaches Lost or Return Complete node, the customer can withdraw funds.
 
-**请求（客户提取资金）:
+**Request (Customer Withdrawal):**
 ```json
 {
   "operation_type": "order",
@@ -579,26 +579,26 @@ Transaction completed successfully - 商家成功提取资金
 }
 ```
 
-**结果**:
+**Result:**
 ```
-Transaction completed successfully - 客户成功提取资金
+Transaction completed successfully - Customer successfully withdrew funds
 ```
 
 ---
 
-## 测试执行状态
+## Test Execution Status
 
-已成功执行的完整步骤:
-- ✅ Step 1: 创建 Permission (0xa2dc...3a85)
-- ✅ Step 2: 添加自定义权限索引(1010, 1011)
-- ✅ Step 3: 创建 Machine
-- ✅ Step 4: 创建空 Service (0xb4ac...5f92)
-- ✅ Step 5: 创建多个 Guards (guard_merkle_root_v1 0xd173...239a, guard_service_signature_merkle_v1 0xf7d4...9d9d)
-- ✅ Step 10: 添加 Reward Guards (guard_wonderful_v1, guard_lost_v1, guard_shipping_timeout_v1 到 Reward Pool 0x0d54...ed8a)
-- ✅ Part 3 Step 1: 创建客户订单
-- ✅ Part 4: 完成资金分配测试
+Successfully executed complete steps:
+- ✅ Step 1: Create Permission (0xa2dc...3a85)
+- ✅ Step 2: Add custom permission indexes (1010, 1011)
+- ✅ Step 3: Create Machine
+- ✅ Step 4: Create empty Service (0xb4ac...5f92)
+- ✅ Step 5: Create multiple Guards (guard_merkle_root_v1 0xd173...239a, guard_service_signature_merkle_v1 0xf7d4...9d9d)
+- ✅ Step 10: Add Reward Guards (guard_wonderful_v1, guard_lost_v1, guard_shipping_timeout_v1 to Reward Pool 0x0d54...ed8a)
+- ✅ Part 3 Step 1: Create customer order
+- ✅ Part 4: Complete fund allocation test
 
-**已记录对象:**
+**Recorded Objects:**
 - Permission: myshop_permission_v1 (0xc2fa...bad2)
 - Machine: myshop_advanced_machine_v1 (0xd5a0...abc0)
 - Service: three_body_signature_service_v1 (0xb4ac...5f92)
@@ -610,19 +610,18 @@ Transaction completed successfully - 客户成功提取资金
 
 ---
 
-## 总结
+## Summary
 
-本高级电商示例演示了：
-1. **多路径工作流**：订单可以通过正常交货、好评或各种退货路径完成
-2. **双签名退货**：退货流程需要双方确认（阈值=2）
-3. **基于时间的自动完成**：订单在时间阈值后自动完成（发货后10天，交货后2天）
-4. **基于 Guard 的验证**：所有状态转换和资金分配都由 Guard 保护
-5. **奖励激励机制**：好评获得奖励，包裹丢失和发货延迟获得补偿
-6. **仲裁支持**：服务绑定到仲裁对象以进行最终的链上争议解决
-7. **隐私保护物流**：只有默克尔根在链上提交，实际跟踪信息通过 Messenger 共享
-8. **灵活的资金分配**：明确的商家获胜（订单完成、好评、退货失败）与客户获胜（丢失、退货完成）规则
+This advanced e-commerce example demonstrates:
+1. **Multi-path workflow**: Orders can complete through normal delivery, wonderful rating, or various return paths
+2. **Dual-signature returns**: Return processes require confirmation from both parties (threshold=2)
+3. **Time-based auto-completion**: Orders auto-complete after time thresholds (10 days from shipping, 2 days from delivery)
+4. **Guard-based verification**: All state transitions and fund allocations are protected by Guards
+5. **Reward incentive mechanism**: Wonderful ratings receive rewards, lost packages and shipping delays receive compensation
+6. **Arbitration support**: Service bound to arbitration object for final on-chain dispute resolution
+7. **Privacy-preserving logistics**: Only Merkle Root submitted on-chain, actual tracking info shared via Messenger
+8. **Flexible fund allocation**: Clear merchant win (Order Complete, Wonderful, Return Fail) vs customer win (Lost, Return Complete) rules
 
-系统通过“谁完成关键动作，谁提交证明”原则确保问责制，为所有关键操作创建清晰的审计线索。
+The system ensures accountability through the "Who completes the key action, who submits the proof" principle, creating a clear audit trail for all critical operations.
 
-测试文件已更新,记录了所有成功执行的关键步骤。
-
+Test file updated with all successfully executed key steps.

@@ -1,6 +1,6 @@
 # MyShop Advanced E-Commerce Example
 
-An advanced e-commerce example demonstrating escrow with milestone-based fund release, multi-party allocation, arbitration with voting guards, and WIP-based product verification using the WoWok protocol.
+An advanced e-commerce example demonstrating escrow with multiple order fund allocation modes, multi-party allocation, arbitration with voting guards, and WIP-based product verification.
 
 > **View Actual Execution Results**: See [MyShop\_Advanced\_TestResults.md](MyShop_Advanced_TestResults.md) for real testnet execution results with actual object addresses and transaction outputs.
 

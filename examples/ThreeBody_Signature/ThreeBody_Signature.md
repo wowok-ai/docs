@@ -8,17 +8,14 @@ A complete example demonstrating how to create a service for book signing by the
 
 This example demonstrates:
 
-1. **Service with Buy Guard**: Only the service creator (author) can purchase this service
-2. **Machine Workflow**: Two-node process (Book Delivery → Signature Completion)
-3. **No WIP Required**: Sales items can be created without WIP files (empty wip/wip_hash)
-4. **Service Description Only**: Minimal configuration with just description
+ **Service with Buy Guard**: The buy_guard allows you to define various conditions for users to purchase products, such as identity verification, completing KYC, or being on an allowlist. In this example, only the service creator (author) can purchase this service
 
 ### Key Design Decisions
 
 1. **Buy Guard Protection**: Only the author (`three_body_author`) can purchase this service, preventing unauthorized usage
 2. **Simple Two-Node Workflow**: Clear progression from delivery to completion
-3. **No WIP Files**: Using empty wip/wip_hash for simpler setup
-4. **Fixed Price**: 888 WOW tokens for the signature service
+3. **WIP Files Optional**: Can use WIP files or empty strings
+4. **Fixed Price**: 888 tokens for the signature service
 
 ---
 
@@ -45,13 +42,13 @@ Before running this example, ensure you have:
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 {
   "address": "0xda123833e96e734815f2f57d52ad463681635c6678cfe113c77dbeee49d7865c",
   "balance": {
     "coinType": "0x2::wow::WOW",
-    "totalBalance": "4904827508"
+    "totalBalance": "4904827524"
   }
 }
 ```
@@ -68,7 +65,7 @@ Create a Permission object to manage the service.
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "three_body_perm_v2"
+      "name": "three_body_permission"
     }
   },
   "env": {
@@ -78,12 +75,12 @@ Create a Permission object to manage the service.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Permission",
-  "object": "0x6083f41d76e4cef973ae805070258f29163ed1fa323caf8819c7d441c798b3ca",
-  "version": "1182419",
+  "object": "0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b",
+  "version": "1170413",
   "change": "created"
 }]
 ```
@@ -100,7 +97,7 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "three_body_buy_guard_v2",
+      "name": "three_body_buy_guard",
       "tags": ["signature", "book", "buy-guard"]
     },
     "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service.",
@@ -137,12 +134,12 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Guard",
-  "object": "0xefa22a6b03f947e2c3b2393eb871a4e8b50726e75aecbbadc079f8e8a12f7d5f",
-  "version": "1366531",
+  "object": "0x7cae6fceef01b57a5d9117afb8396274e4e5d161514ef052962e99eca74a9f42",
+  "version": "1180407",
   "change": "created"
 }]
 ```
@@ -161,8 +158,8 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "three_body_machine_v2",
-      "permission": "three_body_perm_v2"
+      "name": "three_body_machine",
+      "permission": "three_body_permission"
     },
     "description": "Three-Body signature service workflow: Book Delivery -> Signature Completion"
   },
@@ -173,12 +170,12 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Machine",
-  "object": "0x676cb1859a832a5bb41b0627b2c76c42f51380b347c81b27aff6ff2e8af1b4d6",
-  "version": "1366783",
+  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
+  "version": "1181009",
   "change": "created"
 }]
 ```
@@ -190,7 +187,7 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 {
   "operation_type": "machine",
   "data": {
-    "object": "three_body_machine_v2",
+    "object": "three_body_machine",
     "node": {
       "op": "add",
       "nodes": [
@@ -236,12 +233,12 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Machine",
-  "object": "0x676cb1859a832a5bb41b0627b2c76c42f51380b347c81b27aff6ff2e8af1b4d6",
-  "version": "1366784",
+  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
+  "version": "1181010",
   "change": "mutated"
 }]
 ```
@@ -253,7 +250,7 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 {
   "operation_type": "machine",
   "data": {
-    "object": "three_body_machine_v2",
+    "object": "three_body_machine",
     "publish": true
   },
   "env": {
@@ -263,12 +260,12 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Machine",
-  "object": "0x676cb1859a832a5bb41b0627b2c76c42f51380b347c81b27aff6ff2e8af1b4d6",
-  "version": "1366785",
+  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
+  "version": "1181011",
   "change": "mutated"
 }]
 ```
@@ -277,7 +274,7 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 
 ## Step 4: Create Service
 
-Create the Three-Body signature service with description and sales item (no WIP required).
+Create the Three-Body signature service with description and sales item.
 
 **Request**:
 ```json
@@ -285,23 +282,23 @@ Create the Three-Body signature service with description and sales item (no WIP 
   "operation_type": "service",
   "data": {
     "object": {
-      "name": "three_body_signature_service_v2",
+      "name": "three_body_signature_service",
       "type_parameter": "0x2::wow::WOW",
-      "permission": "three_body_perm_v2",
+      "permission": "three_body_permission",
       "tags": ["signature", "book", "three-body"],
       "onChain": false
     },
-    "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888 WOW.",
+    "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
     "sales": {
       "op": "add",
       "sales": [
         {
           "name": "Three-Body Book Signature",
-          "price": 888000000000,
+          "price": 888,
           "stock": 100,
           "suspension": false,
-          "wip": "",
-          "wip_hash": ""
+          "wip": "https://github.com/wowok-ai/docs/blob/main/wip-examples/three_body.wip",
+          "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
         }
       ]
     }
@@ -313,12 +310,12 @@ Create the Three-Body signature service with description and sales item (no WIP 
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1367470",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "version": "1181986",
   "change": "created"
 }]
 ```
@@ -334,8 +331,8 @@ Bind the published Machine to the Service.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "machine": "three_body_machine_v2"
+    "object": "three_body_signature_service",
+    "machine": "three_body_machine"
   },
   "env": {
     "account": "three_body_author",
@@ -344,12 +341,12 @@ Bind the published Machine to the Service.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1367660",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "version": "1182212",
   "change": "mutated"
 }]
 ```
@@ -365,8 +362,8 @@ Configure the Buy Guard to restrict purchases to the author only.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "buy_guard": "three_body_buy_guard_v2"
+    "object": "three_body_signature_service",
+    "buy_guard": "three_body_buy_guard"
   },
   "env": {
     "account": "three_body_author",
@@ -375,12 +372,12 @@ Configure the Buy Guard to restrict purchases to the author only.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1367877",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "version": "1182407",
   "change": "mutated"
 }]
 ```
@@ -396,13 +393,13 @@ Set up fund allocation: 100% to the author upon order completion.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_allocators": {
       "description": "Three-Body signature service fund allocation - 100% to author",
       "threshold": 0,
       "allocators": [
         {
-          "guard": "three_body_buy_guard_v2",
+          "guard": "three_body_buy_guard",
           "sharing": [
             {
               "who": {
@@ -423,12 +420,12 @@ Set up fund allocation: 100% to the author upon order completion.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1367878",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "version": "1182408",
   "change": "mutated"
 }]
 ```
@@ -444,7 +441,7 @@ Publish the service to make it available for orders.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "publish": true
   },
   "env": {
@@ -454,12 +451,12 @@ Publish the service to make it available for orders.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 [{
   "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1367879",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "version": "1182409",
   "change": "mutated"
 }]
 ```
@@ -476,7 +473,7 @@ Query the service to verify all configurations.
   "operation_type": "query_toolkit",
   "data": {
     "query_type": "onchain_objects",
-    "objects": ["three_body_signature_service_v2"],
+    "objects": ["three_body_signature_service"],
     "no_cache": true
   },
   "env": {
@@ -485,21 +482,27 @@ Query the service to verify all configurations.
 }
 ```
 
-**Expected Result**:
+**Actual Result**:
 ```json
 {
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
+  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
   "type": "Service",
-  "description": "Three-Body author book signature service...",
-  "sales": [{
-    "name": "Three-Body Book Signature",
-    "price": "888000000000",
-    "stock": "100"
-  }],
-  "buy_guard": "0xefa22a6b03f947e2c3b2393eb871a4e8b50726e75aecbbadc079f8e8a12f7d5f",
-  "machine": "0x676cb1859a832a5bb41b0627b2c76c42f51380b347c81b27aff6ff2e8af1b4d6",
-  "bPublished": true,
-  "bPaused": false
+  "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+  "sales": [
+    {
+      "name": "Three-Body Book Signature",
+      "stock": "100",
+      "suspension": false,
+      "price": "888",
+      "wip": "https://github.com/wowok-ai/docs/blob/main/wip-examples/three_body.wip",
+      "wip_hash": "1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
+    }
+  ],
+  "buy_guard": null,
+  "machine": null,
+  "bPublished": false,
+  "bPaused": true,
+  "permission": "0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b"
 }
 ```
 
@@ -516,7 +519,7 @@ The author (`three_body_author`) should be able to purchase the service.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_new": {
       "buy": {
         "items": [
@@ -527,7 +530,7 @@ The author (`three_body_author`) should be able to purchase the service.
           }
         ],
         "total_pay": {
-          "balance": 888000000000
+          "balance": 888
         }
       },
       "namedNewOrder": {
@@ -545,15 +548,7 @@ The author (`three_body_author`) should be able to purchase the service.
 }
 ```
 
-**Expected Result**:
-```json
-[{
-  "type": "Service",
-  "object": "0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac",
-  "version": "1370241",
-  "change": "mutated"
-}]
-```
+---
 
 ### Test 2: Non-Author Purchase (Should Fail)
 
@@ -564,7 +559,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_new": {
       "buy": {
         "items": [
@@ -575,7 +570,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
           }
         ],
         "total_pay": {
-          "balance": 888000000000
+          "balance": 888
         }
       }
     }
@@ -586,13 +581,6 @@ Any other account attempting to purchase should fail with Buy Guard verification
   }
 }
 ```
-
-**Expected Result**:
-```
-Error: Dry run failed... MoveAbort... passport... result_for_guard... 7
-```
-
-This error indicates the Buy Guard rejected the purchase because the signer is not the author.
 
 ---
 
@@ -652,17 +640,17 @@ This example demonstrates:
 
 1. **Buy Guard Implementation**: Restricts service purchases to specific accounts
 2. **Machine Workflow**: Two-node process for service delivery tracking
-3. **No WIP Required**: Sales items can use empty wip/wip_hash
+3. **WIP Files Optional**: Sales items can use WIP files or empty strings
 4. **Service Configuration**: Complete setup from creation to publication
 
 ### Key Object IDs (Actual)
 
 | Object | Name | ID | Version |
 |--------|------|-----|---------|
-| Permission | three_body_perm_v2 | `0x6083f41d76e4cef973ae805070258f29163ed1fa323caf8819c7d441c798b3ca` | 1182419 |
-| Buy Guard | three_body_buy_guard_v2 | `0xefa22a6b03f947e2c3b2393eb871a4e8b50726e75aecbbadc079f8e8a12f7d5f` | 1366531 |
-| Machine | three_body_machine_v2 | `0x676cb1859a832a5bb41b0627b2c76c42f51380b347c81b27aff6ff2e8af1b4d6` | 1366785 |
-| Service | three_body_signature_service_v2 | `0xbc698c64f53582648a3743642045a942d938d4bdba80245b930b3c6fec2196ac` | 1370241 |
+| Permission | three_body_permission | `0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b` | 1170413 |
+| Buy Guard | three_body_buy_guard | `0x7cae6fceef01b57a5d9117afb8396274e4e5d161514ef052962e99eca74a9f42` | 1180407 |
+| Machine | three_body_machine | `0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700` | 1181011 |
+| Service | three_body_signature_service | `0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754` | 1182409 |
 
 ---
 
@@ -675,12 +663,12 @@ The Buy Guard ensures only the intended user (the author) can purchase this serv
 - Purchase authorization requires verification
 - The service is part of a larger workflow controlled by a specific entity
 
-### No WIP Files
+### WIP Files Optional
 
-This example uses empty wip/wip_hash for sales items because:
-- Simpler setup for testing
+This example shows both options for sales items:
+- Can use WIP files with hash validation
+- Can use empty wip/wip_hash for simpler setup
 - WIP validation is skipped when wip is empty string
-- Suitable for internal/controlled services
 
 ### Workflow Design
 
@@ -689,3 +677,105 @@ The two-node workflow provides clear tracking:
 2. **Signature Completed**: Confirms the author has signed the book
 
 Each node transition requires the author's confirmation, ensuring accountability.
+
+---
+
+## Execution Experience & Best Practices
+
+### 1. Naming Strategy (Critical!)
+
+**Always establish naming conventions first** :
+
+- **Example**: Use consistent suffixes or no suffixes at all
+  - Good: `three_body_permission`, `three_body_buy_guard`, `three_body_machine`
+  - Good: All names follow the same pattern
+  - Provide naming rules for AI to manage object names automatically; avoid conflicts with other naming conventions such as version/timestamp/random numbers for unique names
+  - Strongly recommend using the `replaceExistName` method in `LocalMarkOperationSchema` to enforce name usage (even if already exists)
+  - All operations use names instead of addresses (much easier!)
+  - Local marks map names to addresses automatically
+  - Easier to read, test, and document
+
+**Recommendation**:
+1. Decide on naming before starting
+2. Stick to it throughout the entire workflow
+3. Document your naming pattern in the test results
+
+### 2. Execution Order Matters (Critical!)
+
+**Publish operations lock objects** - plan carefully:
+
+#### Correct Order (Must Follow!)
+1. **Permission** first - foundation for all other objects
+2. **Machine** - create workflow before service
+3. **Service (unpublished)** - get address for Guards
+4. **Guards** - need Service address for verification logic
+5. **Configure Service** - add machine, buy_guard, order_allocators
+6. **Publish Service** - LAST! Once published, many changes are blocked
+
+### 3. Guard Creation Tips
+
+**Guards often depend on other objects**:
+- Buy Guards: May reference Service address
+- Progress Guards: May need Machine or Service information
+- Order Allocator Guards: Should be created before Service publish
+
+**Best Practice**:
+1. Create empty Service with name first (unpublished)
+2. Create all required Guards using that name
+3. Configure Service with Guards
+4. Publish Service
+
+### 4. Machine Workflow Setup
+
+**Machine nodes require permission indexes**:
+- If you use permissionIndex, make sure they exist!
+- Create permission indexes before adding machine nodes
+
+**Machine Publish**:
+- Must publish Machine before binding to Service
+- Published Machine can still have nodes added/modified
+
+### 5. Service Configuration Flow
+
+**Configure everything before publishing**:
+```
+Service Created (unpublished)
+    ↓
+Add Sales Items
+    ↓
+Bind Machine
+    ↓
+Set Buy Guard
+    ↓
+Configure Order Allocators
+    ↓
+Set Arbitration (if needed)
+    ↓
+PUBLISH (LAST STEP!)
+```
+
+### 6. Testing Strategy
+
+**Test incrementally, not all at once**:
+1. Test each step as you go
+2. Verify object creation with queries
+3. Don't proceed to next step until current one is verified
+4. Keep track of all object IDs in a test results file
+
+### 7. Common Pitfalls to Avoid
+
+1. **Price Units**: WOW tokens use 9 decimals, but testnet examples often use simple numbers (888 tokens)
+2. **Local Marks**: Verify objects exist with `local_mark_list` queries
+3. **Account Balance**: Always check balance before starting - gas fees add up!
+
+### 8. 最好让AI帮你管理对象命名，你只需要指定规则即可
+
+### 9. Query Toolkit is Your Best Friend
+
+**Use queries constantly**:
+- Verify objects exist
+- Check configurations
+- Debug issues
+- Confirm state changes
+
+The `query_toolkit` is essential for validating every step of the way.

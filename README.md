@@ -72,7 +72,7 @@ After restarting the AI client, you can try a conversation like this to verify:
 
 ## 📚 Learning Path
 
-We have designed 7 learning stages and a large number of Prompt examples for you, with each stage building on the previous one:
+We have designed 8 learning stages and a large number of Prompt examples for you, with each stage building on the previous one:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -106,9 +106,14 @@ We have designed 7 learning stages and a large number of Prompt examples for you
 │  └─ Personal - Personal On-Chain Portal                       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Stage 7: Data Query 🔍                                        │
-│  ├─ WatchQuery - Query any on-chain and local data you want   │
+│  ├─ Watch & Query - Query any on-chain and local data you want   │
 │  ├─ On-chain Events - Watch real-time on-chain events        │
 │  └─ WoWok Build-in Info - Query protocol constants & info    │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 8: Practical Examples 🚀                                │
+│  ├─ MyShop - Basic E-Commerce Example                         │
+│  ├─ ThreeBody_Signature - Signed Book Service Example         │
+│  └─ MyShop_Advanced - Advanced E-Commerce Example             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -138,6 +143,9 @@ Choose a stage to begin your WoWok journey:
 
 ### [🔍 Stage 7: Data Query →](docs/stage-07-query.md)
 **Explore Data** - Learn how to query on-chain and local data.
+
+### [🚀 Stage 8: Practical Examples →](docs/stage-08-query.md)
+**Real-World Applications** - Explore three complete practical examples (MyShop, ThreeBody_Signature, MyShop_Advanced) that demonstrate how to use WoWok in real-world scenarios.
 
 ---
 

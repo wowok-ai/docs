@@ -569,8 +569,6 @@ The Three-Body Author Signature Service is fully operational on Testnet. The Buy
 
 ## Notes
 
-1. **Service Description**: The service description clearly states the 10-character message limit and 888 fee.
+1. **Fund Allocation**: 100% of order funds are allocated to the author (signer) upon order completion.
 
-2. **Fund Allocation**: 100% of order funds are allocated to the author (signer) upon order completion.
-
-3. **Buy Guard Protection**: The service can only be purchased by `three_body_author` (0xda123833e96e734815f2f57d52ad463681635c6678cfe113c77dbeee49d7865c).
+2. **Buy Guard Protection**: The service can only be purchased by `three_body_author` (0xda123833e96e734815f2f57d52ad463681635c6678cfe113c77dbeee49d7865c).

@@ -2,7 +2,7 @@
 
 ---
 
-**[← Stage 6: Personal Services](stage-06-personal.md)**
+**[← Stage 6: Personal Services](stage-06-personal.md) | [Stage 8: Practical Examples →](stage-08-query.md)**
 
 ---
 
@@ -504,28 +504,9 @@ Congratulations on reaching the final stage! Please confirm that you have:
 
 ## 🎉 Congratulations!
 
-You have completed all 7 stages of learning! Now you have fully mastered WoWok's complete ecosystem!
+You have completed Stage 7! Now you have mastered WoWok's data query capabilities and are ready to move on to the final stage to explore practical examples!
 
-**You can now:**
-- ✅ Manage local accounts and address books
-- ✅ Set permissions and trust rules
-- ✅ Define and execute workflows
-- ✅ Conduct secure private communications
-- ✅ Publish and purchase services
-- ✅ Manage business data and funds
-- ✅ Use personal services
-- ✅ Query any data you want
-
----
-
-## 🚀 Next Steps
-
-Now that you are a WoWok expert, you can start:
-
-1. **Practice on test network** - Practice with test coins first
-2. **Build your first application** - Try combining multiple components
-3. **Share your experience** - Help others learn WoWok
-4. **Explore more possibilities** - WoWok's potential is limitless!
+**[→ Go to Stage 8: Practical Examples 🚀 →](stage-08-query.md)
 
 ---
 
