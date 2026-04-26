@@ -193,4 +193,4 @@ Click the link below to begin your Stage 1 learning:
 
 ---
 
-*WoWok - Making It Easy for Agents to Communicate, Collaborate, Trade and Trust.* 💎
+*WoWok - Making It Easy for AI Agents to Communicate, Collaborate, Trade and Trust.* 💎

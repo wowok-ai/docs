@@ -146,64 +146,73 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │                         Object Creation Dependencies                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Phase 1: Foundation Objects                                                │
+│  Phase 1: Foundation                                                        │
 │  ═══════════════════════════                                                │
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐                                │
 │  │   Permission    │    │   Accounts      │                                │
 │  │ (myshop_perm_   │    │ (myshop_merchant│                                │
-│  │     v1)         │    │  myshop_customer)│                               │
+│  │     v2)         │    │  myshop_customer)│                               │
 │  └────────┬────────┘    └─────────────────┘                                │
 │           │                                                                 │
 │           ▼                                                                 │
 │  ┌─────────────────┐                                                       │
-│  │     Machine     │◄─── Requires: Permission                              │
-│  │(myshop_advanced │                                                        │
-│  │  _machine_v1)   │                                                        │
-│  └────────┬────────┘                                                        │
-│           │                                                                 │
-│           ▼                                                                 │
-│  Phase 2: Service Creation (Empty)                                          │
-│  ═══════════════════════════════════                                        │
-│                                                                             │
-│  ┌─────────────────┐                                                       │
 │  │     Service     │◄─── Requires: Permission                              │
 │  │(three_body_sig  │     Publish: FALSE (get address first)                │
-│  │ _service_v1)    │                                                        │
+│  │ _service_v2)    │                                                        │
 │  └────────┬────────┘                                                        │
 │           │                                                                 │
 │           ▼                                                                 │
-│  Phase 3: Guard Creation                                                    │
+│  Phase 2: Guard Creation                                                    │
 │  ═══════════════════════                                                    │
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
 │  │ guard_merkle_   │    │ guard_service_  │    │ guard_delivery_ │         │
-│  │   root_v1       │    │ signature_v1    │    │ complete_v1     │         │
+│  │   root_v2       │    │ signature_v2    │    │ complete_v2     │         │
 │  └─────────────────┘    └────────┬────────┘    └─────────────────┘         │
 │                                  │                                          │
 │                                  ▼                                          │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
 │  │ guard_merchant_ │    │ guard_customer_ │    │ guard_time_10d  │         │
-│  │   win_v1        │    │   win_v1        │    │     _v1         │         │
+│  │   win_v2        │    │   win_v2        │    │     _v2         │         │
 │  └─────────────────┘    └─────────────────┘    └────────┬────────┘         │
 │                                                         │                   │
 │                                                         ▼                   │
 │                                               ┌─────────────────┐          │
 │                                               │ guard_time_2d   │          │
-│                                               │     _v1         │          │
+│                                               │     _v2         │          │
 │                                               └─────────────────┘          │
 │                                                                             │
-│  Phase 4: Arbitration Creation                                              │
+│  Phase 3: Machine Creation                                                  │
+│  ═══════════════════════════════                                            │
+│                                                                             │
+│  ┌─────────────────┐                                                       │
+│  │     Machine     │◄─── Requires: Permission + Guards                     │
+│  │(myshop_advanced │     All nodes with guards for verification           │
+│  │  _machine_v2)   │                                                        │
+│  └────────┬────────┘                                                        │
+│           │                                                                 │
+│           ▼                                                                 │
+│  Phase 4: Machine Binding                                                   │
+│  ═══════════════════════════════                                            │
+│                                                                             │
+│  ┌─────────────────┐                                                       │
+│  │ Bind Machine    │◄─── Requires: Service + Machine                       │
+│  │   to Service    │     Must be done before publishing Service            │
+│  └────────┬────────┘                                                        │
+│           │                                                                 │
+│           ▼                                                                 │
+│  Phase 5: Arbitration Creation                                              │
 │  ═══════════════════════════════                                            │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │   Arbitration   │◄─── Independent, but needs Service binding            │
 │  │myshop_arbitration│                                                        │
-│  │      _v1        │                                                        │
+│  │      _v2        │                                                        │
 │  └────────┬────────┘                                                        │
 │           │                                                                 │
 │           ▼                                                                 │
-│  Phase 5: Service Configuration                                             │
+│  Phase 6: Service Configuration                                             │
 │  ════════════════════════════════                                           │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
@@ -211,12 +220,12 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  │  and Publish    │     Requires: All Guards, Arbitration                 │
 │  └─────────────────┘                                                        │
 │                                                                             │
-│  Phase 6: Reward Pool                                                       │
+│  Phase 7: Reward Pool                                                       │
 │  ═════════════════════                                                      │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │     Reward      │◄─── Requires: Service (for guard verification)        │
-│  │myshop_reward_v1 │     Add: reward_guards for Wonderful/Lost/Timeout     │
+│  │myshop_reward_v2 │     Add: reward_guards for Wonderful/Lost/Timeout     │
 │  └─────────────────┘                                                        │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -224,73 +233,79 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 
 ### Why This Order Matters
 
-| Phase | Object               | Dependencies    | Reason                                                                                                        |
-| ----- | -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1     | **Permission**       | None            | Permission is the foundation. Machine and Service both reference a permission object for access control.      |
-| 1     | **Machine**          | Permission      | Machine requires a permission object to define who can advance workflow nodes.                                |
-| 2     | **Service (Empty)**  | Permission      | Create Service without publishing first to obtain its address. This address is needed for Guard verification. |
-| 3     | **Guards**           | Service Address | Guards must verify that orders belong to the correct Service. They query Service address and Progress state.  |
-| 4     | **Arbitration**      | None            | Arbitration is independent but needs to be bound to Service. Create before Service update.                    |
-| 5     | **Service (Update)** | Guards, Arb     | Update Service with order\_allocators, arbitrations that reference Guards and Arbitration. Then publish.      |
-| 6     | **Reward**           | Service, Guards | Reward pool needs Service address for Guard verification and guards for claim validation.                     |
+| Phase | Object               | Dependencies         | Reason                                                                                                        |
+| ----- | -------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | **Permission**       | None                 | Permission is the foundation. Machine and Service both reference a permission object for access control.      |
+| 2     | **Service (Empty)**  | Permission           | Create Service without publishing first to obtain its address. This address is needed for Guard verification. |
+| 3     | **Guards**           | Service Address      | Guards must verify that orders belong to the correct Service. They query Service address and Progress state.  |
+| 4     | **Machine**          | Permission, Guards   | Machine requires guards for node verification. Guards need Service address which is now available.            |
+| 5     | **Machine Binding**  | Service, Machine     | Bind Machine to Service before publishing. Once published, Machine cannot be bound.                           |
+| 6     | **Arbitration**      | None                 | Arbitration is independent but needs to be bound to Service. Create before Service update.                    |
+| 7     | **Service (Update)** | Guards, Arb, Machine | Update Service with order\_allocators, arbitrations, machine binding. Then publish.                            |
+| 8     | **Reward**           | Service, Guards      | Reward pool needs Service address in guards for claim verification. Create after Service is available.        |
 
 ### Key Design Decisions
 
 1. **Permission First**: Every major object (Machine, Service) requires a permission object. Create this first.
-2. **Machine Before Service**: While Service doesn't directly reference Machine, orders created from Service will use Machine for workflow progression.
-3. **Service Address Before Guards**: Guards verify `order.service == service_address`. Create Service first (unpublished), get address, then create Guards.
-4. **Guards Before Service Update**: Service's `order_allocators` field references guards for fund distribution logic.
+2. **Service Before Guards**: Create Service without publishing to get its address. Guards need Service address to verify orders belong to the correct service.
+3. **Guards Before Machine**: Machine nodes reference guards for verification. Create all guards first, then create Machine with guard references.
+4. **Machine Binding Before Publish**: Bind Machine to Service before publishing. Once published, Machine cannot be bound.
 5. **Arbitration Before Service Update**: Arbitration must be created before Service update so it can be bound to Service.
-6. **Service Publishing Last**: Only publish Service after all guards and arbitration are ready and order\_allocators are configured.
-7. **Reward Last**: Reward references Service address in guards for claim verification. Create Shipping timeout guard after Service is available.
+6. **Service Publishing Last**: Only publish Service after all guards, machine, and arbitration are ready.
+7. **Reward Last**: Reward references Service address in guards for claim verification. Create after Service is available.
 
 ### Simplified Build Sequence
 
 ```
 Phase 1: Foundation
-├── 1. Create Permission (myshop_permission_v1)
-│   └── Add permission indexes (1010, 1011)
-│
-└── 2. Create Machine (myshop_advanced_machine_v1)
-    └── Add all nodes (Order Confirmed, Order Cancel, Shipping, 
-        Delivery Complete, Wonderful, Order Complete, Lost, 
-        Non-receipt Return, Receipt Return, Return Fail, Return Complete)
+└── 1. Create Permission (myshop_permission_v2)
+    └── Add permission indexes (1010-1017, 306)
 
 Phase 2: Service Creation
-└── 3. Create Service (three_body_signature_service_v1)
+└── 2. Create Service (three_body_signature_service_v2)
     ├── Publish: FALSE
     └── Record the Service address for Guard creation
 
 Phase 3: Guard Creation
-└── 4. Create All Guards
-    ├── guard_merkle_root_v1 (verify string length = 64)
-    ├── guard_service_signature_v1 (verify order service + signature + merkle)
-    ├── guard_delivery_complete_v1 (verify node = Delivery Complete)
-    ├── guard_wonderful_v1 (verify node = Wonderful)
-    ├── guard_lost_v1 (verify node = Lost)
-    ├── guard_return_complete_v1 (verify node = Return Complete)
-    ├── guard_return_fail_v1 (verify node = Return Fail)
-    ├── guard_merchant_win_v1 (verify node in [Order Complete, Wonderful, Return Fail])
-    ├── guard_customer_win_v1 (verify node in [Lost, Return Complete])
-    ├── guard_time_10d_v1 (time >= 10 days)
-    ├── guard_time_2d_v1 (time >= 2 days)
-    └── guard_shipping_timeout_v1 (Shipping node time >= 2 days)
+└── 3. Create All Guards (using Service address)
+    ├── guard_merkle_root_v2 (verify string length = 64)
+    ├── guard_service_signature_merkle_v2 (verify order service + signature + merkle)
+    ├── guard_delivery_complete_v2 (verify node = Delivery Complete)
+    ├── guard_wonderful_v2 (verify node = Wonderful)
+    ├── guard_lost_v2 (verify node = Lost)
+    ├── guard_return_complete_v2 (verify node = Return Complete)
+    ├── guard_return_fail_v2 (verify node = Return Fail)
+    ├── guard_order_complete_v2 (verify node = Order Complete)
+    ├── guard_merchant_win_v2 (verify node in [Order Complete, Wonderful, Return Fail])
+    ├── guard_customer_win_v2 (verify node in [Lost, Return Complete])
+    ├── guard_time_10d_v2 (time >= 10 days)
+    └── guard_time_2d_v2 (time >= 2 days)
 
-Phase 4: Arbitration Creation
-└── 5. Create Arbitration (myshop_arbitration_v1)
+Phase 4: Machine Creation
+└── 4. Create Machine (myshop_advanced_machine_v2)
+    └── Add all nodes with guards (Order Confirmed, Order Cancel, Shipping, 
+        Delivery Complete, Wonderful, Order Complete, Lost, 
+        Non-receipt Return, Receipt Return, Return Fail, Return Complete)
+
+Phase 5: Machine Binding
+└── 5. Bind Machine to Service
+    └── Must be done before publishing Service
+
+Phase 6: Arbitration Creation
+└── 6. Create Arbitration (myshop_arbitration_v2)
     └── Final dispute resolution mechanism
 
-Phase 5: Service Configuration
-└── 6. Update and Publish Service
+Phase 7: Service Configuration
+└── 7. Update and Publish Service
     ├── Add order_allocators (merchant_win, customer_win)
     ├── Add sales (Three-Body Problem product)
     ├── Add arbitrations binding
     └── Publish service
 
-Phase 6: Reward Pool
-└── 7. Create Reward (myshop_reward_v1)
+Phase 8: Reward Pool
+└── 8. Create Reward (myshop_reward_v2)
     ├── Deposit initial balance
-    ├── Create guard_shipping_timeout_v1
+    ├── Create guard_shipping_timeout_v2
     └── Add reward_guards (Wonderful: 10000, Lost: 20000, Shipping Timeout: 20000)
 ```
 
@@ -313,14 +328,14 @@ Ensure both accounts have sufficient testnet WOW tokens.
 
 Create a new permission object for the advanced shop.
 
-**Prompt**: Create permission object "myshop\_permission\_v1".
+**Prompt**: Create permission object "myshop\_permission\_v2".
 
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "myshop_permission_v1",
+      "name": "myshop_permission_v2",
       "replaceExistName": true
     },
     "description": "Permission object for MyShop Advanced e-commerce system"
@@ -344,7 +359,7 @@ Add custom permission indexes for advanced operations.
 {
   "operation_type": "permission",
   "data": {
-    "object": "myshop_permission_v1",
+    "object": "myshop_permission_v2",
     "remark": {
       "op": "set",
       "index": 1010,
@@ -365,17 +380,17 @@ Add custom permission indexes for advanced operations.
 }
 ```
 
-**Permission Index 1011**: Shipping + Lost + Non-receipt Return + Receipt Return + Return Complete + Return Fail + Order Complete (Merchant logistics operations)
+**Permission Index 1011**: Shipping + Order Complete (Merchant logistics operations)
 
 ```json
 {
   "operation_type": "permission",
   "data": {
-    "object": "myshop_permission_v1",
+    "object": "myshop_permission_v2",
     "remark": {
       "op": "set",
       "index": 1011,
-      "remark": "Merchant logistics operations - Shipping, Returns, Lost handling, Order Complete"
+      "remark": "Shipping and Order Complete - Merchant logistics operations with Merkle Root"
     },
     "table": {
       "op": "add perm by index",
@@ -392,23 +407,160 @@ Add custom permission indexes for advanced operations.
 }
 ```
 
-***
-
-### Step 3: Create Machine (Multi-Path Workflow)
-
-Create a new Machine for the multi-path order processing workflow.
-
-**Prompt**: Create a Machine named "myshop\_advanced\_machine\_v1" with permission "myshop\_permission\_v1".
+**Permission Index 1012**: Delivery Complete (Customer confirms receipt)
 
 ```json
 {
-  "operation_type": "machine",
+  "operation_type": "permission",
   "data": {
-    "object": {
-      "name": "myshop_advanced_machine_v1",
-      "permission": "myshop_permission_v1"
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1012,
+      "remark": "Delivery Complete - Customer confirms receipt"
     },
-    "description": "Multi-path order processing with delivery confirmation, wonderful rating, and return handling"
+    "table": {
+      "op": "add perm by index",
+      "index": 1012,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_customer"}]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission Index 1013**: Wonderful (Customer rates wonderful)
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1013,
+      "remark": "Wonderful - Customer rates order as wonderful"
+    },
+    "table": {
+      "op": "add perm by index",
+      "index": 1013,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_customer"}]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission Index 1014**: Lost (Customer reports lost, Merchant confirms)
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1014,
+      "remark": "Lost - Customer reports lost, Merchant confirms"
+    },
+    "table": {
+      "op": "add perm by index",
+      "index": 1014,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_customer"}]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission Index 1015**: Non-receipt Return (Customer requests return before receipt)
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1015,
+      "remark": "Non-receipt Return - Customer requests return before receipt"
+    },
+    "table": {
+      "op": "add perm by index",
+      "index": 1015,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_customer"}]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission Index 1016**: Receipt Return (Customer requests return after receipt)
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1016,
+      "remark": "Receipt Return - Customer requests return after receipt"
+    },
+    "table": {
+      "op": "add perm by index",
+      "index": 1016,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_customer"}]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Permission Index 1017**: Return Complete (Merchant confirms return received)
+
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "remark": {
+      "op": "set",
+      "index": 1017,
+      "remark": "Return Complete - Merchant confirms return received"
+    },
+    "table": {
+      "op": "add perm by index",
+      "index": 1017,
+      "entity": {
+        "entities": [{"name_or_address": "myshop_merchant"}]
+      }
+    }
   },
   "env": {
     "account": "myshop_merchant",
@@ -419,17 +571,72 @@ Create a new Machine for the multi-path order processing workflow.
 
 ***
 
-### Step 3.1: Add Machine Nodes
+### Step 3: Create Service (Unpublished)
 
-Add all workflow nodes to the Machine.
+Create the Service without publishing to obtain its address for Guard creation.
 
-**Node 1: Order Confirmed** (Initial node, no previous node)
+**Prompt**: Create Service "three\_body\_signature\_service\_v2" with permission "myshop\_permission\_v2", do not publish.
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "three_body_signature_service_v2",
+      "permission": "myshop_permission_v2"
+    },
+    "description": "Three-Body Problem Signature Edition - Limited collector's item with WIP verification",
+    "publish": false
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Record the Service address** - it will be needed for Guard creation.
+
+***
+
+### Step 4: Create Guards (8 Guards for Machine)
+
+Create 8 Guards using the Service address. Guards verify order state and service ownership.
+
+**Guard List:**
+
+| # | Guard Name | Purpose |
+|---|------------|---------|
+| 1 | `guard_merkle_root_v2` | Verify Merkle Root string length = 64 |
+| 2 | `guard_service_signature_merkle_v2` | Verify order belongs to Service + signature + Merkle Root |
+| 3 | `guard_delivery_complete_v2` | Verify node = Delivery Complete |
+| 4 | `guard_wonderful_v2` | Verify node = Wonderful |
+| 5 | `guard_lost_v2` | Verify node = Lost |
+| 6 | `guard_return_complete_v2` | Verify node = Return Complete |
+| 7 | `guard_return_fail_v2` | Verify node = Return Fail |
+| 8 | `guard_order_complete_v2` | Verify node = Order Complete |
+
+> **Note**: See [MyShop_Advanced_MerchantSystem_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for detailed guard creation examples.
+```
+
+***
+
+### Step 5: Create Machine (Multi-Path Workflow)
+
+Create Machine with all nodes and guards in a single operation.
+
+**Prompt**: Create Machine "myshop\_advanced\_machine\_v2" with permission "myshop\_permission\_v2" and all nodes.
 
 ```json
 {
   "operation_type": "machine",
   "data": {
-    "object": "myshop_advanced_machine_v1",
+    "object": {
+      "name": "myshop_advanced_machine_v2",
+      "replaceExistName": true,
+      "permission": "myshop_permission_v2"
+    },
+    "description": "Multi-path order processing with delivery confirmation, wonderful rating, lost handling and return processing - Complete workflow with guards",
     "node": {
       "op": "add",
       "nodes": [
@@ -448,27 +655,7 @@ Add all workflow nodes to the Machine.
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 2: Order Cancel** (Initial node, no previous node)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Order Cancel",
           "pairs": [
@@ -484,27 +671,7 @@ Add all workflow nodes to the Machine.
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 3: Shipping** (Previous: Order Confirmed)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Shipping",
           "pairs": [
@@ -516,32 +683,12 @@ Add all workflow nodes to the Machine.
                   "name": "Confirm Signature and Submit Merkle Root",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_service_signature_merkle_v1" }
+                  "guard": { "guard": "guard_service_signature_merkle_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 4: Delivery Complete** (Previous: Shipping)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Delivery Complete",
           "pairs": [
@@ -551,34 +698,14 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Confirm Receipt",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1012,
                   "weight": 1,
-                  "guard": { "guard": "guard_delivery_complete_v1" }
+                  "guard": { "guard": "guard_delivery_complete_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 5: Wonderful** (Previous: Shipping)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Wonderful",
           "pairs": [
@@ -588,34 +715,14 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Rate Wonderful",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1013,
                   "weight": 1,
-                  "guard": { "guard": "guard_wonderful_v1" }
+                  "guard": { "guard": "guard_wonderful_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 6: Order Complete** (Previous: Shipping or Delivery Complete)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Order Complete",
           "pairs": [
@@ -627,7 +734,7 @@ Add all workflow nodes to the Machine.
                   "name": "Auto Complete from Shipping",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_order_complete_v1" }
+                  "guard": { "guard": "guard_order_complete_v2" }
                 }
               ]
             },
@@ -639,32 +746,12 @@ Add all workflow nodes to the Machine.
                   "name": "Auto Complete from Delivery",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_order_complete_v1" }
+                  "guard": { "guard": "guard_order_complete_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 7: Lost** (Previous: Shipping, Dual-signature)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Lost",
           "pairs": [
@@ -674,40 +761,20 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Report Lost",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1014,
                   "weight": 1,
-                  "guard": { "guard": "guard_lost_v1" }
+                  "guard": { "guard": "guard_lost_v2" }
                 },
                 {
                   "name": "Confirm Lost with Merkle Root",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_lost_v1" }
+                  "guard": { "guard": "guard_lost_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 8: Non-receipt Return** (Previous: Shipping, Dual-signature)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Non-receipt Return",
           "pairs": [
@@ -717,7 +784,7 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Request Return",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1015,
                   "weight": 1
                 },
                 {
@@ -728,27 +795,7 @@ Add all workflow nodes to the Machine.
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 9: Receipt Return** (Previous: Delivery Complete, Dual-signature)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Receipt Return",
           "pairs": [
@@ -758,7 +805,7 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Request Return with Receipt",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1016,
                   "weight": 1
                 },
                 {
@@ -769,27 +816,7 @@ Add all workflow nodes to the Machine.
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 10: Return Fail** (Previous: Receipt Return)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Return Fail",
           "pairs": [
@@ -801,32 +828,12 @@ Add all workflow nodes to the Machine.
                   "name": "Timeout Return Not Received",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_return_fail_v1" }
+                  "guard": { "guard": "guard_return_fail_v2" }
                 }
               ]
             }
           ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Node 11: Return Complete** (Previous: Receipt Return or Non-receipt Return, Dual-signature)
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_advanced_machine_v1",
-    "node": {
-      "op": "add",
-      "nodes": [
+        },
         {
           "name": "Return Complete",
           "pairs": [
@@ -836,15 +843,15 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1017,
                   "weight": 1,
-                  "guard": { "guard": "guard_return_complete_v1" }
+                  "guard": { "guard": "guard_return_complete_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_return_complete_v1" }
+                  "guard": { "guard": "guard_return_complete_v2" }
                 }
               ]
             },
@@ -854,15 +861,15 @@ Add all workflow nodes to the Machine.
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 0,
+                  "permissionIndex": 1017,
                   "weight": 1,
-                  "guard": { "guard": "guard_return_complete_v1" }
+                  "guard": { "guard": "guard_return_complete_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
                   "permissionIndex": 1011,
                   "weight": 1,
-                  "guard": { "guard": "guard_return_complete_v1" }
+                  "guard": { "guard": "guard_return_complete_v2" }
                 }
               ]
             }
@@ -880,22 +887,18 @@ Add all workflow nodes to the Machine.
 
 ***
 
-### Step 4: Create Empty Service (Get Address First)
+### Step 6: Bind Machine to Service
 
-Create Service without publishing to obtain its address for Guard creation.
+Bind the Machine to the Service. **Important**: The Service must be unpublished when binding the Machine.
 
-**Prompt**: Create empty service "three\_body\_signature\_service\_v1" (do not publish yet).
+**Prompt**: Bind machine "myshop\_advanced\_machine\_v2" to service "three\_body\_signature\_service\_v2".
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": {
-      "name": "three_body_signature_service_v1",
-      "permission": "myshop_permission_v1"
-    },
-    "description": "The Three-Body Problem book with author signature service - Advanced e-commerce with multi-path workflow",
-    "publish": false
+    "object": "three_body_signature_service_v2",
+    "machine": "myshop_advanced_machine_v2"
   },
   "env": {
     "account": "myshop_merchant",
@@ -904,929 +907,43 @@ Create Service without publishing to obtain its address for Guard creation.
 }
 ```
 
-**Record the Service address** from the response. It will be needed for Guard creation.
+**Note**: This step must be performed before publishing the Service. Once published, the Machine cannot be bound.
 
 ***
 
-### Step 5: Create Guards
+### Step 7: Create Additional Guards for Service (4 Guards)
 
-All guards must verify that orders belong to the Service. The Service address is: `0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92`
+Create 4 additional guards for Service order_allocators.
 
-#### Guard 1: Verify Merkle Root Length (64 characters)
+**Guard List:**
 
-**Prompt**: Create guard "guard\_merkle\_root\_v1" to verify Merkle Root is 64 characters.
+| # | Guard Name | Purpose |
+|---|------------|---------|
+| 9 | `guard_merchant_win_v2` | Verify node in [Order Complete, Wonderful, Return Fail] |
+| 10 | `guard_customer_win_v2` | Verify node in [Lost, Return Complete] |
+| 11 | `guard_time_10d_v2` | Verify time >= 10 days (864000000 ms) |
+| 12 | `guard_time_2d_v2` | Verify time >= 2 days (172800000 ms) |
 
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_merkle_root_v1",
-      "tags": ["ecommerce", "merkle", "verification"]
-    },
-    "description": "Verify submitted Merkle Root string length is exactly 64 characters",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "String",
-        "name": "merkle_root"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 64,
-        "name": "expected_length"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "calc_string_length",
-            "node": {
-              "type": "identifier",
-              "identifier": 0
-            }
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 2: Verify Service + Signature + Merkle Root (for Shipping)
-
-**Prompt**: Create guard "guard\_service\_signature\_merkle\_v1" for Shipping verification.
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_service_signature_merkle_v1",
-      "tags": ["ecommerce", "shipping", "verification"]
-    },
-    "description": "Verify order belongs to service, signature is completed, and Merkle Root is submitted",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92",
-        "name": "service_address"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Order Confirmed",
-        "name": "order_confirmed_node"
-      },
-      {
-        "identifier": 3,
-        "b_submission": true,
-        "value_type": "String",
-        "name": "merkle_root"
-      },
-      {
-        "identifier": 4,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 64,
-        "name": "expected_merkle_length"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": 1563,
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": 1253,
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 2
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "calc_string_length",
-                "node": {
-                  "type": "identifier",
-                  "identifier": 3
-                }
-              },
-              {
-                "type": "identifier",
-                "identifier": 4
-              }
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 3: Verify Node is Delivery Complete
-
-**Prompt**: Create guard "guard\_delivery\_complete\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_delivery_complete_v1",
-      "tags": ["ecommerce", "delivery", "verification"]
-    },
-    "description": "Verify order progress is at Delivery Complete node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Delivery Complete",
-        "name": "delivery_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 4: Verify Node is Wonderful
-
-**Prompt**: Create guard "guard\_wonderful\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_wonderful_v1",
-      "tags": ["ecommerce", "wonderful", "verification"]
-    },
-    "description": "Verify order progress is at Wonderful node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Wonderful",
-        "name": "wonderful_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 5: Verify Node is Lost
-
-**Prompt**: Create guard "guard\_lost\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_lost_v1",
-      "tags": ["ecommerce", "lost", "verification"]
-    },
-    "description": "Verify order progress is at Lost node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Lost",
-        "name": "lost_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 6: Verify Node is Return Complete
-
-**Prompt**: Create guard "guard\_return\_complete\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_return_complete_v1",
-      "tags": ["ecommerce", "return", "verification"]
-    },
-    "description": "Verify order progress is at Return Complete node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Return Complete",
-        "name": "return_complete_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 7: Verify Node is Return Fail
-
-**Prompt**: Create guard "guard\_return\_fail\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_return_fail_v1",
-      "tags": ["ecommerce", "return", "fail"]
-    },
-    "description": "Verify order progress is at Return Fail node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Return Fail",
-        "name": "return_fail_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 8: Verify Node is Order Complete
-
-**Prompt**: Create guard "guard\_order\_complete\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_order_complete_v1",
-      "tags": ["ecommerce", "complete", "verification"]
-    },
-    "description": "Verify order progress is at Order Complete node",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Order Complete",
-        "name": "order_complete_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 9: Merchant Win Condition
-
-**Prompt**: Create guard "guard\_merchant\_win\_v1" for fund allocation.
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_merchant_win_v1",
-      "tags": ["ecommerce", "allocation", "merchant"]
-    },
-    "description": "Verify order is at Order Complete, Wonderful, or Return Fail node (merchant wins)",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92",
-        "name": "service_address"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Order Complete",
-        "name": "order_complete_node"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Wonderful",
-        "name": "wonderful_node"
-      },
-      {
-        "identifier": 4,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Return Fail",
-        "name": "return_fail_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": 1563,
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          },
-          {
-            "type": "logic_or",
-            "nodes": [
-              {
-                "type": "logic_equal",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1253,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": []
-                  },
-                  {
-                    "type": "identifier",
-                    "identifier": 2
-                  }
-                ]
-              },
-              {
-                "type": "logic_equal",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1253,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": []
-                  },
-                  {
-                    "type": "identifier",
-                    "identifier": 3
-                  }
-                ]
-              },
-              {
-                "type": "logic_equal",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1253,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": []
-                  },
-                  {
-                    "type": "identifier",
-                    "identifier": 4
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 10: Customer Win Condition
-
-**Prompt**: Create guard "guard\_customer\_win\_v1" for fund allocation.
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_customer_win_v1",
-      "tags": ["ecommerce", "allocation", "customer"]
-    },
-    "description": "Verify order is at Lost or Return Complete node (customer wins)",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92",
-        "name": "service_address"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Lost",
-        "name": "lost_node"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Return Complete",
-        "name": "return_complete_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": 1563,
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          },
-          {
-            "type": "logic_or",
-            "nodes": [
-              {
-                "type": "logic_equal",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1253,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": []
-                  },
-                  {
-                    "type": "identifier",
-                    "identifier": 2
-                  }
-                ]
-              },
-              {
-                "type": "logic_equal",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1253,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": []
-                  },
-                  {
-                    "type": "identifier",
-                    "identifier": 3
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 11: Time >= 10 Days
-
-**Prompt**: Create guard "guard\_time\_10d\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_time_10d_v1",
-      "tags": ["ecommerce", "time", "10days"]
-    },
-    "description": "Verify at least 10 days (864000000 ms) have passed since node entry",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "progress_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 864000000,
-        "name": "ten_days_ms"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          {
-            "type": "calc_number_subtract",
-            "nodes": [
-              {
-                "type": "context",
-                "context": "Clock"
-              },
-              {
-                "type": "query",
-                "query": 1315,
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              }
-            ]
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-#### Guard 12: Time >= 2 Days
-
-**Prompt**: Create guard "guard\_time\_2d\_v1".
-
-```json
-{
-  "operation_type": "guard",
-  "data": {
-    "namedNew": {
-      "name": "guard_time_2d_v1",
-      "tags": ["ecommerce", "time", "2days"]
-    },
-    "description": "Verify at least 2 days (172800000 ms) have passed since node entry",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "progress_address"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 172800000,
-        "name": "two_days_ms"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          {
-            "type": "calc_number_subtract",
-            "nodes": [
-              {
-                "type": "context",
-                "context": "Clock"
-              },
-              {
-                "type": "query",
-                "query": 1315,
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              }
-            ]
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
+> **Note**: See [MyShop_Advanced_MerchantSystem_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for detailed guard creation examples.
 
 ***
 
-### Step 6: Create Arbitration Object
+### Step 8: Create Arbitration Object
 
 Create an Arbitration object as the final on-chain mechanism for protecting user rights.
 
-**Prompt**: Create arbitration object "myshop\_arbitration\_v1".
+**Prompt**: Create arbitration object "myshop\_arbitration\_v2".
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
-    "namedNew": {
-      "name": "myshop_arbitration_v1"
+    "object": {
+      "name": "myshop_arbitration_v2",
+      "replaceExistName": true
     },
-    "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism"
+    "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism",
+    "fee": 100000000
   },
   "env": {
     "account": "myshop_merchant",
@@ -1837,39 +954,43 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 
 ***
 
-### Step 7: Update Service with Allocators, Arbitration and Publish
+### Step 9: Update Service with Allocators, Arbitration and Publish
 
 Update Service with order\_allocators, sales, arbitration binding, and publish.
 
-**Prompt**: Update service "three\_body\_signature\_service\_v1" with order allocators, arbitration and publish.
+**Prompt**: Update service "three\_body\_signature\_service\_v2" with order allocators, arbitration and publish.
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v1",
-    "order_allocators": [
-      {
-        "guard": "guard_merchant_win_v1",
-        "sharing": [
-          {
-            "who": { "Signer": "signer" },
-            "sharing": 10000,
-            "mode": "Rate"
-          }
-        ]
-      },
-      {
-        "guard": "guard_customer_win_v1",
-        "sharing": [
-          {
-            "who": { "GuardIdentifier": 0 },
-            "sharing": 10000,
-            "mode": "Rate"
-          }
-        ]
-      }
-    ],
+    "object": "three_body_signature_service_v2",
+    "order_allocators": {
+      "description": "Order fund allocators for MyShop Advanced",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "guard_merchant_win_v2",
+          "sharing": [
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "guard_customer_win_v2",
+          "sharing": [
+            {
+              "who": {"GuardIdentifier": 0},
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    },
     "sales": {
       "op": "add",
       "sales": [
@@ -1879,11 +1000,14 @@ Update Service with order\_allocators, sales, arbitration binding, and publish.
           "stock": 100,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
+          "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
         }
       ]
     },
-    "arbitrations": ["myshop_arbitration_v1"],
+    "arbitrations": {
+      "op": "add",
+      "objects": ["myshop_arbitration_v2"]
+    },
     "customer_required": ["phone", "email", "shipping_address"],
     "publish": true
   },
@@ -1896,21 +1020,22 @@ Update Service with order\_allocators, sales, arbitration binding, and publish.
 
 ***
 
-### Step 8: Create Reward Pool
+### Step 10: Create Reward Pool
 
 Create reward pool with guards for Wonderful, Lost, and Shipping timeout compensation.
 
-**Prompt**: Create reward object "myshop\_reward\_v1" with initial balance.
+**Prompt**: Create reward object "myshop\_reward\_v2" with initial balance.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "namedNew": {
-      "name": "myshop_reward_v1"
+    "object": {
+      "name": "myshop_reward_v2",
+      "replaceExistName": true
     },
     "description": "Reward pool for MyShop advanced - Wonderful rewards (10000), Lost compensation (20000), Shipping timeout compensation (20000)",
-    "deposit": {
+    "coin_add": {
       "balance": 150000000
     }
   },
@@ -1923,19 +1048,20 @@ Create reward pool with guards for Wonderful, Lost, and Shipping timeout compens
 
 ***
 
-### Step 9: Create Shipping Timeout Guard
+### Step 11: Create Shipping Timeout Guard
 
 Create a guard to verify Shipping node time exceeds 2 days (172800000 ms).
 
-**Prompt**: Create guard "guard\_shipping\_timeout\_v1".
+**Prompt**: Create guard "guard\_shipping\_timeout\_v2".
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "guard_shipping_timeout_v1",
-      "tags": ["ecommerce", "shipping", "timeout"]
+      "name": "guard_shipping_timeout_v2",
+      "tags": ["ecommerce", "shipping", "timeout"],
+      "replaceExistName": true
     },
     "description": "Verify order has been in Shipping node for at least 2 days (172800000 ms)",
     "table": [
@@ -1970,7 +1096,7 @@ Create a guard to verify Shipping node time exceeds 2 days (172800000 ms).
             "nodes": [
               {
                 "type": "query",
-                "query": 1563,
+                "query": 1253,
                 "object": {
                   "identifier": 0,
                   "convert_witness": 100
@@ -2022,44 +1148,30 @@ Create a guard to verify Shipping node time exceeds 2 days (172800000 ms).
 
 ***
 
-### Step 10: Add Reward Guards
+### Step 12: Add Reward Guards
 
 Add reward guards for Wonderful (10000), Lost (20000), and Shipping timeout (20000) compensation.
 
-**Prompt**: Add reward guard for Wonderful node (10000 reward).
+**Prompt**: Add reward guards.
 
 ```json
 {
   "operation_type": "reward",
   "data": {
-    "object": "myshop_reward_v1",
+    "object": "myshop_reward_v2",
     "guard_add": [
       {
-        "guard": "guard_wonderful_v1",
-        "for_guard": {
-          "amount": 10000,
-          "reward_object": "0xe9f8dc4b4f71466d51a47893596d65ee81970d03f070d3e01ba80c36e5c44ade"
-        }
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Prompt**: Add reward guard for Lost node (20000 compensation).
-
-```json
-{
-  "operation_type": "reward",
-  "data": {
-    "object": "myshop_reward_v1",
-    "guard_add": [
+        "guard": "guard_wonderful_v2",
+        "recipient": {"Signer": "signer"},
+        "amount": {"type": "Fixed", "value": 10000}
+      },
       {
-        "guard": "guard_lost_v1",
+        "guard": "guard_lost_v2",
+        "recipient": {"Signer": "signer"},
+        "amount": {"type": "Fixed", "value": 20000}
+      },
+      {
+        "guard": "guard_shipping_timeout_v2",
         "recipient": {"Signer": "signer"},
         "amount": {"type": "Fixed", "value": 20000}
       }
@@ -2072,27 +1184,9 @@ Add reward guards for Wonderful (10000), Lost (20000), and Shipping timeout (200
 }
 ```
 
-**Prompt**: Add reward guard for Shipping timeout (20000 compensation).
+> **Note**: See [MyShop_Advanced_MerchantSystem_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for Guard 4-5 detailed creation examples.
 
-```json
-{
-  "operation_type": "reward",
-  "data": {
-    "object": "myshop_reward_v1",
-    "guard_add": [
-      {
-        "guard": "guard_shipping_timeout_v1",
-        "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 20000}
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
+> **Note**: See [MyShop_Advanced_MerchantSystem_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for Guard 6-10 detailed creation examples.
 
 ***
 
@@ -2108,7 +1202,7 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v1",
+    "object": "three_body_signature_service_v2",
     "order_new": {
       "buy": {
         "items": [
@@ -2124,13 +1218,13 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
         "order_info": "To my dear friend - keep exploring the universe"
       },
       "namedNewOrder": {
-        "name": "myshop_order_v1"
+        "name": "myshop_order_v2"
       },
       "namedNewAllocation": {
-        "name": "myshop_allocation_v1"
+        "name": "myshop_allocation_v2"
       },
       "namedNewProgress": {
-        "name": "myshop_progress_v1"
+        "name": "myshop_progress_v2"
       }
     }
   },
@@ -2153,7 +1247,7 @@ Merchant confirms order by submitting Merkle Root.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Order Confirmed",
@@ -2167,13 +1261,13 @@ Merchant confirms order by submitting Merkle Root.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_merkle_root_v1",
+        "object": "guard_merkle_root_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_merkle_root_v1",
+        "guard": "guard_merkle_root_v2",
         "submission": [
           {
             "identifier": 0,
@@ -2205,7 +1299,7 @@ Merchant starts shipping after signature service is completed.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Shipping",
@@ -2219,19 +1313,19 @@ Merchant starts shipping after signature service is completed.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_service_signature_merkle_v1",
+        "object": "guard_service_signature_merkle_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_service_signature_merkle_v1",
+        "guard": "guard_service_signature_merkle_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_order_v1"
+            "value": "myshop_order_v2"
           },
           {
             "identifier": 3,
@@ -2263,7 +1357,7 @@ Customer confirms receipt of goods.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Delivery Complete",
@@ -2293,7 +1387,7 @@ Alternatively, customer can rate as Wonderful (very satisfied).
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Wonderful",
@@ -2323,29 +1417,29 @@ Customer claims Wonderful reward from reward pool.
 {
   "operation_type": "reward",
   "data": {
-    "object": "myshop_reward_v1",
+    "object": "myshop_reward_v2",
     "claim": {
-      "guard": "guard_wonderful_v1",
-      "reward_object": "myshop_order_v1"
+      "guard": "guard_wonderful_v2",
+      "reward_object": "myshop_order_v2"
     }
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_wonderful_v1",
+        "object": "guard_wonderful_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_wonderful_v1",
+        "guard": "guard_wonderful_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_order_v1"
+            "value": "myshop_order_v2"
           }
         ]
       }
@@ -2371,7 +1465,7 @@ Order can auto-complete after time thresholds or be manually completed.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Order Complete",
@@ -2385,19 +1479,19 @@ Order can auto-complete after time thresholds or be manually completed.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_time_10d_v1",
+        "object": "guard_time_10d_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_time_10d_v1",
+        "guard": "guard_time_10d_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_progress_v1"
+            "value": "myshop_progress_v2"
           }
         ]
       }
@@ -2417,7 +1511,7 @@ Order can auto-complete after time thresholds or be manually completed.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Order Complete",
@@ -2431,19 +1525,19 @@ Order can auto-complete after time thresholds or be manually completed.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_time_2d_v1",
+        "object": "guard_time_2d_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_time_2d_v1",
+        "guard": "guard_time_2d_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_progress_v1"
+            "value": "myshop_progress_v2"
           }
         ]
       }
@@ -2469,7 +1563,7 @@ If package is lost, customer reports and merchant confirms.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Lost",
@@ -2493,7 +1587,7 @@ If package is lost, customer reports and merchant confirms.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Lost",
@@ -2507,13 +1601,13 @@ If package is lost, customer reports and merchant confirms.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_merkle_root_v1",
+        "object": "guard_merkle_root_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_merkle_root_v1",
+        "guard": "guard_merkle_root_v2",
         "submission": [
           {
             "identifier": 0,
@@ -2539,29 +1633,29 @@ If package is lost, customer reports and merchant confirms.
 {
   "operation_type": "reward",
   "data": {
-    "object": "myshop_reward_v1",
+    "object": "myshop_reward_v2",
     "claim": {
-      "guard": "guard_lost_v1",
-      "reward_object": "myshop_order_v1"
+      "guard": "guard_lost_v2",
+      "reward_object": "myshop_order_v2"
     }
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_lost_v1",
+        "object": "guard_lost_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_lost_v1",
+        "guard": "guard_lost_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_order_v1"
+            "value": "myshop_order_v2"
           }
         ]
       }
@@ -2587,7 +1681,7 @@ Customer requests return after delivery confirmation.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Receipt Return",
@@ -2611,7 +1705,7 @@ Customer requests return after delivery confirmation.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Receipt Return",
@@ -2625,13 +1719,13 @@ Customer requests return after delivery confirmation.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_merkle_root_v1",
+        "object": "guard_merkle_root_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_merkle_root_v1",
+        "guard": "guard_merkle_root_v2",
         "submission": [
           {
             "identifier": 0,
@@ -2657,7 +1751,7 @@ Customer requests return after delivery confirmation.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Return Complete",
@@ -2671,13 +1765,13 @@ Customer requests return after delivery confirmation.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_merkle_root_v1",
+        "object": "guard_merkle_root_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_merkle_root_v1",
+        "guard": "guard_merkle_root_v2",
         "submission": [
           {
             "identifier": 0,
@@ -2703,7 +1797,7 @@ Customer requests return after delivery confirmation.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Return Complete",
@@ -2731,7 +1825,7 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
 {
   "operation_type": "progress",
   "data": {
-    "object": "myshop_progress_v1",
+    "object": "myshop_progress_v2",
     "operate": {
       "operation": {
         "next_node_name": "Return Fail",
@@ -2745,19 +1839,19 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
     "type": "submission",
     "guard": [
       {
-        "object": "guard_time_10d_v1",
+        "object": "guard_time_10d_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_time_10d_v1",
+        "guard": "guard_time_10d_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_progress_v1"
+            "value": "myshop_progress_v2"
           }
         ]
       }
@@ -2785,28 +1879,28 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
 {
   "operation_type": "order",
   "data": {
-    "object": "myshop_order_v1",
+    "object": "myshop_order_v2",
     "withdraw": {
-      "guard": "guard_merchant_win_v1"
+      "guard": "guard_merchant_win_v2"
     }
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_merchant_win_v1",
+        "object": "guard_merchant_win_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_merchant_win_v1",
+        "guard": "guard_merchant_win_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_order_v1"
+            "value": "myshop_order_v2"
           }
         ]
       }
@@ -2830,28 +1924,28 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
 {
   "operation_type": "order",
   "data": {
-    "object": "myshop_order_v1",
+    "object": "myshop_order_v2",
     "withdraw": {
-      "guard": "guard_customer_win_v1"
+      "guard": "guard_customer_win_v2"
     }
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_customer_win_v1",
+        "object": "guard_customer_win_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_customer_win_v1",
+        "guard": "guard_customer_win_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_order_v1"
+            "value": "myshop_order_v2"
           }
         ]
       }

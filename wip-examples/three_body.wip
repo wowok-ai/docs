@@ -1,5 +1,5 @@
 {
-  "wip": "https://schema.wip/v1",
+  "wip": "https://schema.wowok.net/wip/v1",
   "payload": {
     "content": {
       "text": "# The Three-Body Problem\n\nThe Three-Body Problem is a science fiction novel written by Chinese author Liu Cixin, the first book in the \"Remembrance of Earth's Past\" trilogy.\n\n## Synopsis\n\nDuring the Cultural Revolution, astrophysicist Ye Wenjie is brought to a secret military project called \"Red Coast\" after surviving numerous hardships. Using the sun as an antenna, Ye Wenjie sends Earth's first signal into the universe, making a breakthrough in the search for extraterrestrial civilization.\n\n## Product Information\n\n- **Title**: The Three-Body Problem\n- **Author**: Liu Cixin\n- **Genre**: Science Fiction\n- **Price**: 50 WOW\n\n![Book Cover](https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800)\n\n![Space Scene](https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800)",
@@ -23,8 +23,8 @@
   "meta": {
     "type": "wip",
     "version": "1.0.0",
-    "created": "2026-04-24T03:01:05.266Z",
-    "hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43",
+    "created": "2026-04-26T11:45:55.110Z",
+    "hash": "1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43",
     "algorithm": "sha256"
   }
 }

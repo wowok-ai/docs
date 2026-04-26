@@ -65,7 +65,14 @@ Create a Permission object to manage the service.
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "three_body_permission"
+      "name": "three_body_permission_v2",
+      "replaceExistName": true
+    },
+    "description": "Permission for Three-Body Signature Service v2",
+    "table": {
+      "op": "add perm by entity",
+      "entity": {"name_or_address": "three_body_author"},
+      "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
     }
   },
   "env": {
@@ -79,8 +86,8 @@ Create a Permission object to manage the service.
 ```json
 [{
   "type": "Permission",
-  "object": "0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b",
-  "version": "1170413",
+  "object": "0xf939b4be49761ef8c30ff19ee874157e2ba1d83ab3a8de4f310443e588d1df99",
+  "version": "2195623",
   "change": "created"
 }]
 ```
@@ -97,8 +104,9 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "three_body_buy_guard",
-      "tags": ["signature", "book", "buy-guard"]
+      "name": "three_body_buy_guard_v2",
+      "tags": ["signature", "book", "buy-guard"],
+      "replaceExistName": true
     },
     "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service.",
     "table": [
@@ -138,8 +146,8 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 ```json
 [{
   "type": "Guard",
-  "object": "0x7cae6fceef01b57a5d9117afb8396274e4e5d161514ef052962e99eca74a9f42",
-  "version": "1180407",
+  "object": "0x2fc0283e55f4322eb602a5370b32e455597e339c74a23ada5d9a4a82f02f7925",
+  "version": "2195993",
   "change": "created"
 }]
 ```
@@ -158,36 +166,11 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "three_body_machine",
-      "permission": "three_body_permission"
+      "name": "three_body_machine_v2",
+      "permission": "three_body_permission_v2",
+      "replaceExistName": true
     },
-    "description": "Three-Body signature service workflow: Book Delivery -> Signature Completion"
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
-  }
-}
-```
-
-**Actual Result**:
-```json
-[{
-  "type": "Machine",
-  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
-  "version": "1181009",
-  "change": "created"
-}]
-```
-
-### Add Workflow Nodes
-
-**Request**:
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "three_body_machine",
+    "description": "Three-Body signature service workflow v2: Book Delivery -> Signature Completion",
     "node": {
       "op": "add",
       "nodes": [
@@ -224,33 +207,7 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
           ]
         }
       ]
-    }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
-  }
-}
-```
-
-**Actual Result**:
-```json
-[{
-  "type": "Machine",
-  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
-  "version": "1181010",
-  "change": "mutated"
-}]
-```
-
-### Publish Machine
-
-**Request**:
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "three_body_machine",
+    },
     "publish": true
   },
   "env": {
@@ -264,17 +221,19 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 ```json
 [{
   "type": "Machine",
-  "object": "0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700",
-  "version": "1181011",
-  "change": "mutated"
+  "object": "0x8e7e1c3f173c9e2203ca2e1e50b4c634dd1cef06d248ac50e35749adf7499411",
+  "version": "2196424",
+  "change": "created"
 }]
 ```
 
+
+
 ---
 
-## Step 4: Create Service
+## Step 4: Create Service (Unpublished)
 
-Create the Three-Body signature service with description and sales item.
+Create the Three-Body signature service without publishing. The Service must be unpublished when binding the Machine.
 
 **Request**:
 ```json
@@ -282,26 +241,13 @@ Create the Three-Body signature service with description and sales item.
   "operation_type": "service",
   "data": {
     "object": {
-      "name": "three_body_signature_service",
+      "name": "three_body_signature_service_v2",
       "type_parameter": "0x2::wow::WOW",
-      "permission": "three_body_permission",
-      "tags": ["signature", "book", "three-body"],
-      "onChain": false
+      "permission": "three_body_permission_v2",
+      "replaceExistName": true
     },
-    "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Three-Body Book Signature",
-          "price": 888,
-          "stock": 100,
-          "suspension": false,
-          "wip": "https://github.com/wowok-ai/docs/blob/main/wip-examples/three_body.wip",
-          "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
-        }
-      ]
-    }
+    "description": "Three-Body author book signature service v2. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+    "publish": false
   },
   "env": {
     "account": "three_body_author",
@@ -314,8 +260,8 @@ Create the Three-Body signature service with description and sales item.
 ```json
 [{
   "type": "Service",
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
-  "version": "1181986",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2198123",
   "change": "created"
 }]
 ```
@@ -324,15 +270,15 @@ Create the Three-Body signature service with description and sales item.
 
 ## Step 5: Configure Machine
 
-Bind the published Machine to the Service.
+Bind the published Machine to the Service. **Important**: The Service must be unpublished when binding the Machine.
 
 **Request**:
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
-    "machine": "three_body_machine"
+    "object": "three_body_signature_service_v2",
+    "machine": "three_body_machine_v2"
   },
   "env": {
     "account": "three_body_author",
@@ -345,10 +291,18 @@ Bind the published Machine to the Service.
 ```json
 [{
   "type": "Service",
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
-  "version": "1182212",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2198329",
   "change": "mutated"
 }]
+```
+
+**Verification** (with no_cache: true):
+```json
+{
+  "machine": "0x8e7e1c3f173c9e2203ca2e1e50b4c634dd1cef06d248ac50e35749adf7499411",
+  "bPublished": false
+}
 ```
 
 ---
@@ -362,8 +316,8 @@ Configure the Buy Guard to restrict purchases to the author only.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
-    "buy_guard": "three_body_buy_guard"
+    "object": "three_body_signature_service_v2",
+    "buy_guard": "three_body_buy_guard_v2"
   },
   "env": {
     "account": "three_body_author",
@@ -376,8 +330,8 @@ Configure the Buy Guard to restrict purchases to the author only.
 ```json
 [{
   "type": "Service",
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
-  "version": "1182407",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2203786",
   "change": "mutated"
 }]
 ```
@@ -393,13 +347,13 @@ Set up fund allocation: 100% to the author upon order completion.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
+    "object": "three_body_signature_service_v2",
     "order_allocators": {
       "description": "Three-Body signature service fund allocation - 100% to author",
       "threshold": 0,
       "allocators": [
         {
-          "guard": "three_body_buy_guard",
+          "guard": "three_body_buy_guard_v2",
           "sharing": [
             {
               "who": {
@@ -411,7 +365,8 @@ Set up fund allocation: 100% to the author upon order completion.
           ]
         }
       ]
-    }
+    },
+    "customer_required": ["phone", "email", "shipping_address"]
   },
   "env": {
     "account": "three_body_author",
@@ -424,24 +379,37 @@ Set up fund allocation: 100% to the author upon order completion.
 ```json
 [{
   "type": "Service",
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
-  "version": "1182408",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2203787",
   "change": "mutated"
 }]
 ```
 
 ---
 
-## Step 8: Publish Service
+## Step 8: Add Sales and Publish Service
 
-Publish the service to make it available for orders.
+Add sales items and publish the service to make it available for orders.
 
 **Request**:
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
+    "object": "three_body_signature_service_v2",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "Three-Body Book Signature",
+          "price": 888,
+          "stock": 100,
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
+        }
+      ]
+    },
     "publish": true
   },
   "env": {
@@ -455,15 +423,46 @@ Publish the service to make it available for orders.
 ```json
 [{
   "type": "Service",
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
-  "version": "1182409",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2205976",
   "change": "mutated"
 }]
 ```
 
 ---
 
-## Step 9: Verify Service Configuration
+## Step 9: Unpause Service
+
+Unpause the service to allow order creation.
+
+**Request**:
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "three_body_signature_service_v2",
+    "pause": false
+  },
+  "env": {
+    "account": "three_body_author",
+    "network": "testnet"
+  }
+}
+```
+
+**Actual Result**:
+```json
+[{
+  "type": "Service",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
+  "version": "2205975",
+  "change": "mutated"
+}]
+```
+
+---
+
+## Step 10: Verify Service Configuration
 
 Query the service to verify all configurations.
 
@@ -473,7 +472,7 @@ Query the service to verify all configurations.
   "operation_type": "query_toolkit",
   "data": {
     "query_type": "onchain_objects",
-    "objects": ["three_body_signature_service"],
+    "objects": ["three_body_signature_service_v2"],
     "no_cache": true
   },
   "env": {
@@ -485,24 +484,25 @@ Query the service to verify all configurations.
 **Actual Result**:
 ```json
 {
-  "object": "0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754",
+  "object": "0x140e91943775592736f587e596afce7d28f41fee1593f8dfbc2f04d852e5d45c",
   "type": "Service",
-  "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+  "description": "Three-Body author book signature service v2. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
   "sales": [
     {
       "name": "Three-Body Book Signature",
       "stock": "100",
       "suspension": false,
       "price": "888",
-      "wip": "https://github.com/wowok-ai/docs/blob/main/wip-examples/three_body.wip",
-      "wip_hash": "1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
+      "wip": "",
+      "wip_hash": ""
     }
   ],
-  "buy_guard": null,
-  "machine": null,
-  "bPublished": false,
-  "bPaused": true,
-  "permission": "0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b"
+  "buy_guard": "0x2fc0283e55f4322eb602a5370b32e455597e339c74a23ada5d9a4a82f02f7925",
+  "machine": "0x8e7e1c3f173c9e2203ca2e1e50b4c634dd1cef06d248ac50e35749adf7499411",
+  "bPublished": true,
+  "bPaused": false,
+  "customer_required": ["phone", "email", "shipping_address"],
+  "permission": "0xf939b4be49761ef8c30ff19ee874157e2ba1d83ab3a8de4f310443e588d1df99"
 }
 ```
 
@@ -519,7 +519,7 @@ The author (`three_body_author`) should be able to purchase the service.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
+    "object": "three_body_signature_service_v2",
     "order_new": {
       "buy": {
         "items": [
@@ -534,10 +534,12 @@ The author (`three_body_author`) should be able to purchase the service.
         }
       },
       "namedNewOrder": {
-        "name": "three_body_order_v2"
+        "name": "three_body_order_v2",
+        "replaceExistName": true
       },
       "namedNewProgress": {
-        "name": "three_body_progress_v2"
+        "name": "three_body_progress_v2",
+        "replaceExistName": true
       }
     }
   },
@@ -559,7 +561,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service",
+    "object": "three_body_signature_service_v2",
     "order_new": {
       "buy": {
         "items": [
@@ -647,10 +649,13 @@ This example demonstrates:
 
 | Object | Name | ID | Version |
 |--------|------|-----|---------|
-| Permission | three_body_permission | `0x276761c3fee4f0c5e04d309e060c943ad57f8b3f66ff0da60849b38ea210b77b` | 1170413 |
-| Buy Guard | three_body_buy_guard | `0x7cae6fceef01b57a5d9117afb8396274e4e5d161514ef052962e99eca74a9f42` | 1180407 |
-| Machine | three_body_machine | `0x1189627fcef5c94495211f13f3b84732910584e966144dbcbc6837dadeed5700` | 1181011 |
-| Service | three_body_signature_service | `0xcbea374b83f05a81e6557057a3d1c39a28cc2accf705a0c49ed7341e57e13754` | 1182409 |
+| Permission | three_body_permission_v2 | `0xf939b4...1df99` | 2195623 |
+| Buy Guard | three_body_buy_guard_v2 | `0x2fc028...f7925` | 2195993 |
+| Machine | three_body_machine_v2 | `0x8e7e1c...99411` | 2196424 |
+| Service | three_body_signature_service_v2 | `0x140e91...e5d45c` | 2205976 |
+| Order | three_body_order_v2 | `0x7684ab...3f35d49` | 2209290 |
+| Allocation | three_body_allocation_v2 | `0xd6f2da...99e00` | 2209290 |
+| Progress | three_body_progress_v2 | `0x97ef34...d935d9` | 2209290 |
 
 ---
 
@@ -687,7 +692,7 @@ Each node transition requires the author's confirmation, ensuring accountability
 **Always establish naming conventions first** :
 
 - **Example**: Use consistent suffixes or no suffixes at all
-  - Good: `three_body_permission`, `three_body_buy_guard`, `three_body_machine`
+  - Good: `three_body_permission_v2`, `three_body_buy_guard_v2`, `three_body_machine_v2`
   - Good: All names follow the same pattern
   - Provide naming rules for AI to manage object names automatically; avoid conflicts with other naming conventions such as version/timestamp/random numbers for unique names
   - Strongly recommend using the `replaceExistName` method in `LocalMarkOperationSchema` to enforce name usage (even if already exists)
