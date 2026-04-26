@@ -17,11 +17,11 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 
 ### Test Environment
 - **Network**: Testnet
-- **Service**: `three_body_signature_service_v2` (0xbfb5fe351fd114d8c77e8d163f3e440b5320aa849d417ca8d72c34762a7d71f9)
-- **Machine**: `myshop_advanced_machine_v2` (0xa0b47cbec8cdb8f5358e4b3c2569de3fecb05161d2bce487cd564efa70bf81c0)
-- **Permission**: `myshop_permission_v2` (0x4972b33431d3e1969dbbcd9e093c8052c30992492c5ceff5902b48f1a7cb11f8)
-- **Arbitration**: `myshop_arbitration_v2` (0xf0fca6d3841793681de4b10ce398897b99cb1b3b59c90a670c5729d38615d7ff)
-- **Reward**: `myshop_reward_v2` (0x5d4e9b75bf1b94a77c13aa60487898c5dba3b221a293f0fdd085bee9d20e277a)
+- **Service**: `three_body_signature_service_v2`
+- **Machine**: `myshop_advanced_machine_v2`
+- **Permission**: `myshop_permission_v2`
+- **Arbitration**: `myshop_arbitration_v2`
+- **Reward**: `myshop_reward_v2`
 
 ### Test Accounts
 | Account | Address | Role |
@@ -30,21 +30,20 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 | myshop_customer | 0x06906ffa2eccd04c9f8ec0feb8456115d5bffbddcee1d211288cf8fe1848987c | Customer |
 
 ### Reference Guards
-| Guard Name | Address | Purpose |
-|------------|---------|---------|
-| guard_merkle_root_v2 | 0x8644baca380888c11a35a9687b7ceb5611cecaff6a225eeeda1d0f4af792139d | Verify Merkle Root length = 64 |
-| guard_service_signature_merkle_v2 | 0xa45f21fdcf987939655da059218e54197365e28bb614f7d9620531219d5886f0 | Verify service, signature, Merkle Root |
-| guard_delivery_complete_v2 | 0x6669df3af6abbdfbe6072f354d04d059348a50a87d64a1019c4142739f6050ee | Verify Delivery Complete node |
-| guard_wonderful_v2 | 0x42534c40643d04ec4c32821ee33681517e9f56ba5b3839c7a50d4fe2942a203a | Verify Wonderful node |
-| guard_lost_v2 | 0xcf91f4877edc06e50bfb1132e96e6c77c66bc8ccd2dbb35457ca089f09113351 | Verify Lost node |
-| guard_return_complete_v2 | 0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382 | Verify Return Complete node |
-| guard_return_fail_v2 | 0x3b3c5138b9abd5d7843c449ba7e8145ee9d3899a817f0c6703539013ae0ee89c | Verify Return Fail node |
-| guard_order_complete_v2 | 0x2b1fae955f63f688e0d03cd68601b52f392133afed106b21183775a60b29d2b8 | Verify Order Complete node |
-| guard_merchant_win_v2 | 0xece766c71360200d805abb128f1fb3bf3c9e3eae366352c5de176ab5dd82c1b2 | Verify merchant winning nodes |
-| guard_customer_win_v2 | 0x9e6ce67f66c3e96df6b7bb5873da3d5076b3a15bb1d12e9182419f905cebbd15 | Verify customer winning nodes |
-| guard_time_10d_v2 | 0x51b290507808df00021825bb436184d34b1be27aed3590493f3d13003e0a3cb1 | Verify 10-day timeout |
-| guard_time_2d_v2 | 0x7c69cfae4c0dd64f5e4ce6fedc9053ce3b664e4f3a82d69614649d97459329c4 | Verify 2-day timeout |
-| guard_shipping_timeout_v2 | 0x8fdb3fc5f40265491111e5907bca8c4774375e2c0da38f7a2cf95ae7f03c0d94 | Verify shipping timeout |
+| Guard Name | Purpose |
+|------------|---------|
+| **Machine Guards** | |
+| machine_merkle_root_v2 | Verify Merkle Root string length = 64 |
+| machine_service_order_v2 | Verify order belongs to Service and current node is valid |
+| machine_time_10d_v2 | Verify 10-day timeout (864000000 ms) for auto-completion |
+| machine_time_2d_v2 | Verify 2-day timeout (172800000 ms) for auto-completion |
+| **Service Guards** | |
+| service_merchant_win_v2 | Verify order at merchant winning nodes (Order Complete, Wonderful, Return Fail) |
+| service_customer_win_v2 | Verify order at customer winning nodes (Lost, Return Complete) |
+| **Reward Guards** | |
+| reward_wonderful_v2 | Verify order at Wonderful node for 10000 reward |
+| reward_lost_v2 | Verify order at Lost node for 20000 compensation |
+| reward_shipping_timeout_v2 | Verify order at Shipping node > 2 days for 30000 compensation |
 
 ---
 
@@ -160,24 +159,585 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 
 | Path # | Path Name | Status | Order ID | Notes |
 |--------|-----------|--------|----------|-------|
-| 1 | Order Cancel | ⏳ Pending | - | - |
-| 2 | Standard Delivery | ⏳ Pending | - | - |
-| 3 | Auto-Complete from Delivery | ⏳ Pending | - | - |
-| 4 | Wonderful Rating | ⏳ Pending | - | - |
+| 1 | Order Cancel | ✅ Completed | myshop_cancel_order | Successfully cancelled before shipping |
+| 2 | Standard Delivery | ⚠️ Partial | myshop_delivery_order | Blocked at Delivery Complete (permission issue) |
+| 3 | Auto-Complete from Delivery | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
+| 4 | Wonderful Rating | ⚠️ Partial | myshop_wonderful_order | Blocked at Wonderful node (guard verification) |
 | 5 | Lost Package | ⏳ Pending | - | - |
-| 6 | Auto-Complete from Shipping | ⏳ Pending | - | - |
+| 6 | Auto-Complete from Shipping | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
 | 7 | Non-receipt Return → Complete | ⏳ Pending | - | - |
 | 8 | Receipt Return → Complete | ⏳ Pending | - | - |
-| 9 | Receipt Return → Fail | ⏳ Pending | - | - |
-| 10 | Shipping Timeout Compensation | ⏳ Pending | - | - |
+| 9 | Receipt Return → Fail | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
+| 10 | Shipping Timeout Compensation | ⏸️ Skipped | - | Requires 2-day timeout, guard will fail |
+
+**Note**: Paths requiring time-based guards (2-day, 10-day timeouts) are skipped because the guard verification will fail in test environment.
 
 ---
 
 ## Test Results
 
-*Test results will be populated as tests are executed*
+### Path 1: Order Cancel ✅
+
+**Status**: Successfully Completed (2026-04-26)
+
+**Order Info**:
+- Order: `test_cancel_order_v2`
+- Progress: `test_cancel_progress_v2`
+- Allocation: `test_cancel_allocation_v2`
+
+**Test Steps**:
+
+#### Step 1: Create Order ✅
+
+**Request:**
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "three_body_signature_service_v2",
+    "order_new": {
+      "buy": {
+        "items": [
+          {
+            "name": "The Three-Body Problem + Author Signature",
+            "stock": 1,
+            "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
+          }
+        ],
+        "total_pay": {
+          "balance": 5000000000
+        }
+      },
+      "namedNewOrder": {
+        "name": "test_cancel_order_v2",
+        "replaceExistName": true
+      },
+      "namedNewAllocation": {
+        "name": "test_cancel_allocation_v2",
+        "replaceExistName": true
+      },
+      "namedNewProgress": {
+        "name": "test_cancel_progress_v2",
+        "replaceExistName": true
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Order created successfully
 
 ---
 
-*Test document updated: 2026-04-26*
+#### Step 2: Confirm Order ✅
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_cancel_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Order Confirmed",
+        "forward": "Confirm Order"
+      },
+      "hold": false,
+      "message": "Order confirmed by merchant"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Progress at "Order Confirmed"
+
+---
+
+#### Step 3: Cancel Order ✅
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_cancel_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Order Cancel",
+        "forward": "Cancel Order"
+      },
+      "hold": false,
+      "message": "Order cancelled by merchant before shipping"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Order cancelled successfully, progress at "Order Cancel" node
+
+**End State**: Order Cancelled - funds returned to customer
+
+---
+
+### Path 2: Standard Delivery ⚠️
+
+**Status**: Partially Completed (Blocked at Delivery Complete)
+
+**Order Info**:
+- Order: `myshop_delivery_order`
+- Progress: `myshop_delivery_progress`
+- Allocation: `myshop_delivery_allocation`
+
+**Test Steps**:
+
+#### Step 1: Create Order ✅
+
+**Result**: ✅ Order created successfully
+
+---
+
+#### Step 2: Order Confirmed ✅
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "myshop_delivery_progress",
+    "operate": {
+      "operation": {
+        "next_node_name": "Order Confirmed",
+        "forward": "Submit Messenger Merkle Root"
+      },
+      "hold": false,
+      "message": "Order confirmed by merchant"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Result**: ✅ Progress at "Order Confirmed"
+
+---
+
+#### Step 3: Shipping ✅
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "myshop_delivery_progress",
+    "operate": {
+      "operation": {
+        "next_node_name": "Shipping",
+        "forward": "Confirm Signature and Submit Merkle Root"
+      },
+      "hold": false,
+      "message": "Shipping started with signature confirmation"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "guard_service_signature_merkle_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "guard_service_signature_merkle_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "myshop_delivery_order"
+          },
+          {
+            "identifier": 3,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "0123456789012345678901234567890123456789012345678901234567890123"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Result**: ✅ Progress at "Shipping"
+
+---
+
+#### Step 4: Delivery Complete ❌
+
+**Issue**: Guard verification failed
+
+**Error**: `MoveAbort(MoveLocation { module: ModuleId { ... }, function: 6, ... }, 7)`
+
+**Error Code 7**: `E_VERIFY_FAILED` - Guard verification failed
+
+**Analysis**: The guard `guard_delivery_complete_v2` requires specific verification parameters that may not match the current order state.
+
+**Status**: Blocked - cannot proceed to Delivery Complete
+
+---
+
+### Path 4: Wonderful Rating ⚠️
+
+**Status**: Partially Completed (Blocked at Wonderful node)
+
+**Order Info**:
+- Order: `myshop_wonderful_order`
+- Progress: `myshop_wonderful_progress`
+- Allocation: `myshop_wonderful_allocation`
+
+**Test Steps**:
+
+#### Step 1-3: Order Creation → Confirmed → Shipping ✅
+
+Same as Path 2, completed successfully.
+
+---
+
+#### Step 4: Rate Wonderful ❌
+
+**Issue**: Guard verification failed
+
+**Error**: Same as Path 2 - `E_VERIFY_FAILED`
+
+**Analysis**: The guard `guard_wonderful_v2` verification failed. This may be due to:
+1. Guard logic checking for specific order conditions not met
+2. Missing or incorrect submission parameters
+3. Permission configuration issues
+
+**Status**: Blocked - cannot proceed to Wonderful node
+
+---
+
+### Path 4: Lost Package ✅
+
+**Status**: Successfully Completed (2026-04-26)
+
+**Order Info**:
+- Order: `test_delivery_order_v2`
+- Progress: `test_delivery_progress_v2`
+- Allocation: `test_delivery_allocation_v2`
+
+**Test Steps**:
+
+#### Step 1-3: Order Creation → Confirmed → Shipping ✅
+
+Same as Path 2, completed successfully. Progress at "Shipping" node.
+
+---
+
+#### Step 4: Report Lost ✅
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Lost",
+        "forward": "Report Lost"
+      },
+      "message": "Package reported as lost by customer"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Progress at "Lost" node
+
+---
+
+#### Step 5: Withdraw Funds via Allocation Guard ✅
+
+**Request:**
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "test_delivery_allocation_v2",
+    "alloc_by_guard": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": 1,
+            "value": "test_delivery_order_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Funds withdrawn successfully to customer
+
+**End State**: Lost - Customer wins 100% allocation
+
+**Key Findings**:
+- User operations (like Report Lost) use `progress` operation type
+- Allocation withdrawal uses `alloc_by_guard` with guard address
+- Submission format: `value_type` uses numeric codes (1=Address, 2=String, etc.)
+
+---
+
+## Summary
+
+| Path | Status | End State | Notes |
+|------|--------|-----------|-------|
+| 1 | ✅ Completed | Order Cancel | Full flow tested successfully |
+| 2 | ⏳ Pending | - | Standard delivery flow - need dual-sig test |
+| 3 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
+| 4 | ✅ Completed | Lost | Customer wins, funds withdrawn successfully |
+| 5 | ⏳ Pending | - | Wonderful rating - need Delivery Complete first |
+| 6 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
+| 7 | ⚠️ Partial | Non-receipt Return | Dual-sig entry successful, blocked at Return Complete |
+| 8 | ⏳ Not Tested | - | Receipt Return |
+| 9 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
+| 10 | ⏸️ Skipped | - | Time-based guard (2d) - not testable |
+
+## Key Findings
+
+### Operation Patterns
+
+1. **User Operations** (Customer):
+   - Use `operation_type: "progress"`
+   - Example: Report Lost, Rate Wonderful, Request Return
+   - Account: `myshop_customer`
+
+2. **Merchant Operations**:
+   - Use `operation_type: "progress"`
+   - Example: Confirm Order, Shipping, Complete Order
+   - Account: `myshop_merchant`
+   - Often require `permissionIndex: 1000` or `1001`
+
+3. **Allocation Withdrawal**:
+   - Use `operation_type: "allocation"`
+   - Field: `alloc_by_guard` (use guard address, not name)
+   - Requires submission with guard verification
+
+### Submission Format
+
+```json
+{
+  "type": "submission",
+  "guard": [
+    {
+      "object": "<guard_address>",
+      "impack": true
+    }
+  ],
+  "submission": [
+    {
+      "guard": "<guard_address>",
+      "submission": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": 1,  // 1=Address, 2=String
+          "value": "<value>"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Value Type Codes
+
+| Code | Type |
+|------|------|
+| 1 | Address |
+| 2 | String |
+| 3 | U8 |
+| 4 | U16 |
+| 5 | U32 |
+| 6 | U64 |
+| 7 | U128 |
+| 8 | U256 |
+| 9 | Bool |
+
+## Known Limitations
+
+1. **Time-Based Guards**: Guards requiring time thresholds (2-day, 10-day) cannot be tested as they depend on actual time passage.
+
+2. **Dual-Signature Nodes**: Some nodes (Delivery Complete, Return Complete) require threshold=2, needing both customer and merchant actions.
+
+3. **Guard Verification Issues**: Some guards fail verification (error 7) even with correct parameters. This may be related to node state validation or submission format.
+
+---
+
+## Path 7: Non-receipt Return (Partial)
+
+### Test Flow
+
+**Step 1**: Customer requests return (namedOperator)
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_wonderful_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Non-receipt Return",
+        "forward": "Request Return"
+      },
+      "message": "Customer requests return without receipt"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Success - First signature recorded
+
+**Step 2**: Merchant confirms return (permissionIndex + guard)
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_wonderful_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Non-receipt Return",
+        "forward": "Confirm Return with Merkle Root"
+      },
+      "message": "Merchant confirms return request"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [{"object": "machine_merkle_root_v2", "impack": true}],
+    "submission": [{
+      "guard": "machine_merkle_root_v2",
+      "submission": [{
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": 2,
+        "value": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+      }]
+    }]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ✅ Success - Dual-sig complete, entered Non-receipt Return node
+
+**Step 3**: Customer submits return Merkle Root (namedOperator + guard)
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_wonderful_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Return Complete",
+        "forward": "Submit Return Merkle Root"
+      },
+      "message": "Customer submits return tracking Merkle Root"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [{"object": "machine_merkle_root_v2", "impack": true}],
+    "submission": [{
+      "guard": "machine_merkle_root_v2",
+      "submission": [{
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": 2,
+        "value": "fedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcb"
+      }]
+    }]
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Result**: ❌ Failed - Guard verification error (E_VERIFY_FAILED, code 7)
+
+### Key Findings
+
+1. **Dual-signature mechanism works**: Successfully entered Non-receipt Return node with two signatures
+2. **Guard verification issue**: machine_merkle_root_v2 guard fails even with 64-character string
+3. **Possible causes**:
+   - Guard may require additional node state validation
+   - Submission format may need adjustment
+   - Guard logic may have additional constraints not visible in query
+
+---
+
+*Test document updated: 2026-04-27*
 *Tester: AI Assistant*

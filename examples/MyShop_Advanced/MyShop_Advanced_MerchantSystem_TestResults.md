@@ -11,53 +11,52 @@ This document contains test results for **Part 2: Merchant System Setup** with p
 | Step | Description | Status |
 |------|-------------|--------|
 | 1 | Create Permission Object | Success |
-| 2 | Create Empty Service Object (Get Address) | Success |
-| 3 | Create Guards (8 guards for Machine) | Success |
-| 4 | Create Machine with Guards | Success |
-| 5 | Bind Machine to Service | Success |
-| 6 | Create Additional Guards for Service | Success |
-| 7 | Create Arbitration Object | Success |
-| 8 | Update Service and Publish | Success |
-| 9 | Create Reward Object | Success |
-| 10 | Add Reward Guards | Success |
+| 1b | Add Permission Indexes (1000, 1001) | Success |
+| 2 | Create Empty Service Object | Success |
+| 3 | Create Machine Guards (4 guards) | Success |
+| 4 | Create Service Guards (2 guards) | Success |
+| 5 | Create Machine with Guards | Success |
+| 6 | Publish Machine | Success |
+| 7 | Bind Machine to Service | Success |
+| 8 | Create Arbitration Object | Success |
+| 9 | Update Service and Publish | Success |
+| 10 | Create Reward Object | Success |
+| 11 | Create Reward Guards (3 guards) | Success |
+| 12 | Add Reward Guards to Reward | Success |
 
-### Guard Objects Created (8 total for Machine)
+### Machine Guards (4 total)
 
-| # | Guard Name | Address | Purpose |
-|---|------------|---------|---------|
-| 1 | `guard_merkle_root_v2` | `0x8644baca380888c11a35a9687b7ceb5611cecaff6a225eeeda1d0f4af792139d` | Verify Merkle Root string length = 64 |
-| 2 | `guard_service_signature_merkle_v2` | `0xa45f21fdcf987939655da059218e54197365e28bb614f7d9620531219d5886f0` | Verify service, signature, and Merkle Root |
-| 3 | `guard_delivery_complete_v2` | `0x6669df3af6abbdfbe6072f354d04d059348a50a87d64a1019c4142739f6050ee` | Verify Delivery Complete node |
-| 4 | `guard_wonderful_v2` | `0x42534c40643d04ec4c32821ee33681517e9f56ba5b3839c7a50d4fe2942a203a` | Verify Wonderful node |
-| 5 | `guard_lost_v2` | `0xcf91f4877edc06e50bfb1132e96e6c77c66bc8ccd2dbb35457ca089f09113351` | Verify Lost node |
-| 6 | `guard_return_complete_v2` | `0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382` | Verify Return Complete node |
-| 7 | `guard_return_fail_v2` | `0x3b3c5138b9abd5d7843c449ba7e8145ee9d3899a817f0c6703539013ae0ee89c` | Verify Return Fail node |
-| 8 | `guard_order_complete_v2` | `0x2b1fae955f63f688e0d03cd68601b52f392133afed106b21183775a60b29d2b8` | Verify Order Complete node |
+| # | Guard Name | Purpose |
+|---|------------|---------|
+| 1 | `machine_merkle_root_v2` | Verify Merkle Root string length = 64 |
+| 2 | `machine_service_order_v2` | Verify order belongs to Service and node is valid |
+| 3 | `machine_time_10d_v2` | Verify 10-day timeout (864000000 ms) |
+| 4 | `machine_time_2d_v2` | Verify 2-day timeout (172800000 ms) |
 
-### Additional Guards for Service (4 total)
+### Service Guards (2 total)
 
-| # | Guard Name | Address | Purpose |
-|---|------------|---------|---------|
-| 9 | `guard_merchant_win_v2` | `0xece766c71360200d805abb128f1fb3bf3c9e3eae366352c5de176ab5dd82c1b2` | Verify merchant winning nodes (Order Complete, Wonderful, Return Fail) |
-| 10 | `guard_customer_win_v2` | `0x9e6ce67f66c3e96df6b7bb5873da3d5076b3a15bb1d12e9182419f905cebbd15` | Verify customer winning nodes (Lost, Return Complete) |
-| 11 | `guard_time_10d_v2` | `0x51b290507808df00021825bb436184d34b1be27aed3590493f3d13003e0a3cb1` | Verify 10-day timeout (864000000 ms) |
-| 12 | `guard_time_2d_v2` | `0x7c69cfae4c0dd64f5e4ce6fedc9053ce3b664e4f3a82d69614649d97459329c4` | Verify 2-day timeout (172800000 ms) |
+| # | Guard Name | Purpose |
+|---|------------|---------|
+| 5 | `service_merchant_win_v2` | Verify merchant winning nodes (Order Complete, Wonderful, Return Fail) |
+| 6 | `service_customer_win_v2` | Verify customer winning nodes (Lost, Return Complete) |
 
-### Reward Guards (1 total)
+### Reward Guards (3 total)
 
-| # | Guard Name | Address | Purpose |
-|---|------------|---------|---------|
-| 13 | `guard_shipping_timeout_v2` | `0x8fdb3fc5f40265491111e5907bca8c4774375e2c0da38f7a2cf95ae7f03c0d94` | Verify shipping timeout for reward |
+| # | Guard Name | Purpose | Reward Amount |
+|---|------------|---------|---------------|
+| 7 | `reward_wonderful_v2` | Verify order at Wonderful node | 10000 |
+| 8 | `reward_lost_v2` | Verify order at Lost node | 20000 |
+| 9 | `reward_shipping_timeout_v2` | Verify order at Shipping node > 2 days | 30000 |
 
-### Key Object Addresses
+### Key Objects
 
-| Object | Name | Address |
-|--------|------|---------|
-| Permission | `myshop_permission_v2` | `0x4972b33431d3e1969dbbcd9e093c8052c30992492c5ceff5902b48f1a7cb11f8` |
-| Service | `three_body_signature_service_v2` | `0xbfb5fe351fd114d8c77e8d163f3e440b5320aa849d417ca8d72c34762a7d71f9` |
-| Machine | `myshop_advanced_machine_v2` | `0xa0b47cbec8cdb8f5358e4b3c2569de3fecb05161d2bce487cd564efa70bf81c0` |
-| Arbitration | `myshop_arbitration_v2` | `0xf0fca6d3841793681de4b10ce398897b99cb1b3b59c90a670c5729d38615d7ff` |
-| Reward | `myshop_reward_v2` | `0x5d4e9b75bf1b94a77c13aa60487898c5dba3b221a293f0fdd085bee9d20e277a` |
+| Object Type | Object Name |
+|-------------|-------------|
+| Permission | `myshop_permission_v2` |
+| Service | `three_body_signature_service_v2` |
+| Machine | `myshop_advanced_machine_v2` |
+| Arbitration | `myshop_arbitration_v2` |
+| Reward | `myshop_reward_v2` |
 
 ---
 
@@ -80,24 +79,53 @@ This document contains test results for **Part 2: Merchant System Setup** with p
       "name": "myshop_permission_v2",
       "replaceExistName": true
     },
-    "description": "Permission object for MyShop Advanced - with machine binding permission",
-    "table": {
-      "op": "add perm by entity",
-      "entity": {"name_or_address": "myshop_merchant"},
-      "index": [1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 306]
-    }
+    "description": "Permission for MyShop Advanced v2 - Multi-path order processing with delivery confirmation and return handling"
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Permission object created: `0x4972b33431d3e1969dbbcd9e093c8052c30992492c5ceff5902b48f1a7cb11f8`
+- Permission object created: `myshop_permission_v2`
 - Name: `myshop_permission_v2` (with replaceExistName=true)
-- Permission indexes added: 1010-1017, 306
+
+---
+
+### Step 1b: Add Permission Indexes to Permission Object
+
+Grant permission indexes 1000 and 1001 to `myshop_merchant`:
+
+**Request:**
+```json
+{
+  "operation_type": "permission",
+  "data": {
+    "object": "myshop_permission_v2",
+    "table": {
+      "op": "add perm by entity",
+      "entity": {
+        "name_or_address": "myshop_merchant"
+      },
+      "index": [1000, 1001]
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Response:**
+- Permission indexes 1000 and 1001 granted to `myshop_merchant`
+- **Note**: These permission indexes are used in Machine node forwards:
+  - `permissionIndex: 1000` - Used for Order Confirmed and Order Cancel nodes
+  - `permissionIndex: 1001` - Used for all other merchant operations (Shipping, Delivery Complete, etc.)
 
 ---
 
@@ -118,109 +146,317 @@ This document contains test results for **Part 2: Merchant System Setup** with p
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Service object created: `0xbfb5fe351fd114d8c77e8d163f3e440b5320aa849d417ca8d72c34762a7d71f9`
+- Service object created: `three_body_signature_service_v2`
 - Name: `three_body_signature_service_v2` (with replaceExistName=true)
 - Permission: `myshop_permission_v2`
 - Published: false (intentionally left unpublished for guard creation)
 
-**Note**: Service address recorded for Guard creation.
+**Note**: Service name can be used for Guard creation.
 
 ---
 
-### Step 3: Create Guards (Using Service Address)
+### Step 3: Create Guards
 
-All guards verify that orders belong to the Service. Service address: `0xbfb5fe351fd114d8c77e8d163f3e440b5320aa849d417ca8d72c34762a7d71f9`
+Create 9 guards total: 4 Machine guards, 2 Service guards, 3 Reward guards.
 
-#### Guard 1: Merkle Root Verification
+#### Guard 1: machine_merkle_root_v2
 
 **Request:**
 ```json
 {
   "operation_type": "guard",
   "data": {
-    "object": {
-      "name": "guard_merkle_root_v2"
+    "namedNew": {
+      "name": "machine_merkle_root_v2",
+      "replaceExistName": true
     },
     "description": "Verify Merkle Root string length equals 64 characters",
-    "logic": {
-      "and": [
-        {
-          "identifier": { "input": "string", "value": "merkle_root" },
-          "op": "length",
-          "value": { "input": "number", "value": 64 }
-        }
-      ]
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "String",
+        "name": "merkle_root"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 64,
+        "name": "length_64"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "calc_string_length",
+            "node": {
+              "type": "identifier",
+              "identifier": 0
+            }
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
     }
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Guard created: `0x8644baca380888c11a35a9687b7ceb5611cecaff6a225eeeda1d0f4af792139d`
+- Guard created: `0x647c43c3b731dc3481ed9dba43b9a401102465685cc8172c44ef824b539b40b9`
 
-#### Guard 2: Service Signature + Merkle Root
+#### Guard 2: machine_service_order_v2
 
 **Request:**
 ```json
 {
   "operation_type": "guard",
   "data": {
-    "object": {
-      "name": "guard_service_signature_merkle_v2"
+    "namedNew": {
+      "name": "machine_service_order_v2",
+      "replaceExistName": true
     },
-    "description": "Verify order belongs to Service, has valid signature, and Merkle Root length is 64",
-    "logic": {
-      "and": [
-        {
-          "identifier": { "input": "order", "value": "service" },
-          "op": "equal",
-          "value": { "input": "address", "value": "0xbfb5fe351fd114d8c77e8d163f3e440b5320aa849d417ca8d72c34762a7d71f9" }
-        },
-        {
-          "identifier": { "input": "order", "value": "has_witness" },
-          "op": "equal",
-          "value": { "input": "boolean", "value": true }
-        },
-        {
-          "identifier": { "input": "string", "value": "merkle_root" },
-          "op": "length",
-          "value": { "input": "number", "value": 64 }
-        }
-      ]
+    "description": "Verify order belongs to Service and current node is valid",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "progress_address"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "Address",
+        "value": "0xaa141f310000095b1bd1fd86586d15af866048fcbb68fbb321e1aec6ab56493d",
+        "name": "service_address"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Shipping",
+        "name": "node_name"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "node",
+            "node": {
+              "type": "logic_equal",
+              "nodes": [
+                {
+                  "type": "query",
+                  "query": "order.service",
+                  "object": {
+                    "identifier": 0,
+                    "convert_witness": 100
+                  },
+                  "parameters": []
+                },
+                {
+                  "type": "identifier",
+                  "identifier": 1
+                }
+              ]
+            }
+          },
+          {
+            "type": "node",
+            "node": {
+              "type": "logic_equal",
+              "nodes": [
+                {
+                  "type": "query",
+                  "query": "progress.current",
+                  "object": {
+                    "identifier": 0,
+                    "convert_witness": 100
+                  },
+                  "parameters": []
+                },
+                {
+                  "type": "identifier",
+                  "identifier": 2
+                }
+              ]
+            }
+          }
+        ]
+      }
     }
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Guard created: `0xa45f21fdcf987939655da059218e54197365e28bb614f7d9620531219d5886f0`
+- Guard created: `0xba43345b0af09e61758729850cfe1dc32ceed7899e7cb41c6b15b96c35f5dcc8`
 
-#### Guard 3-8: Node Verification Guards
+#### Guard 3: machine_time_10d_v2
 
-Created 6 additional guards for node verification:
+**Request:**
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "machine_time_10d_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order has been in current node for at least 10 days (864000000 ms)",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "progress_address"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 864000000,
+        "name": "ten_days_ms"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          {
+            "type": "calc_number_subtract",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Clock"
+              },
+              {
+                "type": "query",
+                "query": 1315,
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": 100
+                },
+                "parameters": []
+              }
+            ]
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
 
-| Guard | Address | Purpose |
-|-------|---------|---------|
-| guard_delivery_complete_v2 | 0x6669df3af6abbdfbe6072f354d04d059348a50a87d64a1019c4142739f6050ee | Verify Delivery Complete node |
-| guard_wonderful_v2 | 0x42534c40643d04ec4c32821ee33681517e9f56ba5b3839c7a50d4fe2942a203a | Verify Wonderful node |
-| guard_lost_v2 | 0xcf91f4877edc06e50bfb1132e96e6c77c66bc8ccd2dbb35457ca089f09113351 | Verify Lost node |
-| guard_return_complete_v2 | 0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382 | Verify Return Complete node |
-| guard_return_fail_v2 | 0x3b3c5138b9abd5d7843c449ba7e8145ee9d3899a817f0c6703539013ae0ee89c | Verify Return Fail node |
-| guard_order_complete_v2 | 0x2b1fae955f63f688e0d03cd68601b52f392133afed106b21183775a60b29d2b8 | Verify Order Complete node |
+**Response:**
+- Guard created: `0x24d263baf75888c6de698c6f8e7b024184876db9484e4a25915b868605973535`
+
+#### Guard 4: machine_time_2d_v2
+
+**Request:**
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "machine_time_2d_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order has been in current node for at least 2 days (172800000 ms)",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "progress_address"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 172800000,
+        "name": "two_days_ms"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          {
+            "type": "calc_number_subtract",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Clock"
+              },
+              {
+                "type": "query",
+                "query": 1315,
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": 100
+                },
+                "parameters": []
+              }
+            ]
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+**Response:**
+- Guard created: `0x6465313f91b2a09a4da85e3e2db267f7789db3e2c050ced62b356142268d4abc`
 
 ---
 
@@ -249,8 +485,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Submit Messenger Merkle Root",
-                  "permissionIndex": 1010,
-                  "weight": 1
+                  "permissionIndex": 1000,
+                  "weight": 1,
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 }
               ]
             }
@@ -265,8 +502,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Submit Cancellation Merkle Root",
-                  "permissionIndex": 1010,
-                  "weight": 1
+                  "permissionIndex": 1000,
+                  "weight": 1,
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 }
               ]
             }
@@ -281,9 +519,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Confirm Signature and Submit Merkle Root",
-                  "permissionIndex": 1011,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0xa45f21fdcf987939655da059218e54197365e28bb614f7d9620531219d5886f0" }
+                  "guard": { "guard": "machine_service_order_v2" }
                 }
               ]
             }
@@ -298,9 +536,8 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Confirm Receipt",
-                  "permissionIndex": 1012,
-                  "weight": 1,
-                  "guard": { "guard": "0x6669df3af6abbdfbe6072f354d04d059348a50a87d64a1019c4142739f6050ee" }
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             }
@@ -315,9 +552,8 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Rate Wonderful",
-                  "permissionIndex": 1013,
-                  "weight": 1,
-                  "guard": { "guard": "0x42534c40643d04ec4c32821ee33681517e9f56ba5b3839c7a50d4fe2942a203a" }
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             }
@@ -332,9 +568,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Auto Complete from Shipping",
-                  "permissionIndex": 1011,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0x2b1fae955f63f688e0d03cd68601b52f392133afed106b21183775a60b29d2b8" }
+                  "guard": { "guard": "machine_time_10d_v2" }
                 }
               ]
             },
@@ -344,9 +580,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Auto Complete from Delivery",
-                  "permissionIndex": 1011,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0x2b1fae955f63f688e0d03cd68601b52f392133afed106b21183775a60b29d2b8" }
+                  "guard": { "guard": "machine_time_2d_v2" }
                 }
               ]
             }
@@ -361,15 +597,14 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Report Lost",
-                  "permissionIndex": 1014,
-                  "weight": 1,
-                  "guard": { "guard": "0xcf91f4877edc06e50bfb1132e96e6c77c66bc8ccd2dbb35457ca089f09113351" }
+                  "permissionIndex": 1001,
+                  "weight": 1
                 },
                 {
                   "name": "Confirm Lost with Merkle Root",
-                  "permissionIndex": 1011,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0xcf91f4877edc06e50bfb1132e96e6c77c66bc8ccd2dbb35457ca089f09113351" }
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 }
               ]
             }
@@ -384,13 +619,14 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Request Return",
-                  "permissionIndex": 1015,
+                  "permissionIndex": 1001,
                   "weight": 1
                 },
                 {
                   "name": "Confirm Return with Merkle Root",
-                  "permissionIndex": 1011,
-                  "weight": 1
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 }
               ]
             }
@@ -405,13 +641,14 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Request Return with Receipt",
-                  "permissionIndex": 1016,
+                  "permissionIndex": 1001,
                   "weight": 1
                 },
                 {
                   "name": "Confirm Return Address with Merkle Root",
-                  "permissionIndex": 1011,
-                  "weight": 1
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 }
               ]
             }
@@ -426,9 +663,9 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Timeout Return Not Received",
-                  "permissionIndex": 1011,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0x3b3c5138b9abd5d7843c449ba7e8145ee9d3899a817f0c6703539013ae0ee89c" }
+                  "guard": { "guard": "machine_time_10d_v2" }
                 }
               ]
             }
@@ -443,15 +680,14 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 1017,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382" }
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
-                  "permissionIndex": 1011,
-                  "weight": 1,
-                  "guard": { "guard": "0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382" }
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             },
@@ -461,15 +697,14 @@ Created 6 additional guards for node verification:
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 1017,
+                  "permissionIndex": 1001,
                   "weight": 1,
-                  "guard": { "guard": "0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382" }
+                  "guard": { "guard": "machine_merkle_root_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
-                  "permissionIndex": 1011,
-                  "weight": 1,
-                  "guard": { "guard": "0xcc3d931c54419e41037dc4d9b2dd344a14a84c7bdf3c113ca710b978ff84b382" }
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             }
@@ -480,16 +715,18 @@ Created 6 additional guards for node verification:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Machine object created: `0xa0b47cbec8cdb8f5358e4b3c2569de3fecb05161d2bce487cd564efa70bf81c0`
+- Machine object created: `myshop_advanced_machine_v2`
 - Name: `myshop_advanced_machine_v2` (with replaceExistName=true)
 - Permission: `myshop_permission_v2`
 - Nodes added: 11 nodes with guards for multi-path workflow
+- Published: true
 
 ---
 
@@ -505,10 +742,16 @@ Created 6 additional guards for node verification:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
+
+**Response:**
+- Machine bound successfully to Service
+- Service: `three_body_signature_service_v2`
+- Machine: `myshop_advanced_machine_v2`
 
 **Response:**
 - Machine bound successfully
@@ -886,7 +1129,7 @@ Created 4 additional guards for Service order_allocators:
       "threshold": 0,
       "allocators": [
         {
-          "guard": "guard_merchant_win_v2",
+          "guard": "service_merchant_win_v2",
           "sharing": [
             {
               "who": {"Signer": "signer"},
@@ -896,7 +1139,7 @@ Created 4 additional guards for Service order_allocators:
           ]
         },
         {
-          "guard": "guard_customer_win_v2",
+          "guard": "service_customer_win_v2",
           "sharing": [
             {
               "who": {"GuardIdentifier": 0},
@@ -911,19 +1154,20 @@ Created 4 additional guards for Service order_allocators:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 **Response:**
-- Service updated and published: `0x489f...b6ae`
+- Service updated and published: `three_body_signature_service_v2`
 - Machine: `myshop_advanced_machine_v2` (already bound)
 - Published: true
 - Added:
   - Sales: "The Three-Body Problem + Author Signature"
   - Arbitrations: `myshop_arbitration_v2`
-  - Order allocators: `guard_merchant_win_v2`, `guard_customer_win_v2`
+  - Order allocators: `service_merchant_win_v2`, `service_customer_win_v2`
   - Customer required: `phone`, `email`, `shipping_address`
 
 ---

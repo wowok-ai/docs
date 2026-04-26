@@ -1,0 +1,222 @@
+[
+  {
+    "name": "Order Confirmed",
+    "pairs": [
+      {
+        "prev_node": "",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Confirm Order",
+            "permissionIndex": 1000,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Order Cancel",
+    "pairs": [
+      {
+        "prev_node": "Order Confirmed",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Cancel Order",
+            "permissionIndex": 1000,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Shipping",
+    "pairs": [
+      {
+        "prev_node": "Order Confirmed",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Confirm Signature and Submit Merkle Root",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_service_order_v2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Delivery Complete",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Confirm Delivery with Merkle Root",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
+          },
+          {
+            "name": "Timeout Auto-Complete (10 days)",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_time_10d_v2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Wonderful",
+    "pairs": [
+      {
+        "prev_node": "Delivery Complete",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Rate as Wonderful",
+            "namedOperator": "",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Order Complete",
+    "pairs": [
+      {
+        "prev_node": "Delivery Complete",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Complete Order",
+            "permissionIndex": 1001,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Lost",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Report Lost",
+            "namedOperator": "",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Non-receipt Return",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Request Return",
+            "namedOperator": "",
+            "weight": 1
+          },
+          {
+            "name": "Confirm Return with Merkle Root",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Receipt Return",
+    "pairs": [
+      {
+        "prev_node": "Delivery Complete",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Request Return with Receipt",
+            "namedOperator": "",
+            "weight": 1
+          },
+          {
+            "name": "Confirm Return Address with Merkle Root",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Return Fail",
+    "pairs": [
+      {
+        "prev_node": "Receipt Return",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Timeout Return Not Received",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_time_10d_v2" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Return Complete",
+    "pairs": [
+      {
+        "prev_node": "Receipt Return",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Submit Return Merkle Root",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
+          },
+          {
+            "name": "Confirm Return Received",
+            "permissionIndex": 1001,
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "prev_node": "Non-receipt Return",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Submit Return Merkle Root",
+            "namedOperator": "",
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
+          },
+          {
+            "name": "Confirm Return Received",
+            "permissionIndex": 1001,
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  }
+]
