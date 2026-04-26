@@ -126,7 +126,7 @@ service (Service Object)
 │   │   │   ├── payment_remark (string, optional)
 │   │   │   └── payment_index (number, optional)
 │   │   ├── agents (ManyAccountOrMark_Address, optional) - order agents
-│   │   ├── order_required_info (string, required) - contact ID or WTS proof
+│   │   ├── order_required_info (string, optional) - contact ID or WTS proof
 │   │   ├── transfer (AccountOrMark_Address, optional) - new owner
 │   │   ├── namedNewOrder (NamedObject, optional) - order name
 │   │   ├── namedNewAllocation (NamedObject, optional) - allocation name

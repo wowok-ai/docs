@@ -2,7 +2,9 @@
 
 An advanced e-commerce example demonstrating escrow with multiple order fund allocation modes, multi-party allocation, arbitration with voting guards, and WIP-based product verification.
 
-> **View Actual Execution Results**: See [MyShop\_Advanced\_TestResults.md](MyShop_Advanced_TestResults.md) for real testnet execution results with actual object addresses and transaction outputs.
+> **View Actual Execution Results**: 
+> - **Merchant System Setup**: See [MyShop\_Advanced\_MerchantSystem\_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for service construction test results
+> - **Customer Order Flow**: See [MyShop\_Advanced\_OrderFlow\_TestResults.md](MyShop_Advanced_OrderFlow_TestResults.md) for order testing results
 
 ***
 
@@ -317,9 +319,11 @@ Create a new permission object for the advanced shop.
 {
   "operation_type": "permission",
   "data": {
-    "namedNew": {
-      "name": "myshop_permission_v1"
-    }
+    "object": {
+      "name": "myshop_permission_v1",
+      "replaceExistName": true
+    },
+    "description": "Permission object for MyShop Advanced e-commerce system"
   },
   "env": {
     "account": "myshop_merchant",
@@ -927,6 +931,13 @@ All guards must verify that orders belong to the Service. The Service address is
         "b_submission": true,
         "value_type": "String",
         "name": "merkle_root"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 64,
+        "name": "expected_length"
       }
     ],
     "root": {
@@ -935,16 +946,15 @@ All guards must verify that orders belong to the Service. The Service address is
         "type": "logic_equal",
         "nodes": [
           {
-            "type": "query",
-            "query": 1104,
-            "object": {
+            "type": "calc_string_length",
+            "node": {
+              "type": "identifier",
               "identifier": 0
-            },
-            "parameters": []
+            }
           },
           {
-            "type": "value",
-            "value": 64
+            "type": "identifier",
+            "identifier": 1
           }
         ]
       }
@@ -996,6 +1006,13 @@ All guards must verify that orders belong to the Service. The Service address is
         "b_submission": true,
         "value_type": "String",
         "name": "merkle_root"
+      },
+      {
+        "identifier": 4,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 64,
+        "name": "expected_merkle_length"
       }
     ],
     "root": {
@@ -1433,6 +1450,27 @@ All guards must verify that orders belong to the Service. The Service address is
         "value_type": "Address",
         "value": "0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92",
         "name": "service_address"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Order Complete",
+        "name": "order_complete_node"
+      },
+      {
+        "identifier": 3,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Wonderful",
+        "name": "wonderful_node"
+      },
+      {
+        "identifier": 4,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Return Fail",
+        "name": "return_fail_node"
       }
     ],
     "root": {
@@ -1473,8 +1511,8 @@ All guards must verify that orders belong to the Service. The Service address is
                     "parameters": []
                   },
                   {
-                    "type": "value",
-                    "value": "Order Complete"
+                    "type": "identifier",
+                    "identifier": 2
                   }
                 ]
               },
@@ -1491,8 +1529,8 @@ All guards must verify that orders belong to the Service. The Service address is
                     "parameters": []
                   },
                   {
-                    "type": "value",
-                    "value": "Wonderful"
+                    "type": "identifier",
+                    "identifier": 3
                   }
                 ]
               },
@@ -1509,8 +1547,8 @@ All guards must verify that orders belong to the Service. The Service address is
                     "parameters": []
                   },
                   {
-                    "type": "value",
-                    "value": "Return Fail"
+                    "type": "identifier",
+                    "identifier": 4
                   }
                 ]
               }
@@ -1553,6 +1591,20 @@ All guards must verify that orders belong to the Service. The Service address is
         "value_type": "Address",
         "value": "0xb4ac7cd039380244807e3ce98f2c5489cb5cfb35d750174e0207a5d265ad5f92",
         "name": "service_address"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Lost",
+        "name": "lost_node"
+      },
+      {
+        "identifier": 3,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Return Complete",
+        "name": "return_complete_node"
       }
     ],
     "root": {
@@ -1593,8 +1645,8 @@ All guards must verify that orders belong to the Service. The Service address is
                     "parameters": []
                   },
                   {
-                    "type": "value",
-                    "value": "Lost"
+                    "type": "identifier",
+                    "identifier": 2
                   }
                 ]
               },
@@ -1611,8 +1663,8 @@ All guards must verify that orders belong to the Service. The Service address is
                     "parameters": []
                   },
                   {
-                    "type": "value",
-                    "value": "Return Complete"
+                    "type": "identifier",
+                    "identifier": 3
                   }
                 ]
               }
@@ -2829,3 +2881,9 @@ This advanced e-commerce example demonstrates:
 8. **Flexible Fund Allocation**: Clear rules for merchant win (Order Complete, Wonderful, Return Fail) vs customer win (Lost, Return Complete)
 
 The system ensures accountability through the "Who Completes the Key Action, Who Submits the Proof" principle, creating a clear audit trail for all critical actions.
+
+***
+
+> **View Actual Execution Results**:
+> - **Merchant System Setup**: See [MyShop\_Advanced\_MerchantSystem\_TestResults.md](MyShop_Advanced_MerchantSystem_TestResults.md) for service construction test results
+> - **Customer Order Flow**: See [MyShop\_Advanced\_OrderFlow\_TestResults.md](MyShop_Advanced_OrderFlow_TestResults.md) for order testing results
