@@ -76,91 +76,60 @@ This advanced example demonstrates an enterprise-grade e-commerce system with:
 
 ### Order Workflow (Multi-Path Milestone-Based)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Order Lifecycle Workflow                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  INITIAL NODES (No Previous Node):                                          │
-│  ┌─────────────────┐    ┌─────────────────┐                                 │
-│  │ Order Confirmed │    │  Order Cancel   │                                 │
-│  │ (Merchant)      │    │  (Merchant)     │                                 │
-│  │ Guard: Merkle64 │    │ Guard: Merkle64 │                                 │
-│  └────────┬────────┘    └─────────────────┘                                 │
-│           │                                                                 │
-│           ▼                                                                 │
-│  ┌─────────────────┐                                                        │
-│  │    Shipping     │◄── Previous: Order Confirmed                           │
-│  │   (Merchant)    │                                                        │
-│  │ Guard: Service  │                                                        │
-│  │ + Signature +   │                                                        │
-│  │   Merkle64      │                                                        │
-│  └────────┬────────┘                                                        │
-│           │                                                                 │
-│           ├──────────────────┬──────────────────┐                          │
-│           ▼                  ▼                  ▼                          │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐               │
-│  │Delivery Complete│ │    Wonderful    │ │  Order Complete │               │
-│  │   (Customer)    │ │   (Customer)    │ │  (Merchant)     │               │
-│  │    No Guard     │ │    No Guard     │ │ Time >= 10 days │               │
-│  └────────┬────────┘ └────────┬────────┘ │ (from Shipping) │               │
-│           │                   │          └─────────────────┘               │
-│           │                   │                   ▲                        │
-│           │                   │                   │                        │
-│           │                   └───────────────────┘                        │
-│           │                           │                                    │
-│           │                    Time >= 2 days                              │
-│           │                    (from Delivery)                             │
-│           │                                                                │
-│           ├──────────────────┬──────────────────┐                         │
-│           ▼                  ▼                  ▼                         │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐              │
-│  │      Lost       │ │Non-receipt Return│ │Receipt Return  │              │
-│  │  (Dual-Sig,     │ │  (Dual-Sig,      │ │ (Dual-Sig,      │              │
-│  │   Threshold=2)  │ │   Threshold=2)   │ │  Threshold=2)   │              │
-│  │ User: No Guard  │ │ User: No Guard   │ │ User: No Guard  │              │
-│  │ Merchant:Merkle │ │ Merchant:Merkle  │ │ Merchant:Merkle │              │
-│  └─────────────────┘ └────────┬────────┘ └────────┬────────┘              │
-│                               │                   │                       │
-│                               │                   ▼                       │
-│                               │          ┌─────────────────┐              │
-│                               │          │  Return Fail    │              │
-│                               │          │  (Merchant)     │              │
-│                               │          │ Time >= 10 days │              │
-│                               │          └─────────────────┘              │
-│                               │                   │                       │
-│                               │                   ▼                       │
-│                               │          ┌─────────────────┐              │
-│                               └────────►│  Return Complete │              │
-│                                          │  (Dual-Sig,      │              │
-│                                          │  Threshold=2)    │              │
-│                                          │ User: Merkle64   │              │
-│                                          │ Merchant: No Guard  │              │
-│                                          └─────────────────┘              │
-│                                                                             │
-│  FUND ALLOCATION:                                                          │
-│  ├─ Merchant 100%: Order Complete | Wonderful | Return Fail                │
-│  └─ Customer 100%: Lost | Return Complete                                   │
-│                                                                             │
-│  REWARD COMPENSATION (from Reward Pool):                                   │
-│  ├─ Wonderful Node: 10000 reward                                           │
-│  ├─ Lost Node: 20000 compensation                                          │
-│  └─ Shipping Timeout (>2 days): 20000 compensation                         │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    classDef initial fill:#e1f5ff,stroke:#3399ff,stroke-width:2px;
+    classDef merchant fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
+    classDef customer fill:#d4edda,stroke:#28a745,stroke-width:2px;
+    classDef dualsig fill:#f8d7da,stroke:#dc3545,stroke-width:2px;
+    classDef start fill:#999,stroke:#666,stroke-width:2px;
+
+    START(( )):::start
+
+    OC["Order Confirmed (Merchant)"]:::initial
+    OR["Order Cancel (Merchant)"]:::initial
+
+    SH["Shipping (Merchant)"]:::merchant
+
+    DC["Delivery Complete (Customer)"]:::customer
+    WO["Wonderful (Customer)"]:::customer
+    OC2["Order Complete (Merchant)<br/>Time >= 10 days"]:::merchant
+    LO["Lost (Dual-Sig)<br/>Threshold = 2"]:::dualsig
+
+    OC3["Order Complete (Merchant)"]:::merchant
+    NR["Non-receipt Return (Dual-Sig)<br/>Threshold = 2"]:::dualsig
+
+    RR["Receipt Return (Dual-Sig)<br/>Threshold = 2"]:::dualsig
+    RF["Return Fail (Merchant)<br/>Time >= 10 days"]:::merchant
+    RC["Return Complete (Dual-Sig)<br/>Threshold = 2"]:::dualsig
+
+    START --> OC
+    START --> OR
+    OC --> SH
+    SH --> DC
+    SH --> WO
+    SH --> OC2
+    SH --> LO
+    
+    DC --> OC3
+    DC --> NR
+    
+    DC --> RR
+    RR --> RF
+    RR --> RC
+    NR --> RC
 ```
 
-**Normal Flow**: Order Created → Order Confirmed (with Merkle Root) → Shipping Started → Delivery Complete/Wonderful/Order Complete
-**Return Flows**:
+#### Fund Allocation
 
-- Non-receipt Return: From Shipping, dual-signature
-- Receipt Return: From Delivery Complete, dual-signature → Return Complete or Return Fail
-  **Fund Release**:
-- Merchant 100%: Order Complete, Wonderful, Return Fail
-- Customer 100%: Lost, Return Complete
-  **Reward/Compensation**:
-- Wonderful Node: 10000 reward from pool
-- Lost Node: 20000 compensation from pool
+- **Merchant 100%**: Order Complete | Wonderful | Return Fail
+- **Customer 100%**: Lost | Return Complete
+
+#### Reward Compensation
+
+- **Wonderful Node**: 10000 reward
+- **Lost Node**: 20000 compensation
+- **Shipping Timeout (>2 days)**: 20000 compensation
 
 ***
 
@@ -260,7 +229,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 | 2     | **Service (Empty)**  | Permission      | Create Service without publishing first to obtain its address. This address is needed for Guard verification. |
 | 3     | **Guards**           | Service Address | Guards must verify that orders belong to the correct Service. They query Service address and Progress state.  |
 | 4     | **Arbitration**      | None            | Arbitration is independent but needs to be bound to Service. Create before Service update.                    |
-| 5     | **Service (Update)** | Guards, Arb     | Update Service with order_allocators, arbitrations that reference Guards and Arbitration. Then publish.       |
+| 5     | **Service (Update)** | Guards, Arb     | Update Service with order\_allocators, arbitrations that reference Guards and Arbitration. Then publish.      |
 | 6     | **Reward**           | Service, Guards | Reward pool needs Service address for Guard verification and guards for claim validation.                     |
 
 ### Key Design Decisions
@@ -270,7 +239,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 3. **Service Address Before Guards**: Guards verify `order.service == service_address`. Create Service first (unpublished), get address, then create Guards.
 4. **Guards Before Service Update**: Service's `order_allocators` field references guards for fund distribution logic.
 5. **Arbitration Before Service Update**: Arbitration must be created before Service update so it can be bound to Service.
-6. **Service Publishing Last**: Only publish Service after all guards and arbitration are ready and order_allocators are configured.
+6. **Service Publishing Last**: Only publish Service after all guards and arbitration are ready and order\_allocators are configured.
 7. **Reward Last**: Reward references Service address in guards for claim verification. Create Shipping timeout guard after Service is available.
 
 ### Simplified Build Sequence
@@ -457,18 +426,24 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Order Confirmed",
           "pairs": [
             {
-              "permission": 1010,
-              "forward": "Submit Messenger Merkle Root"
+              "prev_node": "",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Submit Messenger Merkle Root",
+                  "permissionIndex": 1010,
+                  "weight": 1
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -487,18 +462,24 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Order Cancel",
           "pairs": [
             {
-              "permission": 1010,
-              "forward": "Submit Cancellation Merkle Root"
+              "prev_node": "",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Submit Cancellation Merkle Root",
+                  "permissionIndex": 1010,
+                  "weight": 1
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -517,19 +498,25 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Shipping",
           "pairs": [
             {
-              "permission": 1011,
-              "forward": "Confirm Signature and Submit Merkle Root",
-              "guard": "guard_service_signature_merkle_v1"
+              "prev_node": "Order Confirmed",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Confirm Signature and Submit Merkle Root",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_service_signature_merkle_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -548,19 +535,25 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Delivery Complete",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Confirm Receipt",
-              "guard": "guard_delivery_complete_v1"
+              "prev_node": "Shipping",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Confirm Receipt",
+                  "permissionIndex": 0,
+                  "weight": 1,
+                  "guard": { "guard": "guard_delivery_complete_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -579,19 +572,25 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Wonderful",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Rate Wonderful",
-              "guard": "guard_wonderful_v1"
+              "prev_node": "Shipping",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Rate Wonderful",
+                  "permissionIndex": 0,
+                  "weight": 1,
+                  "guard": { "guard": "guard_wonderful_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -610,24 +609,37 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Order Complete",
           "pairs": [
             {
-              "permission": 1011,
-              "forward": "Auto Complete from Shipping",
-              "guard": "guard_order_complete_v1"
+              "prev_node": "Shipping",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Auto Complete from Shipping",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_order_complete_v1" }
+                }
+              ]
             },
             {
-              "permission": 1011,
-              "forward": "Auto Complete from Delivery",
-              "guard": "guard_order_complete_v1"
+              "prev_node": "Delivery Complete",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Auto Complete from Delivery",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_order_complete_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -646,24 +658,31 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Lost",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Report Lost",
-              "guard": "guard_lost_v1"
-            },
-            {
-              "permission": 1011,
-              "forward": "Confirm Lost with Merkle Root",
-              "guard": "guard_lost_v1"
+              "prev_node": "Shipping",
+              "threshold": 2,
+              "forwards": [
+                {
+                  "name": "Report Lost",
+                  "permissionIndex": 0,
+                  "weight": 1,
+                  "guard": { "guard": "guard_lost_v1" }
+                },
+                {
+                  "name": "Confirm Lost with Merkle Root",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_lost_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 2
+          ]
         }
       ]
     }
@@ -682,22 +701,29 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Non-receipt Return",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Request Return"
-            },
-            {
-              "permission": 1011,
-              "forward": "Confirm Return with Merkle Root"
+              "prev_node": "Shipping",
+              "threshold": 2,
+              "forwards": [
+                {
+                  "name": "Request Return",
+                  "permissionIndex": 0,
+                  "weight": 1
+                },
+                {
+                  "name": "Confirm Return with Merkle Root",
+                  "permissionIndex": 1011,
+                  "weight": 1
+                }
+              ]
             }
-          ],
-          "threshold": 2
+          ]
         }
       ]
     }
@@ -716,22 +742,29 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Receipt Return",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Request Return with Receipt"
-            },
-            {
-              "permission": 1011,
-              "forward": "Confirm Return Address with Merkle Root"
+              "prev_node": "Delivery Complete",
+              "threshold": 2,
+              "forwards": [
+                {
+                  "name": "Request Return with Receipt",
+                  "permissionIndex": 0,
+                  "weight": 1
+                },
+                {
+                  "name": "Confirm Return Address with Merkle Root",
+                  "permissionIndex": 1011,
+                  "weight": 1
+                }
+              ]
             }
-          ],
-          "threshold": 2
+          ]
         }
       ]
     }
@@ -750,19 +783,25 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Return Fail",
           "pairs": [
             {
-              "permission": 1011,
-              "forward": "Timeout Return Not Received",
-              "guard": "guard_return_fail_v1"
+              "prev_node": "Receipt Return",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Timeout Return Not Received",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_return_fail_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 1
+          ]
         }
       ]
     }
@@ -781,24 +820,49 @@ Add all workflow nodes to the Machine.
   "operation_type": "machine",
   "data": {
     "object": "myshop_advanced_machine_v1",
-    "nodes": {
+    "node": {
       "op": "add",
       "nodes": [
         {
           "name": "Return Complete",
           "pairs": [
             {
-              "permission": 0,
-              "forward": "Submit Return Merkle Root",
-              "guard": "guard_return_complete_v1"
+              "prev_node": "Receipt Return",
+              "threshold": 2,
+              "forwards": [
+                {
+                  "name": "Submit Return Merkle Root",
+                  "permissionIndex": 0,
+                  "weight": 1,
+                  "guard": { "guard": "guard_return_complete_v1" }
+                },
+                {
+                  "name": "Confirm Return Received",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_return_complete_v1" }
+                }
+              ]
             },
             {
-              "permission": 1011,
-              "forward": "Confirm Return Received",
-              "guard": "guard_return_complete_v1"
+              "prev_node": "Non-receipt Return",
+              "threshold": 2,
+              "forwards": [
+                {
+                  "name": "Submit Return Merkle Root",
+                  "permissionIndex": 0,
+                  "weight": 1,
+                  "guard": { "guard": "guard_return_complete_v1" }
+                },
+                {
+                  "name": "Confirm Return Received",
+                  "permissionIndex": 1011,
+                  "weight": 1,
+                  "guard": { "guard": "guard_return_complete_v1" }
+                }
+              ]
             }
-          ],
-          "threshold": 2
+          ]
         }
       ]
     }
@@ -1596,10 +1660,10 @@ All guards must verify that orders belong to the Service. The Service address is
     "root": {
       "type": "node",
       "node": {
-        "type": "logic_greater_or_equal",
+        "type": "logic_as_u256_greater_or_equal",
         "nodes": [
           {
-            "type": "math_subtract",
+            "type": "calc_number_subtract",
             "nodes": [
               {
                 "type": "context",
@@ -1661,10 +1725,10 @@ All guards must verify that orders belong to the Service. The Service address is
     "root": {
       "type": "node",
       "node": {
-        "type": "logic_greater_or_equal",
+        "type": "logic_as_u256_greater_or_equal",
         "nodes": [
           {
-            "type": "math_subtract",
+            "type": "calc_number_subtract",
             "nodes": [
               {
                 "type": "context",
@@ -1701,7 +1765,7 @@ All guards must verify that orders belong to the Service. The Service address is
 
 Create an Arbitration object as the final on-chain mechanism for protecting user rights.
 
-**Prompt**: Create arbitration object "myshop_arbitration_v1".
+**Prompt**: Create arbitration object "myshop\_arbitration\_v1".
 
 ```json
 {
@@ -1723,9 +1787,9 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 
 ### Step 7: Update Service with Allocators, Arbitration and Publish
 
-Update Service with order_allocators, sales, arbitration binding, and publish.
+Update Service with order\_allocators, sales, arbitration binding, and publish.
 
-**Prompt**: Update service "three_body_signature_service_v1" with order allocators, arbitration and publish.
+**Prompt**: Update service "three\_body\_signature\_service\_v1" with order allocators, arbitration and publish.
 
 ```json
 {
@@ -1868,10 +1932,10 @@ Create a guard to verify Shipping node time exceeds 2 days (172800000 ms).
             ]
           },
           {
-            "type": "logic_greater_or_equal",
+            "type": "logic_as_u256_greater_or_equal",
             "nodes": [
               {
-                "type": "math_subtract",
+                "type": "calc_number_subtract",
                 "nodes": [
                   {
                     "type": "context",
