@@ -51,8 +51,26 @@ reward (Reward Object)
 │   ├── claim (Guard to claim reward, optional)
 │   ├── description (description, optional)
 │   ├── coin_add (add funds, optional)
+│   │   ├── Option 1: { balance: number } - specify amount
+│   │   └── Option 2: { coin: string } - use specified Coin object ID
 │   ├── receive (receive CoinWrapper, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recently received
+│   │   └── Option 2: { balance, token_type, received } - specify received balance
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string) - token type like "CoinWrapper<0x2::wow::WOW>"
+│   │       └── received (array) - received CoinWrapper object records
+│   │           └── [{ id: string, balance: number, payment: string }]
 │   ├── guard_add (add RewardGuards, optional)
+│   │   └── Array of RewardGuard objects
+│   │       ├── guard (string) - Guard object ID or name
+│   │       ├── recipient (object) - Recipient specification
+│   │       │   ├── Option 1: { type: "Signer", Signer: boolean } - Signer ID
+│   │       │   ├── Option 2: { type: "Entity", Entity: string } - Fixed entity ID
+│   │       │   └── Option 3: { type: "GuardIdentifier", GuardIdentifier: number } - From Guard table
+│   │       ├── amount (object) - Reward amount
+│   │       │   └── { type: "Fixed", value: number } - Fixed amount
+│   │       ├── expiration_time (number, optional) - Expiration timestamp in milliseconds
+│   │       └── store_from_id (number or null, optional) - Guard table index for record storage
 │   ├── guard_remove_expired (remove expired, optional)
 │   ├── guard_expiration_time (expiration time, optional)
 │   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
@@ -421,6 +439,7 @@ Add RewardGuard objects to the reward pool, remove expired guards, and set guard
 | `recipient` | object | Yes | Recipient specification |
 | `amount` | object | Yes | Reward amount |
 | `expiration_time` | number | No | Expiration time in milliseconds (Unix timestamp) |
+| `store_from_id` | number or null | No | Guard table data index for record storage. The value at this index (address or number, including submitted values) will be stored in the record for Guard verification purposes, such as controlling operation frequency |
 
 #### ⚠️ Important Notes About `expiration_time`
 

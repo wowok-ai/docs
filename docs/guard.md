@@ -1138,6 +1138,43 @@ Step 2: Use Passport in Messenger (see [messenger.md](messenger.md)) to verify s
 
 **Important**: Context nodes return non-bool types! Never use them directly in logic gates like logic_and or logic_or.
 
+### Vector Operation Nodes
+
+| Node Type | Return Type | Description | Parameters |
+|-----------|-------------|-------------|------------|
+| `vec_length` | U64 | Get vector length | `node: GuardNode` (must be Vec type) |
+| `vec_contains_bool` | Bool | Check if vector contains boolean values | `nodes: GuardNode[]` (2-8 nodes: VecBool + Bool values) |
+| `vec_contains_address` | Bool | Check if vector contains address values | `nodes: GuardNode[]` (2-8 nodes: VecAddress + Address values) |
+| `vec_contains_string` | Bool | Check if vector contains string values | `nodes: GuardNode[]` (2-8 nodes: VecString + String values) |
+| `vec_contains_string_nocase` | Bool | Check if vector contains strings (case-insensitive) | `nodes: GuardNode[]` (2-8 nodes: VecString + String values) |
+| `vec_contains_number` | Bool | Check if vector contains number values | `nodes: GuardNode[]` (2-8 nodes: VecU8-VecU256 + U8-U256 values) |
+| `vec_indexof_bool` | U64 | Find boolean in vector | `nodeLeft: GuardNode` (VecBool), `nodeRight: GuardNode` (Bool), `order: "forward" \| "backward"` |
+| `vec_indexof_address` | U64 | Find address in vector | `nodeLeft: GuardNode` (VecAddress), `nodeRight: GuardNode` (Address), `order: "forward" \| "backward"` |
+| `vec_indexof_string` | U64 | Find string in vector | `nodeLeft: GuardNode` (VecString), `nodeRight: GuardNode` (String), `order: "forward" \| "backward"` |
+| `vec_indexof_string_nocase` | U64 | Find string in vector (case-insensitive) | `nodeLeft: GuardNode` (VecString), `nodeRight: GuardNode` (String), `order: "forward" \| "backward"` |
+| `vec_indexof_number` | U64 | Find number in vector | `nodeLeft: GuardNode` (VecU8-VecU256), `nodeRight: GuardNode` (U8-U256), `order: "forward" \| "backward"` |
+
+### Reward Record Query Nodes
+
+| Node Type | Return Type | Description | Parameters |
+|-----------|-------------|-------------|------------|
+| `query_reward_record_find` | Value | Find first/last reward record matching filters | `object: { identifier: number }`, `find: "first" \| "last"`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+| `query_reward_record_count` | U64 | Count reward records matching filters | `object: { identifier: number }`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+| `query_reward_record_exists` | Bool | Check if reward record exists matching filters | `object: { identifier: number }`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+
+### Progress History Query Nodes
+
+| Node Type | Return Type | Description | Parameters |
+|-----------|-------------|-------------|------------|
+| `query_progress_history_find` | Value | Find first/last history entry | `object: { identifier: number }`, `where: { node?, nextNode?, timeMin?, timeMax?, indexMin?, indexMax? }`, `find: "first" \| "last"` |
+| `query_progress_history_session_find` | Value | Find first/last session in history | `object: { identifier: number }`, `historyIdx: GuardNode`, `where: { nextNode? }`, `find: "first" \| "last"` |
+| `query_progress_history_session_forward_find` | Value | Find first/last forward operation | `object: { identifier: number }`, `historyIdx: GuardNode`, `sessionIdx: GuardNode`, `where: { who?, operation?, accomplished?, timeMin?, timeMax? }`, `find: "first" \| "last"` |
+| `query_progress_history_session_count` | U64 | Count sessions in history entry | `object: { identifier: number }`, `historyIdx: GuardNode` |
+| `query_progress_history_session_forward_count` | U64 | Count forward operations in session | `object: { identifier: number }`, `historyIdx: GuardNode`, `sessionIdx: GuardNode` |
+| `query_progress_history_session_forward_retained_submission_count` | U64 | Count retained submissions in forward | `object: { identifier: number }`, `historyIdx: GuardNode`, `sessionIdx: GuardNode`, `forwardIdx: GuardNode` |
+
+**Note on Range Filter Types**: All time and amount range filters (`timeMin`, `timeMax`, `amountMin`, `amountMax`, `indexMin`, `indexMax`) use **string type** to represent U64 values. This ensures compatibility with JavaScript's number precision limitations.
+
 ---
 
 ## Query Instructions and Witness Types
@@ -1192,6 +1229,22 @@ When querying Progress objects (directly or via witness), these instructions are
 | 1254 | `progress.task some` | Bool | Whether task object is set | None |
 | 1255 | `progress.task` | Address | Task object ID | None |
 | 1272 | `progress.history count` | U64 | Number of history records | None |
+
+### New BCS Query Instructions (ID 1270-1276)
+
+These instructions use BCS serialization for efficient querying:
+
+| ID | Name | Return Type | Description | Query Parameters (BCS encoded) |
+|----|------|-------------|-------------|-------------------------------|
+| 1270 | `progress.history.find` | U64 | Find history index by conditions | `HistoryFindConditions`: `{ node?, next_node?, time_min?, time_max?, index_min?, index_max?, find }` |
+| 1271 | `progress.session.forward.time` | U64 | Get forward operation timestamp | `[next_node_name, forward_name]` |
+| 1275 | `progress.history.session.find` | U64 | Find session index in history | `SessionFindConditions`: `{ next_node?, find }` |
+| 1276 | `progress.history.session.forward.find` | U64 | Find forward operation index | `ForwardFindConditions`: `{ who?, operation?, accomplished?, time_min?, time_max?, find }` |
+| 1277 | `progress.history.session.count` | U64 | Count sessions in history | None |
+| 1278 | `progress.history.session.forward.count` | U64 | Count forward operations | None |
+| 1279 | `progress.history.session.forward.retained_submission.count` | U64 | Count retained submissions | None |
+
+**Note**: For query instructions 1270, 1275, and 1276, use the corresponding Guard node types (`query_progress_history_find`, `query_progress_history_session_find`, `query_progress_history_session_forward_find`) which automatically handle BCS serialization.
 
 ### Example: Query Order's Progress Status
 

@@ -1,0 +1,237 @@
+# WoWok AI Skill Framework (.WOWOK)
+
+> 本文件是WoWok MCP Server的AI使用指引总纲。目标：让AI在调用任何WoWok工具前，具备正确的规划能力、上下文理解能力和安全意识。
+> 配套schema子文件位于同目录下，文件名格式为 `schema-<tool_name>.md`。
+
+---
+
+## 一、总体原则（使用任何工具前必须遵守）
+
+### 1.1 安全红线
+- **绝不泄露私钥**：account_operation返回的secret字段仅限本地使用，禁止在日志、对话或网络中传播。
+- **金额敏感操作必须确认**：任何涉及token转移、支付、奖励分配的操作，必须在执行前向用户明确复述金额、币种、接收方。
+- **区分LOCAL与ON-CHAIN**：标有"LOCAL ONLY"的工具（account_operation, local_mark_operation, local_info_operation）永不触链，不会消耗gas；其余工具可能产生链上交易。
+- **个人资料永久公开**：personal对象的所有数据上链后永久公开，提醒用户谨慎填写隐私信息。
+
+### 1.2 网络与Token
+- **默认网络**：testnet（如无特殊指定）。
+- **默认Token**：`0x2::wow::WOW`，精度9位（1 WOW = 1_000_000_000）。
+- **多Token支持**：任何操作支持自定义token_type，但必须先通过 `query_toolkit (token_list)` 查询精度，绝不可假设精度。
+- **金额格式**：
+  - 带单位：`"2WOW"`、`"10.5USDT"` —— 系统按token精度自动转换。
+  - 纯数字：`"2"`、`"100"` —— 用于非金额参数（计数、索引等）。
+
+### 1.3 命名解析优先级
+- 所有接受 `name_or_address` 的字段，解析规则为：
+  1. 若值以 `0x` 开头 → 视为地址直接使用。
+  2. 否则 → 视为本地名称（name）或本地mark名称，按 `local_mark_first` 策略查找。
+- 空字符串 `""` 表示使用默认账户。
+
+### 1.4 通用调用模式
+- **查询优先**：任何修改操作前，先查询当前状态（如query_toolkit查询对象、账户余额）。
+- **分页处理**：链上列表查询（events, table, received等）均支持cursor/limit分页，大数据量必须循环获取。
+- **缓存意识**：query_toolkit支持no_cache参数，敏感读操作可强制刷新。
+
+### 1.5 命名与管理规范（大型任务必遵）
+当用户要求构建复杂系统（涉及多个对象、Guard、Machine、Service等）且未指定命名时，AI**必须主动提出命名方案**供用户确认。命名规范：
+- **项目前缀**：使用统一的项目标识前缀（如 `myshop_`），避免不同项目对象混淆。
+- **版本后缀**：对象命名应包含版本后缀（如 `_v2`），便于迭代管理。
+- **语义清晰**：名称应反映对象类型和用途（如 `myshop_advanced_machine_v2`、`service_merchant_win_v2`）。
+- **命名记录**：创建对象后立即通过 `local_mark_operation` 为对象地址添加本地标记，便于后续引用。
+
+### 1.6 连续构建的缓存控制
+在一次性连续构建多个相互依赖的对象时，**必须在env中设置 `no_cache: true`**：
+- **原因**：前一个对象创建后，本地缓存可能未及时刷新，导致后续对象查询不到新创建的对象状态（如Service地址、Guard验证结果等）。
+- **典型场景**：创建Service → 创建引用Service的Guard → 创建引用Guard的Machine → 绑定Machine到Service。每一步都可能依赖前一步的结果。
+- **例外**：纯查询操作、非连续的单步操作可不设置。
+
+### 1.7 对象创建顺序原则（依赖链管理）
+复杂系统的对象创建必须遵循依赖顺序，错误的顺序会导致创建失败或对象无法关联：
+1. **Permission先行**：Permission是基础设施，Machine和Service都需要引用Permission。
+2. **Service先创建后发布**：Service需先创建（publish=false）获取地址，供Guard引用；Guard创建完成后再发布Service。
+3. **Guard依赖Service地址**：Guard需要验证订单是否属于正确的Service，因此需要Service的地址或名称。
+4. **Machine依赖Guard和Permission**：Machine的节点forward需要配置Guard和PermissionIndex。
+5. **Machine绑定在Service发布前**：Service一旦发布（publish=true），Machine不可再绑定。
+6. **Arbitration独立创建**：Arbitration可在任何时候创建，但需在Service发布前绑定到Service。
+7. **Reward Pool最后**：Reward Pool需要引用Service和Guard，应在它们都创建完成后最后创建。
+
+### 1.8 "谁完成关键动作，谁提交证明"原则
+为确保责任清晰和防止争议，完成关键动作的一方必须负责提交链上证明：
+- **商家发货**：商家通过Messenger收到客户地址并发送运单号 → **商家提交Merkle Root**证明通信完成。
+- **客户退货**：客户通过Messenger发送退货运单号给商家 → **客户提交Merkle Root**证明通信完成。
+- **双方确认**：需要双方签名的操作（如Lost、Return），双方各自提交确认。
+
+---
+
+## 二、工具总览与快速选择
+
+| 工具名 | 类型 | 核心用途 | Schema文件 |
+|--------|------|----------|------------|
+| `onchain_operations` | ON-CHAIN | 15种链上对象的创建与管理 | [schema-onchain_operations.md](schema-onchain_operations.md) |
+| `account_operation` | LOCAL | 本地账户生命周期管理 | [schema-account_operation.md](schema-account_operation.md) |
+| `local_mark_operation` | LOCAL | 本地地址簿/标记管理 | [schema-local_mark_operation.md](schema-local_mark_operation.md) |
+| `local_info_operation` | LOCAL | 本地敏感信息存储 | [schema-local_info_operation.md](schema-local_info_operation.md) |
+| `query_toolkit` | QUERY | 本地+链上数据统一查询入口 | [schema-query_toolkit.md](schema-query_toolkit.md) |
+| `onchain_events` | QUERY | 链上事件订阅与查询 | [schema-onchain_events.md](schema-onchain_events.md) |
+| `wowok_buildin_info` | QUERY | 协议内置常量/权限/指令查询 | [schema-wowok_buildin_info.md](schema-wowok_buildin_info.md) |
+| `wip_file` | LOCAL/ON-CHAIN | WIP承诺文件生成/验证/签名 | [schema-wip_file.md](schema-wip_file.md) |
+| `messenger_operation` | ON-CHAIN/LOCAL | 加密消息/文件/WTS/列表管理 | [schema-messenger_operation.md](schema-messenger_operation.md) |
+| `guard2file` | QUERY | 导出Guard定义到本地文件 | [schema-guard2file.md](schema-guard2file.md) |
+| `machineNode2file` | QUERY | 导出Machine节点到本地文件 | [schema-machineNode2file.md](schema-machineNode2file.md) |
+| `documents_and_learn` | QUERY | 获取官方文档URL | （无schema，仅一个topic参数） |
+
+---
+
+## 三、各工具核心经验与原则
+
+### 3.1 onchain_operations（最复杂工具）
+**规划原则**：
+1. 该工具通过 `operation_type` 字段区分15种子操作，属于**discriminated union**结构。
+2. 调用前必须明确：要操作的对象类型 → 准备data字段 → 可选env/submission。
+3. **Guard和Permission是基础设施**：很多对象（service, machine, progress等）依赖Guard做验证、依赖Permission做访问控制。创建业务对象前，通常需要先创建或引用Guard/Permission。
+4. **Machine与Progress的关系**：Machine是工作流模板，Progress是模板实例。创建Service时绑定Machine，用户下单后自动生成Progress。
+5. **Order是核心交易对象**：Order关联service、progress、machine、arbitration、allocation等多个对象，管理Order时需理解其完整生命周期。
+
+**常见错误避免**：
+- 不要混淆 `permission`（访问控制对象）和 `guard`（验证规则对象）。
+- Guard的root节点支持直接定义（type='node'）或从文件加载（type='file'），复杂Guard建议先用guard2file导出模板编辑。
+- Machine的node字段支持增量更新或完整替换（通过json/markdown文件），复杂工作流建议先用machineNode2file导出模板。
+- **Service必须先创建（publish=false）再绑定Machine**：一旦publish=true，Machine不可再绑定。
+
+### 3.2 account_operation
+**规划原则**：
+1. 所有操作围绕本地账户对象，不涉及区块链（除了faucet和transfer/get会发交易）。
+2. 账户有名称（name，本地唯一）和地址（address，链上唯一）。
+3. **suspend/resume**：suspend后账户无法签名交易，但地址仍在链上；resume可恢复。
+4. **messenger字段**：启用messenger后账户才能参与加密通信，m是messenger名称。
+
+### 3.3 local_mark_operation / local_info_operation
+**规划原则**：
+1. 纯本地数据，永不触链，用于AI辅助用户管理地址别名和敏感信息。
+2. mark是给地址起别名+打标签；info是存储结构化隐私数据（如收货地址）。
+3. 两者都支持add/remove/clear操作，info额外支持reset（修改已有条目内容）。
+
+### 3.4 query_toolkit
+**规划原则**：
+1. 该工具通过 `query_type` 区分约20种查询子操作，是**统一查询入口**。
+2. 查询链上对象时，需要知道对象ID（或名称）；查询本地数据时不需要网络。
+3. **table_item查询**：不同对象的数据表使用不同的key类型（string/u64/address/name+address），必须选择正确的query_type子类型。
+4. **received查询**：用于查询某个对象收到的token或其他对象，支持分页。
+
+### 3.5 onchain_events
+**规划原则**：
+1. 6种事件类型：ArbEvent, NewOrderEvent, ProgressEvent, DemandPresentEvent, DemandFeedbackEvent, NewEntityEvent。
+2. 支持cursor分页和asc/desc排序，适合构建事件监听和同步逻辑。
+3. 首次查询cursor传null，后续用返回的nextCursor。
+
+### 3.6 wowok_buildin_info
+**规划原则**：
+1. 5种查询类型：constants, built-in permissions, guard instructions, current network, value types。
+2. **创建Permission前**：必须先查询built-in permissions了解可用权限索引。
+3. **创建Guard前**：必须先查询guard instructions了解所有可用操作符和查询指令。
+4. 该工具是设计Guard和Permission的**前置依赖**。
+
+### 3.7 wip_file
+**规划原则**：
+1. 4种子操作：generate（从markdown+图片生成.wip）、verify（完整性校验）、sign（数字签名）、wip2html（转HTML）。
+2. WIP是"Witness Immutable Promise"，用于在网络传输中向AI传递不可篡改的信息。
+3. generate时支持本地图片路径、网络URL或base64 data URL。
+4. sign操作需要指定account，会产生链上签名（但文件本身仍在本地）。
+
+### 3.8 messenger_operation
+**规划原则**：
+1. 该工具包含14种子操作，分为：消息通信（send_message/send_file/watch_messages/watch_conversations）、WTS相关（generate_wts/verify_wts/sign_wts/wts2html）、列表管理（blacklist/friendslist/guardlist/settings）、状态标记（mark_messages_as_viewed/mark_conversation_as_viewed）、上链证明（proof_message）。
+2. **send_message/send_file**：from/to可以是字符串或对象；to支持AccountOrMark_AddressAISchema（字符串简写或完整对象）。
+3. **watch_conversations**：支持unreadOnly过滤，快速定位未读会话；支持previewMessageCount控制预览消息数。
+4. **watch_messages**：支持viewed状态过滤（viewed: true/false），支持多维度时间过滤。
+5. **WTS（Witness Timestamp Signature）**：用于生成对话的时间戳签名证据，可转换为HTML展示。
+6. **guardlist**：与blacklist/friendslist不同，guardlist存储的是Guard地址+passport有效期配置。
+
+### 3.9 guard2file / machineNode2file
+**规划原则**：
+1. 这两个工具是**只读导出工具**，将链上已有对象的定义导出为本地JSON/Markdown文件。
+2. 用途：在创建新的Guard/Machine时，基于已有对象做模板修改。
+3. 导出后编辑文件，再通过onchain_operations创建新对象时引用这些文件。
+
+---
+
+## 四、典型工作流模式
+
+### 模式A：创建并发布一个服务（Service）
+遵循1.7节对象创建顺序原则：
+1. `wowok_buildin_info` → 查询built-in permissions（如需自定义权限）。
+2. `onchain_operations (permission)` → 创建权限对象（如需多人管理）。
+3. `onchain_operations (service)` → **创建空Service（publish=false）**，获取Service地址/名称。
+4. `onchain_operations (guard)` → 创建引用Service的验证规则（如购买Guard、资金分配Guard）。
+5. `onchain_operations (machine)` → 创建工作流模板，节点forward引用Guard和PermissionIndex。
+6. `onchain_operations (service)` → 绑定Machine到Service（必须在发布前）。
+7. `onchain_operations (arbitration)` → 创建仲裁对象（可选，需在发布前绑定）。
+8. `onchain_operations (service)` → 配置完整Service（sales、order_allocators、arbitrations等）并发布（bPublished=true）。
+9. `onchain_operations (reward)` → 创建奖励池（如需，依赖已发布的Service和Guard）。
+
+### 模式B：用户下单与订单处理
+1. `query_toolkit (onchain_objects)` → 查询服务详情和售卖项。
+2. `onchain_operations (order)` → 创建订单（购买服务）。
+3. `query_toolkit (onchain_objects)` → 查询订单关联的Progress。
+4. `onchain_operations (progress)` → 按Machine定义的流程推进订单状态。
+5. 如需仲裁：`onchain_operations (order)` → 创建仲裁申请。
+
+### 模式C：创建奖励池并发放
+1. `onchain_operations (guard)` → 创建领取奖励的验证规则。
+2. `onchain_operations (reward)` → 创建奖励池，绑定Guard条件。
+3. 用户领取：`onchain_operations (reward)` → 提交满足Guard条件的交易领取奖励。
+
+### 模式D：加密通信全流程
+1. `account_operation` → 确保账户已启用messenger（m字段）。
+2. `messenger_operation (send_message/send_file)` → 发送加密消息或文件。
+3. `messenger_operation (watch_conversations)` → 查看会话列表（unreadOnly=true快速定位未读）。
+4. `messenger_operation (watch_messages)` → 查看消息详情（支持viewed过滤）。
+5. `messenger_operation (generate_wts)` → 生成对话证据文件（WTS）。
+6. `messenger_operation (proof_message)` → 将消息证据上链。
+
+### 模式E：本地账户与地址管理
+1. `account_operation (gen)` → 生成新账户。
+2. `account_operation (faucet)` → 获取测试币（仅限testnet/localnet）。
+3. `local_mark_operation (add)` → 为常用地址添加别名和标签。
+4. `local_info_operation (add)` → 存储收货地址等敏感信息。
+5. `query_toolkit (account_list/local_mark_list)` → 查询管理本地数据。
+
+---
+
+## 五、Schema文件索引
+
+每个工具的完整schema结构详见同目录下对应文件：
+
+- [schema-onchain_operations.md](schema-onchain_operations.md) — 15种链上对象操作总览+每个对象的完整字段结构
+- [schema-account_operation.md](schema-account_operation.md) — 账户生成/恢复/转账/签名等
+- [schema-local_mark_operation.md](schema-local_mark_operation.md) — 本地地址标记CRUD
+- [schema-local_info_operation.md](schema-local_info_operation.md) — 本地隐私信息CRUD
+- [schema-query_toolkit.md](schema-query_toolkit.md) — 20+种查询操作总览
+- [schema-onchain_events.md](schema-onchain_events.md) — 6种事件类型结构
+- [schema-wowok_buildin_info.md](schema-wowok_buildin_info.md) — 5种协议信息查询
+- [schema-wip_file.md](schema-wip_file.md) — WIP文件生成/验证/签名/转HTML
+- [schema-messenger_operation.md](schema-messenger_operation.md) — 14种消息操作
+- [schema-guard2file.md](schema-guard2file.md) — Guard导出
+- [schema-machineNode2file.md](schema-machineNode2file.md) — Machine节点导出
+
+---
+
+## 六、AI调用决策速查
+
+当用户提出需求时，按以下顺序判断：
+
+1. **是否需要修改链上状态？**
+   - 是 → 进入onchain_operations或messenger_operation或wip_file(sign)
+   - 否 → 进入query类工具或local类工具
+2. **操作的是本地数据还是链上数据？**
+   - 本地账户/地址/隐私 → account/local_mark/local_info
+   - 链上对象查询 → query_toolkit / onchain_events / guard2file / machineNode2file
+   - 协议元信息 → wowok_buildin_info / documents_and_learn
+3. **涉及对象类型判断**：
+   - 服务/订单/支付 → onchain_operations (service/order/payment)
+   - 工作流/进度 → onchain_operations (machine/progress)
+   - 验证规则 → onchain_operations (guard) 或 guard2file
+   - 权限管理 → onchain_operations (permission)
+   - 资金分配 → onchain_operations (allocation/treasury/reward)
+   - 加密通信 → messenger_operation
+   - 承诺文件 → wip_file

@@ -49,20 +49,48 @@ treasury (Treasury Object)
 │   │   └── name|tags|type_parameter|permission (create new object)
 │   ├── description (description, optional)
 │   ├── receive (receive CoinWrapper, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recently received
+│   │   └── Option 2: { balance, token_type, received } - specify received balance
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string) - token type like "CoinWrapper<0x2::wow::WOW>"
+│   │       └── received (array) - received CoinWrapper object records
+│   │           └── [{ id: string, balance: number, payment: string }]
 │   ├── deposit (deposit, optional)
 │   │   ├── coin (asset, required)
-│   │   ├── by_external_deposit_guard (optional)
+│   │   │   ├── Option 1: { balance: number } - specify amount
+│   │   │   └── Option 2: { coin: string } - use specified Coin object ID
+│   │   ├── by_external_deposit_guard (string, optional) - Guard ID for external verification
 │   │   ├── payment_info (required)
-│   │   └── namedNewPayment (optional)
+│   │   │   ├── for_object (string or null, optional) - Payment for a specific object ID
+│   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
+│   │   │   ├── remark (string) - Payment record remark
+│   │   │   └── index (number or string) - Payment record index
+│   │   └── namedNewPayment (object, optional) - Create new Payment object after deposit
+│   │       └── name (string, optional) - Name for the new Payment object
 │   ├── withdraw (withdrawal, optional)
 │   │   ├── amount (amount, required)
-│   │   ├── recipient (recipient, required)
+│   │   │   ├── Option 1: { fixed: number } - Fixed withdrawal amount (Permission only)
+│   │   │   └── Option 2: { by_external_withdraw_guard: string } - Guard-verified withdrawal
+│   │   ├── recipient (string) - ID or account to receive assets
 │   │   ├── payment_info (required)
-│   │   └── namedNewPayment (optional)
+│   │   │   ├── for_object (string or null, optional) - Payment for a specific object ID
+│   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
+│   │   │   ├── remark (string) - Payment record remark
+│   │   │   └── index (number or string) - Payment record index
+│   │   └── namedNewPayment (object, optional) - Create new Payment object after withdrawal
+│   │       └── name (string, optional) - Name for the new Payment object
 │   ├── external_deposit_guard (optional)
-│   │   └── op (add|set|remove|clear)
+│   │   ├── op (string) - Operation type: "add", "set", "remove", "clear"
+│   │   └── guards (array, required for add/set/remove) - Array of AmountFromDepositGuard
+│   │       ├── guard (string) - Guard object ID or name
+│   │       ├── identifier (number or null, optional) - Guard Table data index for amount
+│   │       └── store_from_id (number or null, optional) - Guard table index for record storage
 │   ├── external_withdraw_guard (optional)
-│   │   └── op (add|set|remove|clear)
+│   │   ├── op (string) - Operation type: "add", "set", "remove", "clear"
+│   │   └── guards (array, required for add/set/remove) - Array of AmountFromWithdrawGuard
+│   │       ├── guard (string) - Guard object ID or name
+│   │       ├── identifier (number, required) - Guard Table data index for amount
+│   │       └── store_from_id (number or null, optional) - Guard table index for record storage
 │   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
 │   │   ├── Option 1: "recently" (string) - receive all recent objects
 │   │   ├── Option 2: Array of received objects
@@ -615,6 +643,14 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 | `data.external_deposit_guard.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
 | `data.external_deposit_guard.guards` | array | No | Guard list | Required for add/set/remove |
 
+### AmountFromDepositGuard Structure
+
+| Field | Type | Required | Description |
+|-------|------|------|------|
+| `guard` | string | Yes | Guard object ID or name |
+| `identifier` | number or null | No | Guard Table data index, whose corresponding value is the storable amount. If null, deposit amount is unlimited |
+| `store_from_id` | number or null | No | Guard table data index for record storage. The value at this index (address or number, including submitted values) will be stored in the record for Guard verification purposes, such as controlling operation frequency |
+
 ### Important Notes
 
 ⚠️ **External Guard Function**: Allows non-Permission users to deposit through Guard verification.
@@ -802,6 +838,14 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 | `data.object` | string | Yes | Treasury name or ID | |
 | `data.external_withdraw_guard.op` | string | Yes | Operation type | "add", "set", "remove", "clear" |
 | `data.external_withdraw_guard.guards` | array | No | Guard list | Required for add/set/remove |
+
+### AmountFromWithdrawGuard Structure
+
+| Field | Type | Required | Description |
+|-------|------|------|------|
+| `guard` | string | Yes | Guard object ID or name |
+| `identifier` | number | Yes | Guard Table data index, whose corresponding value is the withdrawable amount |
+| `store_from_id` | number or null | No | Guard table data index for record storage. The value at this index (address or number, including submitted values) will be stored in the record for Guard verification purposes, such as controlling operation frequency |
 
 ### Important Notes
 
