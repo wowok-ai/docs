@@ -558,6 +558,19 @@ OnchainOperations
 3. **table字段**：定义Guard的数据表结构，identifier范围0-255，用于submission中按索引提交数据。
 4. **Guard创建后不可修改**：设计时需充分考虑所有边界情况，建议先用guard2file导出已有类似Guard做参考。
 
+**GuardNode 查询类型（部分列举）**：
+- **基础逻辑运算**：`logic_and`, `logic_or`, `logic_not`, `logic_equal`, `logic_as_u256_greater_or_equal` 等
+- **数值计算**：`calc_number_add`, `calc_number_subtract`, `calc_number_multiply`, `calc_number_divide` 等
+- **字符串操作**：`calc_string_length`, `calc_string_contains`, `calc_string_indexof` 等
+- **类型转换**：`convert_number_address`, `convert_address_number`, `convert_number_string`, `convert_safe_u8/u16/u32/u64/u128/u256` 等
+- **向量操作**：`vec_length`, `vec_contains_bool/address/string/number`, `vec_indexof_*` 等
+- **数据查询**：`query` - 查询任意对象数据，`identifier` - 获取Guard表中的常量值
+- **Reward记录查询**：`query_reward_record_find`, `query_reward_record_count`, `query_reward_record_exists` - 查询奖励领取记录
+- **Progress历史查询**：`query_progress_history_find`, `query_progress_history_session_find`, `query_progress_history_session_forward_find`, `query_progress_history_session_count`, `query_progress_history_session_forward_count`, `query_progress_history_session_forward_retained_submission_count` - 查询进度历史记录
+- **系统上下文**：`context` - 获取Signer地址、Clock时间戳、Guard对象ID
+
+> 完整Guard指令列表请通过 `wowok_buildin_info` 工具查询 `guard instructions` 获取。
+
 ---
 
 ### personal — 公开身份档案
