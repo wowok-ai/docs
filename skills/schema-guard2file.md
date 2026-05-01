@@ -1,44 +1,81 @@
 # Schema: guard2file
 
-> 📄 将链上Guard对象的定义导出到本地JSON或Markdown文件，便于查看、编辑和创建新Guard。
+> 📤 Export a Guard object's definition from the blockchain to a local JSON or Markdown file for editing and creating new Guard objects.
 
 ---
 
-## 顶层结构
+## Top-Level Structure
 
 ```
-Guard2File_Input
-├── guard: string — Guard对象ID或名称（必填）
-├── file_path: string — 输出文件路径（必填）
-├── format?: "json" \| "markdown" — 输出格式（默认"json"）
-└── env?: { no_cache?: boolean, network?: "localnet" \| "testnet", account?: string }
-```
-
----
-
-## 输出结构
-
-```
-Guard2File_OutputWrapped
-└── result: Guard2File_Output (discriminatedUnion by status)
-    ├── status: "success" → data: { file_path, format, guard_object }
-    └── status: "error" → error: string
+Guard2File
+├── guard: string              // Guard object ID or name to export (required)
+├── file_path: string          // Output file path (absolute or relative) (required)
+├── format?: "json" | "markdown"  // Output format (default: "json")
+└── env?: CallEnv              // Optional environment
 ```
 
 ---
 
-## AI调用规划要点
+## Parameters
 
-1. **用途定位**：该工具是**只读导出**，不修改链上状态。用于：
-   - 查看已有Guard的完整定义结构。
-   - 基于已有Guard做模板修改后创建新Guard。
-2. **与query_toolkit的区别**：
-   - query_toolkit查询Guard返回的是运行时对象状态（ObjectGuard）。
-   - guard2file导出的是Guard的定义结构（节点树、table等），可直接用于创建新Guard。
-3. **工作流程**：
-   ```
-   guard2file(已有GuardID) → 本地编辑文件 → onchain_operations(guard, root.type="file", root.file=编辑后的文件)
-   ```
-4. **format选择**：
-   - json：机器友好，适合程序化编辑。
-   - markdown：人类友好，适合手动编辑和阅读。
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| guard | string | Yes | Guard object ID or local name to export |
+| file_path | string | Yes | Absolute or relative path for output file |
+| format | "json" \| "markdown" | No | Output format. JSON = structured data; Markdown = human-readable with tables |
+| env | CallEnv | No | Account, network, and other environment settings |
+
+---
+
+## Usage Patterns
+
+### Pattern 1: Export for Backup
+
+```json
+{
+  "guard": "my_guard",
+  "file_path": "./backups/my_guard.json",
+  "format": "json"
+}
+```
+
+### Pattern 2: Export for Editing and Re-creation
+
+```json
+{
+  "guard": "template_guard",
+  "file_path": "./templates/new_guard.md",
+  "format": "markdown"
+}
+```
+
+**After editing**: Use the exported file as `root.file_path` in `onchain_operations (guard)` to create a new Guard.
+
+---
+
+## Output Format Details
+
+### JSON Format
+
+Contains the complete Guard definition:
+- `description`: Guard description
+- `table`: Data table definitions with identifiers, types, and submission flags
+- `root`: Rule tree with logic, instructions, queries, and children
+- `rely`: Dependent Guard references
+
+### Markdown Format
+
+Human-readable format with:
+- Guard metadata header
+- Data table as markdown table
+- Rule tree as nested structure
+- Instruction and query details
+
+---
+
+## AI Planning Notes
+
+1. **Guard immutability**: Guards cannot be modified after creation. Export → edit → create new is the standard workflow.
+2. **Template reuse**: Export well-tested Guards as templates for similar use cases.
+3. **Version control**: Store exported Guard definitions in version control for auditability.
+4. **Cross-reference**: After exporting, use `wowok_buildin_info (guard instructions)` to understand instruction semantics when editing.

@@ -1,119 +1,93 @@
 # Schema: wip_file
 
-> 🤝 WIP（Witness Immutable Promise）文件操作：生成、验证、签名、转HTML。
+> 📄 WIP (Witness Immutable Promise) file operations: generate (create WIP files from markdown and images), verify (integrity check), sign (add signatures), or wip2html (convert to HTML).
 
 ---
 
-## 顶层结构（Discriminated Union by type）
+## Top-Level Structure
 
 ```
-WipOperations
-├── type: "generate" → options: WipGenerationOptions, outputPath: string
-├── type: "verify" → wipFilePath: string, hash_equal?: string, requireSignature?: boolean
-├── type: "sign" → wipFilePath: string, account?: string, outputPath?: string
-└── type: "wip2html" → wipPath: string, options?: WipToHtmlOptions
-```
-
----
-
-## generate — 生成WIP文件
-
-### WipGenerationOptions
-```
-├── markdown_text: string(max 10000) — Markdown格式文本内容
-├── images?: ImageSource[] (max 10项) — 图片列表
-└── account?: string — 签名账户（可选，指定则自动签名）
-```
-
-### ImageSource
-```
-├── source: string — 图片路径/URL/dataURL
-├── id?: string — 图片引用ID（可选，未提供则按索引自动生成如image_0）
-└── filename?: string — 文件名（可选）
-```
-
-**source支持格式**：
-1. 本地路径：`/path/to/image.png`、`C:\Users\name\image.jpg`
-2. 网络URL：`https://example.com/image.png`
-3. Data URL：`data:image/png;base64,iVBORw0K...`
-
-### 输出
-```
-{ result: { type: "generate", filePath: string } }
+WipFileOperation
+├── Exactly one operation type (generate / verify / sign / wip2html)
+└── env?: CallEnv
 ```
 
 ---
 
-## verify — 验证WIP文件
+## Operations
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| wipFilePath | string | **是** | WIP文件路径/URL/dataURL |
-| hash_equal | string | 否 | 预期hash值，提供则先比对hash |
-| requireSignature | boolean | 否 | true时若无签名则验证失败 |
+### generate — Create WIP File
 
-### 输出
 ```
-{ result: { type: "verify", valid: boolean, error?: string, hashValid: boolean, signatureValid?: boolean, hasSignature: boolean, signatures?: WipSignatureVerification[] } }
+{
+  "generate": {
+    "markdown_file": "./document.md",     // Source markdown file path (required)
+    "image_files": ["./image1.png"],      // Attached image files (optional)
+    "output_file": "./output.wip"         // Output WIP file path (required)
+  }
+}
 ```
+
+**Process**:
+1. Reads markdown content
+2. Embeds referenced images
+3. Computes content hash
+4. Generates tamper-evident WIP file
 
 ---
 
-## sign — 签名WIP文件
+### verify — Verify WIP File Integrity
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| wipFilePath | string | **是** | WIP文件路径/URL |
-| account | string | 否 | 签名账户，空为默认账户 |
-| outputPath | string | 否 | 输出路径，未指定则加signed_前缀 |
+```
+{
+  "verify": {
+    "wip_file": "./document.wip"         // WIP file to verify (required)
+  }
+}
+```
 
-### 输出
-```
-{ result: { type: "sign", filePath: string } }
-```
+**Returns**: Verification result including hash match status and signature validity.
 
 ---
 
-## wip2html — 转换为HTML
+### sign — Sign WIP File
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| wipPath | string | **是** | 单文件、目录或URL |
-| options?.title | string | 否 | HTML页面标题 |
-| options?.theme | "light" \| "dark" | 否 | 主题 |
-| options?.outputPath | string | 否 | 输出路径 |
+```
+{
+  "sign": {
+    "wip_file": "./document.wip",         // WIP file to sign (required)
+    "account": "signer_account"           // Signing account name (optional, default account)
+  }
+}
+```
 
-### 输出
-```
-{ result: { type: "wip2html", html?: string, filePath?: string, files?: string[] } }
-```
+**Returns**: Updated WIP file with added signature.
 
 ---
 
-## WIP文件内部结构
+### wip2html — Convert WIP to HTML
 
 ```
-WipFile
-├── wip: string — 根标识，值为schema URL
-├── payload: WipPayload
-│   ├── content: { text, format: "plain"|"markdown"|"html" }
-│   └── media: WipMedia[]
-│       └── { id, type: ImageMimeType, data: base64, filename? }
-└── meta: WipMeta
-    ├── type: "wip"
-    ├── version: string
-    ├── created: ISO 8601时间
-    ├── hash: string (格式: sha256:hexString)
-    ├── algorithm: "sha256"
-    └── signature?: WipSignature | WipSignature[]
-        └── { value, publicKey, algorithm: "Ed25519", address? }
+{
+  "wip2html": {
+    "wip_file": "./document.wip",         // Source WIP file (required)
+    "output_file": "./output.html"        // Output HTML file path (required)
+  }
+}
 ```
+
+**Returns**: HTML rendering of the WIP content with embedded images.
 
 ---
 
-## AI调用规划要点
+## AI Planning Notes
 
-1. **生成WIP前**：确认markdown_text不超过10000字符，图片不超过10张且每张不超过2MB，总大小不超过10MB。
-2. **验证WIP时**：如需确保文件来自特定方，设requireSignature=true。
-3. **签名与账户操作签名的区别**：wip_file(sign)是对WIP文件内容做数字签名；account_operation(signData)是对任意数据做签名。
-4. **wip2html目录处理**：传入目录路径时，会转换目录下所有.wip文件。
+1. **WIP purpose**: Create tamper-proof documents for information transfer and commercial promises. The content hash ensures any modification is detectable.
+2. **Signature chain**: Multiple parties can sign a WIP file to create a chain of evidence.
+3. **Use cases**:
+   - Service terms and conditions
+   - Delivery confirmations
+   - Arbitration evidence
+   - Commercial agreements
+4. **Integration with Service**: Set `wip_hash` in `ServiceSale` items to bind WIP files to service offerings.
+5. **Integration with Messenger**: WIP files can be referenced in encrypted messages for secure document exchange.

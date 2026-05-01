@@ -1,143 +1,175 @@
 # Schema: account_operation
 
-> 🔒 100% LOCAL, NEVER ON-CHAIN（除faucet/transfer/get外）。管理WoWok账户本地生命周期。
+> 🔒 100% LOCAL, NEVER ON-CHAIN. Manage WoWok accounts locally on the device. All operations are private and never touch the blockchain.
 
 ---
 
-## 顶层结构
+## Top-Level Structure
 
 ```
 AccountOperation
-├── gen?: { name?, m?, replaceExistName? }
-├── faucet?: { name_or_address?, network }
-├── suspend?: { name_or_address? }
-├── resume?: { address, name? }
-├── rename?: { name_or_address?, new_name }
-├── swap_name?: { name1?, name2? }
-├── transfer?: { name_or_address_from?, name_or_address_to?, amount, token_type?, network? }
-├── get?: { name_or_address?, balance_required, token_type?, network? }
-├── signData?: { name_or_address?, data, data_encoding? }
-└── messenger?: { name_or_account?, m }
-```
-
-**约束**：至少指定一个操作字段；各操作互斥（一次调用只执行一种）。
-
----
-
-## 操作详解
-
-### gen — 生成新账户
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name | string(max 64) | 否 | 账户名称，空则为默认账户 |
-| m | string(max 64) \| null | 否 | 启用messenger的名称；null表示不启用 |
-| replaceExistName | boolean | 否 | 是否覆盖同名账户（默认false） |
-
-**返回**：{ address, name?, m? }
-
-### faucet — 领取测试币
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address | string | 否 | 目标账户，空为默认账户 |
-| network | "localnet" \| "testnet" | **是** | 网络 |
-
-**返回**：{ name_or_address?, result: FaucetCoinInfo[], network }
-
-### suspend — 暂停账户
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address | string | 否 | 空为默认账户 |
-
-**返回**：{ name_or_address?, success }
-
-### resume — 恢复账户
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| address | string(0x+64hex) | **是** | 账户地址 |
-| name | string(max 64) | 否 | 恢复后赋予的新名称 |
-
-**返回**：{ address, name?, success }
-
-### rename — 重命名账户
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address | string | 否 | 源账户 |
-| new_name | string(max 64) | **是** | 新名称（不能是地址格式） |
-
-**返回**：{ name_or_address?, new_name, success }
-
-### swap_name — 交换两个账户名称
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name1 | string | 否 | 第一个账户名称 |
-| name2 | string | 否 | 第二个账户名称 |
-
-**返回**：{ name1?, name2?, success }
-
-### transfer — 转账（⚠️ 链上交易）
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address_from | string | 否 | 发送方，空为默认账户 |
-| name_or_address_to | string | 否 | 接收方，空为默认账户 |
-| amount | number \| string | **是** | 金额（带单位如"2WOW"或纯数字） |
-| token_type | string | 否 | 默认"0x2::wow::WOW" |
-| network | "localnet" \| "testnet" | 否 | 网络 |
-
-**返回**：WowTransactionBlockResponse（完整交易回执）
-
-### get — 按金额获取Coin对象（⚠️ 链上交易）
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address | string | 否 | 账户，空为默认 |
-| balance_required | number \| string | **是** | 所需余额 |
-| token_type | string | 否 | 默认WOW |
-| network | "localnet" \| "testnet" | 否 | 网络 |
-
-**返回**：{ coin_address?, name_or_address?, balance_required, token_type?, network? }
-
-### signData — 数据签名
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_address | string | 否 | 签名账户 |
-| data | string | **是** | 待签数据 |
-| data_encoding | "utf8" \| "base64" \| "hex" | 否 | 数据编码，默认utf8 |
-
-**返回**：{ name_or_address?, signature, publicKey, address }
-
-### messenger — 启用/禁用messenger
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| name_or_account | string | 否 | 目标账户 |
-| m | string(max 64) \| null | **是** | messenger名称；null=禁用 |
-
-**返回**：{ name_or_account?, m }
-
----
-
-## 输出结构
-
-```
-AccountOperationOutputWrapped
-└── result: AccountOperationOutput (discriminatedUnion by status)
-    ├── status: "success" → data: AccountOperationResult
-    │   ├── gen?: { address, name?, m? }
-    │   ├── faucet?: { name_or_address?, result[], network }
-    │   ├── suspend?: { name_or_address?, success }
-    │   ├── resume?: { address, name?, success }
-    │   ├── rename?: { name_or_address?, new_name, success }
-    │   ├── swap_name?: { name1?, name2?, success }
-    │   ├── transfer?: WowTransactionBlockResponse
-    │   ├── get?: { coin_address?, name_or_address?, balance_required, token_type?, network? }
-    │   ├── signData?: { name_or_address?, signature, publicKey, address }
-    │   └── messenger?: { name_or_account?, m }
-    └── status: "error" → error: string
+├── Exactly one operation type (see below)
+└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
 ```
 
 ---
 
-## AI调用规划要点
+## Operations
 
-1. **生成账户前**：询问用户是否需要命名，是否启用messenger。
-2. **转账前**：必须复述"从X向Y转账Z个TOKEN"，确认token_type和金额格式。
-3. **faucet仅限测试网**：mainnet无faucet功能。
-4. **suspend后**：该账户无法签名任何链上交易，需resume恢复。
+### gen — Generate New Account
+
+```
+{
+  "gen": {
+    "name": "my_account",           // Account name (max 64 chars, optional, empty = default)
+    "m": "messenger_name",          // Enable messenger (optional, max 64 chars)
+    "replaceExistName": false       // Replace existing name (default: false)
+  }
+}
+```
+
+**Notes**:
+- If `name` is empty, generates the default account.
+- If `replaceExistName` is false and name exists, throws error.
+- `m` enables the encrypted messenger for this account.
+
+---
+
+### rename — Rename Account
+
+```
+{
+  "rename": {
+    "name_or_address": "old_name",  // Current name or address
+    "new_name": "new_name"          // New name (max 64 chars)
+  }
+}
+```
+
+---
+
+### suspend — Suspend Account
+
+```
+{
+  "suspend": {
+    "name_or_address": "account_name"  // Name or address to suspend
+  }
+}
+```
+
+**Effect**: Removes account from active list. Cannot sign transactions until resumed.
+
+---
+
+### resume — Resume Account
+
+```
+{
+  "resume": {
+    "address": "0x...",             // Full 66-char address (0x + 64 hex)
+    "name": "new_name"              // Optional new name
+  }
+}
+```
+
+---
+
+### swap_name — Swap Account Names
+
+```
+{
+  "swap_name": {
+    "name1": "account_a",
+    "name2": "account_b"
+  }
+}
+```
+
+---
+
+### transfer — Transfer Tokens Between Accounts
+
+```
+{
+  "transfer": {
+    "name_or_address_from": "sender",   // Sender (empty = default)
+    "name_or_address_to": "recipient",  // Recipient
+    "amount": "10WOW",                  // Amount (unit string or number)
+    "token_type": "0x2::wow::WOW",      // Optional: non-default token type
+    "network": "testnet"                // Required: localnet or testnet
+  }
+}
+```
+
+---
+
+### faucet — Request Test Coins
+
+```
+{
+  "faucet": {
+    "name_or_address": "account_name",  // Target account (empty = default)
+    "network": "testnet"                // Required: localnet or testnet
+  }
+}
+```
+
+**Note**: Only available on testnet and localnet.
+
+---
+
+### get — Generate Coin Object ID
+
+```
+{
+  "get": {
+    "name_or_address": "account_name",  // Source account (empty = default)
+    "balance_required": "5WOW",         // Required balance amount
+    "token_type": "0x2::wow::WOW",      // Optional: non-default token type
+    "network": "testnet"                // Required
+  }
+}
+```
+
+**Returns**: Coin object ID with sufficient balance.
+
+---
+
+### messenger — Enable/Disable Messenger
+
+```
+{
+  "messenger": {
+    "name_or_account": "account_name",  // Target account (empty = default)
+    "m": "messenger_name"               // Enable messenger (null = disable)
+  }
+}
+```
+
+---
+
+### signData — Sign Data with Account
+
+```
+{
+  "signData": {
+    "name_or_address": "account_name",  // Signing account (empty = default)
+    "data": "message_to_sign",          // Data to sign
+    "data_encoding": "utf8"             // Optional: utf8 (default), base64, hex
+  }
+}
+```
+
+**Returns**: Signature bytes.
+
+---
+
+## AI Planning Notes
+
+1. **Default account**: Use empty string `""` for the default account in all operations.
+2. **Address format**: Full WoWok address is `0x` prefix + 64 hex characters (66 chars total).
+3. **Network requirement**: `transfer`, `faucet`, and `get` require explicit `network` field.
+4. **Token amounts**: Accept unit strings (e.g., `"2WOW"`) or plain numbers.
+5. **Account lifecycle**: `gen` → `rename` → operations → `suspend`/`resume`.
+6. **Messenger integration**: Enable messenger per-account for encrypted communication features.

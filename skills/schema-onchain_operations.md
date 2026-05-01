@@ -1,135 +1,111 @@
 # Schema: onchain_operations
 
-> ⛓️ 最核心的链上操作工具，通过 `operation_type` 字段区分16种子操作。每笔操作都可能产生区块链交易并消耗gas。
+> ⛓️ Core on-chain operations tool. Discriminated union by `operation_type` with 16 object types. Every operation may submit a blockchain transaction and consume gas.
 
 ---
 
-## 顶层结构（Discriminated Union by operation_type）
+## Top-Level Structure
 
 ```
 OnchainOperations
-├── operation_type: "service" → data: CallService_Data, env?, submission?
-├── operation_type: "machine" → data: CallMachine_Data, env?, submission?
-├── operation_type: "progress" → data: CallProgress_Data, env?, submission?
-├── operation_type: "repository" → data: CallRepository_Data, env?, submission?
-├── operation_type: "arbitration" → data: CallArbitration_Data, env?, submission?
-├── operation_type: "contact" → data: CallContact_Data, env?, submission?
-├── operation_type: "treasury" → data: CallTreasury_Data, env?, submission?
-├── operation_type: "reward" → data: CallReward_Data, env?, submission?
-├── operation_type: "allocation" → data: CallAllocation_Data, env?, submission?
-├── operation_type: "permission" → data: CallPermission_Data, env?
-├── operation_type: "guard" → data: CallGuard_Data, env?
-├── operation_type: "personal" → data: CallPersonal_Data, env?
-├── operation_type: "payment" → data: CallPayment_Data, env?
-├── operation_type: "demand" → data: CallDemand_Data, env?, submission?
-├── operation_type: "order" → data: CallOrder_Data, env?, submission?
-└── operation_type: "gen_passport" → guard: string, info?, env?
+├── operation_type: string — One of 16 types (see below)
+├── data: object — Type-specific data (required)
+├── env?: CallEnv — Optional environment
+└── submission?: SubmissionCall — Optional Guard submission data
 ```
+
+### CallEnv
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| account | string | No | Operating account (empty = default) |
+| permission_guard | string[] | No | Permission Guard ID list for extended permissions |
+| no_cache | boolean | No | Disable cache for fresh chain state |
+| network | "localnet" \| "testnet" | No | Target network |
+| referrer | string | No | Referrer ID |
+
+### SubmissionCall
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| type | "submission" | Yes | Fixed value |
+| guard | { object: string, impack: boolean }[] | Yes | Guard validation list |
+| submission | GuardSubmissionToFill[] | Yes | Submission data per Guard |
 
 ---
 
-## 通用字段说明
+## Operation Types
 
-### CallEnv（可选环境配置）
+### service — Service Marketplace
+
+**Capabilities**: Create/manage service listings, pricing, inventory, bind Machine workflows, set arbitration and compensation funds, issue discount coupons.
+
+**CallService_Data Structure**:
+
 ```
-├── account?: string — 操作账户（空为默认）
-├── permission_guard?: string[] — 权限Guard ID列表
-├── no_cache?: boolean — 是否禁用缓存
-├── network?: "localnet" | "testnet" — 网络
-└── referrer?: string — 推荐人ID
-```
-
-### SubmissionCall（Guard提交数据，可选）
-```
-├── type: "submission"
-├── guard: { object: string, impack: boolean }[] — Guard验证列表
-└── submission: GuardSubmissionToFill[] — 提交数据
-    └── { guard: string, submission: GuardSubmission[] }
-        └── { identifier: number(0-255), value_type: ValueType, value: SupportedValue }
-```
-
----
-
-## 各对象操作详解
-
-### service — 服务市场
-**核心能力**：创建/管理服务列表、定价、库存、绑定Machine工作流、设置仲裁和补偿。
-
-**CallService_Data关键字段**：
-```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? } — 已有对象ID（修改时）或创建新对象
-├── order_new?: OrderNew — 客户下单（创建订单）
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? }
+│   — Existing object ID (modify) or creation config (new)
+├── order_new?: OrderNew — Customer places order
 │   └── { buy: BuySchema, agents?, order_required_info?, transfer?, namedNewOrder?, namedNewAllocation?, namedNewProgress? }
 │       └── BuySchema: { items: ServiceBuyItem[], total_pay: CoinParam, discount?, payment_remark?, payment_index? }
 │           └── ServiceBuyItem: { name, stock, wip_hash }
-├── description?: string — 服务描述
-├── location?: string — 服务位置
-├── sales?: SalesOp — 售卖项操作（discriminated union by op）
-│   ├── { op: "add", sales: ServiceSale[], bReplace? } — 添加售卖项
-│   ├── { op: "set", sales: ServiceSale[], bReplace? } — 设置售卖项
-│   ├── { op: "remove", sales_name: string[] } — 移除售卖项
-│   └── { op: "clear" } — 清空所有售卖项
+├── description?: string — Service description
+├── location?: string — Service location
+├── sales?: SalesOp — Sales item operations (discriminated union by op)
+│   ├── { op: "add", sales: ServiceSale[], bReplace? }
+│   ├── { op: "set", sales: ServiceSale[], bReplace? }
+│   ├── { op: "remove", sales_name: string[] }
+│   └── { op: "clear" }
 │       └── ServiceSale: { name, price, stock, suspension, wip, wip_hash }
-├── repositories?: ObjectsOp — 仓库操作（discriminated union by op）
-│   ├── { op: "add"|"set", objects: string[] } — 添加/设置仓库
-│   ├── { op: "remove", objects: string[] } — 移除仓库
-│   └── { op: "clear" } — 清空所有仓库
-├── rewards?: ObjectsOp — 奖励对象操作（同repositories结构）
-├── arbitrations?: ObjectsOp — 仲裁对象操作（同repositories结构）
-├── machine?: string | null — 绑定Machine（null=移除）
-├── discount?: Discount — 发行折扣券
+├── repositories?: ObjectsOp — Repository operations
+├── rewards?: ObjectsOp — Reward object operations
+├── arbitrations?: ObjectsOp — Arbitration object operations
+├── machine?: string | null — Bind Machine (null = remove)
+├── discount?: Discount — Issue discount coupon
 │   └── { name, discount_type, discount_value, benchmark?, time_ms_start?, time_ms_end?, count?, recipient, transferable? }
-├── discount_destroy?: string[] — 销毁折扣对象ID列表
-├── customer_required?: string[] — 客户必填信息（如phone, email等）
-├── order_allocators?: Allocators | null — 订单资金分配器
+├── discount_destroy?: string[] — Destroy discount object IDs
+├── customer_required?: string[] — Required customer info (phone, email, shipping_address)
+├── order_allocators?: Allocators | null — Order fund allocators
 │   └── { description, threshold, allocators: Allocator[] }
 │       └── Allocator: { guard, sharing: AllocationSharing[], fix?, max? }
 │           └── AllocationSharing: { who: Recipient, sharing: string|number, mode: "Amount"|"Rate"|"Surplus" }
-├── buy_guard?: string | null — 购买Guard（null=移除）
-├── compensation_fund_add?: CoinParam — 补偿基金金额
-├── compensation_locked_time_add?: number — 补偿金锁定时长（毫秒）
-├── compensation_fund_receive?: ReceivedBalanceOrRecently — 接收订单补偿资金
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-├── um?: string | null — 联系对象
-└── pause?: boolean — 暂停接受新订单
-└── publish?: boolean — 发布状态（true=正式发布，false=草稿）
+├── buy_guard?: string | null — Purchase Guard (null = remove)
+├── compensation_fund_add?: CoinParam — Add to compensation fund
+├── compensation_locked_time_add?: number — Compensation lock duration (ms)
+├── compensation_fund_receive?: ReceivedBalanceOrRecently — Receive compensation funds
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap CoinWrapper to Permission owner
+├── um?: string | null — Contact object
+├── pause?: boolean — Pause new orders
+└── publish?: boolean — Publish service (true = immutable)
 ```
 
-**关键约束**：
-- 服务发布后（publish=true），Machine、arbitrations、order_allocators等变为不可变。
-- 发布前需确保Machine已处于published状态。
+**Critical Constraints**:
+- After `publish=true`: Machine, arbitrations, order_allocators become immutable.
+- Machine MUST be in `published` state before binding to Service.
+- `order_allocators` Rate mode: `sharing` is in basis points (10,000 = 100%).
 
-**Service构建与发布流程（从示例中提取）**：
-1. **先创建空Service（publish=false）**：获取Service地址，供后续Guard引用验证。
-   ```json
-   { "operation_type": "service", "data": { "object": { "name": "xxx_service" }, "publish": false } }
-   ```
-2. **创建引用Service的Guard**：如验证订单归属、验证当前节点等Guard，需在Service创建后、发布前完成。
-3. **创建Machine并绑定到Service**：Machine创建完成后，在Service未发布前绑定。
-   ```json
-   { "operation_type": "service", "data": { "object": "xxx_service", "machine": "xxx_machine" } }
-   ```
-4. **配置完整Service并发布**：添加sales、order_allocators、arbitrations、customer_required等，最后设置 `publish: true`。
-   - **注意**：order_allocators中的sharing.mode为"Rate"时，sharing值是万分比（10000=100%）。
-   - customer_required可要求客户提供phone、email、shipping_address等信息。
-5. **创建Reward Pool（最后）**：Reward Pool依赖Service和Guard，应在Service发布完成后创建。
+**Build & Publish Flow**:
+1. Create empty Service (`publish=false`) → get Service address/name.
+2. Create Guards referencing Service.
+3. Create Machine, bind Guards/Permissions.
+4. Bind Machine to Service.
+5. Configure order_allocators, arbitrations, sales.
+6. Publish Service (`publish=true`).
 
-**Service下单操作（order_new）**：
-客户通过service操作直接下单，同时创建Order、Allocation、Progress：
+**Order Placement (order_new)**:
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "service名称",
+    "object": "service_name",
     "order_new": {
       "buy": {
-        "items": [{ "name": "商品名", "stock": 1, "wip_hash": "sha256:..." }],
-        "total_pay": { "balance": "金额" },
-        "order_info": "订单备注"
+        "items": [{ "name": "product", "stock": 1, "wip_hash": "sha256:..." }],
+        "total_pay": { "balance": "amount" }
       },
-      "namedNewOrder": { "name": "订单名称" },
-      "namedNewAllocation": { "name": "分配器名称" },
-      "namedNewProgress": { "name": "进度名称" }
+      "namedNewOrder": { "name": "order_name" },
+      "namedNewAllocation": { "name": "allocation_name" },
+      "namedNewProgress": { "name": "progress_name" }
     }
   }
 }
@@ -137,614 +113,565 @@ OnchainOperations
 
 ---
 
-### machine — 工作流模板
-**核心能力**：定义订单处理的状态机，每个节点（node）代表一个状态，包含可执行的操作（forward）。
+### machine — Workflow Template
 
-**CallMachine_Data关键字段**：
+**Capabilities**: Define order processing state machines. Each node represents a state with executable forwards (operations).
+
+**CallMachine_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? } — 已有对象ID或创建新对象
-├── progress_new?: ProgressNew — 生成新Progress对象
+├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? }
+├── progress_new?: ProgressNew — Generate new Progress
 │   └── { task?, repository?, progress_namedOperator?, namedNew? }
 │       └── progress_namedOperator: { op: "add"|"set"|"remove", name: string, operators: ManyAccountOrMark_Address }
-├── description?: string — 描述
-├── repository?: ObjectsOp — 共识仓库操作（discriminated union by op）
-│   ├── { op: "add"|"set", objects: string[] }
-│   ├── { op: "remove", objects: string[] }
-│   └── { op: "clear" }
-├── node?: NodeField — 节点操作（两种互斥模式）
-│   **模式1: NodeSchema（增量操作）**
+├── description?: string — Description
+├── repository?: ObjectsOp — Consensus repository operations
+├── node?: NodeField — Node operations (two mutually exclusive modes)
+│   **Mode 1: NodeSchema (incremental)**
 │   └── { op: "add"|"set", nodes: MachineNode[], bReplace? }
 │       └── MachineNode: { name, pairs: NodePair[] }
 │           └── NodePair: { prior_node, forwards: Forward[], threshold? }
-│               └── Forward: { name, namedOperator?, permissionIndex?, weight }
-│   或 { op: "remove", nodes: string[] }
-│   或 { op: "clear" }
-│   或 { op: "exchange", node_one, node_other }
-│   或 { op: "rename", node_name_old, node_name_new }
-│   或 { op: "remove prior node", pairs: NodeRemovePriorNodeData[] }
-│   或 { op: "add forward", data: NodeAddForwardData[] }
-│   或 { op: "remove forward", data: NodeRemoveForwardData[] }
-│   **模式2: NodeJsonOrMarkdownFileSchema（完整替换）**
-│   └── { json_or_markdown_file: string } — 从JSON/Markdown文件加载完整节点定义
-├── pause?: boolean — 暂停生成新Progress
-├── publish?: boolean — 发布对象（发布后节点不可修改）
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
+│               └── Forward: { name, namedOperator?, permissionIndex?, weight, guard? }
+│   Or: { op: "remove", nodes: string[] }
+│   Or: { op: "clear" }
+│   Or: { op: "exchange", node_one, node_other }
+│   Or: { op: "rename", node_name_old, node_name_new }
+│   Or: { op: "remove prior node", pairs: NodeRemovePriorNodeData[] }
+│   Or: { op: "add forward", data: NodeAddForwardData[] }
+│   Or: { op: "remove forward", data: NodeRemoveForwardData[] }
+│   **Mode 2: NodeJsonOrMarkdownFileSchema (complete replacement)**
+│   └── { json_or_markdown_file: string }
+├── pause?: boolean — Pause new Progress generation
+├── publish?: boolean — Publish (nodes become immutable)
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
-**关键约束**：
-- Machine发布（publish=true）后不可修改节点结构。
-- 发布前需充分测试工作流逻辑。
+**Critical Constraints**:
+- After `publish=true`: Node structure is immutable.
+- Initial node name is `""` (empty string).
+- Each forward MUST specify either `permissionIndex` OR `namedOperator`.
+- `namedOperator("")` = order owner/agents can execute (for customer operations).
 
-**Machine设计经验（从示例中提取）**：
-1. **节点命名与语义**：节点名称应清晰表达业务状态（如"Order Confirmed"、"Shipping"、"Delivery Complete"）。
-2. **forward命名**：forward名称应描述操作动作（如"Submit Messenger Merkle Root"、"Confirm Receipt"）。
-3. **threshold配置**：
-   - 单签操作（如商家确认发货）：`threshold: 1`
-   - 双签操作（如双方确认丢失）：`threshold: 2`，需要两个不同操作者各自提交forward。
-4. **permissionIndex映射**：
-   - 建议将Permission索引与节点/forward语义绑定（如1000=商家操作，1001=客户操作）。
-   - 在Permission对象中通过remark记录每个索引的用途，便于管理。
-5. **多路径设计**：同一节点可有多个prev_node指向它（如"Order Complete"可从"Shipping"或"Delivery Complete"到达）。
-6. **时间Guard**：使用time Guard实现自动超时推进（如10天自动完成、2天自动完成）。
-7. **Machine创建JSON结构**：
-   ```json
-   {
-     "node": {
-       "op": "add",
-       "nodes": [
-         {
-           "name": "节点名称",
-           "pairs": [
-             {
-               "prior_node": "上一节点名称（空字符串表示起始节点）",
-               "threshold": 1,
-               "forwards": [
-                 {
-                   "name": "forward名称",
-                   "permissionIndex": 1000,
-                   "weight": 1,
-                   "guard": { "guard": "guard名称" }
-                 }
-               ]
-             }
-           ]
-         }
-       ]
-     }
-   }
-   ```
+**Node Design Best Practices**:
+- **Node names**: Describe business states (e.g., "Order Confirmed", "Shipping", "Delivery Complete").
+- **Forward names**: Describe actions (e.g., "Submit Messenger Merkle Root", "Confirm Receipt").
+- **Threshold**: 1 for single-signature; 2+ for multi-party confirmation.
+- **Permission mapping**: Document index semantics in Permission remarks.
 
 ---
 
-### progress — 工作流实例
-**核心能力**：驱动Machine定义的流程向前推进，管理会话（session）和操作（forward）。
+### progress — Workflow Instance
 
-**CallProgress_Data关键字段**：
+**Capabilities**: Drive Machine-defined workflows forward. Manage sessions and forwards.
+
+**CallProgress_Data Structure**:
+
 ```
-├── object: string — Progress对象ID或名称（必填，Progress只能修改不能新建）
-├── task?: string | null — 目标任务ID（设置后不可更改）
-├── repository?: ObjectsOp — 共识仓库操作（discriminated union by op）
-│   ├── { op: "add"|"set", objects: string[] }
-│   ├── { op: "remove", objects: string[] }
-│   └── { op: "clear" }
-├── progress_namedOperator?: ProgressNamedOperator — 管理Progress权限命名空间操作者
+├── object: string — Progress ID or name (required, modify only)
+├── task?: string | null — Target task ID (immutable after set)
+├── repository?: ObjectsOp — Context repository operations
+├── progress_namedOperator?: ProgressNamedOperator — Manage namespace operators
 │   └── { op: "add"|"set"|"remove", name: string, operators: ManyAccountOrMark_Address }
-├── operate?: Operate — 推进操作（核心字段）
+├── operate?: Operate — Advance workflow (core field)
 │   └── { operation: { next_node_name, forward }, hold?, adminUnhold?, message? }
-└── permission?: string | null — 权限对象
+└── permission?: string | null — Permission object
 ```
 
-**关键约束**：
-- Progress的当前节点和可用forward由所属Machine定义。
-- operate中的who、submit等需满足Machine节点配置的Guard和权限要求。
+**Operate Structure**:
+```json
+{
+  "operate": {
+    "operation": {
+      "next_node_name": "target_node",
+      "forward": "forward_name"
+    },
+    "hold": false,
+    "message": "operation note"
+  }
+}
+```
 
-**Progress操作经验（从示例中提取）**：
-1. **operate结构**：
-   ```json
-   {
-     "operate": {
-       "operation": {
-         "next_node_name": "目标节点名称",
-         "forward": "要执行的forward名称"
-       },
-       "hold": false,
-       "message": "操作说明"
-     }
-   }
-   ```
-2. **submission结构（当forward需要Guard验证时）**：
-   ```json
-   {
-     "submission": {
-       "type": "submission",
-       "guard": [{ "object": "guard名称", "impack": true }],
-       "submission": [
-         {
-           "guard": "guard名称",
-           "submission": [
-             {
-               "identifier": 0,
-               "value_type": "String|Address|U64|...",
-               "value": "提交的值"
-             }
-           ]
-         }
-       ]
-     }
-   }
-   ```
-3. **常见提交值类型**：
-   - Merkle Root字符串：`value_type: "String"`，value为64位十六进制字符串。
-   - 订单/服务地址：`value_type: "Address"`，value为对象名称或地址。
-   - Progress地址（时间Guard）：`value_type: "Address"`，value为Progress对象名称。
-4. **无Guard的forward**：如简单确认操作，无需submission字段。
-5. **env.no_cache**：Progress操作常涉及状态变更后的下一步操作，建议设置 `no_cache: true`。
+**With Guard Submission**:
+```json
+{
+  "submission": {
+    "type": "submission",
+    "guard": [{ "object": "guard_name", "impack": true }],
+    "submission": [{
+      "guard": "guard_name",
+      "submission": [
+        { "identifier": 0, "value_type": "String", "value": "merkle_root" },
+        { "identifier": 1, "value_type": "Address", "value": "progress_name" }
+      ]
+    }]
+  }
+}
+```
+
+**Common Submission Values**:
+- Merkle Root: `value_type: "String"`, 64-char hex.
+- Order/Service address: `value_type: "Address"`.
+- Progress address (time Guards): `value_type: "Address"`.
 
 ---
 
-### repository — 链上数据库
-**核心能力**：以共识字段+地址为key，存储强类型数据。
+### repository — On-Chain Database
 
-**CallRepository_Data关键字段**：
+**Capabilities**: Store strongly-typed data with consensus field + address as key.
+
+**CallRepository_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? } — 已有对象ID或创建新对象
-├── description?: string — 描述
-├── policies?: PoliciesOp — 策略规则操作（discriminated union by op）
-│   ├── { op: "add"|"set", policy: PolicyRule[] } — 添加/设置策略
-│   ├── { op: "remove", policy: string[] } — 移除策略（按名称）
-│   └── { op: "clear" } — 清空所有策略
+├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? }
+├── description?: string — Description
+├── policies?: PoliciesOp — Policy rules (discriminated union by op)
+│   ├── { op: "add"|"set", policy: PolicyRule[] }
+│   ├── { op: "remove", policy: string[] }
+│   └── { op: "clear" }
 │       └── PolicyRule: { name, type_guard?, read_guard?, consensus?, write_guard? }
-├── data_add?: DataAdd — 添加数据项
-│   **模式1: SignerOrClock**
+├── data_add?: DataAdd — Add data items
+│   **Mode 1: SignerOrClock**
 │   └── { name, write_guard?, data: SupportedValue }
-│   **模式2: DataAddWithItems**
+│   **Mode 2: DataAddWithItems**
 │   └── { name, items: RepDataItem[] }
 │       └── RepDataItem: { data: KeyData[], write_guard? }
 │           └── KeyData: { id: string|number, data: SupportedValue }
-├── data_remove?: DataRemove — 删除数据项
-│   **模式1: SignerOrClockBase**
+├── data_remove?: DataRemove — Remove data items
+│   **Mode 1: SignerOrClockBase**
 │   └── { name, write_guard? }
-│   **模式2: 按名称和ID列表删除**
+│   **Mode 2: By name and ID list**
 │   └── { name, items: DataRemoveItem[] }
 │       └── DataRemoveItem: { id: (string|number)[], write_guard? }
-├── rewards?: ObjectsOp — 奖励对象操作（同machine中的repository结构）
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
+├── rewards?: ObjectsOp — Reward object operations
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### arbitration — 仲裁系统
-**核心能力**：创建仲裁机构，处理订单纠纷，定义仲裁员、投票规则等。
+### arbitration — Arbitration System
 
-**CallArbitration_Data关键字段**：
+**Capabilities**: Create arbitration institutions, handle order disputes, define arbitrators and voting rules.
+
+**CallArbitration_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? } — 已有对象ID或创建新对象
-├── dispute?: Dispute — 为订单创建新Arb对象
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? }
+├── dispute?: Dispute — Create new Arb for an order
 │   └── { order, description?, proposition: string[], fee: CoinParam, namedArb? }
-├── description?: string — 仲裁机构描述
-├── location?: string — 仲裁地点
-├── fee?: string|number — 仲裁费
-├── pause?: boolean — 暂停仲裁
-├── confirm?: Confirm — 确认用户提交的仲裁材料
+├── description?: string — Arbitration institution description
+├── location?: string — Arbitration location
+├── fee?: string|number — Arbitration fee
+├── pause?: boolean — Pause arbitration
+├── confirm?: Confirm — Confirm user's arbitration materials
 │   └── { arb, voting_deadline: number|null }
-├── voting_deadline_change?: VotingDeadlineChange — 修改投票截止期限
+├── voting_deadline_change?: VotingDeadlineChange — Modify voting deadline
 │   └── { arb, voting_deadline: number|null }
-├── vote?: Vote — 对命题投票
+├── vote?: Vote — Vote on propositions
 │   └── { arb, votes: number[], voting_guard? }
-├── feedback?: Feedback — 仲裁反馈
+├── feedback?: Feedback — Arbitration feedback
 │   └── { arb, feedback: string }
-├── arbitration?: ArbitrationAction — 提供最终仲裁结果
+├── arbitration?: ArbitrationAction — Final arbitration result
 │   └── { arb, feedback: string, indemnity: number }
-├── reset?: Reset — 用户申请重新提交材料
+├── reset?: Reset — User requests resubmission
 │   └── { arb, feedback: string }
-├── arb_withdraw?: ArbWithdraw — 从Arb对象提取仲裁费
+├── arb_withdraw?: ArbWithdraw — Withdraw arbitration fee from Arb
 │   └── { arb }
-├── fees_transfer?: FeesTransfer — 分配提取的仲裁费
+├── fees_transfer?: FeesTransfer — Distribute collected arbitration fees
 │   └── { to: { allocation } | { treasury }, payment_remark, payment_index, newPayment? }
-├── usage_guard?: string | null — 设置用户申请仲裁时的Guard验证
-├── voting_guard?: VotingGuardAction — 设置投票时的Guard验证
+├── usage_guard?: string | null — Guard for applying for arbitration
+├── voting_guard?: VotingGuardAction — Guard for voting
 │   └── { op: "add"|"set", guards: VotingGuard[] } | { op: "remove", guards: string[] } | { op: "clear" }
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### contact — 联系人管理
-**核心能力**：管理链上即时通信联系人档案。
+### contact — Contact Management
 
-**CallContact_Data关键字段**：
+**Capabilities**: Manage on-chain instant messaging contact profiles.
+
+**CallContact_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? } — 已有对象ID或创建新对象
-├── my_status?: string — 设置自己在联系人列表中的状态消息
-├── description?: string — 联系人对象描述
-├── location?: string — 位置信息
-├── ims?: ImsOperation — IM联系人列表操作（discriminated union by op）
-│   ├── { op: "add", im: ImEntry[] } — 添加联系人
-│   ├── { op: "set", im: ImEntry[] } — 设置/替换所有联系人
-│   ├── { op: "remove", im: string[] } — 移除联系人（按地址/名称）
-│   └── { op: "clear" } — 清空所有联系人
+├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? }
+├── my_status?: string — Status message in contact list
+├── description?: string — Contact object description
+├── location?: string — Location
+├── ims?: ImsOperation — IM contact list operations
+│   ├── { op: "add", im: ImEntry[] }
+│   ├── { op: "set", im: ImEntry[] }
+│   ├── { op: "remove", im: string[] }
+│   └── { op: "clear" }
 │       └── ImEntry: { at: string, description? }
-├── owner_receive?: ReceivedObjectsOrRecently — 接收对象并解包给Permission所有者
-└── um?: string | null — 联系对象
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### treasury — 团队资金库
-**核心能力**：创建团队资金池，设置存取规则。
+### treasury — Team Treasury
 
-**CallTreasury_Data关键字段**：
+**Capabilities**: Create team fund pools with deposit/withdrawal rules.
+
+**CallTreasury_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? } — 已有对象ID或创建新对象
-├── description?: string — 描述
-├── receive?: ReceivedBalanceOrRecently — 接收CoinWrapper并存入余额
-├── deposit?: Deposit — 存入资金
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? }
+├── description?: string — Description
+├── receive?: ReceivedBalanceOrRecently — Receive CoinWrapper into balance
+├── deposit?: Deposit — Deposit funds
 │   └── { coin: CoinParam, by_external_deposit_guard?, payment_info, namedNewPayment? }
-├── withdraw?: Withdraw — 提取资金
+├── withdraw?: Withdraw — Withdraw funds
 │   └── { amount: { fixed: string|number } | { by_external_withdraw_guard: string }, recipient, payment_info, namedNewPayment? }
-├── external_deposit_guard?: ExternalDepositGuardOp — 外部存入Guard操作
+├── external_deposit_guard?: ExternalDepositGuardOp — External deposit Guards
 │   └── { op: "add"|"set", guards: AmountFromDepositGuard[] } | { op: "remove", guards: string[] } | { op: "clear" }
-├── external_withdraw_guard?: ExternalWithdrawGuardOp — 外部提取Guard操作
+├── external_withdraw_guard?: ExternalWithdrawGuardOp — External withdraw Guards
 │   └── { op: "add"|"set", guards: AmountFromWithdrawGuard[] } | { op: "remove", guards: string[] } | { op: "clear" }
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### reward — 奖励池
-**核心能力**：创建奖励池，设置Guard验证的领取条件。
+### reward — Reward Pool
 
-**CallReward_Data关键字段**：
+**Capabilities**: Create reward pools with Guard-verified claim conditions.
+
+**CallReward_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? } — 已有对象ID或创建新对象
-├── claim?: string — Guard对象ID，验证通过后启动对应奖励分配
-├── description?: string — 描述
-├── coin_add?: CoinParam — 向Reward对象添加金额
-├── receive?: ReceivedBalanceOrRecently — 解包CoinWrapper并存入待处理余额
-├── guard_add?: RewardGuard[] — 添加奖励Guard条件
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? }
+├── claim?: string — Guard object ID; on verification success, triggers reward distribution
+├── description?: string — Description
+├── coin_add?: CoinParam — Add funds to Reward
+├── receive?: ReceivedBalanceOrRecently — Unwrap CoinWrapper into pending balance
+├── guard_add?: RewardGuard[] — Add reward Guard conditions
 │   └── { guard, recipient, amount, expiration_time?, store_from_id? }
 │       └── recipient: { GuardIdentifier: number } | { Entity: string } | { Signer: boolean }
-│       └── amount: { type: "GuardU64Identifier", value: number } | { type: "Fixed", value: string|number }
-├── guard_remove_expired?: boolean — 是否移除过期Guard
-├── guard_expiration_time?: number | null — 新增Guard的过期时间（毫秒），null表示永不过期
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
-```
-
-**Reward Pool构建经验（从示例中提取）**：
-1. **分阶段创建**：
-   - 阶段1：创建Reward对象并充值（coin_add）。
-   - 阶段2：创建奖励验证Guard（如验证Progress节点为Wonderful）。
-   - 阶段3：将Guard添加到Reward对象（guard_add）。
-2. **guard_add配置**：
-   ```json
-   {
-     "guard_add": [
-       {
-         "guard": "reward_wonderful_v2",
-         "recipient": {"Signer": true},
-         "amount": {"type": "Fixed", "value": 10000}
-       }
-     ]
-   }
-   ```
-3. **领取奖励**：用户通过reward操作claim，提交满足Guard条件的submission。
-   ```json
-   {
-     "data": {
-       "object": "myshop_reward_v2",
-       "claim": "reward_wonderful_v2"
-     },
-     "submission": { /* Guard验证提交 */ }
-   }
-   ```
-4. **奖励用途**：可用于优质服务奖励、丢失补偿、超时补偿等场景。
-
----
-
-### allocation — 资金分配
-**核心能力**：创建分配计划，自动按策略分发资金给多个接收方。
-
-**CallAllocation_Data关键字段（Discriminated Union）**：
-
-**创建新Allocation对象**：
-```
-├── object: { name, type_parameter? } — 创建新对象（必须传对象格式）
-├── allocators: Allocators — 分配器配置
-│   └── { description, threshold, allocators: Allocator[] }
-│       └── Allocator: { guard, sharing: AllocationSharing[], fix?, max? }
-├── coin: CoinParam — 初始资金
-└── payment_info: PaymentInfo — 支付信息
-```
-
-**操作已有Allocation对象**：
-```
-├── object: string — 已有对象ID或名称
-├── received_coins?: ReceivedBalanceOrRecently — 解包CoinWrapper并存入待分配余额
-└── alloc_by_guard?: string — 验证指定Guard并执行对应资金分配
+├── guard_remove?: string[] — Remove reward Guards by ID
+├── guard_pause?: boolean — Pause reward claiming
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### permission — 权限控制
-**核心能力**：定义谁可以对哪些对象执行哪些操作。
+### allocation — Fund Allocation
 
-**CallPermission_Data关键字段**：
+**Capabilities**: Create distribution plans for auto-distributing funds to multiple recipients.
+
+**CallAllocation_Data Structure**:
+
 ```
-├── object?: string | { name?, tags?, onChain?, replaceExistName? } — 已有对象ID或创建新对象
-├── description?: string — 描述
-├── remark?: RemarkOp — 权限备注操作（discriminated union by op）
-│   ├── { op: "set", index: number, remark: string } — 设置备注
-│   ├── { op: "remove", index: number } — 移除备注
-│   └── { op: "clear" } — 清空所有备注
-├── table?: TableOp — 权限分配操作（discriminated union by op）
-│   **按权限索引操作（Permission-centric）**：
-│   ├── { op: "add perm by index", index: number, entity: ManyAccountOrMark_Address } — 为指定权限添加实体
-│   ├── { op: "set perm by index", index: number, entity: ManyAccountOrMark_Address } — 设置指定权限的实体列表
-│   ├── { op: "remove perm by index", index: number, entity: ManyAccountOrMark_Address } — 移除指定权限的实体
-│   **按实体操作（Entity-centric）**：
-│   ├── { op: "add perm by entity", entity: AccountOrMark_Address, index: number[] } — 为指定实体添加权限
-│   ├── { op: "set perm by entity", entity: AccountOrMark_Address, index: number[] } — 设置指定实体的权限列表
-│   └── { op: "remove perm by entity", entity: AccountOrMark_Address, index: number[] } — 移除指定实体的权限
-├── entity?: EntityOp — 高级实体权限操作（discriminated union by op）
-│   ├── { op: "swap", entity1, entity2 } — 交换两个实体的所有权限
-│   ├── { op: "replace", entity1, entity2 } — 将entity1的权限转移给entity2
-│   ├── { op: "copy", entity1, entity2 } — 将entity1的权限复制给entity2
-│   └── { op: "del", entity } — 删除实体的所有权限
-├── admin?: AdminOp — 管理员操作
-│   └── { op: "add"|"remove"|"set", addresses: ManyAccountOrMark_Address }
-├── apply?: string[] — 将Permission对象应用到指定对象列表
-├── builder?: AccountOrMark_Address — 设置/转移Permission对象所有权
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给builder(owner)
-└── um?: string | null — 联系对象
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter?, permission? }
+├── description?: string — Description
+├── bPaused?: boolean — Pause distribution
+├── withdraw?: AllocationWithdraw — Execute distribution
+│   └── { guard: string, submission?: SubmissionCall }
+├── deposit?: AllocationDeposit — Deposit funds
+│   └── { coin: CoinParam }
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
-
-**关键约束**：
-- 创建Permission前，必须先通过wowok_buildin_info查询built-in permissions了解可用索引。
-- 用户自定义权限索引范围：1000-65535。
-
-**Permission设计经验（从示例中提取）**：
-1. **索引规划**：为不同角色/操作分配固定索引区间：
-   - 1000：商家操作（如确认订单、发货）
-   - 1001：客户操作（如确认收货、评价）
-   - 1015-1017：特殊操作（如退货、退款确认）
-2. **remark记录**：为每个索引添加remark说明用途，便于后续维护。
-   ```json
-   {
-     "remark": { "op": "set", "index": 1000, "remark": "Merchant operations" },
-     "table": { "op": "add perm by index", "index": 1000, "entity": { "entities": [{"name_or_address": "merchant_account"}] } }
-   }
-   ```
-3. **entity配置**：支持多个实体共享同一权限，也支持用Guard进一步约束。
 
 ---
 
-### guard — 可编程验证规则
-**核心能力**：创建不可变的验证规则树，返回boolean结果。
+### permission — Access Control
 
-**CallGuard_Data关键字段**：
+**Capabilities**: Define who can perform which operations on WoWok objects.
+
+**CallPermission_Data Structure**:
+
 ```
-├── namedNew?: { name: string, tags?: string[], onChain?: boolean, replaceExistName?: boolean } — 新对象命名
-├── description?: string — Guard描述
-├── table?: GuardTableItem[] — 数据表定义
+├── object: string | { name?, tags?, onChain?, replaceExistName?, type_parameter? }
+├── description?: string — Description
+├── table?: TableOp — Permission table operations
+│   ├── { op: "add perm by index", index: number, entity: ManyAccountOrMark_Address }
+│   ├── { op: "remove perm by index", index: number, entity: ManyAccountOrMark_Address }
+│   ├── { op: "add perm by index with guard", index: number, entity: ManyAccountOrMark_Address, guard: string }
+│   ├── { op: "remove perm by index with guard", index: number, entity: ManyAccountOrMark_Address, guard: string }
+│   └── { op: "clear" }
+├── remark?: RemarkOp — Index remark operations
+│   └── { op: "set"|"remove", index: number, remark: string }
+├── apply?: string[] — Apply Permission to object list
+├── builder?: AccountOrMark_Address — Set/transfer ownership
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
+```
+
+**Critical Constraints**:
+- Query `wowok_buildin_info (built-in permissions)` BEFORE creating Permission.
+- Custom permission index range: 1000-65535.
+- Document each index with `remark` for maintainability.
+
+---
+
+### guard — Programmable Validation Rules
+
+**Capabilities**: Create immutable validation rule trees returning boolean results.
+
+**CallGuard_Data Structure**:
+
+```
+├── namedNew?: { name: string, tags?: string[], onChain?: boolean, replaceExistName?: boolean }
+├── description?: string — Guard description
+├── table?: GuardTableItem[] — Data table definitions
 │   └── { identifier(0-255), b_submission: boolean, value_type: ValueType, value?, name? }
-├── root: GuardRoot — 规则树根节点（必填）
-│   ├── type: "node" → node: GuardNode（直接定义节点树）
-│   └── type: "file" → file_path: string, format?: "json"|"markdown"（从文件加载）
+├── root: GuardRoot — Rule tree root (required)
+│   ├── type: "node" → node: GuardNode (direct definition)
+│   └── type: "file" → file_path: string, format?: "json"|"markdown" (load from file)
 │       └── GuardNode: { logic?: "and"|"or"|"not", instructions?, queries?, children?: GuardNode[] }
 │           └── instructions: { name, id, parameters?: SupportedValue[], returnType? }
 │           └── queries: { id, name, objectType, parameters, return, description, parameters_description }
-└── rely?: { guards: string[], logic_or?: boolean } — 依赖的其他Guard对象
+└── rely?: { guards: string[], logic_or?: boolean } — Dependent Guard objects
 ```
 
-**关键约束**：
-- 创建Guard前，必须先通过wowok_buildin_info查询guard instructions了解所有可用操作。
-- Guard一旦创建不可修改（immutable），设计需谨慎。
-- 复杂Guard建议先用guard2file导出模板编辑。
+**Critical Constraints**:
+- Query `wowok_buildin_info (guard instructions)` BEFORE creating Guard.
+- Guard is immutable once created. Design carefully.
+- Complex Guards: use `guard2file` to export templates for editing.
+- `table` identifier range: 0-255. Used for submission indexing.
 
-**Guard设计经验（从示例中提取）**：
-1. **常见Guard类型**：
-   - **Merkle Root验证**：验证提交的字符串是否为64位十六进制（Merkle Root格式）。
-   - **Service-Order关联验证**：验证订单是否属于指定Service，且当前节点是否为预期节点。
-   - **时间Guard**：验证从指定节点进入后是否已超过指定时间（如10天=864000000ms）。
-   - **资金分配Guard**：验证当前Progress节点是否在指定集合中（如[Order Complete, Wonderful, Return Fail]）。
-2. **Guard依赖链**：
-   - Guard可查询Service名称、Progress状态、节点名称等链上数据。
-   - 创建Guard前需确保被查询的对象已存在（如Service已创建）。
-3. **table字段**：定义Guard的数据表结构，identifier范围0-255，用于submission中按索引提交数据。
-4. **Guard创建后不可修改**：设计时需充分考虑所有边界情况，建议先用guard2file导出已有类似Guard做参考。
-
-**GuardNode 查询类型（部分列举）**：
-- **基础逻辑运算**：`logic_and`, `logic_or`, `logic_not`, `logic_equal`, `logic_as_u256_greater_or_equal` 等
-- **数值计算**：`calc_number_add`, `calc_number_subtract`, `calc_number_multiply`, `calc_number_divide` 等
-- **字符串操作**：`calc_string_length`, `calc_string_contains`, `calc_string_indexof` 等
-- **类型转换**：`convert_number_address`, `convert_address_number`, `convert_number_string`, `convert_safe_u8/u16/u32/u64/u128/u256` 等
-- **向量操作**：`vec_length`, `vec_contains_bool/address/string/number`, `vec_indexof_*` 等
-- **数据查询**：`query` - 查询任意对象数据，`identifier` - 获取Guard表中的常量值
-- **Reward记录查询**：`query_reward_record_find`, `query_reward_record_count`, `query_reward_record_exists` - 查询奖励领取记录
-- **Progress历史查询**：`query_progress_history_find`, `query_progress_history_session_find`, `query_progress_history_session_forward_find`, `query_progress_history_session_count`, `query_progress_history_session_forward_count`, `query_progress_history_session_forward_retained_submission_count` - 查询进度历史记录
-- **系统上下文**：`context` - 获取Signer地址、Clock时间戳、Guard对象ID
-
-> 完整Guard指令列表请通过 `wowok_buildin_info` 工具查询 `guard instructions` 获取。
+**Common Guard Patterns**:
+- **Merkle Root validation**: Verify 64-char hex string format.
+- **Service-Order association**: Verify order belongs to specified Service and current node is expected.
+- **Time Guard**: Verify elapsed time since entering a node (e.g., 10 days = 864000000ms).
+- **Node set validation**: Verify current node is in allowed set.
 
 ---
 
-### personal — 公开身份档案
-**核心能力**：建立链上公开身份。
+### personal — Public Identity Profile
 
-**⚠️ 关键警告**：所有数据永久公开上链！
+**⚠️ CRITICAL**: All data is PERMANENTLY PUBLIC on the blockchain.
 
-**CallPersonal_Data关键字段**：
+**CallPersonal_Data Structure**:
+
 ```
-├── description?: string — 个人描述
-├── referrer?: string | null — 推荐人ID（加入链上网络）
-├── information?: InformationOp — 个人信息操作（discriminated union by op）
-│   ├── { op: "add", data: RecordsInEntity[] } — 添加信息记录
-│   ├── { op: "remove", name: string[] } — 移除记录（按名称）
-│   └── { op: "clear" } — 清空所有信息
+├── description?: string — Personal description
+├── referrer?: string | null — Referrer ID (join network)
+├── information?: InformationOp — Personal information operations
+│   ├── { op: "add", data: RecordsInEntity[] }
+│   ├── { op: "remove", name: string[] }
+│   └── { op: "clear" }
 │       └── RecordsInEntity: { name, value_type: ValueType, value: SupportedValue }
-└── mark?: MarkOp — 链上身份标记操作（discriminated union by op）
-    ├── { op: "add", data: { address, name?, tags? }[] } — 添加标记
-    ├── { op: "remove", data: { address, tags? }[] } — 移除标记
-    ├── { op: "clear", address: ManyAccountOrMark_Address } — 清空指定地址标记
-    ├── { op: "transfer", to: AccountOrMark_Address } — 转移标记所有权
-    ├── { op: "replace", new_mark_object: string } — 替换为新标记对象
-    └── { op: "destroy" } — 永久销毁标记
+└── mark?: MarkOp — On-chain identity mark operations
+    ├── { op: "add", data: { address, name?, tags? }[] }
+    ├── { op: "remove", data: { address, tags? }[] }
+    ├── { op: "clear", address: ManyAccountOrMark_Address }
+    ├── { op: "transfer", to: AccountOrMark_Address }
+    ├── { op: "replace", new_mark_object: string }
+    └── { op: "destroy" }
 ```
 
 ---
 
-### payment — 直接转账
-**核心能力**：创建不可变的支付对象，向多个接收方转账。
+### payment — Direct Transfer
 
-**CallPayment_Data关键字段**：
+**Capabilities**: Create immutable payment objects for multi-recipient transfers.
+
+**CallPayment_Data Structure**:
+
 ```
-├── object: { name, type_parameter? } — 创建新Payment对象（必填，Payment不可修改）
-├── revenue: Revenue[] — 收款人列表（必填）
+├── object: { name, type_parameter? } — Create new Payment (required, immutable)
+├── revenue: Revenue[] — Recipients (required)
 │   └── { recipient: AccountOrMark_Address, amount: CoinParam }
-└── info: PaymentInfo — 支付信息（必填）
+└── info: PaymentInfo — Payment information (required)
 ```
 
 ---
 
-### demand — 需求发布
-**核心能力**：发布服务需求并设置奖励池激励推荐人。
+### demand — Service Demand
 
-**CallDemand_Data关键字段**：
+**Capabilities**: Post service requests with reward pools for recommenders.
+
+**CallDemand_Data Structure**:
+
 ```
-├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? } — 已有对象ID或创建新对象
-├── present?: DemandPresent — 推荐服务到Demand对象
+├── object: string | { name?, tags?, onChain?, replaceExistName?, permission? }
+├── present?: DemandPresent — Recommend service to Demand
 │   └── { recommend: string, by_guard?, service? }
-├── description?: string — 描述
-├── location?: string — 服务位置
-├── rewards?: ObjectsOp — 奖励对象操作（discriminated union by op）
-├── feedback?: FeedbackInfo[] — 用户反馈信息
+├── description?: string — Description
+├── location?: string — Location
+├── rewards?: ObjectsOp — Reward object operations
+├── feedback?: FeedbackInfo[] — User feedback
 │   └── { who: AccountOrMark_Address, acceptance_score?, feedback? }
-├── guards?: GuardsOp — 验证Guard列表操作（discriminated union by op）
+├── guards?: GuardsOp — Guard list operations
 │   ├── { op: "add"|"set", guard: ServiceGuard[] }
 │   ├── { op: "remove", guard: string[] }
 │   └── { op: "clear" }
 │       └── ServiceGuard: { guard, service_identifier? }
-├── owner_receive?: ReceivedObjectsOrRecently — 解包CoinWrapper并发送给Permission所有者
-└── um?: string | null — 联系对象
+├── owner_receive?: ReceivedObjectsOrRecently — Unwrap to Permission owner
+└── um?: string | null — Contact object
 ```
 
 ---
 
-### order — 订单管理
-**核心能力**：管理订单全生命周期，包括仲裁、进度推进、退款、设置代理等。
+### order — Order Management
 
-**CallOrder_Data关键字段**：
+**Capabilities**: Manage full order lifecycle: arbitration, progress advancement, refunds, agent setting.
+
+**CallOrder_Data Structure**:
+
 ```
-├── object: string — 订单ID或名称（必填）
-├── agents?: ManyAccountOrMark_Address — 订单代理（可操作订单但不能收款）
-├── required_info?: string | null — 联系对象ID或WTS Proof对象（通过Messenger交付信息的证明）
-├── progress?: Operate — 推进订单流程（同Progress的operate结构）
+├── object: string — Order ID or name (required)
+├── agents?: ManyAccountOrMark_Address — Order agents (can operate but not collect payment)
+├── required_info?: string | null — Contact object ID or WTS Proof (delivery proof via Messenger)
+├── progress?: Operate — Advance order workflow
 │   └── { operation: { next_node_name, forward }, hold?, adminUnhold?, message? }
-├── arb_confirm?: ArbConfirm — 提交赔偿请求并申请仲裁
+├── arb_confirm?: ArbConfirm — Submit compensation claim and apply for arbitration
 │   └── { arb, confirm, description?, proposition? }
-├── arb_objection?: ArbObjection — 反对仲裁结果并上诉
+├── arb_objection?: ArbObjection — Object to arbitration result and appeal
 │   └── { arb, objection: string }
-├── arb_claim_compensation?: ArbClaimCompensation — 指定已裁决Arb对象获取赔偿
+├── arb_claim_compensation?: ArbClaimCompensation — Claim compensation from arbitrated Arb
 │   └── { arb }
-├── receive?: QueryReceivedResult — 解包CoinWrapper并转移给订单所有者
-└── transfer_to?: AccountOrMark_Address — 设置订单新所有者
+├── receive?: QueryReceivedResult — Unwrap CoinWrapper to order owner
+└── transfer_to?: AccountOrMark_Address — Transfer order ownership
 ```
 
-**Order创建经验（从示例中提取）**：
-1. **通过Service下单（推荐）**：客户通过service操作的order_new字段下单，同时创建Order、Allocation、Progress。
-   ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "service名称",
-       "order_new": {
-         "buy": { "items": [...], "total_pay": { "balance": "金额" } },
-         "namedNewOrder": { "name": "myshop_order_v2" },
-         "namedNewAllocation": { "name": "myshop_allocation_v2" },
-         "namedNewProgress": { "name": "myshop_progress_v2" }
-       }
-     }
-   }
-   ```
-2. **WIP验证**：购买时可提供wip_hash进行产品真伪验证，确保购买的商品与承诺一致。
-3. **订单信息**：order_info字段可填写订单备注（如祝福语、特殊要求等）。
+**Order Creation (via Service)**:
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "service_name",
+    "order_new": {
+      "buy": { "items": [...], "total_pay": { "balance": "amount" } },
+      "namedNewOrder": { "name": "order_name" },
+      "namedNewAllocation": { "name": "allocation_name" },
+      "namedNewProgress": { "name": "progress_name" }
+    }
+  }
+}
+```
 
-**Order资金提取经验**：
-1. **提取条件**：提取资金需满足Service中order_allocators配置的Guard条件。
-2. **提取结构**：
-   ```json
-   {
-     "data": {
-       "object": "订单名称",
-       "receive": "提取Guard名称"
-     },
-     "submission": {
-       "type": "submission",
-       "guard": [{ "object": "提取Guard名称", "impack": true }],
-       "submission": [{
-         "guard": "提取Guard名称",
-         "submission": [{ "identifier": 0, "value_type": "Address", "value": "Progress名称" }]
-       }]
-     }
-   }
-   ```
-3. **谁可以提取**：由order_allocators中的sharing配置决定（如Signer=当前签名者，GuardIdentifier=从Guard表取地址）。
+**Fund Withdrawal**:
+```json
+{
+  "data": { "object": "order_name", "receive": "withdraw_guard_name" },
+  "submission": {
+    "type": "submission",
+    "guard": [{ "object": "withdraw_guard_name", "impack": true }],
+    "submission": [{
+      "guard": "withdraw_guard_name",
+      "submission": [
+        { "identifier": 0, "value_type": "Address", "value": "progress_name" }
+      ]
+    }]
+  }
+}
+```
 
 ---
 
-### gen_passport — 生成验证护照
-**核心能力**：Guard验证通过后生成不可变的验证凭证。
+### gen_passport — Generate Verified Passport
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| guard | string | **是** | Guard对象ID |
-| info | SubmissionCall | 否 | 提交数据（不提供则尝试从Guard获取已有提交） |
-| env | CallEnv | 否 | 环境配置 |
+**Capabilities**: Create immutable verified credentials after Guard validation passes.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| guard | string | Yes | Guard object ID to verify |
+| info | SubmissionCall | No | Submission data (omitted = use existing submissions) |
+| env | CallEnv | No | Environment config |
 
 ---
 
-## 输出结构
+## Output Structure
 
 ```
 CallOutput
 └── result: CallResult (discriminated union by type)
-    ├── type: "submission" → guard, submission — 需要用户提交Guard验证数据
-    ├── type: "transaction" → WowTransactionBlockResponse — 交易成功回执
-    ├── type: "error" → error: string — 错误信息
-    ├── type: "data" → data: ResponseData[] — 对象变更数据
-    └── type: "null" — 无返回值
+    ├── type: "submission" → guard, submission — Requires additional Guard data
+    ├── type: "transaction" → WowTransactionBlockResponse — Transaction receipt
+    ├── type: "error" → error: string — Error message
+    ├── type: "data" → data: ResponseData[] — Object change data
+    └── type: "null" — No return value
 ```
 
 ---
 
-## AI调用规划要点
+## Guard Submission Mechanism
 
-1. **对象创建 vs 修改**：
-   - 创建：object字段传 `{ name: string, tags?: string[], onChain?: boolean, replaceExistName?: boolean, type_parameter?: string, permission?: string|object }`。
-   - 修改：object字段传已有对象ID或名称。
+When an operation requires Guard validation and the Guard's table contains entries with **`b_submission: true`**, the tool returns `type: "submission"` instead of executing the transaction. This is a **two-step process**:
 
-2. **Guard/Permission是基础设施**：
-   - 设计复杂业务对象前，先确认Guard和Permission是否已准备就绪。
-   - 创建Guard前必须查询wowok_buildin_info(guard instructions)。
-   - 创建Permission前必须查询wowok_buildin_info(built-in permissions)。
+### Step 1 — Initial Call (Returns Submission Requirements)
 
-3. **金额参数统一处理**：
-   - 所有金额字段支持带单位字符串（如"2WOW"）或纯数字。
-   - 使用非WOW代币时，必须同时指定token_type。
+```json
+{
+  "result": {
+    "type": "submission",
+    "guard": [{ "object": "guard_name", "impack": true }],
+    "submission": [{
+      "guard": "guard_name",
+      "submission": [
+        { "identifier": 0, "value_type": "String", "name": "merkle_root", "value": null }
+      ]
+    }]
+  }
+}
+```
 
-4. **Machine发布前检查清单**：
-   - 所有节点定义是否正确？
-   - forward的Guard和权限是否配置？
-   - 是否已用machineNode2file导出检查？
+**What you receive**:
+- `guard`: List of Guards to verify, each with `object` (Guard ID/name) and `impack` (whether it affects final result).
+- `submission`: Array of submission requirements per Guard. Each item has `identifier` (0-255), `value_type` (expected type), `name` (description), and optionally `value` (pre-filled if available).
 
-5. **Service发布前检查清单**：
-   - Machine是否已创建并绑定？
-   - sales定价和库存是否正确？
-   - order_allocators的sharing总和是否为10000（Rate模式）？
-   - 仲裁和补偿设置是否合理？
-   - **关键**：一旦publish=true，Machine、arbitrations、order_allocators等不可再修改。
+### Step 2 — Re-submit with Filled Values
+
+**CRITICAL**: Only fill the `value` field. Do NOT modify `identifier`, `value_type`, or `name`.
+
+```json
+{
+  "operation_type": "progress",
+  "data": { "object": "progress_name", "operate": { ... } },
+  "submission": {
+    "type": "submission",
+    "guard": [{ "object": "guard_name", "impack": true }],
+    "submission": [{
+      "guard": "guard_name",
+      "submission": [
+        { "identifier": 0, "value_type": "String", "value": "64_char_hex_merkle_root", "name": "merkle_root" }
+      ]
+    }]
+  }
+}
+```
+
+**Rules**:
+1. **Only fill `value`**: The returned template has `identifier`, `value_type`, `name` pre-filled. Add `value` matching the `value_type`.
+2. **Value type matching**: Ensure `value` matches `value_type` exactly (String, Address, U64, Bool, etc.).
+3. **Impack**: All Guards with `impack: true` must pass verification for the operation to proceed.
+4. **Multiple Guards**: Include all required submissions in the array.
+
+### Supported Operations
+
+The following `operation_type` values support the `submission` field:
+- `service`, `machine`, `progress`, `repository`, `arbitration`
+- `treasury`, `reward`, `allocation`, `demand`, `order`
+- `gen_passport`
+
+---
+
+## AI Planning Notes
+
+1. **Object creation vs modification**:
+   - Create: `object` = `{ name, tags?, onChain?, replaceExistName?, type_parameter?, permission? }`
+   - Modify: `object` = existing ID or name string.
+
+2. **Infrastructure dependency**:
+   - Guard and Permission MUST be ready before business objects.
+   - `wowok_buildin_info (guard instructions)` → design Guard → `onchain_operations (guard)`.
+   - `wowok_buildin_info (built-in permissions)` → design Permission → `onchain_operations (permission)`.
+
+3. **Amount handling**:
+   - All amount fields accept unit strings (e.g., `"2WOW"`) or plain numbers.
+   - Non-WOW tokens require explicit `token_type`.
+
+4. **Pre-publish verification checklist**:
+   - Machine: All nodes defined? Forward Guards/permissions configured? Exported via `machineNode2file`?
+   - Service: Machine bound? Sales pricing correct? order_allocators Rate sum = 10000? Arbitration and compensation configured?
+
+5. **Progress operations**:
+   - Always check current node and available forwards via `query_toolkit (onchain_table_item_machine_node)` before operating.
+   - Use `env.no_cache: true` when chaining Progress operations.

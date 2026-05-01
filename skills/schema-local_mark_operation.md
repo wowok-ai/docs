@@ -1,85 +1,78 @@
 # Schema: local_mark_operation
 
-> 🔒 100% LOCAL, NEVER ON-CHAIN。管理ID名称和标签，仅存储在本地设备，永不发布到区块链。
+> 🔒 100% LOCAL, NEVER ON-CHAIN. Manage address aliases and tags stored ONLY on the local device for easy identification of user addresses or object IDs by name.
 
 ---
 
-## 顶层结构
+## Top-Level Structure
 
 ```
 LocalMarkOperation
-├── add?: { op: "add", data: MarkParam[] }
-├── remove?: { op: "remove", names: string[] }
-└── clear?: { op: "clear" }
-```
-
-**约束**：必须且只能指定一个操作（add/remove/clear）。
-
----
-
-## MarkParam（添加/更新标记）
-
-```
-MarkParam
-├── name?: { value: string(max 64), replaceExistName?: boolean }
-├── address: string(0x+64hex 或 builtin ID)
-└── tags?: string[] (max 50项, 每项max 64字符)
-```
-
-**约束**：
-- name.value: 最多64个bcs字符。
-- tags: 最多50个标签，每个最多64个bcs字符。
-- replaceExistName: 为true时，若名称已存在则覆盖；false时抛出错误（默认false）。
-
----
-
-## MarkData（返回数据结构）
-
-```
-MarkData
-├── name?: string(max 64)
-├── address: string
-├── tags?: string[]
-├── createdAt?: number (Unix ms)
-└── updatedAt?: number (Unix ms)
+├── Exactly one operation type (add / remove / clear)
+└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
 ```
 
 ---
 
-## 操作详解
+## Operations
 
-### add — 添加/更新标记
-- **输入**：data为MarkParam数组，至少1项。
-- **行为**：为指定地址添加名称和标签；若名称已存在且replaceExistName=false则报错。
-- **返回**：{ add: MarkData[] }
+### add — Add One or More Marks
 
-### remove — 按名称或地址移除
-- **输入**：names为string数组，每项可以是mark名称或地址。
-- **返回**：{ remove: MarkData[] }
+```
+{
+  "add": {
+    "op": "add",
+    "data": [
+      {
+        "address": "0x...",           // Valid WoWok ID (0x + 64 hex, or builtin ID)
+        "name": {
+          "value": "my_mark_name",    // Mark name (max 64 BCS chars)
+          "replaceExistName": false   // Replace existing (default: false)
+        },
+        "tags": ["tag1", "tag2"]      // Optional tags (max 50, each max 64 chars)
+      }
+    ]
+  }
+}
+```
 
-### clear — 清空所有标记
-- **输入**：无额外参数。
-- **返回**：{ clear: boolean }
+**Address formats**:
+- Standard: `0x` prefix + 64 hex characters
+- Builtin IDs: `0x5`-`0x9`, `@0xaaa`, `@0xaab`, `@0x403`, `@0xacc`, `@0xc`
 
 ---
 
-## 输出结构
+### remove — Remove Marks by Name or Address
 
 ```
-LocalMarkOperationOutputWrapped
-└── result: LocalMarkOperationOutput (discriminatedUnion by status)
-    ├── status: "success" → data: LocalMarkOperationResult
-    │   ├── clear?: boolean
-    │   ├── add?: MarkData[]
-    │   └── remove?: MarkData[]
-    └── status: "error" → error: string
+{
+  "remove": {
+    "op": "remove",
+    "names": ["mark_name_1", "mark_name_2"]
+  }
+}
+```
+
+**Note**: `names` array can contain mark names OR addresses.
+
+---
+
+### clear — Remove All Marks
+
+```
+{
+  "clear": {
+    "op": "clear"
+  }
+}
 ```
 
 ---
 
-## AI调用规划要点
+## AI Planning Notes
 
-1. **用户提到"给地址起个名字"或"标记这个对象"** → 使用local_mark_operation (add)。
-2. **名称冲突处理**：若用户未明确，默认replaceExistName=false，遇到重名需询问是否覆盖。
-3. **与on-chain personal的区别**：local_mark是纯本地私有数据；personal是链上公开数据。提醒用户区分。
-4. **批量操作**：支持一次add多个mark，适合初始化地址簿场景。
+1. **Local-only storage**: Marks are NEVER published to the blockchain. They exist only on the current device.
+2. **Cross-tool usage**: Use mark names in place of addresses across all WoWok tools (onchain_operations, query_toolkit, etc.).
+3. **Naming convention**: Use descriptive names (e.g., "my_service", "arbitration_guard").
+4. **Tags for organization**: Use tags to group related marks (e.g., ["infrastructure", "guards"]).
+5. **Replace caution**: `replaceExistName: true` will cause the existing mark with the same name to lose its name.

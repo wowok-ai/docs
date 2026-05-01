@@ -1,47 +1,81 @@
 # Schema: machineNode2file
 
-> ⚙️ 将链上Machine对象的节点定义导出到本地JSON或Markdown文件，便于查看、编辑和创建新Machine。
+> 📤 Export a Machine object's node definition from the blockchain to a local JSON or Markdown file for editing and creating new Machine objects.
 
 ---
 
-## 顶层结构
+## Top-Level Structure
 
 ```
-MachineNode2File_Input
-├── machine: string — Machine对象ID或名称（必填）
-├── file_path: string — 输出文件路径（必填）
-├── format?: "json" \| "markdown" — 输出格式（默认"json"）
-└── env?: { no_cache?: boolean, network?: "localnet" \| "testnet", account?: string }
-```
-
----
-
-## 输出结构
-
-```
-MachineNode2File_OutputWrapped
-└── result: MachineNode2File_Output (discriminatedUnion by status)
-    ├── status: "success" → data: { file_path, format, machine_object, node_count }
-    └── status: "error" → error: string
+MachineNode2File
+├── machine: string            // Machine object ID or name to export (required)
+├── file_path: string          // Output file path (absolute or relative) (required)
+├── format?: "json" | "markdown"  // Output format (default: "json")
+└── env?: CallEnv              // Optional environment
 ```
 
 ---
 
-## AI调用规划要点
+## Parameters
 
-1. **用途定位**：该工具是**只读导出**，不修改链上状态。用于：
-   - 查看已有Machine的完整节点定义。
-   - 基于已有Machine做模板修改后创建新Machine。
-2. **与query_toolkit的区别**：
-   - query_toolkit查询Machine返回的是运行时对象状态（ObjectMachine）。
-   - machineNode2file导出的是节点定义（node tree），可直接用于创建新Machine。
-3. **工作流程**：
-   ```
-   machineNode2file(已有MachineID) → 本地编辑文件 → onchain_operations(machine, node.type="file", node.file=编辑后的文件)
-   ```
-4. **format选择**：
-   - json：机器友好，适合程序化编辑。
-   - markdown：人类友好，适合手动编辑和阅读。
-5. **NodeField的两种模式**：
-   - 增量模式：直接传入node数组做增量修改。
-   - 完整替换模式：传入json/markdown文件路径，系统从文件加载完整节点定义替换现有定义。
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| machine | string | Yes | Machine object ID or local name to export |
+| file_path | string | Yes | Absolute or relative path for output file |
+| format | "json" \| "markdown" | No | Output format. JSON = structured data; Markdown = human-readable with tables |
+| env | CallEnv | No | Account, network, and other environment settings |
+
+---
+
+## Usage Patterns
+
+### Pattern 1: Export for Backup
+
+```json
+{
+  "machine": "my_machine",
+  "file_path": "./backups/my_machine.json",
+  "format": "json"
+}
+```
+
+### Pattern 2: Export for Editing and Re-creation
+
+```json
+{
+  "machine": "template_machine",
+  "file_path": "./templates/new_machine.md",
+  "format": "markdown"
+}
+```
+
+**After editing**: Use the exported file as `node.json_or_markdown_file` in `onchain_operations (machine)` to create a new Machine.
+
+---
+
+## Output Format Details
+
+### JSON Format
+
+Contains the complete node definition:
+- Array of `MachineNode` objects
+- Each node has `name` and `pairs`
+- Each pair has `prior_node`, `forwards`, and optional `threshold`
+- Each forward has `name`, `namedOperator`/`permissionIndex`, `weight`, and optional `guard`
+
+### Markdown Format
+
+Human-readable format with:
+- Machine metadata header
+- Nodes as sections
+- Forwards as tables within each node
+- Prior node relationships as diagrams
+
+---
+
+## AI Planning Notes
+
+1. **Machine immutability after publish**: After `publish=true`, nodes cannot be modified. Export → edit → create new is the standard workflow.
+2. **Template reuse**: Export well-designed Machines as templates for similar business processes.
+3. **Pre-publish verification**: Always export and review before publishing to catch design errors.
+4. **Cross-reference with Permission**: When editing forwards with `permissionIndex`, cross-reference with the Permission object's remark table to ensure correct index mapping.
