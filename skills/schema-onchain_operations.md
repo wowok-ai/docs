@@ -4,6 +4,28 @@
 
 ---
 
+## ⚠️ Critical: Field Execution Order
+
+**Fields within `data` are executed in schema definition order, NOT in the order you write them.**
+
+This means the blockchain processes fields sequentially from top to bottom as defined in the schema. If your business logic requires `A → B → C` but the schema order is `B → C → A`, the execution will happen as `B → C → A`, which may cause unexpected failures.
+
+**Example**: In `service`, the schema order is:
+1. `object` (create/modify service)
+2. `order_new` (place order)
+3. `description`
+4. `location`
+5. `sales`
+6. ...etc
+
+If you need to **create a service first, then add sales**, but you also want to **place an order in the same call**, this is fine because `object` executes before `order_new`. However, if you need `sales` to exist before `order_new` executes, you must split into two operations:
+- Call 1: `service` with `object` + `sales` (creates service and adds sales)
+- Call 2: `service` with `object` (existing) + `order_new` (places order)
+
+**Rule of thumb**: If multiple fields in a single operation have dependencies on each other, verify the schema field order. When in doubt, **split into multiple sequential operations** — this also makes debugging easier.
+
+---
+
 ## Top-Level Structure
 
 ```

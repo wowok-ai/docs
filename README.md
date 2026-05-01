@@ -68,6 +68,10 @@ After restarting the AI client, you can try a conversation like this to verify:
 
 ---
 
+> 🤖 **AI Collaboration Tip**: For the best AI-assisted WoWok experience, add [`skills/WOWOK.md`](skills/WOWOK.md) as project context in your AI client. This file provides comprehensive technical guidance for AI agents, including tool schemas, workflow patterns, error handling, and best practices. With this context, your AI can help you build, debug, and optimize WoWok operations much more effectively.
+
+---
+
 > 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
 
 ## 📚 Learning Path
@@ -77,7 +81,6 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Stage 1: Getting Started ⭐                                   │
-│  ├─ WoWok - Introduction and Deployment                       │
 │  ├─ Account - Local Wallet Management                         │
 │  └─ LocalMark - User/Object Naming and Categorization         │
 ├─────────────────────────────────────────────────────────────────┤
@@ -124,7 +127,7 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 Choose a stage to begin your WoWok journey:
 
 ### [📖 Stage 1: Getting Started →](docs/stage-01-introduction.md)
-**For Beginners** - Learn about WoWok, install the environment, and start with accounts and address books.
+**For Beginners** - Set up your local wallet (Account) and learn to name blockchain addresses with LocalMark.
 
 ### [🔐 Stage 2: Trust Management →](docs/stage-02-trust.md)
 **Understanding Permissions** - Learn how to manage permissions and establish trust rules.
@@ -133,19 +136,19 @@ Choose a stage to begin your WoWok journey:
 **Start Collaborating** - Master workflows, communication, and contact information management.
 
 ### [💼 Stage 4: Transaction Execution →](docs/stage-04-transaction.md)
-**Conduct Transactions** - Learn how to conduct commercial transactions on WoWok.
+**Conduct Transactions** - Learn how to use Service, Order, and Arbitration for commercial transactions with WIP-backed product descriptions.
 
 ### [🏪 Stage 5: Business Components →](docs/stage-05-business.md)
-**Business Operations** - Understand components for managing and operating on-chain businesses.
+**Business Operations** - Use Repository for structured data, Treasury for team funds, and Reward for marketing incentives.
 
 ### [👤 Stage 6: Personal Services →](docs/stage-06-personal.md)
-**Personal Services** - Use services designed for individuals.
+**Personal Services** - Manage private info locally with LocalInfo, post bounty requests with Demand, and build your on-chain identity with Personal.
 
 ### [🔍 Stage 7: Data Query →](docs/stage-07-query.md)
-**Explore Data** - Learn how to query on-chain and local data.
+**Explore Data** - Query objects, events, and protocol info; access documentation and learning resources.
 
 ### [🚀 Stage 8: Practical Examples →](docs/stage-08-query.md)
-**Real-World Applications** - Explore three complete practical examples (MyShop, ThreeBody_Signature, MyShop_Advanced) that demonstrate how to use WoWok in real-world scenarios.
+**Real-World Applications** - Explore three complete examples: MyShop (basic e-commerce), ThreeBody_Signature (signed book service), and MyShop_Advanced (full merchant system).
 
 ---
 

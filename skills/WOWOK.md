@@ -383,11 +383,92 @@ Follows Section 1.6 dependency chain exactly:
 
 ---
 
-## 7. Error Handling Patterns
+## 7. Response Types & Error Handling
 
-All tools return discriminated unions with `status: "success" | "error"`.
+All on-chain operations return a discriminated union via `result.type`. The response type determines the next action.
 
-- **On-chain operations**: May return `type: "submission"` requiring additional Guard data. Always check response type before assuming success.
-- **Guard validation failures**: Return specific error messages. Review Guard logic and submitted data.
-- **File parsing failures** (`machineNode2file`, `guard2file`): Include line/column information in error messages.
-- **Cache stale reads**: If sequential operations fail unexpectedly, retry with `env.no_cache: true`.
+### 7.1 Response Type Reference
+
+| `result.type` | Meaning | Next Action |
+|---------------|---------|-------------|
+| `"submission"` | Guard requires user-submitted data | Fill `value` fields and re-submit (see Section 1.5) |
+| `"transaction"` | Transaction executed on-chain | Check `effects.status` for success/failure |
+| `"error"` | Operation failed before reaching chain | Read `error` message, fix input, retry |
+| `"data"` | Object change data returned | Process `data` array for created/modified objects |
+| `"null"` | No return value | Operation completed with no data to return |
+
+### 7.2 Handling `type: "submission"` Responses
+
+When a Guard's table contains `b_submission: true` entries, the operation returns submission requirements instead of executing. This is **not an error** — it is a normal part of the Guard verification flow.
+
+**What to do when you receive `submission`**:
+
+1. **Present Guard info to the user clearly**:
+   - Show each Guard's `object` (name/ID) and `impack` status
+   - Explain what each Guard validates
+   - Suggest querying the Guard definition if context is unclear: `query_toolkit (onchain_object)` with the Guard ID
+
+2. **Explain each submission field**:
+   - `identifier`: The data slot index (0-255) in the Guard's table
+   - `value_type`: The expected data type (String, Address, U64, Bool, etc.)
+   - `name`: Human-readable description of what this field represents
+   - `object_type`: When `value_type` is "Address", this indicates the expected object type (e.g., Progress, Order, Service)
+   - `value`: **The ONLY field you fill**. All other fields must remain unchanged.
+
+3. **Handle multiple Guards**:
+   - The `guard` array may contain multiple Guard objects
+   - Each Guard has its own `submission` array with required fields
+   - All Guards with `impack: true` must pass for the operation to proceed
+   - Present each Guard's requirements separately to avoid confusion
+
+**Example user-facing explanation**:
+
+```
+This operation requires Guard verification. Please provide the following:
+
+Guard: shipping_confirmation_guard (impack: true)
+  This Guard validates that the merchant has provided shipping proof.
+  - Field [0] "merkle_root" (type: String): Enter the 64-character hex Merkle root of the shipping receipt.
+
+Guard: time_lock_guard (impack: true)
+  This Guard ensures sufficient time has passed.
+  - Field [1] "progress_ref" (type: Address, object_type: Progress): Enter the Progress object address to verify elapsed time.
+```
+
+### 7.3 Operation Splitting for Debugging
+
+While `onchain_operations` supports multiple fields in a single `data` object, **splitting complex operations into multiple sequential calls** is often better for debugging and error isolation.
+
+**When to split**:
+- **Field dependencies**: If field `B` depends on the result of field `A` (e.g., creating an object then referencing it), but the schema execution order does not match your dependency chain. Fields execute in schema definition order, not the order you write them.
+- **Complex transactions**: Multiple mutations in one call make it hard to identify which field failed.
+- **Guard submissions**: If multiple fields require different Guard validations, splitting avoids confusion about which submission belongs to which field.
+
+**Example — Splitting a Service build**:
+
+Instead of one large call:
+```json
+{ "operation_type": "service", "data": { "object": {...}, "sales": {...}, "machine": "...", "order_allocators": {...}, "publish": true } }
+```
+
+Split into steps:
+```
+Call 1: Create empty service → { "object": { "name": "my_service" } }
+Call 2: Add sales → { "object": "my_service", "sales": { "op": "add", ... } }
+Call 3: Bind machine → { "object": "my_service", "machine": "my_machine" }
+Call 4: Set allocators → { "object": "my_service", "order_allocators": {...} }
+Call 5: Publish → { "object": "my_service", "publish": true }
+```
+
+**Benefits**:
+- Each step can be verified before proceeding
+- Errors are isolated to specific fields
+- Easier to retry failed steps without re-executing successful ones
+- Better user feedback at each stage
+
+### 7.4 Error Patterns
+
+- **Guard validation failures**: After re-submitting with `submission`, if Guard logic evaluates to false, the transaction fails with a specific error. Review the Guard's rule tree (via `guard2file`) and the submitted data values.
+- **File parsing failures** (`machineNode2file`, `guard2file`): Include line/column information in error messages. Check file format and schema compliance.
+- **Cache stale reads**: If sequential operations fail unexpectedly (e.g., "object not found" when you just created it), retry with `env.no_cache: true`.
+- **Permission denied**: The operating account lacks the required Permission index for this operation. Check the object's Permission configuration.
