@@ -1,90 +1,160 @@
 # Schema: local_info_operation
 
-> 🔒 100% LOCAL, NEVER ON-CHAIN. Manage sensitive personal information stored ONLY on the device: delivery addresses, phone numbers, contacts.
+> 100% LOCAL, NEVER ON-CHAIN - Manage sensitive personal information stored ONLY on your device: delivery addresses, phone numbers, contacts.
 
 ---
 
 ## Top-Level Structure
 
-```
-LocalInfoOperation
-├── Exactly one operation type (add / remove / reset / clear)
-└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
-```
-
----
-
-## Operations
-
-### add — Add One or More Info Entries
-
-```
-{
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "home_address",       // Unique identifier (max 64 BCS chars)
-        "default": "123 Main St",     // Primary value (max 300 BCS chars)
-        "contents": ["Apt 4B", "City, State"],  // Additional values (max 50, each max 300 chars)
-        "createdAt": 1714500000000,   // Unix timestamp (ms)
-        "updatedAt": 1714500000000    // Unix timestamp (ms)
-      }
-    ]
-  }
-}
-```
-
-**Required fields**: `name`, `default`
-**Optional fields**: `contents`, `createdAt`, `updatedAt`
-
----
-
-### remove — Remove Info Entries by Name
-
-```
-{
-  "remove": {
-    "op": "remove",
-    "data": ["home_address", "work_phone"]
-  }
+```typescript
+LocalInfoOperation {
+  // Exactly ONE operation type must be specified
+  add?: AddOperation;
+  remove?: RemoveOperation;
+  reset?: ResetOperation;
+  clear?: ClearOperation;
 }
 ```
 
 ---
 
-### reset — Reset Contents of Existing Info Entry
+## Operation Types
 
-```
-{
-  "reset": {
-    "op": "reset",
-    "name": "home_address",
-    "contents": ["456 New St", "New City"]
-  }
+### add
+
+Add one or more info entries.
+
+```typescript
+AddOperation {
+  op: "add";
+  data: InfoData[];  // At least 1 item required
+}
+
+InfoData {
+  name: string;       // Unique identifier (max 64 bcs characters)
+  default: string;    // Primary/default value (max 300 bcs characters)
+  contents?: string[]; // Additional values (max 50 items, each max 300 bcs)
+  createdAt?: number; // Unix timestamp (ms)
+  updatedAt?: number; // Unix timestamp (ms)
 }
 ```
 
-**Note**: Replaces the entire `contents` array. The `default` field remains unchanged.
+**Result**:
 
----
-
-### clear — Remove All Info Entries
-
-```
-{
-  "clear": {
-    "op": "clear"
-  }
+```typescript
+AddResult {
+  success: boolean;
 }
 ```
 
 ---
 
-## AI Planning Notes
+### remove
 
-1. **Privacy first**: All info is stored ONLY on the local device. Never transmitted to the blockchain.
-2. **Use cases**: Delivery addresses, phone numbers, email addresses, emergency contacts.
-3. **Default vs contents**: `default` is the primary value; `contents` provides additional context.
-4. **Timestamp handling**: Use `Date.now()` for current timestamps when creating entries.
-5. **Name uniqueness**: Each info entry must have a unique `name` within the local store.
+Remove info entries by name.
+
+```typescript
+RemoveOperation {
+  op: "remove";
+  data: string[];     // Array of info names to remove (at least 1)
+}
+```
+
+**Result**:
+
+```typescript
+RemoveResult {
+  success: boolean;
+}
+```
+
+---
+
+### reset
+
+Reset the contents of an existing info entry.
+
+```typescript
+ResetOperation {
+  op: "reset";
+  name: string;       // Name of info entry to reset
+  contents: string[]; // New content list to replace existing
+}
+```
+
+**Result**:
+
+```typescript
+ResetResult {
+  success: boolean;
+}
+```
+
+---
+
+### clear
+
+Remove all info entries.
+
+```typescript
+ClearOperation {
+  op: "clear";
+}
+```
+
+**Result**:
+
+```typescript
+ClearResult {
+  success: boolean;
+}
+```
+
+---
+
+## Output Structure
+
+```typescript
+LocalInfoOperationOutput {
+  status: "success" | "error";
+  data?: LocalInfoOperationResult;  // Present when status = "success"
+  error?: string;                   // Present when status = "error"
+}
+
+LocalInfoOperationResult {
+  success: boolean;
+}
+
+// Wrapped format
+{
+  result: LocalInfoOperationOutput;
+}
+```
+
+---
+
+## Query Local Info List
+
+```typescript
+QueryLocalInfoList {
+  filter?: LocalInfoFilter;
+}
+
+LocalInfoFilter {
+  name?: string;              // Filter by info name (fuzzy match)
+  default?: string;           // Filter by default value (fuzzy match)
+  contents?: string[];        // Filter by contents (contains ANY of specified)
+  createdAt?: {
+    gte?: number;             // Created on or after (ms)
+    lte?: number;             // Created on or before (ms)
+  };
+  updatedAt?: {
+    gte?: number;             // Updated on or after (ms)
+    lte?: number;             // Updated on or before (ms)
+  };
+}
+
+QueryLocalInfoListResult {
+  result: InfoData[];
+}
+```

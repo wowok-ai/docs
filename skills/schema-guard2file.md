@@ -1,81 +1,153 @@
-# Schema: guard2file
+# Guard2File Tool Schema
 
-> 📤 Export a Guard object's definition from the blockchain to a local JSON or Markdown file for editing and creating new Guard objects.
+> **Tool Name**: `guard2file`
+> **Description**: Export a Guard object's definition from the blockchain to a local JSON or Markdown file for editing and creating new Guard objects. Note: To query on-chain object information, use the 'query_toolkit' tool instead.
 
 ---
 
-## Top-Level Structure
+## Tool Schema
 
-```
-Guard2File
-├── guard: string              // Guard object ID or name to export (required)
-├── file_path: string          // Output file path (absolute or relative) (required)
-├── format?: "json" | "markdown"  // Output format (default: "json")
-└── env?: CallEnv              // Optional environment
+```typescript
+guard2file: Guard2File_Input
 ```
 
 ---
 
-## Parameters
+## Input Schema
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| guard | string | Yes | Guard object ID or local name to export |
-| file_path | string | Yes | Absolute or relative path for output file |
-| format | "json" \| "markdown" | No | Output format. JSON = structured data; Markdown = human-readable with tables |
-| env | CallEnv | No | Account, network, and other environment settings |
-
----
-
-## Usage Patterns
-
-### Pattern 1: Export for Backup
-
-```json
-{
-  "guard": "my_guard",
-  "file_path": "./backups/my_guard.json",
-  "format": "json"
+```typescript
+Guard2File_Input {
+  guard: NameOrAddress,           // REQUIRED - Guard object ID or name to export
+  file_path: string,              // REQUIRED - Output file path (absolute or relative)
+  format?: "json" | "markdown",   // OPTIONAL - Output format (default: 'json')
+  env?: CallEnv                   // OPTIONAL - Environment configuration
 }
 ```
 
-### Pattern 2: Export for Editing and Re-creation
+---
 
-```json
-{
-  "guard": "template_guard",
-  "file_path": "./templates/new_guard.md",
-  "format": "markdown"
+## Sub Schemas
+
+### NameOrAddress
+
+```typescript
+NameOrAddress = string           // Object ID (0x prefix + 64 hex chars) or name (max 64 chars)
+```
+
+### CallEnv
+
+```typescript
+CallEnv {
+  account?: NameOrAddress,        // Account/Object name or ID for signing
+  network?: "localnet" | "testnet", // Network entrypoint
+  no_cache?: boolean,             // Whether to disable caching
+  permission_guard?: string[],    // Permission guard IDs for extended permissions
+  referrer?: string               // Referrer ID for first-time network users
 }
 ```
 
-**After editing**: Use the exported file as `root.file_path` in `onchain_operations (guard)` to create a new Guard.
+---
+
+## Output Schema
+
+```typescript
+Guard2File_OutputWrapped {
+  result: Guard2File_Output       // Guard2File operation output
+}
+
+Guard2File_Output =
+  | { status: "success"; data: Guard2File_SuccessData }
+  | { status: "error"; error: string }
+```
+
+### Success Data
+
+```typescript
+Guard2File_SuccessData {
+  file_path: string,              // Absolute path of the exported file
+  format: "json" | "markdown",    // Export format
+  guard_object: string            // Guard object ID
+}
+```
 
 ---
 
-## Output Format Details
+## Usage Guide
 
-### JSON Format
+### Purpose
 
-Contains the complete Guard definition:
-- `description`: Guard description
-- `table`: Data table definitions with identifiers, types, and submission flags
-- `root`: Rule tree with logic, instructions, queries, and children
-- `rely`: Dependent Guard references
+The `guard2file` tool is specifically designed to:
+1. Export an existing Guard object's definition from the blockchain
+2. Save it to a local file for editing
+3. Use the exported file to create new Guard objects
 
-### Markdown Format
+### When to Use
 
-Human-readable format with:
-- Guard metadata header
-- Data table as markdown table
-- Rule tree as nested structure
-- Instruction and query details
+| Scenario | Tool to Use |
+|----------|-------------|
+| Export Guard for editing | `guard2file` |
+| Query Guard on-chain state | `query_toolkit` |
+| Create new Guard | `onchain_operations` (guard) |
+| Modify existing Guard | `onchain_operations` (guard) |
+
+### File Formats
+
+**JSON Format** (`format: "json"`):
+- Machine-readable format
+- Suitable for programmatic processing
+- Default format
+
+**Markdown Format** (`format: "markdown"`):
+- Human-readable format with comments
+- Suitable for manual editing
+- Includes documentation
 
 ---
 
-## AI Planning Notes
+## Example
 
-1. **Guard immutability**: Guards cannot be modified after creation. Export → edit → create new is the standard workflow.
-2. **Template reuse**: Export well-tested Guards as templates for similar use cases.
-3. **Version control**: Store exported Guard definitions in version control for auditability.
-4. **Cross-reference**: After exporting, use `wowok_buildin_info (guard instructions)` to understand instruction semantics when editing.
+```typescript
+// Export a Guard to JSON file
+guard2file: {
+  guard: "0x1234...abcd",         // Guard object ID
+  file_path: "./my_guard.json",   // Output path
+  format: "json"
+}
+
+// Export a Guard to Markdown file
+guard2file: {
+  guard: "my_guard_name",         // Guard name
+  file_path: "./my_guard.md",     // Output path
+  format: "markdown"
+}
+```
+
+---
+
+## Output Examples
+
+### Success Response
+
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "file_path": "/absolute/path/to/my_guard.json",
+      "format": "json",
+      "guard_object": "0x1234567890abcdef..."
+    }
+  }
+}
+```
+
+### Error Response
+
+```json
+{
+  "result": {
+    "status": "error",
+    "error": "Guard object not found: 0x1234..."
+  }
+}
+```

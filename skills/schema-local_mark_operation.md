@@ -1,78 +1,148 @@
 # Schema: local_mark_operation
 
-> 🔒 100% LOCAL, NEVER ON-CHAIN. Manage address aliases and tags stored ONLY on the local device for easy identification of user addresses or object IDs by name.
+> 100% LOCAL, NEVER ON-CHAIN - Manage ID names and tags stored ONLY on your local device for easy identification of user address or object IDs by name.
 
 ---
 
 ## Top-Level Structure
 
-```
-LocalMarkOperation
-├── Exactly one operation type (add / remove / clear)
-└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
-```
-
----
-
-## Operations
-
-### add — Add One or More Marks
-
-```
-{
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "address": "0x...",           // Valid WoWok ID (0x + 64 hex, or builtin ID)
-        "name": {
-          "value": "my_mark_name",    // Mark name (max 64 BCS chars)
-          "replaceExistName": false   // Replace existing (default: false)
-        },
-        "tags": ["tag1", "tag2"]      // Optional tags (max 50, each max 64 chars)
-      }
-    ]
-  }
-}
-```
-
-**Address formats**:
-- Standard: `0x` prefix + 64 hex characters
-- Builtin IDs: `0x5`-`0x9`, `@0xaaa`, `@0xaab`, `@0x403`, `@0xacc`, `@0xc`
-
----
-
-### remove — Remove Marks by Name or Address
-
-```
-{
-  "remove": {
-    "op": "remove",
-    "names": ["mark_name_1", "mark_name_2"]
-  }
-}
-```
-
-**Note**: `names` array can contain mark names OR addresses.
-
----
-
-### clear — Remove All Marks
-
-```
-{
-  "clear": {
-    "op": "clear"
-  }
+```typescript
+LocalMarkOperation {
+  // Exactly ONE operation type must be specified
+  add?: AddOperation;
+  remove?: RemoveOperation;
+  clear?: ClearOperation;
 }
 ```
 
 ---
 
-## AI Planning Notes
+## Operation Types
 
-1. **Local-only storage**: Marks are NEVER published to the blockchain. They exist only on the current device.
-2. **Cross-tool usage**: Use mark names in place of addresses across all WoWok tools (onchain_operations, query_toolkit, etc.).
-3. **Naming convention**: Use descriptive names (e.g., "my_service", "arbitration_guard").
-4. **Tags for organization**: Use tags to group related marks (e.g., ["infrastructure", "guards"]).
-5. **Replace caution**: `replaceExistName: true` will cause the existing mark with the same name to lose its name.
+### add
+
+Add one or more marks.
+
+```typescript
+AddOperation {
+  op: "add";
+  data: MarkParam[];  // At least 1 item required
+}
+
+MarkParam {
+  address: string;    // Valid ID: 0x prefix + 64 hex chars, or builtin ID
+  name?: {
+    value: string;    // Mark name (max 64 bcs characters)
+    replaceExistName?: boolean;  // Replace existing mark with same name
+  };
+  tags?: string[];    // Max 50 tags, each max 64 bcs characters
+}
+```
+
+**Result**:
+
+```typescript
+AddResult {
+  add: MarkData[];    // List of added mark data
+}
+
+MarkData {
+  name?: string;      // Mark name (max 64 bcs characters)
+  address: string;    // Valid ID
+  tags?: string[];    // Tags for categorization
+  createdAt?: number; // Unix timestamp (ms)
+  updatedAt?: number; // Unix timestamp (ms)
+}
+```
+
+---
+
+### remove
+
+Remove marks by name or address.
+
+```typescript
+RemoveOperation {
+  op: "remove";
+  names: string[];    // Array of mark names or addresses to remove (at least 1)
+}
+```
+
+**Result**:
+
+```typescript
+RemoveResult {
+  remove: MarkData[];  // List of removed mark data
+}
+```
+
+---
+
+### clear
+
+Remove all marks.
+
+```typescript
+ClearOperation {
+  op: "clear";
+}
+```
+
+**Result**:
+
+```typescript
+ClearResult {
+  clear: boolean;     // Whether all marks were successfully removed
+}
+```
+
+---
+
+## Output Structure
+
+```typescript
+LocalMarkOperationOutput {
+  status: "success" | "error";
+  data?: LocalMarkOperationResult;  // Present when status = "success"
+  error?: string;                   // Present when status = "error"
+}
+
+LocalMarkOperationResult {
+  add?: MarkData[];
+  remove?: MarkData[];
+  clear?: boolean;
+}
+
+// Wrapped format
+{
+  result: LocalMarkOperationOutput;
+}
+```
+
+---
+
+## Query Local Mark List
+
+```typescript
+QueryLocalMarkList {
+  filter?: LocalMarkFilter;
+}
+
+LocalMarkFilter {
+  name?: string;              // Filter by mark name (fuzzy match)
+  tags?: string[];            // Filter by tags (contains ANY of specified)
+  address?: string;           // Filter by address (exact match)
+  createdAt?: {
+    gte?: number;             // Created on or after (ms)
+    lte?: number;             // Created on or before (ms)
+  };
+  updatedAt?: {
+    gte?: number;             // Updated on or after (ms)
+    lte?: number;             // Updated on or before (ms)
+  };
+}
+
+QueryLocalMarkListResult {
+  result: MarkData[];
+}
+```

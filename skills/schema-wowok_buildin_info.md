@@ -1,124 +1,296 @@
-# Schema: wowok_buildin_info
+# WoWok Built-in Info Tool Schema
 
-> ℹ️ Query WoWok protocol information: constants, built-in permissions, guard instructions, current network, or value types.
-
----
-
-## Top-Level Structure
-
-```
-WowokBuildinInfo
-├── Exactly one info type (see below)
-└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
-```
+> **Tool Name**: `wowok_buildin_info`
+> **Description**: Query WoWok protocol information: 'constants', 'built-in permissions', 'guard instructions', 'current network', or 'value types'.
 
 ---
 
-## Info Types
+## Tool Schema
 
-### constants — Protocol Constants
-
+```typescript
+wowok_buildin_info: ProtocolInfoQuery
 ```
-{
-  "constants": {}
+
+---
+
+## Input Schema
+
+```typescript
+ProtocolInfoQuery =
+  | { info: "constants" }
+  | { info: "built-in permissions"; filter?: PermissionFilter }
+  | { info: "guard instructions"; filter?: GuardInstructFilterOptions }
+  | { info: "current network" }
+  | { info: "value types" }
+```
+
+---
+
+## Sub Schemas
+
+### PermissionFilter
+
+```typescript
+PermissionFilter {
+  index?: number,                 // Filter by permission index
+  name?: string,                  // Filter by permission name (partial match, case-insensitive)
+  module?: string                 // Filter by module name (e.g., 'service', 'order', 'machine')
 }
 ```
 
-**Returns**: Protocol-wide constants including:
-- Token type definitions
-- Gas price parameters
-- Time lock defaults
-- Maximum values for various fields
+### GuardInstructFilterOptions
 
----
-
-### built-in permissions — Built-in Permission Definitions
-
-```
-{
-  "built-in permissions": {}
+```typescript
+GuardInstructFilterOptions {
+  id?: number,                    // Filter by instruction ID
+  name?: string,                  // Filter by instruction name (partial match, case-insensitive)
+  objectType?: string,            // Filter by object type
+  returnType?: string             // Filter by return value type
 }
 ```
 
-**Returns**: Complete list of built-in permission indices with descriptions.
+---
 
-**Critical for Permission creation**: Query this BEFORE creating Permission objects to understand available indices and their semantics.
+## Output Schema
 
-**Key concepts**:
-- Built-in indices: Predefined by the protocol (0-999)
-- Custom indices: User-defined (1000-65535)
-- Each index maps to a specific operation on a specific object type
+```typescript
+ProtocolInfoResult {
+  result: ProtocolInfoResultWrapped
+}
+
+ProtocolInfoResultWrapped =
+  | { info: "constants"; result: ConstantItem[] }
+  | { info: "built-in permissions"; result: PermissionInfoType[] }
+  | { info: "guard instructions"; result: GuardItem[] }
+  | { info: "current network"; result: Entrypoint }
+  | { info: "value types"; result: ConstantItem[] }
+```
 
 ---
 
-### guard instructions — Guard Instruction Definitions
+## Result Type Schemas
 
-```
-{
-  "guard instructions": {}
+### ConstantItem
+
+```typescript
+ConstantItem {
+  name: string,                   // Constant name
+  value: string,                  // Constant value
+  description: string             // Constant description
 }
 ```
 
-**Returns**: Complete list of available Guard instructions with:
-- Instruction ID
-- Name
-- Parameter types
-- Return type
-- Description
+### PermissionInfoType
 
-**Critical for Guard creation**: Query this BEFORE creating Guard objects to understand available validation instructions.
-
-**Common instructions**:
-- `verify_address`: Validate address format
-- `verify_merkle_root`: Validate 64-char hex string
-- `verify_time_elapsed`: Check time since event
-- `verify_node_set`: Check if current node is in allowed set
-- `verify_service_order`: Validate service-order association
-
----
-
-### current network — Current Network Information
-
-```
-{
-  "current network": {}
+```typescript
+PermissionInfoType {
+  index: number,                  // Permission index (0-65535)
+  name: string,                   // Permission name
+  module: string,                 // Module name
+  description: string             // Permission description
 }
 ```
 
-**Returns**: Current network configuration including:
-- Network identifier (localnet/testnet)
-- RPC endpoint
-- Chain identifier
+### GuardItem
 
----
-
-### value types — Supported Value Types
-
-```
-{
-  "value types": {}
+```typescript
+GuardItem {
+  id: number,                     // Instruction ID
+  name: string,                   // Instruction name
+  objectType: string,             // Object type this instruction operates on
+  parameters: ValueType[],        // Parameter types
+  return: ValueType,              // Return value type
+  description: string,            // Instruction description
+  parameters_description: string[] // Parameter descriptions
 }
 ```
 
-**Returns**: All supported value types for:
-- Guard table entries
-- Repository data
-- Submission values
+### Entrypoint
 
-**Common types**:
-- `String`: UTF-8 text
-- `Address`: WoWok address (0x + 64 hex)
-- `U64`: Unsigned 64-bit integer
-- `U128`: Unsigned 128-bit integer
-- `Bool`: Boolean
-- `Vector<U8>`: Byte array
+```typescript
+Entrypoint = "localnet" | "testnet"
+```
+
+### ValueType
+
+```typescript
+ValueType =
+  | "Bool" | "Address" | "String"
+  | "U8" | "U16" | "U32" | "U64" | "U128" | "U256"
+  | "VecBool" | "VecAddress" | "VecString"
+  | "VecU8" | "VecU16" | "VecU32" | "VecU64" | "VecU128" | "VecU256"
+  | "VecVecU8"
+  | number  // Numeric representation (0-18)
+```
 
 ---
 
-## AI Planning Notes
+## Query Type Selection Guide
 
-1. **Query before design**: Always query `built-in permissions` and `guard instructions` before creating Permission or Guard objects.
-2. **Permission index planning**: Document custom index semantics in Permission remarks for maintainability.
-3. **Guard instruction selection**: Choose instructions based on validation requirements. Combine with `logic: "and"`/`"or"` for complex rules.
-4. **Value type matching**: Ensure submission values match the expected types defined in Guard tables.
-5. **Network awareness**: Query `current network` to confirm the operating environment before submitting transactions.
+| Query Type | Description | Use Case |
+|------------|-------------|----------|
+| `constants` | Protocol constants | Get system-wide constant values |
+| `built-in permissions` | Built-in permission definitions | Find permission indices for Permission objects |
+| `guard instructions` | Guard query instructions | Find available data queries for Guard nodes |
+| `current network` | Current network entrypoint | Verify which network is active |
+| `value types` | Supported value types | Get type mappings for Guard/Repository data |
+
+---
+
+## Examples
+
+### Query Constants
+
+```typescript
+wowok_buildin_info: {
+  info: "constants"
+}
+```
+
+### Query Built-in Permissions with Filter
+
+```typescript
+wowok_buildin_info: {
+  info: "built-in permissions",
+  filter: {
+    module: "service"             // Filter for service-related permissions
+  }
+}
+```
+
+### Query Guard Instructions with Filter
+
+```typescript
+wowok_buildin_info: {
+  info: "guard instructions",
+  filter: {
+    objectType: "Service",        // Filter for Service object queries
+    returnType: "U64"             // Filter for U64 return type
+  }
+}
+```
+
+### Query Current Network
+
+```typescript
+wowok_buildin_info: {
+  info: "current network"
+}
+```
+
+### Query Value Types
+
+```typescript
+wowok_buildin_info: {
+  info: "value types"
+}
+```
+
+---
+
+## Output Examples
+
+### Constants Result
+
+```json
+{
+  "result": {
+    "info": "constants",
+    "result": [
+      {
+        "name": "MAX_GUARD_NODES",
+        "value": "64",
+        "description": "Maximum number of nodes in a Guard"
+      },
+      {
+        "name": "MAX_MACHINE_NODES",
+        "value": "256",
+        "description": "Maximum number of nodes in a Machine"
+      }
+    ]
+  }
+}
+```
+
+### Built-in Permissions Result
+
+```json
+{
+  "result": {
+    "info": "built-in permissions",
+    "result": [
+      {
+        "index": 0,
+        "name": "service.create",
+        "module": "service",
+        "description": "Create new service"
+      },
+      {
+        "index": 1,
+        "name": "service.update",
+        "module": "service",
+        "description": "Update service settings"
+      }
+    ]
+  }
+}
+```
+
+### Guard Instructions Result
+
+```json
+{
+  "result": {
+    "info": "guard instructions",
+    "result": [
+      {
+        "id": 1001,
+        "name": "service.description",
+        "objectType": "Service",
+        "parameters": [],
+        "return": "String",
+        "description": "Get service description",
+        "parameters_description": []
+      }
+    ]
+  }
+}
+```
+
+### Current Network Result
+
+```json
+{
+  "result": {
+    "info": "current network",
+    "result": "testnet"
+  }
+}
+```
+
+### Value Types Result
+
+```json
+{
+  "result": {
+    "info": "value types",
+    "result": [
+      {
+        "name": "Bool",
+        "value": "0",
+        "description": "Boolean type"
+      },
+      {
+        "name": "Address",
+        "value": "1",
+        "description": "Address type"
+      },
+      {
+        "name": "String",
+        "value": "2",
+        "description": "String type"
+      }
+    ]
+  }
+}
+```

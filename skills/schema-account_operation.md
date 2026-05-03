@@ -1,175 +1,402 @@
 # Schema: account_operation
 
-> 🔒 100% LOCAL, NEVER ON-CHAIN. Manage WoWok accounts locally on the device. All operations are private and never touch the blockchain.
+> 100% LOCAL, NEVER ON-CHAIN - Manage WoWok accounts locally on device: generate, suspend, resume, faucet-test, operate assets, sign data, etc.
 
 ---
 
 ## Top-Level Structure
 
-```
-AccountOperation
-├── Exactly one operation type (see below)
-└── env?: { account?, network?, no_cache?, permission_guard?, referrer? }
-```
-
----
-
-## Operations
-
-### gen — Generate New Account
-
-```
-{
-  "gen": {
-    "name": "my_account",           // Account name (max 64 chars, optional, empty = default)
-    "m": "messenger_name",          // Enable messenger (optional, max 64 chars)
-    "replaceExistName": false       // Replace existing name (default: false)
-  }
-}
-```
-
-**Notes**:
-- If `name` is empty, generates the default account.
-- If `replaceExistName` is false and name exists, throws error.
-- `m` enables the encrypted messenger for this account.
-
----
-
-### rename — Rename Account
-
-```
-{
-  "rename": {
-    "name_or_address": "old_name",  // Current name or address
-    "new_name": "new_name"          // New name (max 64 chars)
-  }
+```typescript
+AccountOperation {
+  // Exactly ONE operation type must be specified
+  gen?: GenOperation;
+  faucet?: FaucetOperation;
+  suspend?: SuspendOperation;
+  resume?: ResumeOperation;
+  rename?: RenameOperation;
+  swap_name?: SwapNameOperation;
+  transfer?: TransferOperation;
+  get?: GetOperation;
+  signData?: SignDataOperation;
+  messenger?: MessengerOperation;
 }
 ```
 
 ---
 
-### suspend — Suspend Account
+## Operation Types
 
-```
-{
-  "suspend": {
-    "name_or_address": "account_name"  // Name or address to suspend
-  }
+### gen
+
+Generate a new account.
+
+```typescript
+GenOperation {
+  name?: string;              // Account name (max 64 chars). Empty = default account
+  replaceExistName?: boolean; // Force claim existing name
+  m?: string | null;          // Messenger name to enable. Null = disable
 }
 ```
 
-**Effect**: Removes account from active list. Cannot sign transactions until resumed.
+**Result**:
 
----
-
-### resume — Resume Account
-
-```
-{
-  "resume": {
-    "address": "0x...",             // Full 66-char address (0x + 64 hex)
-    "name": "new_name"              // Optional new name
-  }
-}
-```
-
----
-
-### swap_name — Swap Account Names
-
-```
-{
-  "swap_name": {
-    "name1": "account_a",
-    "name2": "account_b"
-  }
+```typescript
+GenResult {
+  address: string;            // New account ID
+  name?: string;              // Account name
+  m?: string | null;          // Messenger name if enabled
 }
 ```
 
 ---
 
-### transfer — Transfer Tokens Between Accounts
+### faucet
 
+Distribute test coins from faucet.
+
+```typescript
+FaucetOperation {
+  name_or_address?: string;   // Account name or address. Empty = default
+  network: "localnet" | "testnet";
+}
 ```
-{
-  "transfer": {
-    "name_or_address_from": "sender",   // Sender (empty = default)
-    "name_or_address_to": "recipient",  // Recipient
-    "amount": "10WOW",                  // Amount (unit string or number)
-    "token_type": "0x2::wow::WOW",      // Optional: non-default token type
-    "network": "testnet"                // Required: localnet or testnet
-  }
+
+**Result**:
+
+```typescript
+FaucetResult {
+  name_or_address?: string;
+  result: {
+    amount: number;
+    id: string;
+    transferTxDigest: string;
+  }[];
+  network: "localnet" | "testnet";
 }
 ```
 
 ---
 
-### faucet — Request Test Coins
+### suspend
 
-```
-{
-  "faucet": {
-    "name_or_address": "account_name",  // Target account (empty = default)
-    "network": "testnet"                // Required: localnet or testnet
-  }
+Remove account from active list (cannot sign transactions).
+
+```typescript
+SuspendOperation {
+  name_or_address?: string;   // Account name or address. Empty = default
 }
 ```
 
-**Note**: Only available on testnet and localnet.
+**Result**:
 
----
-
-### get — Generate Coin Object ID
-
-```
-{
-  "get": {
-    "name_or_address": "account_name",  // Source account (empty = default)
-    "balance_required": "5WOW",         // Required balance amount
-    "token_type": "0x2::wow::WOW",      // Optional: non-default token type
-    "network": "testnet"                // Required
-  }
-}
-```
-
-**Returns**: Coin object ID with sufficient balance.
-
----
-
-### messenger — Enable/Disable Messenger
-
-```
-{
-  "messenger": {
-    "name_or_account": "account_name",  // Target account (empty = default)
-    "m": "messenger_name"               // Enable messenger (null = disable)
-  }
+```typescript
+SuspendResult {
+  name_or_address?: string;
+  success: boolean;
 }
 ```
 
 ---
 
-### signData — Sign Data with Account
+### resume
 
-```
-{
-  "signData": {
-    "name_or_address": "account_name",  // Signing account (empty = default)
-    "data": "message_to_sign",          // Data to sign
-    "data_encoding": "utf8"             // Optional: utf8 (default), base64, hex
-  }
+Add account back to active list.
+
+```typescript
+ResumeOperation {
+  address: string;            // Account ID (0x + 64 hex chars)
+  name?: string;              // New name for resumed account
 }
 ```
 
-**Returns**: Signature bytes.
+**Result**:
+
+```typescript
+ResumeResult {
+  address: string;
+  name?: string;
+  success: boolean;
+}
+```
 
 ---
 
-## AI Planning Notes
+### rename
 
-1. **Default account**: Use empty string `""` for the default account in all operations.
-2. **Address format**: Full WoWok address is `0x` prefix + 64 hex characters (66 chars total).
-3. **Network requirement**: `transfer`, `faucet`, and `get` require explicit `network` field.
-4. **Token amounts**: Accept unit strings (e.g., `"2WOW"`) or plain numbers.
-5. **Account lifecycle**: `gen` → `rename` → operations → `suspend`/`resume`.
-6. **Messenger integration**: Enable messenger per-account for encrypted communication features.
+Rename an account.
+
+```typescript
+RenameOperation {
+  name_or_address?: string;   // Source account. Empty = default
+  new_name: string;           // New account name (max 64 chars)
+}
+```
+
+**Result**:
+
+```typescript
+RenameResult {
+  name_or_address?: string;
+  new_name: string;
+  success: boolean;
+}
+```
+
+---
+
+### swap_name
+
+Swap names between two accounts.
+
+```typescript
+SwapNameOperation {
+  name1?: string;             // First account name. Empty = default
+  name2?: string;             // Second account name. Empty = default
+}
+```
+
+**Result**:
+
+```typescript
+SwapNameResult {
+  name1?: string;
+  name2?: string;
+  success: boolean;
+}
+```
+
+---
+
+### transfer
+
+Transfer tokens between accounts.
+
+```typescript
+TransferOperation {
+  name_or_address_from?: string;  // Sender. Empty = default
+  name_or_address_to?: string;    // Recipient. Empty = default
+  amount: number | string;        // Amount to transfer
+  token_type?: string;            // Default: 0x2::wow::WOW
+  network?: "localnet" | "testnet";
+}
+```
+
+**Result**: `WowTransactionBlockResponse` (see Transaction Response Schema)
+
+---
+
+### get
+
+Generate new coin object by required amount.
+
+```typescript
+GetOperation {
+  name_or_address?: string;       // Account. Empty = default
+  balance_required: number | string;
+  token_type?: string;            // Default: 0x2::wow::WOW
+  network?: "localnet" | "testnet";
+}
+```
+
+**Result**:
+
+```typescript
+GetResult {
+  coin_address?: string;          // New coin object ID
+  name_or_address?: string;
+  balance_required: number | string;
+  token_type?: string;
+  network?: "localnet" | "testnet";
+}
+```
+
+---
+
+### signData
+
+Sign data with account's private key.
+
+```typescript
+SignDataOperation {
+  name_or_address?: string;   // Account. Empty = default
+  data: string;               // Data to sign
+  data_encoding?: "utf8" | "base64" | "hex";  // Default: utf8
+}
+```
+
+**Result**:
+
+```typescript
+SignDataResult {
+  name_or_address?: string;
+  signature: string;          // Signature in hex
+  publicKey: string;          // Public key in hex
+  address: string;            // Account address
+}
+```
+
+---
+
+### messenger
+
+Enable or disable messenger for an account.
+
+```typescript
+MessengerOperation {
+  name_or_account?: string;   // Account. Empty = default
+  m: string | null;           // Messenger name. Null = disable
+}
+```
+
+**Result**:
+
+```typescript
+MessengerResult {
+  name_or_account?: string;
+  m: string | null;
+}
+```
+
+---
+
+## Common Sub-Schemas
+
+### WowTransactionBlockResponse
+
+```typescript
+WowTransactionBlockResponse {
+  digest: string;
+  effects?: TransactionEffects;
+  events?: WowEvent[];
+  balanceChanges?: BalanceChange[];
+  objectChanges?: WowObjectChange[];
+  errors?: string[];
+  // ... additional fields
+}
+```
+
+### TransactionEffects
+
+```typescript
+TransactionEffects {
+  status: {
+    status: "success" | "failure";
+    error?: string;
+  };
+  gasUsed: {
+    computationCost: string;
+    storageCost: string;
+    storageRebate: string;
+    nonRefundableStorageFee: string;
+  };
+  gasObject: OwnedObjectRef;
+  created?: OwnedObjectRef[];
+  mutated?: OwnedObjectRef[];
+  deleted?: WowObjectRef[];
+  // ... additional fields
+}
+```
+
+### WowEvent
+
+```typescript
+WowEvent {
+  id: {
+    eventSeq: string;
+    txDigest: string;
+  };
+  packageId: string;
+  transactionModule: string;
+  sender: string;
+  type: string;
+  parsedJson: Record<string, string | number | boolean>;
+  bcs: string;
+  bcsEncoding: "base64" | "base58";
+  timestampMs?: string;
+}
+```
+
+### BalanceChange
+
+```typescript
+BalanceChange {
+  amount: string;     // Negative for spending, positive for receiving
+  coinType: string;
+  owner: ObjectOwner;
+}
+```
+
+### WowObjectChange
+
+```typescript
+WowObjectChange =
+  | { type: "created"; objectId: string; objectType: string; owner: ObjectOwner; sender: string; version: string | number; digest: string }
+  | { type: "mutated"; objectId: string; objectType: string; owner: ObjectOwner | null; sender: string; version: string | number; digest: string; previousVersion: string | number }
+  | { type: "deleted"; objectId: string; objectType: string; sender: string; version: string | number }
+  | { type: "transferred"; objectId: string; objectType: string; recipient: ObjectOwner; sender: string; version: string | number; digest: string }
+  | { type: "wrapped"; objectId: string; objectType: string; sender: string; version: string | number }
+  | { type: "published"; packageId: string; version: string | number; digest: string; modules: string[] };
+```
+
+### ObjectOwner
+
+```typescript
+ObjectOwner =
+  | { AddressOwner: string }
+  | { ObjectOwner: string }
+  | { Shared: { initial_shared_version: number } }
+  | "Immutable";
+```
+
+### WowObjectRef
+
+```typescript
+WowObjectRef {
+  objectId: string;
+  version: string | number;
+  digest: string;
+}
+```
+
+### OwnedObjectRef
+
+```typescript
+OwnedObjectRef {
+  owner: ObjectOwner;
+  reference: WowObjectRef;
+}
+```
+
+---
+
+## Output Structure
+
+```typescript
+AccountOperationOutput {
+  status: "success" | "error";
+  data?: AccountOperationResult;  // Present when status = "success"
+  error?: string;                 // Present when status = "error"
+}
+
+// Wrapped format
+{
+  result: AccountOperationOutput;
+}
+```
+
+### AccountOperationResult
+
+```typescript
+AccountOperationResult {
+  gen?: GenResult;
+  faucet?: FaucetResult;
+  suspend?: SuspendResult;
+  resume?: ResumeResult;
+  rename?: RenameResult;
+  swap_name?: SwapNameResult;
+  transfer?: WowTransactionBlockResponse;
+  get?: GetResult;
+  signData?: SignDataResult;
+  messenger?: MessengerResult;
+}
+```

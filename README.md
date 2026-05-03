@@ -116,7 +116,9 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 │  Stage 8: Practical Examples 🚀                                │
 │  ├─ MyShop - Basic E-Commerce Example                         │
 │  ├─ ThreeBody_Signature - Signed Book Service Example         │
-│  └─ MyShop_Advanced - Advanced E-Commerce Example             │
+│  ├─ MyShop_Advanced - Advanced E-Commerce Example             │
+│  ├─ Insurance - Time-Lock Insurance Claim Processing          │
+│  └─ Travel - Weather-Dependent Travel with Sub-Orders         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -147,8 +149,16 @@ Choose a stage to begin your WoWok journey:
 ### [🔍 Stage 7: Data Query →](docs/stage-07-query.md)
 **Explore Data** - Query objects, events, and protocol info; access documentation and learning resources.
 
-### [🚀 Stage 8: Practical Examples →](docs/stage-08-query.md)
-**Real-World Applications** - Explore three complete examples: MyShop (basic e-commerce), ThreeBody_Signature (signed book service), and MyShop_Advanced (full merchant system).
+### [🚀 Stage 8: Practical Examples →](examples/)
+**Real-World Applications** - Explore complete business examples demonstrating various WoWok protocol features:
+
+| Example | Core Feature | Description |
+|---------|--------------|-------------|
+| [MyShop](examples/MyShop/) | Basic E-Commerce | Simple online store with product listings and orders |
+| [ThreeBody_Signature](examples/ThreeBody_Signature/) | Signed Book Service | Limited edition signed book sales with WIP verification |
+| [MyShop_Advanced](examples/MyShop_Advanced/) | Advanced E-Commerce | Full merchant system with arbitration and rewards |
+| [Insurance](examples/Insurance/) | Time-Lock Guards | Insurance claims with time-lock verification using convert_witness |
+| [Travel](examples/Travel/) | Multi-Node Workflow | Iceland travel service with weather-dependent activities and sub-orders |
 
 ---
 
@@ -177,6 +187,11 @@ Choose a stage to begin your WoWok journey:
 | [Query](docs/query.md) | Query | 7 | Data query |
 | [On-chain Events](docs/onchain_events.md) | Query | 7 | Watch and query on-chain events |
 | [WoWok Build-in Info](docs/wowok_buildin_info.md) | Query | 7 | Query protocol constants and info |
+| [MyShop Example](examples/MyShop/) | Example | 8 | Basic e-commerce store with product listings |
+| [ThreeBody_Signature Example](examples/ThreeBody_Signature/) | Example | 8 | Signed book service with WIP verification |
+| [MyShop_Advanced Example](examples/MyShop_Advanced/) | Example | 8 | Advanced merchant system with arbitration |
+| [Insurance Example](examples/Insurance/) | Example | 8 | Time-lock insurance claims with convert_witness |
+| [Travel Example](examples/Travel/) | Example | 8 | Multi-node workflow with weather checks and sub-orders |
 
 ---
 

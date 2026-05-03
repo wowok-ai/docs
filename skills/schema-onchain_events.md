@@ -1,111 +1,201 @@
-# Schema: onchain_events
+# On-Chain Events Tool Schema
 
-> 📡 Watch on-chain WoWok events by type. Supports pagination for fetching large result sets.
+> **Tool Name**: `onchain_events`
+> **Description**: Watch on-chain WOWOK events by type. Supports arbitration events, new order events, progress events, demand presentation events, demand feedback events, and new entity registration events. Use pagination cursor for fetching large result sets.
 
 ---
 
-## Top-Level Structure
+## Tool Schema
 
-```
-OnchainEvents
-├── type: EventType              // Event type to query (required)
-├── limit?: number              // Max results per query (optional)
-├── cursor?: EventCursor        // Pagination cursor (optional, null for first query)
-├── order?: "ascending" | "descending"  // Sort order (optional)
-├── network?: "localnet" | "testnet"    // Network (optional, uses default)
-└── no_cache?: boolean          // Bypass cache (optional)
+```typescript
+onchain_events: OnchainEventsInput
 ```
 
 ---
 
-## Event Types
+## Input Schema
 
-| Type | Description | Key Fields |
-|------|-------------|------------|
-| `ArbEvent` | Arbitration events | arb_id, order_id, status, voting_result |
-| `NewOrderEvent` | New order creation | order_id, service_id, buyer, amount |
-| `ProgressEvent` | Workflow progress | progress_id, machine_id, node_name, forward |
-| `DemandPresentEvent` | Service recommendation | demand_id, service_id, recommender |
-| `DemandFeedbackEvent` | Demand feedback | demand_id, service_id, score |
-| `NewEntityEvent` | New entity registration | entity_type, entity_id, creator |
+```typescript
+OnchainEventsInput {
+  type: EventType,                // REQUIRED - Event type to query
+  cursor?: EventCursor | null,    // OPTIONAL - Pagination cursor for fetching next page
+  limit?: number | null,          // OPTIONAL - Maximum number of events to return per query
+  order?: "ascending" | "descending" | null,  // OPTIONAL - Sort order
+  no_cache?: boolean,             // OPTIONAL - Whether to bypass cache
+  network?: "localnet" | "testnet"  // OPTIONAL - Network to query
+}
+```
 
 ---
 
-## Pagination
+## Sub Schemas
 
-### First Query
+### EventType
 
-```json
-{
-  "type": "NewOrderEvent",
-  "limit": 10,
-  "cursor": null,
-  "order": "descending"
-}
+```typescript
+EventType =
+  | "ArbEvent"                    // Arbitration events
+  | "NewOrderEvent"               // New order events
+  | "ProgressEvent"               // Progress events
+  | "DemandPresentEvent"          // Demand presentation events
+  | "DemandFeedbackEvent"         // Demand feedback events
+  | "NewEntityEvent"              // New entity registration events
 ```
 
-### Subsequent Query
+### EventCursor
 
-```json
-{
-  "type": "NewOrderEvent",
-  "limit": 10,
-  "cursor": {
-    "txDigest": "previous_tx_digest",
-    "eventSeq": "previous_event_seq"
-  },
-  "order": "descending"
+```typescript
+EventCursor {
+  eventSeq: string,               // Event sequence number
+  txDigest: string                // Transaction digest
 }
 ```
-
-**Response includes**: `nextCursor` for the next page of results.
 
 ---
 
-## Usage Patterns
+## Output Schema
 
-### Pattern 1: Monitor New Orders
+```typescript
+OnchainEventsResult {
+  result: EventAnswer | null      // Event query result or null if no data
+}
 
-```json
-{
-  "type": "NewOrderEvent",
-  "limit": 20,
-  "order": "descending"
+EventAnswer {
+  data: EventBase[],              // Event object data array
+  hasNextPage: boolean,           // Whether there is a next page
+  nextCursor?: EventCursor | null, // Next page cursor
+  cache_expire?: number | "INFINITE"  // Cache expiration time
 }
 ```
-
-**Use case**: Service provider monitoring incoming orders.
-
-### Pattern 2: Track Progress State Changes
-
-```json
-{
-  "type": "ProgressEvent",
-  "limit": 50,
-  "order": "descending"
-}
-```
-
-**Use case**: Workflow monitoring and analytics.
-
-### Pattern 3: Arbitration Monitoring
-
-```json
-{
-  "type": "ArbEvent",
-  "limit": 10,
-  "order": "descending"
-}
-```
-
-**Use case**: Arbitration institution tracking dispute status.
 
 ---
 
-## AI Planning Notes
+## Event Type Schemas
 
-1. **Event-driven architecture**: Use events to trigger subsequent operations rather than polling object state.
-2. **Pagination best practices**: Store `nextCursor` from each response. Use it in the next query to fetch subsequent pages.
-3. **Descending order**: Use `descending` for recent events; `ascending` for historical analysis.
-4. **Cache control**: Use `no_cache: true` when you need the absolute latest events.
-5. **Event correlation**: Cross-reference event data with `query_toolkit (onchain_object)` for full context.
+### EventBase
+
+Base schema for all event types.
+
+```typescript
+EventBase {
+  id: EventCursor,                // Event identifier
+  sender: string,                 // Event sender ID
+  type: EventType | string,       // Event type
+  type_raw: string,               // Raw event type
+  time: string                    // Event occurrence time
+}
+```
+
+### ArbEvent
+
+Arbitration event schema.
+
+```typescript
+ArbEvent extends EventBase {
+  arb: string,                    // Arbitration object ID
+  arbitration: string,            // Arbitration object ID (alias)
+  order: string,                  // Order object ID
+  status: ArbStatus               // Arbitration status
+}
+
+ArbStatus =
+  | "voting"                      // Voting in progress
+  | "completed"                   // Completed
+  | "cancelled"                   // Cancelled
+```
+
+### NewOrderEvent
+
+New order event schema.
+
+```typescript
+NewOrderEvent extends EventBase {
+  order: string,                  // Order object ID
+  service: string,                // Service object ID
+  progress?: string | null,       // Progress object ID
+  discount?: string | null,       // Discount object ID
+  allocation?: string | null,     // Allocation object ID
+  amount: BalanceType             // Order amount
+}
+```
+
+### ProgressEvent
+
+Progress event schema.
+
+```typescript
+ProgressEvent extends EventBase {
+  progress: string,               // Progress object ID
+  machine: string,                // Machine object ID
+  task?: string | null,           // Task object ID
+  node: string,                   // Current node name
+  forward?: string | null,        // Forward operation name
+  hold?: boolean | null           // Whether it is a hold operation
+}
+```
+
+### DemandPresentEvent
+
+Demand presentation event schema.
+
+```typescript
+DemandPresentEvent extends EventBase {
+  demand: string,                 // Demand object ID
+  service?: string | null,        // Service object ID
+  recommend: string               // Recommendation letter
+}
+```
+
+### DemandFeedbackEvent
+
+Demand feedback event schema.
+
+```typescript
+DemandFeedbackEvent extends EventBase {
+  demand: string,                 // Demand object ID
+  service?: string | null,        // Service object ID
+  feedback: string,               // Feedback content
+  acceptance_score?: number | null // Acceptance score
+}
+```
+
+### NewEntityEvent
+
+New entity registration event schema.
+
+```typescript
+NewEntityEvent extends EventBase {
+  address: string,                // User ID
+  resource: string,               // ID mark object ID owned by user
+  referrer?: string | null        // Referrer ID
+}
+```
+
+---
+
+## Event Type Selection Guide
+
+| Event Type | Use Case | Key Fields |
+|------------|----------|------------|
+| `ArbEvent` | Monitor arbitration status changes | `arb`, `order`, `status` |
+| `NewOrderEvent` | Track new orders created | `order`, `service`, `amount` |
+| `ProgressEvent` | Monitor workflow progress | `progress`, `machine`, `node` |
+| `DemandPresentEvent` | Track demand presentations | `demand`, `service`, `recommend` |
+| `DemandFeedbackEvent` | Monitor demand feedback | `demand`, `feedback`, `acceptance_score` |
+| `NewEntityEvent` | Track new user registrations | `address`, `resource`, `referrer` |
+
+---
+
+## Pagination Guide
+
+1. **First Query**: Set `cursor` to `null` to get the first page
+2. **Subsequent Queries**: Use `nextCursor` from previous response
+3. **Check `hasNextPage`**: Stop when `hasNextPage` is `false`
+
+---
+
+## Complete Event Union Type
+
+```typescript
+Event = ArbEvent | NewOrderEvent | ProgressEvent | DemandPresentEvent | DemandFeedbackEvent | NewEntityEvent
+```
