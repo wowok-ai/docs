@@ -116,10 +116,10 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 | `meta.created` | `string` | **Yes** | Creation timestamp in ISO 8601 format |
 | `meta.hash` | `string` | **Yes** | SHA-256 hash of `{ wts, session, messages }` as a lowercase hex string (no prefix) |
 | `meta.algorithm` | `string` | **Yes** | Hash algorithm identifier. Fixed value: `"sha256"` |
-| `meta.startTime` | `number` | **Yes** | Timestamp of the earliest message in the snapshot (ms, Unix epoch) |
-| `meta.endTime` | `number` | **Yes** | Timestamp of the latest message in the snapshot (ms, Unix epoch) |
-| `meta.messageCount` | `number` | **Yes** | Total number of messages in the snapshot |
-| `meta.merkleRoot` | `string` | **Yes** | Merkle root of the **last** message in the snapshot (hex-encoded, `0x` prefix) |
+| `meta.startTime` | `number` | **Yes** | Timestamp of the earliest message in the sequence (ms, Unix epoch) |
+| `meta.endTime` | `number` | **Yes** | Timestamp of the latest message in the sequence (ms, Unix epoch) |
+| `meta.messageCount` | `number` | **Yes** | Total number of messages in the sequence |
+| `meta.merkleRoot` | `string` | **Yes** | Merkle root of the **last** message in the sequence (hex-encoded, `0x` prefix) |
 | `meta.creator` | `string` | **Yes** | Address of the WTS generator (hex-encoded, `0x` prefix) |
 | `meta.participant` | `string` | **Yes** | Address of the conversation peer (hex-encoded, `0x` prefix) |
 | `meta.serverPublicKeys` | `array` | No | Array of server public keys referenced by messages via `serverPublicKeyIndex` |
@@ -480,7 +480,7 @@ Converts a WTS file to a human-readable HTML page with styled message bubbles, t
 |----------|-----------------|
 | **Legal Evidence** | Generate a WTS of a conversation and sign it. The file is a self-contained evidence package with server-attested timestamps and Merkle proofs. |
 | **Dispute Resolution** | In arbitration, both parties can present WTS files of the same conversation. The Merkle chain and server signatures prove message authenticity and order. |
-| **Compliance Auditing** | Organizations generate periodic WTS snapshots of business communications for compliance records. |
+| **Compliance Auditing** | Organizations generate periodic WTS sequences of business communications for compliance records. |
 | **Contract Negotiation** | During Messenger-based negotiations, a signed WTS captures the full exchange as an immutable record. |
 | **On-Chain Proof** | Individual messages from a WTS can be submitted on-chain via `proof_message` for blockchain-level timestamp verification. |
 
