@@ -27,7 +27,7 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 
 ```
 {
-  "wts": "https://github.com/wowok-ai/docs/WTS.md",
+  "wts": "	"https://github.com/wowok-ai/docs/blob/main/WTS.md",
   "payload": {
     "session": { ... },
     "messages": [ ... ]
@@ -44,7 +44,7 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `wts` | `string` | **Yes** | Schema identifier URL. Fixed value: `"https://github.com/wowok-ai/docs/WTS.md"` |
+| `wts` | `string` | **Yes** | Schema identifier URL. Fixed value: `"https://github.com/wowok-ai/docs/blob/main/WTS.md"` |
 | `payload` | `object` | **Yes** | The conversation data (session info + messages) |
 | `meta` | `object` | **Yes** | Metadata including integrity hash, summary stats, and optional signatures |
 
@@ -235,7 +235,7 @@ To ensure deterministic hash computation, all JSON objects are serialized using 
 
 ```json
 {
-  "wts": "https://github.com/wowok-ai/docs/WTS.md",
+  "wts": "https://github.com/wowok-ai/docs/blob/main/WTS.md",
   "payload": {
     "session": {
       "id": "alice_bob_session_001",
@@ -299,7 +299,7 @@ To ensure deterministic hash computation, all JSON objects are serialized using 
 
 ```json
 {
-  "wts": "https://github.com/wowok-ai/docs/WTS.md",
+  "wts": "https://github.com/wowok-ai/docs/blob/main/WTS.md",
   "payload": {
     "session": {
       "id": "alice_bob_session_001",

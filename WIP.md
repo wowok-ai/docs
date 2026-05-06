@@ -25,7 +25,7 @@ A WIP file serves as a **self-verifiable promise** — any recipient can indepen
 
 ```
 {
-  "wip": "https://github.com/wowok-ai/docs/WIP.md",
+  "wip": "https://github.com/wowok-ai/docs/blob/main/WIP.md",
   "payload": { ... },
   "meta": { ... }
 }
@@ -39,7 +39,7 @@ A WIP file serves as a **self-verifiable promise** — any recipient can indepen
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `wip` | `string` | **Yes** | Schema identifier URL. Fixed value: `"https://github.com/wowok-ai/docs/WIP.md"` |
+| `wip` | `string` | **Yes** | Schema identifier URL. Fixed value: `"https://github.com/wowok-ai/docs/blob/main/WIP.md"` |
 | `payload` | `object` | **Yes** | The commitment content (text + optional media) |
 | `meta` | `object` | **Yes** | Metadata including integrity hash and optional signatures |
 
@@ -174,7 +174,7 @@ Canonical form:
 
 ```json
 {
-  "wip": "https://github.com/wowok-ai/docs/WIP.md",
+  "wip": "https://github.com/wowok-ai/docs/blob/main/WIP.md",
   "payload": {
     "content": {
       "text": "I commit to delivering the project by December 31, 2024.",
@@ -196,7 +196,7 @@ Canonical form:
 
 ```json
 {
-  "wip": "https://github.com/wowok-ai/docs/WIP.md",
+  "wip": "https://github.com/wowok-ai/docs/blob/main/WIP.md",
   "payload": {
     "content": {
       "text": "# Service Agreement\n\n## Scope\nComplete website development including:\n- Frontend (React)\n- Backend (Node.js)\n- Database design\n\n## Timeline\nDelivery by **2024-12-31**.",
@@ -231,7 +231,7 @@ Canonical form:
 
 ```json
 {
-  "wip": "https://github.com/wowok-ai/docs/WIP.md",
+  "wip": "https://github.com/wowok-ai/docs/blob/main/WIP.md",
   "payload": {
     "content": {
       "text": "We jointly commit to the terms outlined in this agreement.",
