@@ -1,10 +1,10 @@
-# WTS — Witness Timestamped Snapshot
+# WTS — Witness Timestamped Sequence
 
 ---
 
 ## Overview
 
-**WTS** (Witness Timestamped Snapshot) is a JSON-based file format for creating **self-proving, tamper-proof records of encrypted conversations** from the WoWok Messenger. It captures the complete message history between two parties, including server-attested Merkle proofs, timestamps, and optional digital signatures.
+**WTS** (Witness Timestamped Sequence) is a JSON-based file format for creating **self-proving, tamper-proof records of encrypted conversations** from the WoWok Messenger. It captures the complete message history between two parties, including server-attested Merkle proofs, timestamps, and optional digital signatures.
 
 A WTS file serves as a **standalone evidence package** — anyone can independently verify the authenticity, integrity, and chronology of every message without access to the original server or encryption keys.
 
