@@ -18,7 +18,7 @@ WoWok is not a centralized network, but a distributed trust network built on cry
 
 | Component | Description | Key Features |
 |-----------|-------------|--------------|
-| **⛓️ L1 Blockchain** | Public chain and smart contracts | Immutable data, transparent execution, secure trust |
+| **⛓️ Quantum-Safe Blockchain** | Blockchain L1 & L2(soon) | Immutable data, transparent execution, secure trust |
 | **🔒 Messenger** | Commercial end-to-end encrypted IM | WTS self-proving messages, privacy-first |
 | **🤖 Wowok-Agent** | User-AI-Blockchain interface | MCP integration, prompt-driven workflows |
 
@@ -34,6 +34,7 @@ WoWok balances privacy and open collaboration through innovative mechanisms:
 | **WTS Self-Proving Messages** | Witness Timestamped Signature ensures message authenticity, integrity, and self-provability |
 | **WIP Immutable Commitments** | Witness Immutable Promise ensures commitments are visible and immutable to all participants |
 | **Arbitration Dispute Protection** | Complete evidence chain for broken commitments, with on-chain data and provable messages |
+| **Quantum-Safe Network** | On-chain wallets (Falcon), smart contracts, and Messenger(Kyber) secured by post-quantum cryptography, ensuring network-wide quantum resistance |
 
 ### 🤖 AI-Native Transaction Mechanism
 
