@@ -22,11 +22,12 @@ In this stage, you will learn about data queries in WoWok, including:
 
 ### 7.1 Query Tools Overview
 
-WoWok provides four specialized query tools:
+WoWok provides five specialized query tools:
 
 | Tool Name | Purpose | Main Functions |
 |---------|------|---------|
-| **query_toolkit** | General data query | Local data, on-chain objects, table data, balances, etc. |
+| **query_toolkit** | General data query | Local data, on-chain objects, balances, profiles, received assets |
+| **onchain_table_data** | Dynamic table data query | Object dynamic fields tables, table items (permission, repository, reward, etc.) |
 | **onchain_events** | On-chain event query | Arbitration events, order events, progress events, etc. |
 | **wowok_buildin_info** | Protocol information query | Constants, permissions, Guard instructions, network info, etc. |
 | **documents_and_learn** | Documentation and learning resources | Get official documentation URLs for users and AI to get help |
@@ -44,18 +45,18 @@ query_toolkit is WoWok's core query tool, capable of querying data on local devi
 **Supported Query Types:**
 
 **Local Queries:**
-- 👤 `account_list` - Account list
-- 📇 `local_mark_list` - Local mark list
-- 📝 `local_info_list` - Local information list
-- 💎 `token_list` - Token list
-- 💰 `account_balance` - Account balance
+- 👤 `account_list` — Query your LOCAL accounts (addresses, public keys, messenger status)
+- 📇 `local_mark_list` — Query your LOCAL address book (name→address mappings with tags)
+- 📝 `local_info_list` — Query your LOCAL private info (delivery addresses, phone numbers, contacts)
+- 💎 `token_list` — Query cached token metadata (symbol, decimals, icon URL)
+- 💰 `account_balance` — Query account coin balance OR paginated coin objects
 
 **On-Chain Queries:**
-- 👤 `onchain_personal_profile` - Public profile
-- 📦 `onchain_objects` - Query objects
-- 📊 `onchain_table` - Query table data
-- 📋 `onchain_table_item_*` - Query table items
-- 📥 `onchain_received` - Query received objects
+- 👤 `onchain_personal_profile` — Query any user's PUBLIC on-chain profile (social links, reputation, votes)
+- 📦 `onchain_objects` — Batch query on-chain WOWOK objects by ID
+- 📥 `onchain_received` — Query objects (payments, tokens, NFTs) received by an on-chain object
+
+> **Note**: Dynamic table data queries (`onchain_table`, `onchain_table_item_*`) have been moved to the dedicated **`onchain_table_data`** tool. See [7.2b onchain_table_data](#72b-onchain_table_data-dynamic-table-data-query) below.
 
 **→ [View query_toolkit Detailed Documentation →](query.md)**
 
@@ -84,7 +85,8 @@ Query the WOW token balance of a specified account:
 ```json
 {
   "query_type": "account_balance",
-  "account": "my_account",
+  "name_or_address": "my_account",
+  "balance": true,
   "token_type": "0x2::wow::WOW"
 }
 ```
@@ -104,15 +106,65 @@ Query detailed information of multiple objects:
 
 ---
 
-#### Example 4: Query Table Data
+### 7.2b onchain_table_data (Dynamic Table Data Query 📊)
 
-Query the sales list of a Service object:
+**Why do we need onchain_table_data?**
+
+This tool was split from `query_toolkit` to handle the unique characteristics of dynamic table queries. On-chain objects have fixed size, but their table data (dynamic fields) can grow dynamically. The `onchain_table_data` tool is specialized for querying these dynamic tables and their items.
+
+**Supported Query Types (11 total):**
+
+| # | query_type | Parent Object | Key | Meaning |
+|---|-----------|--------------|-----|---------|
+| 1 | `onchain_table` | Any object | — | Paginated query of ANY object's dynamic fields table |
+| 2 | `onchain_table_item_repository_data` | Repository | name + entity | Query a record from a Repository's key-value database |
+| 3 | `onchain_table_item_permission_perm` | Permission | user/Guard address | Query permission entries from access control table |
+| 4 | `onchain_table_item_entity_registrar` | System EntityRegistrar | user address | Query entity registration records |
+| 5 | `onchain_table_item_entity_linker` | System EntityLinker | entity address | Query community votes/endorsements |
+| 6 | `onchain_table_item_reward_record` | Reward | recipient address | Query reward claim records |
+| 7 | `onchain_table_item_demand_presenter` | Demand | presenter address | Query demand submissions |
+| 8 | `onchain_table_item_treasury_history` | Treasury | payment ID | Query treasury payment records |
+| 9 | `onchain_table_item_machine_node` | Machine | node name | Query workflow node definitions |
+| 10 | `onchain_table_item_progress_history` | Progress | sequence number | Query progress step records |
+| 11 | `onchain_table_item_address_mark` | AddressMark | address | Query PUBLIC on-chain name/tag marks |
+
+**→ [View onchain_table_data Detailed Documentation →](query.md#onchain_table_data-tool)**
+
+---
+
+#### Example: Query Table Data
+
+Query the table data of a Service object with pagination:
 
 ```json
 {
   "query_type": "onchain_table",
   "parent": "service_object_id",
-  "object_type": "Service"
+  "cursor": null,
+  "limit": 20
+}
+```
+
+#### Example: Query Permission Perm Item
+
+Query the permission record for a specific user:
+
+```json
+{
+  "query_type": "onchain_table_item_permission_perm",
+  "parent": "perm_admin",
+  "address": "alice"
+}
+```
+
+#### Example: Query Entity Registrar Item
+
+Query an entity's registration record:
+
+```json
+{
+  "query_type": "onchain_table_item_entity_registrar",
+  "address": "service_provider"
 }
 ```
 
@@ -491,9 +543,10 @@ Get documentation about a specific topic:
 
 Congratulations on reaching the final stage! Please confirm that you have:
 
-- [ ] Understood the differences and uses of the four query tools
+- [ ] Understood the differences and uses of the five query tools
 - [ ] Used query_toolkit to query account list
 - [ ] Used query_toolkit to query account balance
+- [ ] Used onchain_table_data to query dynamic table data
 - [ ] Used onchain_events to query on-chain events
 - [ ] Used wowok_buildin_info to query protocol information
 - [ ] Used documents_and_learn to get documentation links

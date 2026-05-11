@@ -819,15 +819,10 @@ Query the service to verify all configurations are correct.
 
 ```json
 {
-  "operation_type": "query_toolkit",
-  "data": {
-    "query_type": "onchain_objects",
-    "objects": ["travel_service"],
-    "no_cache": true
-  },
-  "env": {
-    "network": "testnet"
-  }
+  "query_type": "onchain_objects",
+  "objects": ["travel_service"],
+  "no_cache": true,
+  "network": "testnet"
 }
 ```
 

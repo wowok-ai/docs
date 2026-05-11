@@ -31,14 +31,9 @@ Before running this example, ensure you have:
 **Request**:
 ```json
 {
-  "operation_type": "query_toolkit",
-  "data": {
-    "query_type": "account_balance",
-    "name_or_address": "three_body_author"
-  },
-  "env": {
-    "network": "testnet"
-  }
+  "query_type": "account_balance",
+  "name_or_address": "three_body_author",
+  "network": "testnet"
 }
 ```
 
@@ -469,15 +464,10 @@ Query the service to verify all configurations.
 **Request**:
 ```json
 {
-  "operation_type": "query_toolkit",
-  "data": {
-    "query_type": "onchain_objects",
-    "objects": ["three_body_signature_service_v2"],
-    "no_cache": true
-  },
-  "env": {
-    "network": "testnet"
-  }
+  "query_type": "onchain_objects",
+  "objects": ["three_body_signature_service_v2"],
+  "no_cache": true,
+  "network": "testnet"
 }
 ```
 
@@ -783,4 +773,4 @@ PUBLISH (LAST STEP!)
 - Debug issues
 - Confirm state changes
 
-The `query_toolkit` is essential for validating every step of the way.
+The `query_toolkit` and `onchain_table_data` are essential for validating every step of the way.

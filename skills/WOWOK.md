@@ -257,6 +257,7 @@ CoinParam =
 
 **QUERY** (Read-only):
 - `query_toolkit`
+- `onchain_table_data`
 - `onchain_events`
 - `wowok_buildin_info`
 - `guard2file`

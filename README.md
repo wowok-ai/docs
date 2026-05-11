@@ -110,7 +110,8 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 │  └─ Personal - Personal On-Chain Portal                       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Stage 7: Data Query 🔍                                        │
-│  ├─ Watch & Query - Query any on-chain and local data you want   │
+│  ├─ query_toolkit — Query on-chain objects, balances, profiles │
+│  ├─ onchain_table_data — Query dynamic table data & items     │
 │  ├─ On-chain Events - Watch real-time on-chain events        │
 │  └─ WoWok Build-in Info - Query protocol constants & info    │
 ├─────────────────────────────────────────────────────────────────┤
@@ -185,7 +186,7 @@ Choose a stage to begin your WoWok journey:
 | [Reward](docs/reward.md) | On-Chain | 5 | Marketing incentives |
 | [Demand](docs/demand.md) | On-Chain | 6 | Seeking assistance |
 | [Personal](docs/personal.md) | On-Chain | 6 | Personal on-chain portal |
-| [Query](docs/query.md) | Query | 7 | Data query |
+| [Query](docs/query.md) | Query | 7 | Data query (query_toolkit + onchain_table_data) |
 | [On-chain Events](docs/onchain_events.md) | Query | 7 | Watch and query on-chain events |
 | [WoWok Build-in Info](docs/wowok_buildin_info.md) | Query | 7 | Query protocol constants and info |
 | [MyShop Example](examples/MyShop/) | Example | 8 | Basic e-commerce store with product listings |

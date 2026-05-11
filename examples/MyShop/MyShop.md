@@ -755,10 +755,7 @@ Customers can query the Service to see available products.
 ```json
 {
   "query_type": "onchain_objects",
-  "filter": {
-    "objectType": "Service",
-    "objectName": "myshop_service_v2"
-  },
+  "objects": ["myshop_service_v2"],
   "no_cache": true
 }
 ```
@@ -907,10 +904,7 @@ Customer can query the order status and progress.
 ```json
 {
   "query_type": "onchain_objects",
-  "filter": {
-    "objectType": "Order",
-    "objectIds": ["0x5678...9abc"]
-  }
+  "objects": ["0x5678...9abc"]
 }
 ```
 
@@ -925,10 +919,7 @@ Check the current workflow node of the order.
 ```json
 {
   "query_type": "onchain_objects",
-  "filter": {
-    "objectType": "Progress",
-    "objectIds": ["0x1234...5678"]
-  }
+  "objects": ["0x1234...5678"]
 }
 ```
 ---
@@ -1217,10 +1208,7 @@ Check the status of the arbitration.
 ```json
 {
   "query_type": "onchain_objects",
-  "filter": {
-    "objectType": "Arb",
-    "objectIds": ["0xbeef...cafe"]
-  }
+  "objects": ["0xbeef...cafe"]
 }
 ```
 

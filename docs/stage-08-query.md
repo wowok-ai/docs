@@ -174,7 +174,7 @@ Now it's time to build your own application! We recommend:
 
 1. Start small - pick one of the examples as a template
 2. Modify incrementally - don't try to build everything at once
-3. Test constantly - use query_toolkit to verify each step
+3. Test constantly - use query_toolkit and onchain_table_data to verify each step
 4. Document everything - record object IDs and test results
 5. Share your work - help others learn from your experience
 
