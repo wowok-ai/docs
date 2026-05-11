@@ -520,7 +520,7 @@ To minimize file size, server public keys are stored in a deduplicated array (`m
   "meta": {
     "serverPublicKeys": [
       { "publicKey": "0xaaaa...", "validFrom": 0 },
-      { "publicKey": "0xbbbb...", "validFrom": 1776900000000 }
+      { "publicKey": "0xbbbb...", "validFrom": 1 }
     ]
   },
   "payload": {
