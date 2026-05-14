@@ -69,7 +69,11 @@ After restarting the AI client, you can try a conversation like this to verify:
 
 ---
 
-> 🤖 **AI Collaboration Tip**: For the best AI-assisted WoWok experience, add [`skills/WOWOK.md`](skills/WOWOK.md) as project context in your AI client. This file provides comprehensive technical guidance for AI agents, including tool schemas, workflow patterns, error handling, and best practices. With this context, your AI can help you build, debug, and optimize WoWok operations much more effectively.
+> 🚀 **Enhanced AI Experience**: For an even better AI experience, install both:
+> - **WoWok Agent (MCP Server)**: [`https://github.com/wowok-ai/agent/`](https://github.com/wowok-ai/agent/)
+> - **WoWok Skills**: [`https://github.com/wowok-ai/skills/`](https://github.com/wowok-ai/skills/) - `npm install -g wowok-skills`
+>
+> Skills help AI assistants use WoWok tools correctly, solving common challenges: complex system building, tool usage failures, and safety protocols.
 
 ---
 
