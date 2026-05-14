@@ -1131,7 +1131,7 @@ Transfer ownership of the Permission object to another user. Only the current ow
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "permission" |
 | `data.object` | string/object | Yes | Existing Permission object name or ID | |
-| `data.builder` | object | Yes | New owner | AccountOrMark_Address |
+| `data.builder` | object | Yes | Set or transfer ownership of the Permission object to the specified user ID. The creator automatically becomes the builder; only the builder can transfer ownership to other users. | AccountOrMark_Address |
 
 ---
 

@@ -109,7 +109,7 @@ CallService_Data {
   // Discount coupon
   discount?: {
     name: string;
-    discount_type: "Ratio" | "Amount" | "Ratio2";
+    discount_type: 0 | 1;  // 0 = RATES (percentage), 1 = FIXED (fixed amount)
     discount_value: number;
     benchmark?: number;
     time_ms_start?: number;

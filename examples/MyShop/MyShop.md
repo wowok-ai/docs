@@ -371,6 +371,7 @@ Add the workflow nodes to the Machine for order processing.
   }
 }
 ```
+
 ---
 
 ### Step 5: Publish the Machine
@@ -428,7 +429,7 @@ Create a Contact object to enable encrypted communication between customers and 
       "op": "add",
       "im": [
         {
-          "at": "myshop_aftersales",
+          "at": "myshop_merchant",
           "description": "Primary after-sales support representative"
         }
       ]

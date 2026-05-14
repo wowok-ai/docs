@@ -1202,6 +1202,17 @@ Guards can access data from ANY on-chain object using `query` nodes! This is a p
 - `object.identifier`: References the object ID from the Guard table (identifier 0-255).
 - `object.convert_witness` (optional): **Critical for cross-object queries!** When specified, the query retrieves data from an associated object instead of the object itself.
 
+### Special System Addresses for Entity Queries
+
+When querying **EntityLinker** or **EntityRegistrar** data, use these system addresses in the Guard table:
+
+| System Address | Value | Description |
+|----------------|-------|-------------|
+| `ENTITY_LINKER_ADDRESS` | `0xaaa` | Use for EntityLinker queries |
+| `ENTITY_REGISTRAR_ADDRESS` | `0xaab` | Use for EntityRegistrar queries |
+
+**Example**: To query entity registration data, set `object.identifier` to reference a Guard table entry containing `0xaaa` (for EntityLinker) or `0xaab` (for EntityRegistrar).
+
 ### Witness Types for Cross-Object Queries
 
 When you submit one object type but need to query data from a related object, use `convert_witness`:
