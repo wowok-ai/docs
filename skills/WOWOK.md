@@ -645,7 +645,5 @@ For complex objects with many fields (Service, Machine), use **incremental build
 | VecVecU8 | 18 | "VecVecU8" | Vector of VecU8 |
 
 ### 8.2 Type Compatibility
-
-- **Numeric types**: U8, U16, U32, U64, U128, U256 are compatible for comparison operations.
 - **Vector types**: Must match exactly (VecU8 ≠ VecU16).
 - **Address**: Can be converted to/from U256 using `convert_address_number` / `convert_number_address`.
