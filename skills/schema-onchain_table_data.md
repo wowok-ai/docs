@@ -17,7 +17,7 @@ OnchainTableData = {
               "onchain_table_item_entity_linker" | "onchain_table_item_reward_record" |
               "onchain_table_item_demand_presenter" | "onchain_table_item_treasury_history" |
               "onchain_table_item_machine_node" | "onchain_table_item_progress_history" |
-              "onchain_table_item_address_mark";
+              "onchain_table_item_address_mark" | "onchain_table_item_generic";
   // ... query-specific parameters (see below)
 }
 ```
@@ -295,6 +295,27 @@ Query a PUBLIC on-chain name/tag mark from an AddressMark object's table. Unlike
 
 ---
 
+### 12. onchain_table_item_generic
+
+Query a generic table item from ANY object's dynamic fields. Supports arbitrary key types and values for non-WoWok objects or custom queries. Use for general-purpose table lookups.
+
+**Parent**: Any object | **Key**: arbitrary (key_type + key_value)
+
+```typescript
+{
+  query_type: "onchain_table_item_generic";
+  parent: string;               // Parent object ID whose dynamic field to query
+  key_type: string;             // Type of the key (e.g., "address", "u64", "string", "0x2::object::ID")
+  key_value: any;               // Value of the key — must match key_type format
+  no_cache?: boolean;
+  network?: "localnet" | "testnet";
+}
+```
+
+**Result**: `ObjectBase | undefined`
+
+---
+
 ## Output Schema
 
 All queries return results wrapped in a unified `z.object({ result: ... })` structure with strict schema validation:
@@ -308,6 +329,6 @@ OnchainTableDataResult {
 }
 ```
 
-The output schema validates all 11 query types with their specific return types. Each query's `result` field is strictly typed:
+The output schema validates all 12 query types with their specific return types. Each query's `result` field is strictly typed:
 - `onchain_table` returns `TableAnswer | undefined` (items[], nextCursor, hasNextPage)
 - All `onchain_table_item_*` queries return their specific `TableItem_* | undefined`

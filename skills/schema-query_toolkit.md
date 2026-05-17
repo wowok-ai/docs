@@ -325,7 +325,7 @@ Query objects (payments, tokens, NFTs) received by an on-chain object.
 ```typescript
 {
   query_type: "onchain_received";
-  object: string;               // Name or address of the object that received payments/items
+  name_or_address: string | AccountOrMark_Address; // Account name, address, or mark. Supports shorthand string (e.g. "alice") or full {name_or_address, local_mark_first} object
   all_type?: boolean;           // Set to true to query all token types; defaults to the object's Token type '0x2::payment::CoinWrapper<TOKEN>' (Coins wrapper sent via Payment). Fails if object has no Token type.
   cursor?: string | null;       // Pagination cursor from previous page
   limit?: number | null;        // Max records per page
