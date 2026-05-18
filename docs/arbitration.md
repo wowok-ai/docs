@@ -1771,9 +1771,9 @@ After arbitration is finalized, the **order owner (buyer)** claims the awarded c
 | Component | Link | Description |
 |-----------|------|-------------|
 | **Service Setup** | [Service - Compensation Fund](service.md#sub-feature-11-add-compensation-fund) | Configure service with arbitration support |
-| **Order Creation** | [Service - Create Order](service.md#sub-feature-12-create-order) | How orders are created from services |
-| **Claim Compensation** | [Order - Claim Compensation](order.md#sub-feature-6-claim-compensation) | Detailed guide for buyers to claim |
-| **Objection Process** | [Order - Object to Arbitration](order.md#sub-feature-5-object-to-arbitration) | How to appeal arbitration decisions |
+| **Order Creation** | [Service - Create Order](service.md#sub-feature-12-configure-customer-required-info) | How orders are created from services |
+| **Claim Compensation** | [Order - Claim Compensation](order.md#function-6-claim-arbitration-compensation-arb_claim_compensation) | Detailed guide for buyers to claim |
+| **Objection Process** | [Order - Object to Arbitration](order.md#function-5-object-to-arbitration-result-arb_objection) | How to appeal arbitration decisions |
 | **Messenger Evidence** | [Messenger](messenger.md) | Submit encrypted evidence via WoWok Messenger |
 
 ---

@@ -6,6 +6,8 @@ Shared types referenced by all `onchain_operations` operation types.
 
 ## Top-Level Structure
 
+Most operations follow this standard wrapper:
+
 ```typescript
 OnchainOperations {
   operation_type: string;     // One of 16 types
@@ -14,6 +16,15 @@ OnchainOperations {
   submission?: SubmissionCall; // Optional Guard submission data
 }
 ```
+
+### Exceptions
+
+| Operation | Structure | Notes |
+|-----------|-----------|-------|
+| `gen_passport` | `{ guard, info?, env? }` | FLAT — no `data` wrapper, no `submission` |
+| `guard` | `{ data, env? }` | No `submission` field |
+| `payment` | `{ data, env? }` | No `submission` field |
+| `personal` | `{ data, env? }` | No `submission` field |
 
 ## CallEnv
 
@@ -58,14 +69,14 @@ SubmissionCall {
 
 ```typescript
 TypedPermissionObject = 
-  | string                           // Existing object ID or name
+  | string                          // Object ID or name (existing)
   | {
-      name?: string;                 // Object name
-      tags?: string[];               // Tags
-      onChain?: boolean;             // Public on-chain name
-      replaceExistName?: boolean;    // Force claim name
-      type_parameter?: string;       // Token type
-      permission?: DescriptionObject; // Permission object
+      name?: string;                // Name for new object
+      tags?: string[];              // Tags for discoverability
+      onChain?: boolean;            // Register name on-chain
+      replaceExistName?: boolean;   // Force claim existing name
+      type_parameter: string;       // Token type parameter (default: "0x2::wow::WOW")
+      permission?: DescriptionObject;  // Permission for the new object
     };
 ```
 
@@ -163,15 +174,15 @@ ManyAccountOrMark_Address = {
 ```typescript
 ReceivedBalanceOrRecently = 
   | {
-      balance: number;
-      token_type: string;
-      received: {
-        id: string;
-        balance: number;
-        payment: string;
+      balance: string | number;  // Balance amount
+      token_type: string;        // Token type
+      received: {                // Unwrapped coin objects
+        id: string;              // CoinWrapper object ID
+        balance: string | number; // Amount
+        payment: string;         // Info string, usually the payment object ID @any
       }[];
     }
-  | "recently";
+  | "recently";                  // Shortcut: automatically unwrap most recently received CoinWrapper
 ```
 
 ### ReceivedObjectsOrRecently
@@ -179,10 +190,11 @@ ReceivedBalanceOrRecently =
 ```typescript
 ReceivedObjectsOrRecently = 
   | {
-      id: string;
-      type: string;
+      id: string;                // Object ID
+      type: string;              // Object type
+      content_raw?: any;         // Raw content (optional)
     }[]
-  | ReceivedBalanceOrRecently;
+  | ReceivedBalanceOrRecently;   // Or: empty/clear then receive CoinWrapper objects
 ```
 
 ---
@@ -213,13 +225,12 @@ ReceivedObjectsOrRecently =
 
 ---
 
-## Recipient Specification
-
+### Recipient
 Used by `service` (order allocators), `reward` (guard recipients), and `allocation` (who field).
 
 ```typescript
 Recipient =
-  | { type: "GuardIdentifier"; GuardIdentifier: number }    // From Guard table
-  | { type: "Entity"; Entity: string }                        // Specific address
-  | { type: "Signer"; Signer: boolean }                      // Transaction signer
+  | { GuardIdentifier: number }
+  | { Entity: AccountOrMark_Address }
+  | { Signer: "signer" }
 ```

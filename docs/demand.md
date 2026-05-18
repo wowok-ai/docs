@@ -160,6 +160,7 @@ Create a new Demand object for posting service requests.
     "location": "Online service"
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -200,6 +201,7 @@ Create a new Demand object for posting service requests.
     "location": "Online service"
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -242,6 +244,7 @@ Create a new Demand object for posting service requests.
     "location": "Online service"
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -278,6 +281,7 @@ Create a new Demand object for posting service requests.
     "description": "Updated description for the demand"
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -321,6 +325,7 @@ Recommend a Service to the Demand object.
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -362,6 +367,7 @@ Recommend a Service to the Demand object.
     }
   }
 }
+```
 
 **Execution Result (Complete workflow)**:
 ```json
@@ -434,6 +440,7 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -482,6 +489,7 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -508,6 +516,7 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -555,6 +564,7 @@ Bind Reward, Contact and other components to Demand.
     "um": "demand_contact"
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -599,6 +609,7 @@ Bind Reward, Contact and other components to Demand.
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
@@ -716,6 +727,7 @@ Provide user feedback information for the Demand object.
     ]
   }
 }
+```
 
 **Execution Result**:
 ```json

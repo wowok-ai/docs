@@ -63,15 +63,15 @@ repository (Repository Object)
 │   │           │   ├── 1 / "Clock" / "clock" - use current timestamp as ID
 │   │           │   └── 2 / "Signer" / "signer" - use signer ID as data ID
 │   │           └── value_type (number or string) - data value type
-│   │               ├── 0 / "Address" / "address" - address type
-│   │               ├── 1 / "Bool" / "bool" - boolean type
-│   │               ├── 2 / "U8" / "u8" - unsigned 8-bit integer
-│   │               ├── 3 / "U16" / "u16" - unsigned 16-bit integer
-│   │               ├── 4 / "U32" / "u32" - unsigned 32-bit integer
-│   │               ├── 5 / "U128" / "u128" - unsigned 128-bit integer
+│   │               ├── 0 / "Bool" / "bool" - boolean type
+│   │               ├── 1 / "Address" / "address" - address type
+│   │               ├── 2 / "String" / "string" - string type
+│   │               ├── 3 / "U8" / "u8" - unsigned 8-bit integer
+│   │               ├── 4 / "U16" / "u16" - unsigned 16-bit integer
+│   │               ├── 5 / "U32" / "u32" - unsigned 32-bit integer
 │   │               ├── 6 / "U64" / "u64" - unsigned 64-bit integer
-│   │               ├── 7 / "U256" / "u256" - unsigned 256-bit integer
-│   │               ├── 8 / "String" / "string" - string type
+│   │               ├── 7 / "U128" / "u128" - unsigned 128-bit integer
+│   │               ├── 8 / "U256" / "u256" - unsigned 256-bit integer
 │   │               └── ... (see ValueType for complete list)
 │   ├── data_add (add data items, optional)
 │   │   ├── Option 1: SignerOrClock structure (when id_from is Clock or Signer)

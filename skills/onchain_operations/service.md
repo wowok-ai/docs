@@ -90,7 +90,7 @@ CallService_Data {
   
   buy_guard?: string | null;     // Purchase Guard
   compensation_fund_add?: CoinParam;
-  compensation_locked_time_add?: number;
+  setting_locked_time_add?: number;
   compensation_fund_receive?: ReceivedBalanceOrRecently;
   owner_receive?: ReceivedObjectsOrRecently;
   um?: string | null;            // Contact object

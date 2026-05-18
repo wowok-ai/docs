@@ -64,11 +64,12 @@ reward (Reward Object)
 │   │   └── Array of RewardGuard objects
 │   │       ├── guard (string) - Guard object ID or name
 │   │       ├── recipient (object) - Recipient specification
-│   │       │   ├── Option 1: { type: "Signer", Signer: boolean } - Signer ID
-│   │       │   ├── Option 2: { type: "Entity", Entity: string } - Fixed entity ID
-│   │       │   └── Option 3: { type: "GuardIdentifier", GuardIdentifier: number } - From Guard table
+│   │       │   ├── Option 1: { GuardIdentifier: number } - From Guard table (0-255)
+│   │       │   ├── Option 2: { Entity: { name_or_address: string } } - Fixed entity ID
+│   │       │   └── Option 3: { Signer: "signer" } - Current transaction signer ID
 │   │       ├── amount (object) - Reward amount
-│   │       │   └── { type: "Fixed", value: number } - Fixed amount
+│   │       │   ├── Option 1: { type: "Fixed", value: number } - Fixed amount
+│   │       │   └── Option 2: { type: "GuardU64Identifier", value: number } - Amount from Guard table (0-255)
 │   │       ├── expiration_time (number, optional) - Expiration timestamp in milliseconds
 │   │       └── store_from_id (number or null, optional) - Guard table index for record storage
 │   ├── guard_remove_expired (remove expired, optional)

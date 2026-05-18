@@ -2474,3 +2474,17 @@ Create another Progress with a different developer:
 | **Machine** | secure_dev_workflow | 0x0588...2b9f | Enhanced workflow with security audit (9 nodes) |
 | **Progress** | project_alpha | 0x5255...9cb4 | Mobile app project instance |
 | **Progress** | project_beta | 0x732b...9100 | Web app project instance |
+
+---
+
+## Related Components
+
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - can bind Machines for workflow templates |
+| **[Progress](progress.md)** | Workflow instance - created from Machine templates via `progress_new` |
+| **[Repository](repository.md)** | Data ownership - can bind Repositories for workflow data storage |
+| **[Guard](guard.md)** | Trust verification engine - used in forwards for workflow validation |
+| **[Permission](permission.md)** | Permission management - controls access to Machine operations |
+| **[Order](order.md)** | Order management - uses Machine workflows for order progress |
+| **[Arbitration](arbitration.md)** | Dispute resolution - can involve Machine workflow states |

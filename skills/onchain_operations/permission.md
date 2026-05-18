@@ -22,6 +22,22 @@ CallPermission_Data {
     index: number[];
   };
   
+  // Advanced entity operations (requires admin)
+  entity?: {
+    op: "swap" | "replace" | "copy";
+    entity1: AccountOrMark_Address;
+    entity2: AccountOrMark_Address;
+  } | {
+    op: "del";
+    entity: AccountOrMark_Address;
+  };
+  
+  // Admin management (builder only)
+  admin?: {
+    op: "add" | "remove" | "set";
+    addresses: ManyAccountOrMark_Address;
+  };
+  
   // Remark operations
   remark?: {
     op: "set" | "remove" | "clear";

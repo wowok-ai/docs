@@ -108,11 +108,15 @@ Contact Component
 │   │   ├── op: "remove"
 │   │   │   └── im (array of strings)
 │   │   ├── op: "clear"
-   └── owner_receive (transfer received coins or NFT objects to owner, optional)
-   │       ├── Option 1: "recently" (string) - receive all recent objects
-   │       ├── Option 2: Array of received objects
-   │       │   └── [{ id: "object_id", type: "object_type" }]
-   ├── env (optional, execution environment)
+│   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
+│   │   ├── Option 1: "recently" (string) - receive all recent objects
+│   │   ├── Option 2: Array of received objects
+│   │   │   └── [{ id: "object_id", type: "object_type" }]
+│   │   └── Option 3: Received balance object
+│   │       ├── balance (number or string)
+│   │       ├── token_type (string)
+│   │       └── received (array of received items)
+├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
 │   ├── network (string, optional) - "testnet" or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
@@ -687,7 +691,7 @@ When purchasing from a Service that requires private information:
 
 ⚠️ **Messenger encryption**: While your Contact identity is public, all messages sent via Messenger are **end-to-end encrypted** and **never stored on-chain**. Only conversation participants can read the message content.
 
-⚠️ **WTS for Arbitration**: If you need to prove what was discussed in a conversation (e.g., for dispute resolution), use [Messenger's WTS feature](messenger.md#generate-wts) to create a cryptographically verifiable record.
+⚠️ **WTS for Arbitration**: If you need to prove what was discussed in a conversation (e.g., for dispute resolution), use [Messenger's WTS feature](messenger.md#example-7-generate-wts) to create a cryptographically verifiable record.
 
 ---
 

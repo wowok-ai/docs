@@ -174,7 +174,7 @@ service (Service Object)
 │   │       │   └── mode (enum, required) - "Amount"|"Rate"|"Surplus"
 │   │       └── max (number/string, optional)
 │   ├── compensation_fund_add (CoinParam, optional) - add compensation
-│   ├── compensation_locked_time_add (number, optional) - lock time
+│   ├── setting_locked_time_add (number, optional) - additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive
 │   ├── compensation_fund_receive (ReceivedBalanceOrRecently, optional)
 │   ├── owner_receive (ReceivedObjectsOrRecently, optional)
 │   ├── um (NameOrAddress|null, optional) - contact object
@@ -369,7 +369,7 @@ For production services, create Guards that verify order status before allowing 
 - Query ID `1253` retrieves the current node name from Progress
 - Validates that order has reached "Completed" status
 
-See [Guard Query Instructions](guard.md#query-instructions-and-witness-types) for more details on cross-object queries.
+See [Guard Query Instructions](guard.md#query-instructions-and-on-chain-object-access) for more details on cross-object queries.
 
 #### Step 3.2: Configure Allocators in Service
 
@@ -1412,7 +1412,7 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
 | `data.compensation_fund_add.balance` | number/string | No | Amount value | Pay from transaction account |
 | `data.compensation_fund_add.coin` | string | No | Coin object ID | Use specified Coin |
-| `data.compensation_locked_time_add` | number | No | Lock time in milliseconds | |
+| `data.setting_locked_time_add` | number | No | Additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive | 
 
 ---
 
@@ -1430,7 +1430,7 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
     "compensation_fund_add": {
       "balance": 1000000000000
     },
-    "compensation_locked_time_add": 86400000
+    "setting_locked_time_add": 86400000
   }
 }
 ```
@@ -1864,7 +1864,7 @@ To enable arbitration for your service:
 | Resource | Link | Description |
 |----------|------|-------------|
 | **State Machine** | [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine) | Complete state transitions and flow |
-| **Create Arbitration** | [Arbitration - Create](arbitration.md#sub-feature-1-create-arbitration) | Set up dispute resolution system |
+| **Create Arbitration** | [Arbitration - Create](arbitration.md#sub-feature-1-create-new-arbitration) | Set up dispute resolution system |
 | **File Dispute** | [Arbitration - Dispute](arbitration.md#sub-feature-2-create-dispute-dispute) | Buyer initiates dispute |
 | **Complete Workflow** | [Arbitration - Full Example](arbitration.md#complete-arbitration-workflow-example) | End-to-end arbitration process |
 | **Transparency** | [Arbitration - Transparency](arbitration.md#transparent-arbitration-process) | How transparency is ensured |

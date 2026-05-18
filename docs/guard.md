@@ -999,10 +999,16 @@ gen_passport (Generate Verified Passport)
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
 | `operation_type` | string | Yes | Operation type | Fixed value "gen_passport" |
-| `guard` | string | Yes | Guard object ID to verify and generate passport from | Use name (preferred) or ID |
+| `guard` | string \| string[] | Yes | Guard object ID(s) to verify and generate passport from | Single guard (string) or multiple guards (array). Supports names or addresses |
 | `info` | object | No | Optional submission data | If not provided, will attempt to get existing submissions from the guard |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
 | `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+
+### Features
+
+- **Single Guard**: Pass a single guard ID or name as a string
+- **Multiple Guards**: Pass an array of guard IDs or names to verify multiple guards at once
+- **Name Resolution**: Supports both guard addresses and LocalMark names
 
 ### Important Notes
 
@@ -1437,3 +1443,23 @@ These instructions use BCS serialization for efficient querying:
 ## Query Instructions and On-chain Object Access
 
 Guards can access data from ANY on-chain object using `query` nodes! Use the `wowok_buildin_info` tool with `'guard instructions'` to query the complete list of available operations.
+
+---
+
+## Related Components
+
+| Component | Description |
+|-----------|-------------|
+| **[Service](service.md)** | WYSIWYG product trading - can bind Guards for service validation |
+| **[Demand](demand.md)** | Service requests - uses Guards to validate recommended services |
+| **[Machine](machine.md)** | Workflow template - uses Guards for workflow validation |
+| **[Progress](progress.md)** | Workflow instance - carries Guard validation during execution |
+| **[Order](order.md)** | Order management - uses Guards for order validation |
+| **[Reward](reward.md)** | Marketing incentives - uses Guards for claiming conditions |
+| **[Repository](repository.md)** | Data ownership - uses Guards for data write permissions |
+| **[Treasury](treasury.md)** | Team fund management - uses Guards for external operation validation |
+| **[Allocation](allocation.md)** | Automatic fund distribution - uses Guards for distribution conditions |
+| **[Arbitration](arbitration.md)** | Dispute resolution - uses Guards for arbitration validation |
+| **[Permission](permission.md)** | Permission management - Guards can be used as permission entities |
+| **[Messenger](messenger.md)** | Encrypted messaging - uses Guards for passport/reputation verification |
+| **[WoWok Build-in Info](wowok_buildin_info.md)** | Query guard instructions and value types |

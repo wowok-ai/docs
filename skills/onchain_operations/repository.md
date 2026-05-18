@@ -11,20 +11,18 @@ CallRepository_Data {
   
   description?: string;             // Repository description
   
-  // Policy rules
+  // Policy rules (discriminated by op)
   policies?: {
-    op: "add" | "set" | "remove" | "clear";
-    policy?: {
-      name: string;
-      type_guard?: string;          // Guard for type validation
-      read_guard?: string;          // Guard for read access
-      consensus?: boolean;          // Whether consensus required
-      write_guard?: string;         // Guard for write access
-    }[];
-    policy_name?: string[];         // For remove op
+    op: "add" | "set";
+    policy: PolicyRule[];
+  } | {
+    op: "remove";
+    policy: string[];               // Policy names to remove
+  } | {
+    op: "clear";
   };
   
-  // Add data
+  // Add data (discriminated union)
   data_add?: {
     name: string;
     write_guard?: string;
@@ -40,7 +38,7 @@ CallRepository_Data {
     }[];
   };
   
-  // Remove data
+  // Remove data (discriminated union)
   data_remove?: {
     name: string;
     write_guard?: string;
@@ -58,6 +56,26 @@ CallRepository_Data {
 }
 ```
 
+### PolicyRule
+
+```typescript
+PolicyWriteGuard {
+  guard: string;                       // Guard object ID
+  id_from_submission?: number;         // Guard table index for data ID (omit = user specifies)
+  data_from_submission?: number;       // Guard table index for data value (omit = user specifies)
+}
+
+PolicyRule {
+  name: string;                        // Policy rule name
+  description: string;                 // Policy rule description
+  write_guard: PolicyWriteGuard[];     // Guard list for write verification
+  quote_guard?: string | null;         // Guard for on-chain quote verification (null = no verification required)
+  id_from: 0 | 1 | 2 | "None" | "Clock" | "Signer" | "none" | "clock" | "signer";
+                                       // Data ID source: 0/None = user-specified, 1/Clock = timestamp, 2/Signer = signer ID
+  value_type: ValueType;               // Type of data value
+}
+```
+
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ObjectsOp, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ValueType, ObjectsOp, ReceivedObjectsOrRecently.

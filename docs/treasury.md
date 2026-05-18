@@ -100,7 +100,11 @@ treasury (Treasury Object)
 │   │       ├── token_type (string)
 │   │       └── received (array of received items)
 │   └── um (Contact object, optional)
-│       ├── Option 1: Contact object name or ID (string)
+│       ├── Option 1: NamedObject (object) - create a named Contact object
+│       │   ├── name (string, optional) - Contact object name
+│       │   ├── tags (string[], optional) - object tags
+│       │   ├── onChain (boolean, optional) - sync name to chain
+│       │   └── replaceExistName (boolean, optional) - overwrite existing
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
