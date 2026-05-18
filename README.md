@@ -46,7 +46,7 @@ WoWok balances privacy and open collaboration through innovative mechanisms:
 ---
 
 ### How to Use? Just One Step!
-Configure "wowok-agent" in your AI client (such as Claude Desktop, Cursor, etc.) (You can ask the AI how to configure MCP Server):
+Configure "@wowok/agent-mcp" in your AI client (such as Claude Desktop, Cursor, etc.) (You can ask the AI how to configure MCP Server):
 
 ```json
 {
@@ -55,7 +55,7 @@ Configure "wowok-agent" in your AI client (such as Claude Desktop, Cursor, etc.)
       "command": "npx",
       "args": [
         "-y",
-        "wowok_agent"
+        "@wowok/agent-mcp"
       ]
     }
   }
@@ -63,7 +63,7 @@ Configure "wowok-agent" in your AI client (such as Claude Desktop, Cursor, etc.)
 ```
 After restarting the AI client, you can try a conversation like this to verify:
 
-**💬 You**: Please provide all tools and detailed usage of wowok_agent.
+**💬 You**: Please provide all tools and detailed usage of @wowok/agent-mcp.
 
 **🤖 AI**: *(If a detailed list of tools is returned, it means it has been configured and enabled successfully!)*
 
@@ -71,7 +71,7 @@ After restarting the AI client, you can try a conversation like this to verify:
 
 > 🚀 **Enhanced AI Experience**: For an even better AI experience, install both:
 > - **WoWok Agent (MCP Server)**: [`https://github.com/wowok-ai/agent/`](https://github.com/wowok-ai/agent/)
-> - **WoWok Skills**: [`https://github.com/wowok-ai/skills/`](https://github.com/wowok-ai/skills/) - `npm install -g wowok-skills`
+> - **WoWok Skills**: [`https://github.com/wowok-ai/skills/`](https://github.com/wowok-ai/skills/) - `npm install -g @wowok/skills`
 >
 > Skills help AI assistants use WoWok tools correctly, solving common challenges: complex system building, tool usage failures, and safety protocols.
 

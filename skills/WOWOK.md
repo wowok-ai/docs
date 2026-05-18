@@ -1,6 +1,6 @@
 # WoWok AI Skill Framework
 
-> Master guidance for AI agents operating the WoWok MCP Server (wowok_agent). This document provides core principles, design patterns, and operational rules. For detailed tool schemas, see `schema-<tool_name>.md` files in this directory.
+> Master guidance for AI agents operating the WoWok MCP Server (@wowok/agent-mcp). This document provides core principles, design patterns, and operational rules. For detailed tool schemas, see `schema-<tool_name>.md` files in this directory.
 
 ---
 
