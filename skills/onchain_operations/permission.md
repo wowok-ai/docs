@@ -2,11 +2,15 @@
 
 Define who can perform which operations on WoWok objects.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Permission uses `NormalObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallPermission_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: NormalObject
   object?: NormalObject;
   
   description?: string;             // Permission description

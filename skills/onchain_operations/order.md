@@ -2,11 +2,13 @@
 
 Manage the order lifecycle, including arbitration, progress advancement, refunds, and setting agents.
 
+> **Note**: Order is **MODIFY-only** — Orders are created via `service.order_new`, not directly.
+
 ## Data Schema
 
 ```typescript
 CallOrder_Data {
-  object: string;                   // Order ID or name (required)
+  object: string;                   // Order ID or name (required) — MODIFY only
   
   // Manage agents
   agents?: ManyAccountOrMark_Address;

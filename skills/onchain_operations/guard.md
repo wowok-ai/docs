@@ -2,11 +2,14 @@
 
 Create immutable programmable validation rules that return boolean results.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Guard is **CREATE-only** and immutable. No `object` field — use `namedNew` for naming.
+
 ## Data Schema
 
 ```typescript
 CallGuard_Data {
-  namedNew?: NamedObject;           // Name for new Guard
+  namedNew?: NamedObject;           // Name for new Guard (optional naming)
   description?: string;             // Guard description
   
   // Data table definitions

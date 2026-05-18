@@ -2,11 +2,13 @@
 
 Track and manage active workflows in real-time.
 
+> **Note**: Progress is **MODIFY-only** — Progress objects are created via `machine.progress_new`, not directly.
+
 ## Data Schema
 
 ```typescript
 CallProgress_Data {
-  object: string;                   // Progress ID or name (required)
+  object: string;                   // Progress ID or name (required) — MODIFY only
   task?: string | null;             // Target task ID
   repository?: ObjectsOp;           // Context repositories
   

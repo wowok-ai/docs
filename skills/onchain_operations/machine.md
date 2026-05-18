@@ -2,11 +2,15 @@
 
 Design and deploy automated workflow templates (Machines) that define how services are delivered.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Machine uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallMachine_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
   // Generate new Progress

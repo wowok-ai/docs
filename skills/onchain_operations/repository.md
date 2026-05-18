@@ -2,11 +2,15 @@
 
 Read/write database with consensus field + address as key, strongly-typed data as value.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Repository uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallRepository_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
   description?: string;             // Repository description

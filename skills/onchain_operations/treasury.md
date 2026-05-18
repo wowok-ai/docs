@@ -2,11 +2,15 @@
 
 Create and manage treasury for team funds with deposit/withdrawal rules.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Treasury uses `TypedPermissionObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallTreasury_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: TypedPermissionObject
   object: TypedPermissionObject;
   
   description?: string;             // Treasury description

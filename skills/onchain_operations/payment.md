@@ -2,11 +2,13 @@
 
 Send instant, irreversible coin transfers to any wallet address.
 
+> **Note**: Payment is **CREATE-only** and immutable — Payments cannot be modified after creation.
+
 ## Data Schema
 
 ```typescript
 CallPayment_Data {
-  // Object reference — create new only (Payment is immutable)
+  // Object reference — CREATE only (Payment is immutable)
   object: {
     name?: string;                 // Object name
     tags?: string[];               // Tags

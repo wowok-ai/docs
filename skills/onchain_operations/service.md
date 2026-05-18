@@ -2,11 +2,15 @@
 
 Create and manage product/service listings with transparent promises, bind workflow templates, set pricing, issue discount coupons.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Service uses `TypedPermissionObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallService_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: TypedPermissionObject
   object: TypedPermissionObject;
   
   // Create new order (customer purchase)

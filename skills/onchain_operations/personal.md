@@ -2,11 +2,13 @@
 
 Establish and manage your on-chain public identity. **CRITICAL: Everything here is PERMANENTLY PUBLIC on the blockchain!**
 
+> **Note**: Personal is **MODIFY-only** — Personal identity is auto-created on first use, then modified via this operation.
+
 ## Data Schema
 
 ```typescript
 CallPersonal_Data {
-  description?: string;             // Public description
+  description?: string;             // Public description — MODIFY only
   
   referrer?: string | AccountOrMark_Address | null; // Referrer for joining network
   

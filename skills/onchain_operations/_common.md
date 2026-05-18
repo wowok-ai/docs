@@ -4,6 +4,47 @@ Shared types referenced by all `onchain_operations` operation types.
 
 ---
 
+## CREATE vs MODIFY Pattern
+
+All on-chain object operations use a **unified discriminated pattern** for CREATE vs MODIFY:
+
+```typescript
+// CREATE: object is an object with configuration
+object: {
+  name?: string;           // Optional name for the new object
+  tags?: string[];         // Optional tags
+  onChain?: boolean;       // Whether to register name on-chain (public)
+  replaceExistName?: boolean;  // Force claim existing name
+  permission?: DescriptionObject;  // Permission (string or new object)
+  type_parameter?: string; // Token type (e.g., "0x2::wow::WOW")
+}
+
+// MODIFY: object is a string referencing existing object
+object: "<object_name_or_id>"  // Existing object name (local mark) or on-chain ID
+```
+
+### Key Rule
+
+| Format | Meaning | Example |
+|--------|---------|---------|
+| **String** | Reference EXISTING object | `object: "my-service"` or `object: "0x1234..."` |
+| **Object** | CREATE NEW object | `object: { name: "my-service", permission: "..." }` |
+
+### Type Mapping
+
+| Type | Used By | CREATE Shape | MODIFY Shape |
+|------|---------|--------------|--------------|
+| `TypedPermissionObject` | `service`, `treasury` | `{ name?, tags?, permission?, type_parameter }` | `string` |
+| `WithPermissionObject` | `machine`, `reward`, `arbitration`, `repository`, `demand`, `contact` | `{ name?, tags?, permission? }` | `string` |
+| `DescriptionObject` | `permission` | `{ name?, tags?, description? }` | `string` |
+| `NormalObject` | `permission` | `{ name?, tags? }` | `string` |
+
+### Guard Exception
+
+`guard` operation is **CREATE-only** and immutable. Guards cannot be modified after creation. Create new Guard to update logic.
+
+---
+
 ## Top-Level Structure
 
 Most operations follow this standard wrapper:
@@ -26,6 +67,86 @@ OnchainOperations {
 | `payment` | `{ data, env? }` | No `submission` field |
 | `personal` | `{ data, env? }` | No `submission` field |
 
+---
+
+## Guard Submission Mechanism
+
+When calling `onchain_operations`, the tool returns one of the following:
+
+- **Direct Result**: The operation completes immediately. Returns a transaction result, data, or error. No additional steps needed.
+- **Submission Required**: Returns `type: "submission"` — the operation triggered a Guard requiring user-provided data. A second call is needed to complete it.
+
+### Direct Result Pattern
+
+Most operations return a direct result when no Guard submission is required:
+
+```
+onchain_operations({ operation_type: "<type>", data: { ... } })
+→ Returns transaction result or error directly
+```
+
+### Submission Required Pattern
+
+When the operation triggers a Guard whose table contains entries with **`b_submission: true`**, the tool does **not** return a transaction result immediately. Instead, it returns a **`type: "submission"`** response containing the Guard's data requirements.
+
+This is the **only scenario** where a second call is required to complete an operation.
+
+**Two-Step Flow**:
+
+```
+Step 1 — Initial Call
+├── onchain_operations (e.g., service, machine, progress, order, etc.)
+└── Response: { type: "submission", ... }
+    ├── guard: [{ object, impack }] — Guards requiring verification
+    └── submission: [{ guard, submission: [{ identifier, value_type, value?, name }] }]
+        ↑ You ONLY fill the `value` field. Do NOT modify other fields.
+
+Step 2 — Re-submit with Completed Data
+├── Same operation data (unchanged)
+└── Add top-level `submission` field:
+    {
+      "type": "submission",
+      "guard": [{ "object": "guard_name", "impack": true }],
+      "submission": [{
+        "guard": "guard_name",
+        "submission": [
+          { "identifier": 0, "value_type": "String", "value": "your_data_here" }
+        ]
+      }]
+    }
+```
+
+**Critical Rules**:
+- **Only fill `value`**: The template has `identifier`, `value_type`, `name` pre-filled. You ONLY supply the `value` field matching the `value_type`. Never modify `identifier`, `value_type`, or `name`.
+- **Value type matching**: `value_type` indicates the expected type (`String`, `Address`, `U64`, `Bool`, etc.). The `value` must match exactly.
+- **Impack flag**: `impack: true` means this Guard's result affects the final outcome. All `impack=true` Guards must pass for the operation to proceed.
+- **All fields required**: Fill every entry in the `submission` array. Incomplete submission data causes a validation error.
+- **Do not change other fields**: The `data` and `env` portions of the original call must remain identical.
+
+**Common Submission Scenarios**:
+- **Merkle Root proof**: `value_type: "String"`, value = hex string.
+- **Progress/Order address**: `value_type: "Address"`, value = object name or ID.
+
+---
+
+## Field Execution Order
+
+**Rule**: Schema field order determines execution order, regardless of JSON field order.
+
+| Order | Fields | Purpose |
+|-------|--------|---------|
+| 1 | `object` | Create or resolve reference |
+| 2 | `description`, `location` | Metadata |
+| 3 | `permission`, `repository` | Structural bindings |
+| 4 | `node`, `sales`, `rewards` | Runtime behavior |
+| 5 | `publish` | Finalize (immutable after) |
+| 6 | `owner_receive` | Fund transfers |
+
+**AI Guidelines**:
+1. Check schema field order against user's intended operation sequence
+2. If schema order conflicts with intent, split into multiple sequential calls
+3. When uncertain, use incremental steps rather than single batch operation
+
 ## CallEnv
 
 ```typescript
@@ -33,7 +154,7 @@ CallEnv {
   account?: string;              // Operating account (empty = default)
   permission_guard?: string[];   // Permission Guard ID list
   no_cache?: boolean;            // Disable cache
-  network?: "localnet" | "testnet"; // Target network
+  network?: "localnet" | "testnet" ; // Target network
   referrer?: string;             // Referrer ID
 }
 ```

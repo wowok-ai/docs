@@ -2,11 +2,15 @@
 
 Post service requests with reward pools on-chain.
 
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Demand uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
+
 ## Data Schema
 
 ```typescript
 CallDemand_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
   // Recommend Service to Demand
