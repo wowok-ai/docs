@@ -1,61 +1,58 @@
 # onchain_operations / personal
 
-Establish and manage your on-chain public identity. **CRITICAL: Everything here is PERMANENTLY PUBLIC on the blockchain!**
+Manage your personal on-chain account profile and identity marks.
 
-> **Note**: Personal is **MODIFY-only** — Personal identity is auto-created on first use, then modified via this operation.
+> **Note**: Personal has no `submission` field. There is only one Personal object per account, created automatically on first use.
 
 ## Data Schema
 
 ```typescript
 CallPersonal_Data {
-  description?: string;             // Public description — MODIFY only
+  description?: string;                 // Personal description
   
-  referrer?: string | AccountOrMark_Address | null; // Referrer for joining network
+  referrer?: string | AccountOrMark_Address | null;  // Referrer ID for joining network
   
-  // PUBLIC on-chain personal info (discriminated union)
+  // Public personal info records (discriminated union)
   information?: {
     op: "add";
-    data: {                        // Records to add
-      name: string;                // Record name (social handle, URL, etc.)
-      value_type: ValueType;       // Value type
-      value: SupportedValue;       // Value
-    }[];
+    data: RecordsInEntity[];            // Records to add (PUBLIC: social handles, URLs — NEVER private data)
   } | {
     op: "remove";
-    name: string[];                // Record names to remove
+    name: string[];                     // Record names to remove
   } | {
     op: "clear";
   };
   
-  // PUBLIC on-chain identity mark (discriminated union)
+  // Public on-chain identity mark (discriminated union)
   mark?: {
     op: "add";
     data: {
-      address: string;             // Address to mark
-      name?: string;               // Mark name
-      tags?: string[];             // Tags
+      address: string;                  // Address
+      name?: string;                    // Name (optional)
+      tags?: string[];                  // Tags (optional)
     }[];
   } | {
     op: "remove";
     data: {
-      address: string;
-      tags?: string[];
+      address: string;                  // Address
+      tags?: string[];                  // Tags to remove
     }[];
   } | {
     op: "clear";
-    address: ManyAccountOrMark_Address;
+    address: ManyAccountOrMark_Address; // Addresses to clear
   } | {
-    op: "transfer";                // Transfer mark to another address
-    to: AccountOrMark_Address;
+    op: "transfer";
+    to: string;                         // Transfer mark to another address
   } | {
-    op: "replace";                 // Replace with new mark object
-    new_mark_object: string;
+    op: "replace";
+    new_mark_object: string;            // Replace with new mark object ID
   } | {
-    op: "destroy";                 // Permanently destroy mark
+    op: "destroy";                     // Permanently destroy identity mark
   };
 }
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, AccountOrMark_Address, ManyAccountOrMark_Address.
+See [_common.md](./_common.md) for shared types: CallEnv, AccountOrMark_Address, ManyAccountOrMark_Address.  
+`RecordsInEntity` schema is defined in the MCP source at `src/schema/query/index.ts`.

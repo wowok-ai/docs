@@ -34,10 +34,13 @@ object: "<object_name_or_id>"  // Existing object name (local mark) or on-chain 
 
 | Type | Used By | CREATE Shape | MODIFY Shape |
 |------|---------|--------------|--------------|
-| `TypedPermissionObject` | `service`, `treasury` | `{ name?, tags?, permission?, type_parameter }` | `string` |
-| `WithPermissionObject` | `machine`, `reward`, `arbitration`, `repository`, `demand`, `contact` | `{ name?, tags?, permission? }` | `string` |
-| `DescriptionObject` | `permission` | `{ name?, tags?, description? }` | `string` |
-| `NormalObject` | `permission` | `{ name?, tags? }` | `string` |
+| `TypedPermissionObject` | `service`, `arbitration`, `treasury`, `reward` | `{ name?, tags?, onChain?, replaceExistName?, type_parameter, permission? }` | `string` |
+| `WithPermissionObject` | `machine`, `repository`, `demand`, `contact` | `{ name?, tags?, onChain?, replaceExistName?, permission? }` | `string` |
+| `TypedDescriptionObject` | *(not directly used by operations)* | `{ name?, tags?, onChain?, replaceExistName?, type_parameter }` | `string` |
+| `TypeNamedObject` | `allocation` (CREATE), `payment` | `{ name?, tags?, onChain?, replaceExistName?, type_parameter? }` | N/A |
+| `DescriptionObject` | `permission` field of other types | `{ name?, tags?, onChain?, replaceExistName?, description? }` | `string` |
+| `NormalObject` | `permission` | `{ name?, tags?, onChain?, replaceExistName? }` | `string` |
+| `NamedObject` | `namedNew*`, `guard.namedNew` | `{ name?, tags?, onChain?, replaceExistName? }` | N/A |
 
 ### Guard Exception
 
@@ -133,19 +136,12 @@ Step 2 — Re-submit with Completed Data
 
 **Rule**: Schema field order determines execution order, regardless of JSON field order.
 
-| Order | Fields | Purpose |
-|-------|--------|---------|
-| 1 | `object` | Create or resolve reference |
-| 2 | `description`, `location` | Metadata |
-| 3 | `permission`, `repository` | Structural bindings |
-| 4 | `node`, `sales`, `rewards` | Runtime behavior |
-| 5 | `publish` | Finalize (immutable after) |
-| 6 | `owner_receive` | Fund transfers |
-
 **AI Guidelines**:
 1. Check schema field order against user's intended operation sequence
 2. If schema order conflicts with intent, split into multiple sequential calls
 3. When uncertain, use incremental steps rather than single batch operation
+
+---
 
 ## CallEnv
 
@@ -154,7 +150,7 @@ CallEnv {
   account?: string;              // Operating account (empty = default)
   permission_guard?: string[];   // Permission Guard ID list
   no_cache?: boolean;            // Disable cache
-  network?: "localnet" | "testnet" ; // Target network
+  network?: "localnet" | "testnet"; // Target network
   referrer?: string;             // Referrer ID
 }
 ```
@@ -186,32 +182,27 @@ SubmissionCall {
 
 ## Common Sub-Schemas
 
-### TypedPermissionObject
+### NamedObject
 
 ```typescript
-TypedPermissionObject = 
-  | string                          // Object ID or name (existing)
-  | {
-      name?: string;                // Name for new object
-      tags?: string[];              // Tags for discoverability
-      onChain?: boolean;            // Register name on-chain
-      replaceExistName?: boolean;   // Force claim existing name
-      type_parameter: string;       // Token type parameter (default: "0x2::wow::WOW")
-      permission?: DescriptionObject;  // Permission for the new object
-    };
+NamedObject {
+  name?: string;            // Object name (max 64 bcs chars, must not start with '0x')
+  tags?: string[];           // Tags for discoverability
+  onChain?: boolean;         // Register name on-chain (public)
+  replaceExistName?: boolean; // Force claim existing name
+}
 ```
 
-### WithPermissionObject
+### NormalObject
 
 ```typescript
-WithPermissionObject = 
+NormalObject = 
   | string                           // Existing object ID or name
   | {
       name?: string;
       tags?: string[];
       onChain?: boolean;
       replaceExistName?: boolean;
-      permission?: DescriptionObject;
     };
 ```
 
@@ -229,28 +220,61 @@ DescriptionObject =
     };
 ```
 
-### NormalObject
+### TypeNamedObject
 
 ```typescript
-NormalObject = 
+TypeNamedObject = 
   | string                           // Existing object ID or name
   | {
       name?: string;
       tags?: string[];
       onChain?: boolean;
       replaceExistName?: boolean;
+      type_parameter?: string;           // Token type (default: "0x2::wow::WOW")
     };
 ```
 
-### NamedObject
+### WithPermissionObject
 
 ```typescript
-NamedObject {
-  name?: string;
-  tags?: string[];
-  onChain?: boolean;
-  replaceExistName?: boolean;
-}
+WithPermissionObject = 
+  | string                           // Existing object ID or name
+  | {
+      name?: string;
+      tags?: string[];
+      onChain?: boolean;
+      replaceExistName?: boolean;
+      permission?: DescriptionObject;
+    };
+```
+
+### TypedPermissionObject
+
+```typescript
+TypedPermissionObject = 
+  | string                          // Object ID or name (existing)
+  | {
+      name?: string;                // Name for new object
+      tags?: string[];              // Tags for discoverability
+      onChain?: boolean;            // Register name on-chain
+      replaceExistName?: boolean;   // Force claim existing name
+      type_parameter: string;       // Token type parameter (default: "0x2::wow::WOW")
+      permission?: DescriptionObject;  // Permission for the new object
+    };
+```
+
+### TypedDescriptionObject
+
+```typescript
+TypedDescriptionObject = 
+  | string                           // Existing object ID or name
+  | {
+      name?: string;
+      tags?: string[];
+      onChain?: boolean;
+      replaceExistName?: boolean;
+      type_parameter?: string;           // Token type (default: "0x2::wow::WOW")
+    };
 ```
 
 ### CoinParam
@@ -264,30 +288,209 @@ CoinParam =
 ### ObjectsOp
 
 ```typescript
-ObjectsOp = {
-  op: "add" | "set" | "remove";
-  objects: string[];
-} | {
-  op: "clear";
-};
+ObjectsOp = 
+  | {
+      op: "add" | "set";
+      objects: string[];             // List of object IDs or names
+    }
+  | {
+      op: "remove";
+      objects: string[];             // List of object IDs or names to remove
+    }
+  | {
+      op: "clear";
+    };
 ```
 
 ### AccountOrMark_Address
 
 ```typescript
-AccountOrMark_Address = {
-  name_or_address?: string;
-  local_mark_first?: boolean;
-};
+AccountOrMark_Address {
+  name_or_address?: string;       // Account name, address (0x...), or mark name
+  local_mark_first?: boolean;     // Prioritize local marks first
+}
 ```
 
 ### ManyAccountOrMark_Address
 
 ```typescript
-ManyAccountOrMark_Address = {
-  entities: AccountOrMark_Address[];
-  check_all_founded?: boolean;
-};
+ManyAccountOrMark_Address {
+  entities: AccountOrMark_Address[];  // Batch of account/address lookups
+  check_all_founded?: boolean;        // Abort if any ID not found
+}
+```
+
+### GuardTableItem
+
+```typescript
+GuardTableItem {
+  identifier: number;             // 0-255
+  b_submission: boolean;          // Whether user submission is required
+  value_type: ValueType;          // Expected type
+  value?: SupportedValue;         // Default value (if b_submission=false)
+  name: string;                   // Description (default: "")
+}
+
+// Note: GuardTableItem may also include:
+//   object_type?: ObjectType;    // Object type when value is Address
+```
+
+### Recipient
+
+```typescript
+Recipient = 
+  | { GuardIdentifier: number }           // Get recipient from Guard table index
+  | { Entity: AccountOrMark_Address }     // Explicit entity ID
+  | { Signer: "signer" };                 // Current transaction signer
+```
+
+### Amount
+
+```typescript
+Amount = 
+  | {
+      type: "GuardU64Identifier";
+      value: number;              // Guard table identifier (0-255) for u64 amount
+    }
+  | {
+      type: "Fixed";
+      value: string | number;     // Fixed amount value
+    };
+```
+
+### PaymentInfo
+
+```typescript
+PaymentInfo {
+  for_object?: string | null;     // Payment for a specific object ID
+  for_guard?: string | null;      // Payment to satisfy Guard verification
+  remark: string;                 // Payment record remark
+  index: string | number;         // Payment record index
+}
+```
+
+### ServiceSale
+
+```typescript
+ServiceSale {
+  name: string;                   // Product or service name
+  price: string | number;         // Price
+  stock: string | number;         // Stock quantity
+  suspension: boolean;            // Whether suspended
+  wip: string;                    // HTTP URL of WIP file
+  wip_hash: string;               // WIP file hash (empty = auto-use WIP hash)
+}
+```
+
+### ServiceBuyItem
+
+```typescript
+ServiceBuyItem {
+  name: string;                   // Product or service name
+  stock: string | number;         // Quantity to purchase
+  wip_hash: string;               // WIP file hash of the item
+}
+```
+
+### Discount
+
+```typescript
+Discount {
+  name: string;                       // Discount name
+  discount_type: 0 | 1;               // 0 = RATES (percentage), 1 = FIXED
+  discount_value: string | number;    // Discount value
+  benchmark?: number | string;        // Minimum amount for discount to apply
+  time_ms_start?: number;             // Start time (milliseconds)
+  time_ms_end?: number;               // End time (milliseconds)
+  count?: number;                     // Usage count limit
+  recipient: ManyAccountOrMark_Address; // Recipient specification
+  transferable?: boolean;             // Whether recipient can transfer
+}
+```
+
+### ServiceGuard
+
+```typescript
+ServiceGuard {
+  guard: string;                                  // Guard object ID
+  service_identifier?: number | null;              // Guard table identifier for service
+}
+```
+
+### RewardGuard
+
+```typescript
+RewardGuard {
+  guard: string;                              // Guard object ID or name
+  recipient: Recipient;                       // Who receives the reward
+  amount: Amount;                             // Reward amount
+  expiration_time?: number;                   // Expiration time (ms)
+  store_from_id?: number | null;              // Guard table index for record storage
+}
+```
+
+### AmountFromDepositGuard
+
+```typescript
+AmountFromDepositGuard {
+  guard: string;                      // Guard object ID or name
+  identifier?: number | null;         // Guard table index for deposit amount limit (null = unlimited)
+  store_from_id?: number | null;      // Guard table index for record storage
+}
+```
+
+### AmountFromWithdrawGuard
+
+```typescript
+AmountFromWithdrawGuard {
+  guard: string;                      // Guard object ID or name
+  identifier: number;                 // Guard table index for withdrawable amount
+  store_from_id?: number | null;      // Guard table index for record storage
+}
+```
+
+### VotingGuard / VoteWeight
+
+```typescript
+VoteWeight = 
+  | { GuardIdentifier: number }           // Voting weight from Guard table index
+  | { FixedValue: number };               // Fixed voting weight (0-65535)
+
+VotingGuard {
+  guard: string;                    // Voting Guard object ID
+  vote_weight: VoteWeight;          // Voting weight configuration
+}
+```
+
+### AllocationSharing
+
+```typescript
+AllocationSharing {
+  who: Recipient;                   // Recipient specification
+  sharing: string | number;         // Allocation amount or rate
+  mode: "Amount" | "Rate" | "Surplus"; // Allocation mode
+}
+```
+
+### Allocator
+
+```typescript
+Allocator {
+  guard: string;                        // Guard object ID — allocation triggers on verify
+  sharing: AllocationSharing[];         // Fund allocation items
+  fix?: string | number;                // Fixed amount per recipient
+  max?: string | number | null;         // Maximum allocation amount
+}
+```
+
+### Allocators
+
+```typescript
+Allocators {
+  description: string;              // Allocator list description
+  threshold: string | number;       // Trigger threshold
+  allocators: Allocator[];          // Fund allocator list
+}
 ```
 
 ### ReceivedBalanceOrRecently
@@ -296,11 +499,11 @@ ManyAccountOrMark_Address = {
 ReceivedBalanceOrRecently = 
   | {
       balance: string | number;  // Balance amount
-      token_type: string;        // Token type
-      received: {                // Unwrapped coin objects
-        id: string;              // CoinWrapper object ID
+      token_type: string;        // Token type (e.g., "CoinWrapper<0x2::wow::WOW>")
+      received: {
+        id: string;              // Received CoinWrapper object ID
         balance: string | number; // Amount
-        payment: string;         // Info string, usually the payment object ID @any
+        payment: string;         // Payment object ID
       }[];
     }
   | "recently";                  // Shortcut: automatically unwrap most recently received CoinWrapper
@@ -315,7 +518,30 @@ ReceivedObjectsOrRecently =
       type: string;              // Object type
       content_raw?: any;         // Raw content (optional)
     }[]
-  | ReceivedBalanceOrRecently;   // Or: empty/clear then receive CoinWrapper objects
+  | {
+      balance: string | number;
+      token_type: string;
+      received: { id: string; balance: string | number; payment: string; }[];
+    }
+  | "recently";
+```
+
+### QueryReceivedResult
+
+```typescript
+QueryReceivedResult {
+  result: 
+    | {
+        balance: string | number;
+        token_type: string;
+        received: { id: string; balance: string | number; payment: string; }[];
+      }
+    | {
+        id: string;
+        type: string;
+        content_raw?: any;
+      }[];
+}
 ```
 
 ---
@@ -343,15 +569,3 @@ ReceivedObjectsOrRecently =
 | VecU128 | 16 | Vector of U128 |
 | VecU256 | 17 | Vector of U256 |
 | VecVecU8 | 18 | Vector of VecU8 |
-
----
-
-### Recipient
-Used by `service` (order allocators), `reward` (guard recipients), and `allocation` (who field).
-
-```typescript
-Recipient =
-  | { GuardIdentifier: number }
-  | { Entity: AccountOrMark_Address }
-  | { Signer: "signer" }
-```

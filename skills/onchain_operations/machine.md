@@ -15,60 +15,75 @@ CallMachine_Data {
   
   // Generate new Progress
   progress_new?: {
-    task?: string | null;           // Task ID
-    repository?: ObjectsOp;         // Repository list
-    progress_namedOperator?: {      // Manage namespace operators
+    task?: string | null;             // Task ID bound to Progress
+    repository?: ObjectsOp;           // Repository list
+    progress_namedOperator?: {        // Manage namespace operators
       op: "add" | "set" | "remove";
-      name: string;
+      name: string;                   // Namespace name (non-empty)
       operators: ManyAccountOrMark_Address;
     };
-    namedNew?: NamedObject;         // Name for new Progress
+    namedNew?: NamedObject;           // Name for new Progress
   };
   
-  description?: string;             // Machine description
-  repository?: ObjectsOp;           // Consensus repositories
+  description?: string;               // Machine description
+  repository?: ObjectsOp;             // Consensus repositories
   
   // Node operations - TWO MODES (mutually exclusive)
   node?: 
     // Mode 1: Incremental operations
     | {
         op: "add" | "set";
-        nodes: MachineNode[];
-        bReplace?: boolean;
+        nodes: MachineNode[];         // Node array
+        bReplace?: boolean;           // Whether to replace existing
       }
-    | { op: "remove"; nodes: string[] }
+    | { op: "remove"; nodes: string[] }       // Node names to delete
     | { op: "clear" }
-    | { op: "exchange"; node_one: string; node_other: string }
-    | { op: "rename"; node_name_old: string; node_name_new: string }
-    | { op: "remove prior node"; pairs: NodeRemovePriorNodeData[] }
-    | { op: "add forward"; data: NodeAddForwardData[] }
-    | { op: "remove forward"; data: NodeRemoveForwardData[] }
+    | { op: "exchange"; node_one: string; node_other: string } // Swap two nodes
+    | { op: "rename"; node_name_old: string; node_name_new: string } // Rename node
+    | { op: "remove prior node"; pairs: { prior_node_name: string[]; node_name: string; }[] } // Delete prev→next pairs
+    | { op: "add forward"; data: {
+        prior_node_name: string;      // Previous node name
+        node_name: string;            // Next node name
+        forward: {
+          name: string;               // Operation name
+          namedOperator?: string | null;     // Per-Progress namespace operator (null or empty "" = order permission)
+          permissionIndex?: number | null;   // Shared permission index
+          weight: number;             // Forward weight (0-65535)
+        }[];
+        threshold?: number | null;    // Weight threshold (int >= 0)
+      }[] }
+    | { op: "remove forward"; data: {
+        prior_node_name: string;
+        node_name: string;
+        forward_name: string[];       // Operation names to delete
+      }[] }
     // Mode 2: Complete replacement from file
     | { json_or_markdown_file: string };
   
-  pause?: boolean;                  // Pause new Progress
-  publish?: boolean;                // Publish (nodes immutable)
+  pause?: boolean;                    // Pause new Progress
+  publish?: boolean;                  // Publish (nodes immutable after)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;               // Contact object
+  um?: string | null;                 // Contact object
 }
 
-// MachineNode definition
+// MachineNode definition (referenced by node operations)
+// For the canonical MachineNodeNodeSchema, see MCP source at src/schema/query
 MachineNode {
-  name: string;                     // Node name (initial is "")
+  name: string;                       // Node name
   pairs: {
-    prior_node: string;             // Previous node ("" for entry)
+    prior_node: string;               // Previous node name ("" for entry)
     forwards: {
-      name: string;                 // Forward name
-      namedOperator?: string;       // Per-Progress namespace
-      permissionIndex?: number;     // Shared permission index
-      weight: number;               // Forward weight
-      guard?: string;               // Optional Guard
+      name: string;                   // Forward name
+      namedOperator?: string;         // Per-Progress namespace
+      permissionIndex?: number;       // Shared permission index
+      weight: number;                 // Forward weight
+      guard?: string;                 // Optional Guard
     }[];
-    threshold?: number;             // Weight threshold
+    threshold?: number;               // Weight threshold (null = any single forward triggers)
   }[];
 }
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ObjectsOp, NamedObject, ManyAccountOrMark_Address, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, NamedObject, ObjectsOp, ManyAccountOrMark_Address, ReceivedObjectsOrRecently.

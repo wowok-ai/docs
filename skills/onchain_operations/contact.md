@@ -1,6 +1,6 @@
 # onchain_operations / contact
 
-Manage on-chain instant messaging contact profiles.
+Create Contact objects linking social signals to on-chain rewards.
 
 > **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
 > Contact uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
@@ -13,20 +13,20 @@ CallContact_Data {
   // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
-  my_status?: string;               // Status message
-  description?: string;             // Contact description
-  location?: string;                // Location
+  my_status?: string;                    // Set your status message in this contact list
+  description?: string;                  // Contact object description or public information
+  location?: string;                     // Physical or virtual location information
   
-  // IM contact list (discriminated union)
+  // IM contact list operations (discriminated union)
   ims?: {
     op: "add" | "set";
-    im: {                           // Contact entries
-      at: string;                   // IM address
-      description?: string;         // Optional note
+    im: {
+      at: string;                        // Contact address or name for IM
+      description?: string;              // Optional description
     }[];
   } | {
     op: "remove";
-    im: string[];                   // Addresses/names to remove
+    im: string[];                        // Contact addresses or names to remove
   } | {
     op: "clear";
   };
@@ -37,4 +37,4 @@ CallContact_Data {
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, WithPermissionObject, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ReceivedObjectsOrRecently.

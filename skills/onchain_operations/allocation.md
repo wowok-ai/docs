@@ -1,50 +1,28 @@
 # onchain_operations / allocation
 
-Create distribution plans to auto-distribute funds to multiple recipients.
+Define token distribution plans with payment scheduling and Guard-triggered distribution.
+
+> **Schema**: `CallAllocation_Data` is a **union** of two variants — CREATE or OPERATE.
 
 ## Data Schema
 
 ```typescript
-// Allocation has TWO modes — discriminated by object format
-
-// MODE 1: Create a new Allocation with allocators
-CallAllocation_Create {
-  object: {
-    name?: string;                 // Object name
-    tags?: string[];               // Tags
-    onChain?: boolean;             // Public on-chain name
-    replaceExistName?: boolean;    // Force claim name
-    type_parameter?: string;       // Token type (default: "0x2::wow::WOW")
-  };
-  allocators: {
-    description: string;           // Allocator list description
-    threshold: number;             // Trigger threshold
-    allocators: {
-      guard: string;               // Guard object ID — allocation triggers on verify
-      sharing: {
-        who: Recipient;            // Recipient specification
-        sharing: number;           // Amount or rate
-        mode: "Amount" | "Rate" | "Surplus";
-      }[];
-      fix?: number;                // Fixed amount per recipient
-      max?: number | null;         // Maximum allocation amount
-    }[];
-  };
-  coin: CoinParam;                 // Initial funding
-  payment_info: {
-    remark?: string;
-    index?: number;
-  };
-}
-
-// MODE 2: Operate existing Allocation
-CallAllocation_Operate {
-  object: string;                  // Allocation object ID or name (required)
-  received_coins?: ReceivedBalanceOrRecently; // Unwrap CoinWrapper
-  alloc_by_guard?: string;         // Verify Guard and trigger allocation
-}
+CallAllocation_Data = 
+  // CREATE: Create a new Allocation object
+  | {
+      object: TypeNamedObject;         // CREATE with {name, type_parameter?}
+      allocators: Allocators;          // Fund allocator rules
+      coin: CoinParam;                 // Asset to allocate
+      payment_info: PaymentInfo;       // Payment record info
+    }
+  // OPERATE: Operate on existing Allocation object
+  | {
+      object: string;                  // Allocation object ID or name
+      received_coins?: ReceivedBalanceOrRecently;  // Unwrap received CoinWrappers into pending balance
+      alloc_by_guard?: string;        // Verify Guard and execute fund allocation
+    };
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, CoinParam, Recipient, ReceivedBalanceOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, TypeNamedObject, Allocators, CoinParam, PaymentInfo, ReceivedBalanceOrRecently.

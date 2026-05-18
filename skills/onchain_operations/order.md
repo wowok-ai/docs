@@ -1,59 +1,56 @@
 # onchain_operations / order
 
-Manage the order lifecycle, including arbitration, progress advancement, refunds, and setting agents.
+Track and manage service delivery lifecycle — progress, arbitration, compensation.
 
-> **Note**: Order is **MODIFY-only** — Orders are created via `service.order_new`, not directly.
+> **Note**: Order is **MODIFY-only**.
 
 ## Data Schema
 
 ```typescript
 CallOrder_Data {
-  object: string;                   // Order ID or name (required) — MODIFY only
+  object: string;                       // Order object ID or name (required)
   
-  // Manage agents
-  agents?: ManyAccountOrMark_Address;
+  agents?: ManyAccountOrMark_Address;   // Order agents (operate, but cannot receive funds)
   
-  // Set required info (Contact or WTS)
-  required_info?: string | null;
+  required_info?: string | null;        // Contact object ID (recipient) or WTS Proof (delivery proof)
   
-  // Advance progress
+  // Advance order progress workflow
   progress?: {
     operation: {
-      next_node_name: string;
-      forward: string;
+      next_node_name: string;           // Target node name
+      forward: string;                  // Forward (operation) name
     };
-    hold?: boolean;
-    adminUnhold?: boolean;
-    message?: string;
+    hold?: boolean;                     // Lock operation permission
+    adminUnhold?: boolean;              // Allow admin to force unlock
+    message?: string;                   // Operation note
   };
   
-  // Submit compensation request
+  // Submit compensation request and apply for arbitration
   arb_confirm?: {
-    arb: string;                    // Arb object ID
-    confirm: boolean;               // Confirm materials valid
-    description?: string;
-    proposition?: string[];         // Compensation claims
+    arb: string;                        // Arb object ID or name
+    confirm: boolean;                   // Confirm arbitration materials are valid
+    description?: string;               // Message description for compensation
+    proposition?: string[];             // Compensation claims
   };
   
-  // Appeal arbitration result
+  // Oppose and appeal arbitration result
   arb_objection?: {
-    arb: string;
-    objection: string;              // Appeal reason
+    arb: string;                        // Arb object ID or name
+    objection: string;                  // Reason for objection
   };
   
-  // Claim compensation
+  // Claim order compensation from adjudicated Arb
   arb_claim_compensation?: {
-    arb: string;
+    arb: string;                        // Arb object ID or name
   };
   
-  // Receive funds/objects
+  // Unwrap received CoinWrappers/objects and transfer to owner
   receive?: QueryReceivedResult;
   
-  // Transfer order ownership
-  transfer_to?: AccountOrMark_Address;
+  transfer_to?: AccountOrMark_Address;  // Transfer order ownership
 }
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, AccountOrMark_Address, ManyAccountOrMark_Address.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, ManyAccountOrMark_Address, AccountOrMark_Address, QueryReceivedResult.

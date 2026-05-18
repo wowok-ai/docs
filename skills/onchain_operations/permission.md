@@ -13,17 +13,31 @@ CallPermission_Data {
   // See _common.md: NormalObject
   object?: NormalObject;
   
-  description?: string;             // Permission description
+  description?: string;               // Permission description
   
-  // Permission table operations
+  // Remark operations (discriminated union)
+  remark?: {
+    op: "set";
+    index: number;                    // Permission index (REQUIRED)
+    remark: string;                   // Permission remark (REQUIRED)
+  } | {
+    op: "remove";
+    index: number;                    // Permission index (REQUIRED)
+  } | {
+    op: "clear";
+  };
+  
+  // Permission table operations (discriminated union)
   table?: {
+    // Permission-centric: assign ONE permission to MANY entities
     op: "add perm by index" | "set perm by index" | "remove perm by index";
-    index: number;                  // Permission index
+    index: number;                    // Permission index
     entity: ManyAccountOrMark_Address;
   } | {
+    // Entity-centric: assign MANY permissions to ONE entity
     op: "add perm by entity" | "set perm by entity" | "remove perm by entity";
     entity: AccountOrMark_Address;
-    index: number[];
+    index: number[];                  // Permission indices
   };
   
   // Advanced entity operations (requires admin)
@@ -36,23 +50,16 @@ CallPermission_Data {
     entity: AccountOrMark_Address;
   };
   
-  // Admin management (builder only)
+  // Admin management (builder/owner only)
   admin?: {
     op: "add" | "remove" | "set";
     addresses: ManyAccountOrMark_Address;
   };
   
-  // Remark operations
-  remark?: {
-    op: "set" | "remove" | "clear";
-    index?: number;
-    remark?: string;
-  };
-  
-  apply?: string[];                 // Objects to apply permission to
-  builder?: AccountOrMark_Address;  // Set/transfer ownership
+  apply?: string[];                   // Object IDs to apply permission to
+  builder?: AccountOrMark_Address;    // Set/transfer ownership
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;               // Contact object
+  um?: string | null;                 // Contact object
 }
 ```
 

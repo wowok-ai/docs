@@ -1,95 +1,106 @@
 # onchain_operations / arbitration
 
-Access a transparent on-chain arbitration system for resolving order conflicts.
+Create arbitration rules for dispute resolution.
+
+> **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
+> Arbitration uses `TypedPermissionObject`: object shape = CREATE, string = MODIFY.
 
 ## Data Schema
 
 ```typescript
 CallArbitration_Data {
   // Object reference - string (existing) or object (create new)
+  // See _common.md: TypedPermissionObject
   object: TypedPermissionObject;
   
-  // Create new Arb for order
+  // Create new Arb object for an order
   dispute?: {
-    order: string;                  // Order ID
-    description?: string;
-    proposition: string[];          // Dispute propositions
-    fee: CoinParam;                 // Arbitration fee
-    namedArb?: NamedObject;         // Name for new Arb
+    order: string;                       // Order ID or name
+    description?: string;                // Dispute description
+    proposition: string[];               // List of dispute propositions
+    fee: CoinParam;                      // Dispute processing fee
+    namedArb?: NamedObject;              // Name for newly created arbitration object
   };
   
-  description?: string;             // Institution description
-  location?: string;                // Arbitration location
-  fee?: number;                     // Arbitration fee
-  pause?: boolean;                  // Pause arbitration
+  description?: string;                  // Introduction of the Arbitration object
+  location?: string;                     // Arbitration location
+  fee?: string | number;                 // Arbitration fee
+  pause?: boolean;                       // Whether to pause arbitration
   
-  // Confirm user's materials
+  // Confirm materials submitted for arbitration
   confirm?: {
-    arb: string;                    // Arb object ID
-    voting_deadline: number | null;
+    arb: string;                         // Arb object ID or name
+    voting_deadline?: number | null;     // Voting deadline
   };
   
-  // Modify voting deadline
+  // Change voting deadline
   voting_deadline_change?: {
-    arb: string;
-    voting_deadline: number | null;
+    arb: string;                         // Arb object ID or name
+    voting_deadline?: number | null;     // New voting deadline
   };
   
   // Vote on propositions
   vote?: {
-    arb: string;
-    votes: number[];                // Supported proposition indices
-    voting_guard?: string;          // Guard for voting
+    arb: string;                         // Arb object ID or name
+    votes: number[];                     // Vote values (per proposition, 0-255)
+    voting_guard?: string;               // Voting Guard object ID or name
   };
   
-  // Arbitration feedback
+  // Provide arbitration feedback
   feedback?: {
-    arb: string;
-    feedback: string;
+    arb: string;                         // Arb object ID or name
+    feedback: string;                    // Arbitration feedback
   };
   
-  // Final arbitration result
+  // Provide definitive arbitration result
   arbitration?: {
-    arb: string;
-    feedback: string;
-    indemnity: number;              // Compensation amount
+    arb: string;                         // Arb object ID or name
+    feedback: string;                    // Arbitration feedback
+    indemnity: number;                   // Indemnity amount (int >= 0)
   };
   
-  // Request resubmission
+  // User applies to resubmit materials and restart arbitration
   reset?: {
-    arb: string;
-    feedback: string;
+    arb: string;                         // Arb object ID or name
+    feedback: string;                    // Arbitration feedback
   };
   
-  // Withdraw arbitration fee
+  // Withdraw arbitration fees
   arb_withdraw?: {
-    arb: string;
+    arb: string;                         // Arb object ID or name
   };
   
-  // Distribute fees
+  // Distribute withdrawn arbitration fees
   fees_transfer?: {
-    to: { allocation: string } | { treasury: string };
-    payment_remark: string;
-    payment_index: number;
-    newPayment?: NamedObject;
+    to: 
+      | { allocation: string }           // Transfer to Allocation object
+      | { treasury: string };            // Transfer to Treasury object
+    payment_remark: string;              // Payment remark
+    payment_index: number;               // Payment index (int >= 0)
+    newPayment?: NamedObject;            // Name for new payment object
   };
   
-  usage_guard?: string | null;      // Guard for applying
-  
-  // Guard for voting
-  voting_guard?: {
-    op: "add" | "set" | "remove" | "clear";
-    guards?: {
-      guard: string;
-      service_identifier?: number;
-    }[];
-  };
-  
+  usage_guard?: string | null;           // Guard for verifying when users apply
+  voting_guard?: VotingGuardAction;      // Guard for verifying during voting
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;               // Contact object
+  um?: string | null;                    // Contact object
 }
+
+// Voting guard operations (discriminated union)
+VotingGuardAction = 
+  | {
+      op: "add" | "set";
+      guards: VotingGuard[];             // Array of voting guard configs
+    }
+  | {
+      op: "remove";
+      guards: string[];                  // Guard IDs or names to remove
+    }
+  | {
+      op: "clear";
+    };
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, TypedPermissionObject, CoinParam, NamedObject, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, TypedPermissionObject, CoinParam, NamedObject, VotingGuard, ReceivedObjectsOrRecently.

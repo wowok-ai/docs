@@ -1,6 +1,6 @@
 # onchain_operations / repository
 
-Read/write database with consensus field + address as key, strongly-typed data as value.
+Define trusted data sources with typed policies, data read/write rules, and contribution incentives.
 
 > **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
 > Repository uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
@@ -13,73 +13,58 @@ CallRepository_Data {
   // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
-  description?: string;             // Repository description
+  description?: string;               // Repository description
   
-  // Policy rules (discriminated by op)
+  // Policy rules (discriminated union)
   policies?: {
     op: "add" | "set";
-    policy: PolicyRule[];
+    policy: PolicyRule[];             // Policy rule list
   } | {
     op: "remove";
-    policy: string[];               // Policy names to remove
+    policy: string[];                 // Policy rule names to remove
   } | {
     op: "clear";
   };
   
-  // Add data (discriminated union)
-  data_add?: {
-    name: string;
-    write_guard?: string;
-    data: SupportedValue;
-  } | {
-    name: string;
-    items: {
-      data: {
-        id: string | number;
-        data: SupportedValue;
-      }[];
-      write_guard?: string;
-    }[];
-  };
+  // Add data
+  data_add?: 
+    | {
+        name: string;                  // Data item name (must match PolicyRule)
+        write_guard?: string;          // Guard for write permissions
+        data: SupportedValue;          // Data value (ID = timestamp or signer)
+      }
+    | {
+        name: string;                  // Data item name
+        items: {
+          data: {
+            id: string | number;        // Data item ID
+            data: SupportedValue;       // Data value
+          }[];
+          write_guard?: string;         // Guard for write permissions
+        }[];
+      };
   
-  // Remove data (discriminated union)
-  data_remove?: {
-    name: string;
-    write_guard?: string;
-  } | {
-    name: string;
-    items: {
-      id: (string | number)[];
-      write_guard?: string;
-    }[];
-  };
+  // Remove data
+  data_remove?: 
+    | {
+        name: string;                  // Data item name
+        write_guard?: string;          // Guard for verifying deletion permission
+      }
+    | {
+        name: string;
+        items: {
+          id: (string | number)[];     // Data item IDs
+          write_guard?: string;        // Guard for verifying deletion permission
+        }[];
+      };
   
-  rewards?: ObjectsOp;              // Reward operations
+  rewards?: ObjectsOp;                 // Reward object list (contribution incentives)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;               // Contact object
-}
-```
-
-### PolicyRule
-
-```typescript
-PolicyWriteGuard {
-  guard: string;                       // Guard object ID
-  id_from_submission?: number;         // Guard table index for data ID (omit = user specifies)
-  data_from_submission?: number;       // Guard table index for data value (omit = user specifies)
-}
-
-PolicyRule {
-  name: string;                        // Policy rule name
-  description: string;                 // Policy rule description
-  write_guard: PolicyWriteGuard[];     // Guard list for write verification
-  quote_guard?: string | null;         // Guard for on-chain quote verification (null = no verification required)
-  id_from: 0 | 1 | 2 | "None" | "Clock" | "Signer" | "none" | "clock" | "signer";
-                                       // Data ID source: 0/None = user-specified, 1/Clock = timestamp, 2/Signer = signer ID
-  value_type: ValueType;               // Type of data value
+  um?: string | null;                  // Contact object
 }
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ValueType, ObjectsOp, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ObjectsOp, ReceivedObjectsOrRecently.  
+`PolicyRule` schema is defined in the MCP source at `src/schema/query/index.ts`.

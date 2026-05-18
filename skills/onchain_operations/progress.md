@@ -8,26 +8,27 @@ Track and manage active workflows in real-time.
 
 ```typescript
 CallProgress_Data {
-  object: string;                   // Progress ID or name (required) — MODIFY only
-  task?: string | null;             // Target task ID
-  repository?: ObjectsOp;           // Context repositories
+  object: string;                     // Progress ID or name (required) — MODIFY only
+  
+  task?: string;                      // Task ID (cannot be changed after setting)
+  repository?: ObjectsOp;             // Context repositories
   
   // Manage namespace operators
   progress_namedOperator?: {
     op: "add" | "set" | "remove";
-    name: string;
+    name: string;                     // Namespace name (non-empty)
     operators: ManyAccountOrMark_Address;
   };
   
   // Advance workflow
   operate?: {
     operation: {
-      next_node_name: string;       // Target node
-      forward: string;              // Forward name
+      next_node_name: string;         // Target node name
+      forward: string;                // Forward (operation) name
     };
-    hold?: boolean;                 // Lock permission
-    adminUnhold?: boolean;          // Allow admin unlock
-    message?: string;               // Operation note
+    hold?: boolean;                   // Lock operation permission
+    adminUnhold?: boolean;            // Allow admin to force unlock
+    message?: string;                 // Operation note
   };
 }
 ```

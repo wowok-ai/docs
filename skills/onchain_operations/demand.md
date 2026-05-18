@@ -1,6 +1,6 @@
 # onchain_operations / demand
 
-Post service requests with reward pools on-chain.
+Create and manage Demand objects for service procurement with Guard validation.
 
 > **CREATE vs MODIFY**: See [_common.md](./_common.md) for the unified pattern.  
 > Demand uses `WithPermissionObject`: object shape = CREATE, string = MODIFY.
@@ -13,44 +13,41 @@ CallDemand_Data {
   // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
-  // Recommend Service to Demand
+  // Recommend a Service to the Demand
   present?: {
-    recommend: string;             // Recommendation text
-    by_guard?: string;             // Guard to verify through
-    service?: string;              // Service ID or name
+    recommend: string;                   // Recommendation description
+    by_guard?: string;                   // Guard ID — pass verification via Guard
+    service?: string;                    // Service ID or name to present
   };
   
-  description?: string;             // Demand description
-  location?: string;                // Demand location
+  description?: string;                  // Demand description
+  location?: string;                     // Service location
   
-  rewards?: ObjectsOp;              // Reward operations
+  rewards?: ObjectsOp;                   // Reward information
   
-  // Service Guard list (discriminated union)
+  // User feedback
+  feedback?: {
+    who: AccountOrMark_Address;          // User being rated
+    acceptance_score?: number;           // Acceptance score (0-255)
+    feedback?: string;                   // Feedback content
+  }[];
+  
+  // Validation Guards (discriminated union)
   guards?: {
     op: "add" | "set";
-    guard: {
-      guard: string;               // Guard object ID
-      service_identifier?: number | null; // Service identifier in Guard
-    }[];
+    guard: ServiceGuard[];               // Guard configs to add/set
   } | {
     op: "remove";
-    guard: string[];               // Guard IDs/names to remove
+    guard: string[];                     // Guard IDs or names to remove
   } | {
     op: "clear";
   };
   
-  // Feedback on presenters (array — multiple feedback entries)
-  feedback?: {
-    who: AccountOrMark_Address;    // Presenter's account
-    acceptance_score?: number;     // 0-255 acceptance score
-    feedback?: string;             // Feedback content
-  }[];
-  
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;               // Contact object
+  um?: string | null;                    // Contact object
 }
 ```
 
 ---
 
-See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ObjectsOp, AccountOrMark_Address, ReceivedObjectsOrRecently.
+See [_common.md](./_common.md) for shared types: CallEnv, SubmissionCall, WithPermissionObject, ObjectsOp, ServiceGuard, AccountOrMark_Address, ReceivedObjectsOrRecently.
