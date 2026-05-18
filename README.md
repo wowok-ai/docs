@@ -75,6 +75,35 @@ After restarting the AI client, you can try a conversation like this to verify:
 >
 > Skills help AI assistants use WoWok tools correctly, solving common challenges: complex system building, tool usage failures, and safety protocols.
 
+### 📦 Using Skills in Your Project
+
+After installing `@wowok/skills` globally, you can use the following commands in your project:
+
+```bash
+# List all available skills
+wowok-skills list
+
+# Show details of a specific skill
+wowok-skills get wowok-build
+
+# Install skills to current project (creates .claude/skills/)
+wowok-skills init
+
+# Remove skills from current project
+wowok-skills uninit
+```
+
+**Quick Start in Project:**
+```bash
+# Navigate to your project directory
+cd your-project
+
+# Install skills for this project
+wowok-skills init
+
+# Now Claude Code will automatically use these skills when working with WoWok
+```
+
 ---
 
 > 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
