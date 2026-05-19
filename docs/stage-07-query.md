@@ -2,7 +2,7 @@
 
 ---
 
-**[← Stage 6: Personal Services](stage-06-personal.md) | [Stage 8: Practical Examples →](stage-08-query.md)**
+**[← Stage 6: Personal Services](stage-06-personal.md) | [Stage 8: Practical Examples →](stage-08-examples.md)**
 
 ---
 
@@ -48,6 +48,7 @@ query_toolkit is WoWok's core query tool, capable of querying data on local devi
 - 👤 `account_list` — Query your LOCAL accounts (addresses, public keys, messenger status)
 - 📇 `local_mark_list` — Query your LOCAL address book (name→address mappings with tags)
 - 📝 `local_info_list` — Query your LOCAL private info (delivery addresses, phone numbers, contacts)
+- 🏷️ `local_names` — Query LOCAL names by a list of addresses (returns resolved account and mark names)
 - 💎 `token_list` — Query cached token metadata (symbol, decimals, icon URL)
 - 💰 `account_balance` — Query account coin balance OR paginated coin objects
 
@@ -112,7 +113,7 @@ Query detailed information of multiple objects:
 
 This tool was split from `query_toolkit` to handle the unique characteristics of dynamic table queries. On-chain objects have fixed size, but their table data (dynamic fields) can grow dynamically. The `onchain_table_data` tool is specialized for querying these dynamic tables and their items.
 
-**Supported Query Types (11 total):**
+**Supported Query Types (12 total):**
 
 | # | query_type | Parent Object | Key | Meaning |
 |---|-----------|--------------|-----|---------|
@@ -127,6 +128,7 @@ This tool was split from `query_toolkit` to handle the unique characteristics of
 | 9 | `onchain_table_item_machine_node` | Machine | node name | Query workflow node definitions |
 | 10 | `onchain_table_item_progress_history` | Progress | sequence number | Query progress step records |
 | 11 | `onchain_table_item_address_mark` | AddressMark | address | Query PUBLIC on-chain name/tag marks |
+| 12 | `onchain_table_item_generic` | Any object | any key type | Query generic table item from ANY object (supports address, u64, string, object ID keys) |
 
 **→ [View onchain_table_data Detailed Documentation →](query.md#onchain_table_data-tool)**
 
@@ -191,6 +193,8 @@ On-chain events record important activities in the WoWok ecosystem, such as orde
 | `DemandPresentEvent` | Demand submission events |
 | `DemandFeedbackEvent` | Demand feedback events |
 | `NewEntityEvent` | New entity registration events |
+
+> **Note**: Any arbitrary string('{package_address::module_name::event_name}') can also be used as an event type for custom events.
 
 ---
 
@@ -559,7 +563,7 @@ Congratulations on reaching the final stage! Please confirm that you have:
 
 You have completed Stage 7! Now you have mastered WoWok's data query capabilities and are ready to move on to the final stage to explore practical examples!
 
-**[→ Go to Stage 8: Practical Examples 🚀 →](stage-08-query.md)
+**[→ Go to Stage 8: Practical Examples 🚀 →](stage-08-examples.md)
 
 ---
 

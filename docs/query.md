@@ -4,9 +4,9 @@
 
 ## Component Overview
 
-The WatchQuery component (`query_toolkit`) is WoWok's core data query tool. It queries both **LOCAL** data (stored only on your device, never published to blockchain) and **ONCHAIN** data (published on the blockchain). Supports 8 query types across accounts, balances, objects, profiles, and received assets.
+The WatchQuery component (`query_toolkit`) is WoWok's core data query tool. It queries both **LOCAL** data (stored only on your device, never published to blockchain) and **ONCHAIN** data (published on the blockchain). Supports 9 query types across accounts, balances, objects, profiles, and received assets.
 
-**LOCAL queries** (device-only): `local_mark_list` | `account_list` | `local_info_list` | `token_list` | `account_balance`
+**LOCAL queries** (device-only): `local_mark_list` | `account_list` | `local_info_list` | `token_list` | `account_balance` | `local_names`
 
 **ONCHAIN queries** (blockchain): `onchain_personal_profile` | `onchain_objects` | `onchain_received`
 
@@ -25,7 +25,8 @@ Use local queries for account management and address book lookups. Use onchain q
 | 3 | `local_info_list` | Query your LOCAL private info — sensitive data like delivery addresses, phone numbers, contacts stored ONLY on this device. Use to retrieve saved contact/delivery details. | `InfoData[]` (name, default value, contents, timestamps) |
 | 4 | `token_list` | Query cached token metadata — symbol, decimals, icon URL, description for tokens previously fetched from chain. Use to look up token info without an on-chain query. | `TokenTypeInfo[]` (type, alias, name, symbol, decimals, iconUrl) |
 | 5 | `account_balance` | Query an account's coin balance OR paginated coin objects. Use `balance=true` for total amount, or `coin={cursor,limit}` to list individual coin objects. | `{ address, balance? \| coin? }` |
-| 6 | `onchain_personal_profile` | Query any user's PUBLIC on-chain profile — social links, reputation (likes/dislikes), personal info records, voting history, referrer. Use to look up a user's public identity and reputation. | `ObjectPersonal \| undefined` |
+| 6 | `local_names` | Query local names by blockchain addresses — resolves addresses back to human-readable names. Use to find account/service names from their address. | `Record<string, string>` (address → name mapping) |
+| 6a | `onchain_personal_profile` | Query any user's PUBLIC on-chain profile — social links, reputation (likes/dislikes), personal info records, voting history, referrer. Use to look up a user's public identity and reputation. | `ObjectPersonal \| undefined` |
 | 7 | `onchain_objects` | Batch query on-chain WOWOK objects by ID — supports Service, Machine, Order, Treasury, Reward, Arb, Personal, Contact, and more. Use to inspect one or more objects in a single call. | `{ objects: ObjectBase[] }` |
 | 8 | `onchain_received` | Query objects (payments, tokens, NFTs) received by an on-chain object. Use to track incoming payments or items sent to an on-chain object. Supports pagination and all_type filter. | `ReceivedBalance \| ReceivedNormal[]` |
 
@@ -54,12 +55,14 @@ query_toolkit (Query Operations)
 │   │   ├── account (optional, NameOrAddress)
 │   │   ├── no_cache (optional, boolean)
 │   │   └── network (optional, "localnet" | "testnet")
+│   ├── "local_names"
+│   │   └── addresses (required, string[])
 │   ├── "onchain_objects"
 │   │   ├── objects (required, NameOrAddress[])
 │   │   ├── no_cache (optional, boolean)
 │   │   └── network (optional, "localnet" | "testnet")
 │   └── "onchain_received"
-│       ├── object (required, string)
+│       ├── name_or_address (required, AccountOrMark_Address)
 │       ├── all_type (optional, boolean) — Set to true to query all token types; defaults to the object's Token type '0x2::payment::CoinWrapper<TOKEN>' (Coins wrapper sent via Payment). Fails if object has no Token type.
 │       ├── cursor (optional, string | null)
 │       ├── limit (optional, number | null)
@@ -236,7 +239,7 @@ Please help me query all types of received objects for the treasury 'service_wal
 ```json
 {
   "query_type": "onchain_received",
-  "object": "service_wallet",
+  "name_or_address": "service_wallet",
   "all_type": true,
   "cursor": null,
   "limit": 50
@@ -304,6 +307,7 @@ The `onchain_table_data` tool is a dedicated tool for querying dynamic table dat
 | 9 | `onchain_table_item_machine_node` | Machine | node name (string) | Query a workflow node definition from a Machine object's node table. Returns node configuration: pairs, forwards, guards, thresholds. |
 | 10 | `onchain_table_item_progress_history` | Progress | sequence number (u64) | Query a progress step record from a Progress object's history table. Returns step details: node, next_node, session state, time. |
 | 11 | `onchain_table_item_address_mark` | AddressMark | address | Query a PUBLIC on-chain name/tag mark from an AddressMark object's table. Unlike local marks, these are published on-chain. Returns public labels: entity, name, tags[]. |
+| 12 | `onchain_table_item_generic` | Generic | key_type + key_value | Query a generic record by key from any object's on-chain data table. Use when the object type is unknown or unsupported. Returns the raw table item with typed key and object reference. |
 
 ### Schema Tree
 
@@ -360,11 +364,15 @@ onchain_table_data (Table Data Query)
 │   │   ├── u64 (required, number | string)
 │   │   ├── no_cache (optional, boolean)
 │   │   └── network (optional, "localnet" | "testnet")
-│   └── "onchain_table_item_address_mark"
+│   ├── "onchain_table_item_address_mark"
 │       ├── parent (required, NameOrAddress)
 │       ├── address (required, Address)
 │       ├── no_cache (optional, boolean)
 │       └── network (optional, "localnet" | "testnet")
+│   └── "onchain_table_item_generic"
+│       ├── parent (required, NameOrAddress)
+│       ├── key_type (required, string)
+│       └── key_value (required, any)
 ```
 
 ### Output Schema

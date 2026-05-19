@@ -87,7 +87,7 @@ reward (Reward Object)
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -133,7 +133,7 @@ Create a new Reward object for managing rewards.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "reward" |
 | `data.object` | object or string | Yes | Object definition | TypedPermissionObject |
-| `data.description` | string | No | Reward description | Max 65535 characters |
+| `data.description` | string | No | Reward description | Max 65535 bcs characters |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
 | `env.network` | enum | No | Network selection | "localnet" or "testnet" |
 

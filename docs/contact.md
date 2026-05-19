@@ -100,11 +100,11 @@ Contact Component
 │   │   ├── op: "add"
 │   │   │   └── im (array)
 │   │   │       ├── at (string)
-│   │   │       └── description (string, optional)
+│   │   │       └── description (string, optional) - max 256 bcs characters
 │   │   ├── op: "set"
 │   │   │   └── im (array)
 │   │   │       ├── at (string)
-│   │   │       └── description (string, optional)
+│   │   │       └── description (string, optional) - max 256 bcs characters
 │   │   ├── op: "remove"
 │   │   │   └── im (array of strings)
 │   │   ├── op: "clear"
@@ -118,7 +118,7 @@ Contact Component
 │   │       └── received (array of received items)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -165,8 +165,8 @@ Create a new Contact object for managing instant messaging contacts.
 | `object.name` | string | No | Local mark name | Max 64 BCS bytes, cannot start with "0x" |
 | `object.id` | string | No | Object ID | 0x prefix + 64 hex characters |
 | `object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
-| `description` | string | No | Contact object description or public information | Max 4000 characters |
-| `location` | string | No | Physical or virtual location of the Contact | Max 256 characters |
+| `description` | string | No | Contact object description or public information | Max 4000 BCS characters |
+| `location` | string | No | Physical or virtual location of the Contact | Max 256 BCS characters |
 | `ims` | object | No | IM contact operations | See description below |
 
 ### Examples
@@ -254,7 +254,7 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 | `ims.op` | string | Yes | Operation type: add/set/remove/clear |
 | `ims.im` | array | Required for add/set | IM contact list |
 | `ims.im[].at` | string | Yes | Contact account address or name |
-| `ims.im[].description` | string | No | Contact note or description |
+| `ims.im[].description` | string | No | Contact note or description | Max 256 BCS characters |
 
 ### Constraints
 

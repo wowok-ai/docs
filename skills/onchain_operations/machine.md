@@ -63,7 +63,7 @@ CallMachine_Data {
   pause?: boolean;                    // Pause new Progress
   publish?: boolean;                  // Publish (nodes immutable after)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                 // Contact object
+  um?: NameOrAddress | null;          // Contact object
 }
 
 // MachineNode definition (referenced by node operations)
@@ -77,7 +77,7 @@ MachineNode {
       namedOperator?: string;         // Per-Progress namespace
       permissionIndex?: number;       // Shared permission index
       weight: number;                 // Forward weight
-      guard?: string;                 // Optional Guard
+      guard?: MachineForwardGuard;    // { guard: string; retained_submission?: number[] }
     }[];
     threshold?: number;               // Weight threshold (null = any single forward triggers)
   }[];

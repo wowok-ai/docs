@@ -141,7 +141,7 @@ service (Service Object)
 │   │   │   ├── stock (number/string, required) - inventory
 │   │   │   ├── suspension (boolean, required) - paused status
 │   │   │   ├── wip (string, required) - WIP URL/path
-│   │   │   └── wip_hash (string, optional) - WIP hash, default ""
+│   │   │   └── wip_hash (string, required) - WIP hash, empty string "" means auto-use hash from WIP file
 │   │   └── sales_name (string[], optional for remove) - names to remove
 │   ├── repositories (ObjectsOp, optional) - manage repositories
 │   ├── rewards (ObjectsOp, optional) - manage rewards
@@ -781,7 +781,7 @@ Configure automatic fund allocation rules for orders. The allocators define how 
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.order_allocators.description` | string | Yes | Allocators description | Max 65535 characters |
+| `data.order_allocators.description` | string | Yes | Allocators description | Max 4000 BCS characters |
 | `data.order_allocators.threshold` | number | Yes | Threshold amount in smallest token units | No decimals or negatives |
 | `data.order_allocators.allocators` | array | Yes | Allocator list | 1-100 allocators |
 | `data.order_allocators.allocators[].guard` | string | Yes | Guard object for this allocator | Guard name or ID |

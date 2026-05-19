@@ -52,7 +52,7 @@ payment (Payment Object)
 │       └── for_guard (optional, Guard verification)
 └── env (optional, execution environment)
     ├── account (string, optional) - account name or address, empty string for default
-    ├── network (string, optional) - "testnet" or "mainnet"
+    ├── network (string, optional) - "testnet" or "localnet"
     ├── permission_guard (array, optional) - list of permission guard IDs
     ├── no_cache (boolean, optional) - disable caching
     └── referrer (string, optional) - referrer ID
@@ -73,7 +73,7 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
 | `operation_type` | string | Yes | Operation type | Fixed value "payment" |
 | `data.object` | object | Yes | Object configuration | Must include type_parameter |
 | `data.object.type_parameter` | string | Yes | Token type | e.g., "0x2::wow::WOW" |
-| `data.object.name` | string | No | Payment name | Max 64 characters |
+| `data.object.name` | string | No | Payment name | Max 64 bcs characters |
 | `data.revenue` | array | Yes | Recipient and amount array | At least one recipient, max 200 |
 | `data.revenue[].recipient` | object | Yes | Recipient | AccountOrMark_Address with name_or_address |
 | `data.revenue[].amount` | object | Yes | Amount | CoinParam with balance field |

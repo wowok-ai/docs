@@ -165,6 +165,7 @@ Step 2 — Re-submit with Completed Data
 1. Check schema field order against user's intended operation sequence
 2. If schema order conflicts with intent, split into multiple sequential calls
 3. When uncertain, use incremental steps rather than single batch operation
+4. Between incremental steps, verify the previous modification landed on-chain: use `query_toolkit({ query_type: "onchain_objects", objects: ["<name>"], no_cache: true })` to confirm the object's updated state before proceeding to the next call
 
 ---
 

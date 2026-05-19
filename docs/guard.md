@@ -281,7 +281,7 @@ All examples in this document use the **testnet** network and **default account*
   "data": { ... },
   "env": {
     "account": "",              // Empty string for default account, or use account name/address
-    "network": "testnet"        // Options: "testnet" | "mainnet"
+    "network": "testnet"        // Options: "testnet" | "localnet"
   }
 }
 ```

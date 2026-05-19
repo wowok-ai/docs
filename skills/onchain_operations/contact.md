@@ -13,20 +13,20 @@ CallContact_Data {
   // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
-  my_status?: string;                    // Set your status message in this contact list
-  description?: string;                  // Contact object description or public information
-  location?: string;                     // Physical or virtual location information
+  my_status?: string;                    // Set your status message in this contact list (max 64 bcs chars)
+  description?: string;                  // Contact object description or public information (max 4000 bcs chars)
+  location?: string;                     // Physical or virtual location information (max 256 bcs chars)
   
   // IM contact list operations (discriminated union)
   ims?: {
     op: "add" | "set";
     im: {
-      at: string;                        // Contact address or name for IM
-      description?: string;              // Optional description
+      at: NameOrAddress;                 // Contact address or name for IM
+      description?: string;              // Optional description (max 256 bcs chars)
     }[];
   } | {
     op: "remove";
-    im: string[];                        // Contact addresses or names to remove
+    im: NameOrAddress[];                 // Contact addresses or names to remove
   } | {
     op: "clear";
   };

@@ -44,14 +44,14 @@ allocation (Allocation Object)
 │   ├── object (object definition, required)
 │   │   ├── Option 1: Reference existing object (string) - object name or ID
 │   │   └── Option 2: Create new object (object)
-│   │       ├── name (string, optional) - local mark name, max 64 characters
+│   │       ├── name (string, optional) - local mark name, max 64 bcs characters
 │   │       ├── tags (array, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       ├── replaceExistName (boolean, optional) - force claim existing name
 │   │       └── type_parameter (string, optional) - token type, default: 0x2::wow::WOW
 │   ├── allocators (object, required for create) - fund allocator list
-│   │   ├── description (string, required) - allocators description, max 65535 characters
-│   │   ├── threshold (number, required) - threshold amount in smallest units
+│   │   ├── description (string, required) - allocators description, max 4000 bcs characters
+│   │   ├── threshold (number or string, required) - threshold amount in smallest units
 │   │   └── allocators (array, required) - allocator list (1-100 allocators)
 │   │       └── Allocator object
 │   │           ├── guard (string, required) - Guard object ID or name
@@ -65,12 +65,13 @@ allocation (Allocation Object)
 │   │           │       │   │       └── name_or_address (string) - entity name or address
 │   │           │       │   └── Option 3: Signer (object)
 │   │           │       │       └── Signer (string) - fixed value "signer"
-│   │           │       ├── sharing (number, required) - sharing amount/rate in smallest units
+│   │           │       ├── sharing (number or string, required) - sharing amount/rate in smallest units
 │   │           │       └── mode (string, required) - allocation mode: "Amount", "Rate", or "Surplus"
-│   │           └── max (number | null, optional) - maximum allocation amount
+│   │           ├── fix (number or string, optional) - fixed allocation amount for all recipients
+│   │           └── max (number | string | null, optional) - maximum allocation amount
 │   ├── coin (object | string, required for create) - initial deposit coin
 │   │   ├── Option 1: Balance object (object)
-│   │   │   └── balance (number) - balance amount
+│   │   │   └── balance (number or string) - balance amount
 │   │   └── Option 2: Coin object ID (string)
 │   ├── payment_info (object, required for create) - payment info
 │   │   ├── remark (string, required) - payment remark
@@ -89,7 +90,7 @@ allocation (Allocation Object)
 │   └── alloc_by_guard (string, optional) - Guard object ID/name to verify and execute distribution
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -141,17 +142,17 @@ Create a new Allocation object with predefined distribution rules. Newly created
 | `data.object.replaceExistName` | boolean | No | Replace existing name | |
 | `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
 | `data.allocators.description` | string | Yes | Allocators description | Max 4000 BCS bytes |
-| `data.allocators.threshold` | number | Yes | Threshold amount in smallest units | No decimals or negatives |
+| `data.allocators.threshold` | number or string | Yes | Threshold amount in smallest units | No decimals or negatives |
 | `data.allocators.allocators` | array | Yes | Allocator list | 1-100 allocators |
 | `data.allocators.allocators[].guard` | string | Yes | Guard object for this allocator | Guard name or ID |
 | `data.allocators.allocators[].sharing` | array | Yes | Sharing items for this allocator | 1-100 sharing items |
 | `data.allocators.allocators[].sharing[].who` | object | Yes | Recipient type | `{ GuardIdentifier: number }`, `{ Entity: { name_or_address: string } }`, or `{ Signer: "signer" }` |
-| `data.allocators.allocators[].sharing[].sharing` | number | Yes | Sharing amount or rate in smallest units | No decimals or negatives |
+| `data.allocators.allocators[].sharing[].sharing` | number or string | Yes | Sharing amount or rate in smallest units | No decimals or negatives |
 | `data.allocators.allocators[].sharing[].mode` | string | Yes | Allocation mode | "Amount", "Rate", or "Surplus" |
-| `data.allocators.allocators[].fix` | number | No | Fixed allocation amount for all recipients | No decimals or negatives |
-| `data.allocators.allocators[].max` | number or null | No | Maximum allocation amount | No decimals or negatives |
+| `data.allocators.allocators[].fix` | number or string | No | Fixed allocation amount for all recipients | No decimals or negatives |
+| `data.allocators.allocators[].max` | number, string, or null | No | Maximum allocation amount | No decimals or negatives |
 | `data.coin` | object or string | Yes | Initial deposit coin | CoinParam structure |
-| `data.coin.balance` | number | No | Balance amount | No decimals or negatives |
+| `data.coin.balance` | number or string | No | Balance amount | No decimals or negatives |
 | `data.payment_info.remark` | string | Yes | Payment record remark | |
 | `data.payment_info.index` | number or string | Yes | Payment record index | |
 | `data.payment_info.for_object` | string or null | No | Payment for specific object | |

@@ -10,7 +10,7 @@ Create immutable programmable validation rules that return boolean results.
 ```typescript
 CallGuard_Data {
   namedNew?: NamedObject;             // Name for new Guard (optional naming)
-  description?: string;               // Guard description
+  description?: string;               // Guard description (max 4000 bcs chars)
   
   // Data table definitions (uses GuardTableItemBaseSchema — no object_type field)
   table?: {

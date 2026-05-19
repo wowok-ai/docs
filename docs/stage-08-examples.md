@@ -99,7 +99,8 @@ An enterprise-grade e-commerce platform with multi-path workflows, milestone-bas
 
 #### 🔗 Project Links
 - [MyShop_Advanced Full Documentation](../examples/MyShop_Advanced/MyShop_Advanced.md)
-- [MyShop_Advanced Test Results](../examples/MyShop_Advanced/MyShop_Advanced_TestResults.md)
+- [MyShop_Advanced Test Results (Order Flow)](../examples/MyShop_Advanced/MyShop_Advanced_OrderFlow_TestResults.md)
+- [MyShop_Advanced Test Results (Merchant System)](../examples/MyShop_Advanced/MyShop_Advanced_MerchantSystem_TestResults.md)
 
 ---
 

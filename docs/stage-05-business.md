@@ -95,9 +95,6 @@ Create a data repository and add some data
   "operation_type": "repository",
   "data": {
     "object": {
-      "new": true
-    },
-    "namedNew": {
       "name": "my_data_repo"
     },
     "data_add": [
@@ -121,12 +118,8 @@ Create a team fund pool
   "operation_type": "treasury",
   "data": {
     "object": {
-      "new": true
-    },
-    "namedNew": {
       "name": "team_treasury"
-    },
-    "manager_add": ["manager1_address", "manager2_address"]
+    }
   }
 }
 ```

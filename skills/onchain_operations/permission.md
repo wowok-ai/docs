@@ -13,7 +13,7 @@ CallPermission_Data {
   // See _common.md: NormalObject
   object?: NormalObject;
   
-  description?: string;               // Permission description
+  description?: string;               // Permission description (max 4000 bcs chars)
   
   // Remark operations (discriminated union)
   remark?: {
@@ -56,7 +56,7 @@ CallPermission_Data {
     addresses: ManyAccountOrMark_Address;
   };
   
-  apply?: string[];                   // Object IDs to apply permission to
+  apply?: NameOrAddress[];            // Object IDs to apply permission to
   builder?: AccountOrMark_Address;    // Set/transfer ownership
   owner_receive?: ReceivedObjectsOrRecently;
   um?: string | null;                 // Contact object

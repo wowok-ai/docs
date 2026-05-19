@@ -13,9 +13,9 @@ CallReward_Data {
   // See _common.md: TypedPermissionObject
   object: TypedPermissionObject;
   
-  claim?: string;                          // Guard object ID — verify Guard to trigger reward distribution
+  claim?: NameOrAddress;                  // Guard object ID — verify Guard to trigger reward distribution
   
-  description?: string;                    // Reward description
+  description?: string;                    // Reward description (max 4000 bcs chars)
   
   coin_add?: CoinParam;                    // Add amount to Reward object
   
@@ -26,10 +26,10 @@ CallReward_Data {
   
   guard_remove_expired?: boolean;          // Whether to remove expired Guards
   
-  guard_expiration_time?: number | null;   // Expiration time (ms) — blocks new Guard additions until expired
+  guard_expiration_time?: number | null;   // Expiration time (ms, >= 1) — blocks new Guard additions until expired
   
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                      // Contact object
+  um?: NameOrAddress | null;              // Contact object
 }
 ```
 

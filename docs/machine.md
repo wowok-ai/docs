@@ -111,7 +111,7 @@ machine
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -1745,7 +1745,7 @@ requirement → design → development → code_review → testing → uat → d
 
 Before creating the Machine workflow, you need to:
 
-1. **Create Team Accounts** (see [Account Operations](../account.md))
+1. **Create Team Accounts** (see [Account Operations](account.md))
 2. **Create Permission Object** with custom permission indexes (see [Permission Component](permission.md))
 3. **Create Guard Objects** for validation (see [Guard Component](guard.md))
 

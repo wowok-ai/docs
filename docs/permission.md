@@ -164,58 +164,48 @@ Permission operations use the following top-level structure:
 ```
 permission (Permission Object)
 ├── operation_type: "permission" (fixed value)
-├── data (Permission data definition)
-│   ├── object (object definition, optional)
-│   │   ├── name|id (reference existing object)
-│   │   └── name|tags|type_parameter|permission (create new object)
-│   ├── description (description, optional)
-│   ├── remark (remark operations, optional)
-│   │   ├── op (operation: set|remove|clear)
-│   │   ├── index (permission index)
-│   │   └── remark (remark text)
-│   ├── table (permission table operations, optional)
-│   │   ├── op (operation: add|set|remove perm by index/entity)
-│   │   ├── index (permission index or index array)
-│   │   └── entity (entity or entities)
-│   ├── entity (advanced entity operations, optional)
-│   │   ├── op (operation: swap|replace|copy|del)
-│   │   ├── entity1 (source entity)
-│   │   ├── entity2 (target entity)
-│   │   └── entity (entity to delete)
-│   ├── admin (admin operations, optional)
-│   │   ├── op (operation: add|remove|set)
-│   │   └── addresses (admin addresses)
-│   ├── apply (apply to objects, optional)
-│   ├── builder (transfer ownership, optional)
-│   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
-│   │   ├── Option 1: "recently" (string) - receive all recent objects
-│   │   ├── Option 2: Array of received objects
-│   │   │   └── [{ id: "object_id", type: "object_type" }]
-│   │   └── Option 3: Received balance object
-│   │       ├── balance (number or string)
-│   │       ├── token_type (string)
-│   │       └── received (array of received items)
-│   └── um (Contact object, optional)
-│       ├── Option 1: Contact object name or ID (string)
-│       └── Option 2: null (to unbind contact)
-├── env (optional, execution environment)
-│   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
-│   ├── permission_guard (array, optional) - list of permission guard IDs
-│   ├── no_cache (boolean, optional) - disable caching
+├── data
+│   ├── object (optional) - string for reference, object for creation
+│   │   ├── string: name or address (reference existing Permission)
+│   │   └── object: { name?, tags?, onChain?, replaceExistName? } (create new Permission)
+│   ├── description (string, optional)
+│   ├── remark (object, optional)
+│   │   ├── op: "set", index: number, remark: string
+│   │   ├── op: "remove", index: number
+│   │   └── op: "clear"
+│   ├── table (object, optional) - Permission table operations (requires admin)
+│   │   ├── op: "add perm by index" | "set perm by index" | "remove perm by index"
+│   │   │   ├── index: number (permission index, 0-65535)
+│   │   │   └── entity: { entities: [{ name_or_address, local_mark_first? }], check_all_founded? }
+│   │   └── op: "add perm by entity" | "set perm by entity" | "remove perm by entity"
+│   │       ├── entity: { name_or_address, local_mark_first? }
+│   │       └── index: number[] (permission index array)
+│   ├── entity (object, optional) - Advanced entity operations (requires admin)
+│   │   ├── op: "swap" | "replace" | "copy"
+│   │   │   ├── entity1: { name_or_address, local_mark_first? }
+│   │   │   └── entity2: { name_or_address, local_mark_first? }
+│   │   └── op: "del"
+│   │       └── entity: { name_or_address, local_mark_first? }
+│   ├── admin (object, optional) - only builder can manage
+│   │   ├── op: "add" | "remove" | "set"
+│   │   └── addresses: { entities: [{ name_or_address, local_mark_first? }], check_all_founded? }
+│   ├── apply (array of strings, optional) - Object IDs or names to apply Permission to
+│   ├── builder (object, optional) - { name_or_address, local_mark_first? }, transfer ownership
+│   ├── owner_receive (optional) - Unwrap received objects to builder
+│   │   ├── "recently" - receive all recent objects
+│   │   ├── [{ id: string, type: string, content_raw?: any }] - specific normal objects
+│   │   └── { balance, token_type, received: [{ id, amount }] } - specific balance objects
+│   └── um (string | null, optional) - Contact object name/ID, or null to unbind
+├── env (optional)
+│   ├── account (string, optional) - account name or address, default: ""
+│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── permission_guard (array of strings, optional) - permission guard IDs
+│   ├── no_cache (boolean, optional) - disable cache
 │   └── referrer (string, optional) - referrer ID
-└── submission (optional, submission data)
-    ├── type (string) - fixed value "submission"
-    ├── guard (array) - list of guards to verify
-    │   └── [{ object: "guard_id", impack: boolean }]
-    └── submission (array) - submission data for guards
-        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
-            └── guard_submission_items
-                ├── identifier (number, 0-255) - Guard table item identifier
-                ├── b_submission (boolean) - whether this item requires submission
-                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
-                ├── **value (any) - submitted value**
-                └── name (string, optional) - item name
+└── submission (optional)
+    ├── type: "submission" (fixed value)
+    ├── guard: [{ object: string, impack: boolean }]
+    └── submission: [{ guard: string, submission: [{ identifier, b_submission, value_type, value, name }] }]
 ```
 
 ---
@@ -246,7 +236,7 @@ Create a new Permission object. You can set the name, description, and tags. The
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "permission" |
 | `data.object` | object/string | Yes | Object reference | Provide object configuration when creating a new object |
-| `data.object.name` | string | No | Object name | Max 64 characters |
+| `data.object.name` | string | No | Object name | Max 64 bcs characters |
 | `data.object.tags` | array | No | Object tags | String array for classification |
 | `data.description` | string | No | Permission object description | Explain the purpose and management scope |
 
@@ -1405,7 +1395,7 @@ All examples in this document use the **testnet** network and **default account*
   "data": { ... },
   "env": {
     "account": "",              // Empty string for default account, or use account name/address
-    "network": "testnet"        // Options: "testnet" | "mainnet"
+    "network": "testnet"        // Options: "localnet" | "testnet"
   }
 }
 ```

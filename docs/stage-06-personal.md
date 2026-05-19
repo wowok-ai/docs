@@ -71,23 +71,26 @@ Sometimes you need help from others. Demand allows you to post requests and set 
 
 **Why do we need Personal?**
 
-You need a public personal homepage. Personal allows you to manage your public profile.
+You need a public personal homepage. Personal allows you to manage your public profile and on-chain identity.
 
 **Core Concepts:**
-- 🏷️ **Name** - Your public name
-- 📝 **Bio** - Personal introduction
-- 🖼️ **Avatar** - Personal avatar
-- 🌐 **Public** - All information is public on the chain
+- 📝 **Description** — Personal description/bio
+- 📎 **Information** — Public records (social handles, URLs, etc.) stored on-chain
+- 🏷️ **Mark** — On-chain identity marks (public name and tags for addresses)
+- 🔗 **Referrer** — Referrer ID for joining the on-chain network
+- 🌐 **Public** — All information is public on the chain
 
 **Core Features:**
-- ✅ Create/Update profile
-- ✅ Set name
-- ✅ Set bio
-- ✅ Set avatar
+- ✅ Set personal description
+- ✅ Add/remove/clear public information records (social handles, URLs)
+- ✅ Add/remove/clear/transfer/replace/destroy on-chain identity marks
+- ✅ Set referrer
 
 **Important Notes:**
 - ⚠️ All information is public on the chain!
 - ⚠️ Please be cautious when posting personal information!
+- ⚠️ NEVER post phone numbers, addresses, or private keys on Personal!
+- ⚠️ For private marks, use the `local` tool instead of on-chain Mark
 
 **→ [View Personal Detailed Documentation →](personal.md)**
 
@@ -125,20 +128,48 @@ Add a shipping address
 
 ---
 
-### Exercise 2: Create Personal Profile
+### Exercise 2: Update Personal Profile
 
-Set up your public profile
+Set your public description
 
 ```json
 {
   "operation_type": "personal",
   "data": {
-    "object": {
-      "new": true
-    },
-    "set_name": "Alice Smith",
-    "set_bio": "This is my personal bio. I am a blockchain developer.",
-    "set_avatar": "avatar_image_hash_here"
+    "description": "This is my personal bio. I am a blockchain developer."
+  }
+}
+```
+
+Add public information records (safe: social handles, URLs)
+
+```json
+{
+  "operation_type": "personal",
+  "data": {
+    "information": {
+      "op": "add",
+      "data": [
+        { "name": "github", "value_type": "String", "value": "https://github.com/alice" },
+        { "name": "twitter", "value_type": "String", "value": "@alice_dev" }
+      ]
+    }
+  }
+}
+```
+
+Add an on-chain identity mark for another address
+
+```json
+{
+  "operation_type": "personal",
+  "data": {
+    "mark": {
+      "op": "add",
+      "data": [
+        { "address": "friend_address", "name": "Alice Smith", "tags": ["colleague", "dev"] }
+      ]
+    }
   }
 }
 ```
@@ -154,7 +185,9 @@ Before moving to the next stage, please confirm that you have:
 - [ ] Understood Demand's bounty request mechanism
 - [ ] Created at least one Demand
 - [ ] Understood Personal's public characteristics
-- [ ] Created/Updated personal profile
+- [ ] Updated personal description
+- [ ] Added/removed personal information records
+- [ ] Managed on-chain identity marks (add/remove/clear/transfer)
 - [ ] Used Payment for transfers
 
 ---

@@ -8,9 +8,9 @@ Manage your personal on-chain account profile and identity marks.
 
 ```typescript
 CallPersonal_Data {
-  description?: string;                 // Personal description
+  description?: string;                 // Personal description (max 4000 bcs chars)
   
-  referrer?: string | AccountOrMark_Address | null;  // Referrer ID for joining network
+  referrer?: NameOrAddress | null;    // Referrer ID for joining network
   
   // Public personal info records (discriminated union)
   information?: {

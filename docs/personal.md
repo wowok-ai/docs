@@ -39,10 +39,8 @@ personal
 │   │   ├── op: "add"
 │   │   │   └── data (Personal info array)
 │   │   │       ├── name (Info name)
-│   │   │       ├── default (Default value)
-│   │   │       ├── contents (Content array, optional)
-│   │   │       ├── createdAt (Creation time, optional)
-│   │   │       └── updatedAt (Update time, optional)
+│   │   │       ├── value_type (Value type)
+│   │   │       └── value (Value)
 │   │   ├── op: "remove"
 │   │   │   └── name (Info name array)
 │   │   └── op: "clear"
@@ -65,7 +63,7 @@ personal
 │   │   └── op: "destroy"
 └── env (optional, execution environment)
     ├── account (string, optional) - account name or address, empty string for default
-    ├── network (string, optional) - "testnet" or "mainnet"
+    ├── network (string, optional) - "testnet" or "localnet"
     ├── permission_guard (array, optional) - list of permission guard IDs
     ├── no_cache (boolean, optional) - disable caching
     └── referrer (string, optional) - referrer ID
@@ -98,7 +96,7 @@ Set or update your public profile description. This will be permanently public o
 | Path | Type | Required | Description |
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "personal" |
-| `data.description` | string | Yes | Profile description (max 4000 chars) |
+| `data.description` | string | Yes | Profile description (max 4000 bcs characters) |
 | `data.referrer` | string/null | No | Referrer ID or null |
 | `env` | object | No | Execution environment |
 

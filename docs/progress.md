@@ -6,12 +6,6 @@
 
 Progress is WoWok's workflow execution component, used to execute workflow instances created by Machine. Progress tracks the execution status of workflows, manages node transitions, and records execution history.
 
-> **✅ Issues Resolved (Last Updated: 2025-04-21)**:
-> - ~~Progress Operate Issue~~: Fixed in SDK v2.1.28. The `operate` function now correctly handles forward operations.
-> - ~~Task Setting Issue~~: Task field validation has been fixed.
->
-> **Note**: Progress workflow execution is now fully functional. All operations including forward execution, hold/accomplish modes, and admin unhold are working correctly.
-
 > **Relationship with Machine**: Progress is an instance of a Machine workflow template. Before creating a Progress:
 > 1. Create and configure a Machine with nodes and forwards
 > 2. **Ensure first node has init connection**: The first node must have `prev_node: ""` to allow Progress to start from the init node
@@ -53,66 +47,48 @@ To execute a forward operation in Progress, the operator must have the required 
 
 ---
 
-## Schema Tree (4-Level Structure)
+## Schema Tree
+
+> **Creating Progress**: Progress instances are created using `operation_type: "machine"` with the `progress_new` field. See [Machine Component](machine.md) for the `progress_new` schema definition.
 
 ```
-progress
-├── operation_type: "progress" | "machine"
+progress (Operate Existing Progress)
+├── operation_type: "progress" (fixed value)
 ├── data
-│   ├── object (string, name or address) - Progress name/ID for "progress" op; Machine name/ID for "machine" op
-│   ├── progress_new (object, optional) - Only for "machine" operation_type
-│   │   ├── namedNew (object, optional)
-│   │   │   ├── name (string, optional)
-│   │   │   └── tags (array of strings, optional)
-│   │   ├── task (string or null, optional)
-│   │   ├── repository (object, optional)
-│   │   │   └── op: "add" | "set"
-│   │   │       └── objects (array of strings)
-│   │   └── progress_namedOperator (object, optional)
-│   │       ├── op: "set"
-│   │       ├── name (string)
-│   │       └── operators (object)
-│   │           └── entities (array)
-│   ├── task (string, optional)
-│   ├── repository (object, optional)
-│   │   ├── op: "add" or "set"
+│   ├── object (string, required) - Progress name or ID to operate on
+│   ├── task (string, optional) - Task ID to bind (cannot be changed after setting)
+│   ├── repository (object, optional, ObjectsOp)
+│   │   ├── op: "add" | "set"
 │   │   │   └── objects (array of strings)
 │   │   ├── op: "remove"
 │   │   │   └── objects (array of strings)
 │   │   └── op: "clear"
 │   ├── progress_namedOperator (object, optional)
 │   │   ├── op: "add" | "set" | "remove"
-│   │   ├── name (string)
-│   │   └── operators (object)
-│   │       ├── entities (array)
+│   │   ├── name (string) - Non-empty namespace name (max 64 bcs characters)
+│   │   └── operators (object, ManyAccountOrMark_Address)
+│   │       ├── entities (array of AccountOrMark_Address)
+│   │       │   └── [{ name_or_address: "string", local_mark_first: boolean }]
 │   │       └── check_all_founded (boolean, optional)
 │   └── operate (object, optional)
-│       ├── operation (object)
-│       │   ├── next_node_name (string) - Target node name to advance to
-│       │   └── forward (string) - Forward operation name defined in Machine
+│       ├── operation (object, required)
+│   │   ├── next_node_name (string) - Target node name to advance to (max 64 bcs characters)
+│   │   └── forward (string) - Forward operation name defined in Machine (max 64 bcs characters)
 │       ├── hold (boolean, optional) - Lock operation permission
-│       │   - When true: locks permission to prevent competition
-│       │   - When false or omitted: submits operation result directly
-│       ├── adminUnhold (boolean, optional) - Allow admin to force unlock (only when hold=true)
+│       ├── adminUnhold (boolean, optional) - Admin force unlock (only when hold=true)
 │       └── message (string, optional) - Operation result message
-├── env (optional, execution environment)
-│   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
-│   ├── permission_guard (array, optional) - list of permission guard IDs
-│   ├── no_cache (boolean, optional) - disable caching
-│   └── referrer (string, optional) - referrer ID
-└── submission (optional, submission data)
-    ├── type (string) - fixed value "submission"
-    ├── guard (array) - list of guards to verify
-    │   └── [{ object: "guard_id", impack: boolean }]
-    └── submission (array) - submission data for guards
-        └── [{ guard: "guard_id", submission: [guard_submission_items] }]
-            └── guard_submission_items
-                ├── identifier (number, 0-255) - Guard table item identifier
-                ├── b_submission (boolean) - whether this item requires submission
-                ├── value_type (number | string) - value type (e.g., 6 or "U64" for U64 type)
-                ├── **value (any) - submitted value**
-                └── name (string, optional) - item name
+├── env (optional)
+│   ├── account (string, optional) - Account name or address, empty string for default
+│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── permission_guard (array of strings, optional) - Permission guard IDs
+│   ├── no_cache (boolean, optional) - Disable cache
+│   └── referrer (string, optional) - Referrer ID
+└── submission (optional)
+    ├── type: "submission" (fixed value)
+    ├── guard (array) - Guards to verify
+    │   └── [{ object: string, impack: boolean }]
+    └── submission (array) - Submission data for guards
+        └── [{ guard: string, submission: [{ identifier, b_submission, value_type, value, name }] }]
 ```
 
 ---
@@ -127,7 +103,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations.
 
 ---
 
@@ -146,38 +122,20 @@ Progress operations use the following top-level structure:
 
 ---
 
-## Sub-feature 1: Create Progress (progress_new)
+## Creating Progress (via Machine)
 
-### Feature Description
+Progress instances are created from published Machine objects using `operation_type: "machine"` with the `progress_new` field. See [Machine Component](machine.md) for complete details.
 
-Progress instances are created from published Machine objects. Before creating a Progress, ensure:
-1. The Machine is published (only published Machines can create Progress)
-2. You have the necessary permissions to create Progress from this Machine
-3. The Machine's nodes are properly configured with init node connections (`prev_node: ""`)
+### Key Points
 
-### Parameter Description
+- Use `operation_type: "machine"` with `data.progress_new`
+- The Machine must be published (only published Machines can create Progress)
+- When created, Progress's `current` field is set to `""` (empty string, the init node)
+- You need a forward with `prev_node: ""` in the Machine to advance from init to the first actual node
 
-| Parameter Path | Type | Required | Description |
-|------|------|------|------|
-| `object` | string | Yes | Machine name or ID to create Progress from |
-| `progress_new` | object | Yes | Progress creation configuration |
-| `progress_new.namedNew.name` | string | No | Name for the new Progress |
-| `progress_new.namedNew.tags` | array | No | Tags for the Progress |
-| `progress_new.task` | string/null | No | Task object to bind (optional) |
-| `progress_new.repository` | object | No | Context repositories configuration |
-| `progress_new.progress_namedOperator` | object | No | Named operators assignment |
+### Quick Examples
 
-### Important Notes
-
-⚠️ **Machine must be published!** Only published Machines can create Progress objects.
-
-⚠️ **Progress starts at init node!** When created, Progress's `current` field is set to `""` (empty string). You need a forward with `prev_node: ""` in the Machine to advance to the first actual node.
-
-⚠️ **Named operators are Progress-specific!** Each Progress can have different operators for the same namedOperator namespace.
-
-### Examples
-
-#### Example 1.1: Create Simple Progress
+#### Create Simple Progress
 
 **Prompt**: Create a new Progress from "sdlc_workflow_v2" Machine.
 
@@ -195,9 +153,59 @@ Progress instances are created from published Machine objects. Before creating a
 }
 ```
 
-**Execution Result**:
+#### Create Named Progress
+
+**Prompt**: Create a Progress named "project_gamma" from "sdlc_workflow_v2" Machine.
+
 ```json
 {
+  "operation_type": "machine",
+  "data": {
+    "object": "sdlc_workflow_v2",
+    "progress_new": {
+      "namedNew": {
+        "name": "project_gamma",
+        "tags": ["mobile", "ecommerce"]
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+#### Create Progress with Named Operators
+
+**Prompt**: Create a Progress and assign "dev_lead_carol" as operator for the "developer" namespace.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": "sdlc_workflow_v2",
+    "progress_new": {
+      "namedNew": { "name": "project_delta" },
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [{ "name_or_address": "dev_lead_carol" }]
+        }
+      }
+    }
+  },
+  "env": {
+    "account": "pm_alice",
+    "network": "testnet"
+  }
+}
+```
+
+---
+
+## Sub-feature 1: Operate Progress (operate)
   "message": "Transaction completed successfully",
   "result": [
     {

@@ -234,7 +234,7 @@ PaymentInfo {
 
 ```typescript
 ServiceSale {
-  name: string;                   // Product or service name
+  name: string;                   // Product or service name (max 256 bcs chars)
   price: string | number;         // Price
   stock: string | number;         // Stock quantity
   suspension: boolean;            // Whether suspended
@@ -247,7 +247,7 @@ ServiceSale {
 
 ```typescript
 ServiceBuyItem {
-  name: string;                   // Product or service name
+  name: string;                   // Product or service name (max 256 bcs chars)
   stock: string | number;         // Quantity to purchase
   wip_hash: string;               // WIP file hash of the item
 }
@@ -274,7 +274,7 @@ Discount {
 ```typescript
 ServiceGuard {
   guard: string;                                  // Guard object ID
-  service_identifier?: number | null;              // Guard table identifier for service
+  service_identifier?: number | null;              // Guard table identifier for service (0-255)
 }
 ```
 
@@ -285,8 +285,8 @@ RewardGuard {
   guard: string;                              // Guard object ID or name
   recipient: Recipient;                       // Who receives the reward
   amount: Amount;                             // Reward amount
-  expiration_time?: number;                   // Expiration time (ms)
-  store_from_id?: number | null;              // Guard table index for record storage
+  expiration_time?: number;                   // Expiration time (ms, >= 1 ms)
+  store_from_id?: number | null;              // Guard table index for record storage (0-255)
 }
 ```
 
@@ -348,7 +348,7 @@ Allocator {
 
 ```typescript
 Allocators {
-  description: string;              // Allocator list description
+  description: string;              // Allocator list description (max 4000 bcs chars)
   threshold: string | number;       // Trigger threshold
   allocators: Allocator[];          // Fund allocator list
 }

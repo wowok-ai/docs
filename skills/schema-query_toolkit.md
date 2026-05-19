@@ -2,7 +2,7 @@
 
 > WOWOK data query toolkit: Query local naming info (accounts, names, Object IDs), and query on-chain WOWOK objects, received tokens, user profile, etc.
 >
-> **LOCAL** (device-only, never on-chain): `local_mark_list` | `account_list` | `local_info_list` | `token_list` | `account_balance`
+> **LOCAL** (device-only, never on-chain): `local_mark_list` | `account_list` | `local_info_list` | `local_names` | `token_list` | `account_balance`
 >
 > **ONCHAIN** (blockchain): `onchain_personal_profile` | `onchain_objects` | `onchain_received`
 >
@@ -17,9 +17,9 @@
 ```typescript
 // Discriminated union by query_type — exactly ONE query per call
 QueryToolkit = {
-  query_type: "local_mark_list" | "account_list" | "local_info_list" | "token_list" |
-              "account_balance" | "onchain_personal_profile" | "onchain_objects" |
-              "onchain_received";
+  query_type: "local_mark_list" | "account_list" | "local_info_list" | "local_names" |
+              "token_list" | "account_balance" | "onchain_personal_profile" |
+              "onchain_objects" | "onchain_received";
   // ... query-specific parameters (see below)
 }
 ```
@@ -150,7 +150,29 @@ InfoData {
 
 ---
 
-### 4. token_list
+### 4. local_names
+
+Batch reverse lookup — query local names by a list of addresses.
+
+```typescript
+{
+  query_type: "local_names";
+  addresses: string[];          // Array of account addresses (0x...) to look up
+}
+```
+
+**Result**: `{ address: string; name?: string }[]`
+
+```typescript
+{
+  address: string;              // The queried address
+  name?: string;                // Local name assigned to this address, undefined if none
+}
+```
+
+---
+
+### 5. token_list
 
 Query cached token metadata — symbol, decimals, icon URL, description.
 
@@ -161,12 +183,9 @@ Query cached token metadata — symbol, decimals, icon URL, description.
 }
 
 TokenDataFilter {
+  alias_or_name?: string;       // Filter by alias or name (max 64 bcs characters)
+  symbol?: string;              // Filter by symbol
   type?: string;                // Filter by token type (e.g., "0x2::wow::WOW")
-  alias?: string;               // Filter by alias
-  name?: string;                // Filter by name (fuzzy)
-  symbol?: string;              // Filter by symbol (fuzzy)
-  decimals?: number;            // Filter by decimals
-  iconUrl?: string;             // Filter by icon URL
 }
 ```
 
@@ -179,14 +198,15 @@ TokenTypeInfo {
   name: string;
   symbol: string;
   decimals: number;
-  iconUrl?: string;
-  description?: string;
+  description: string;          // Token description (required)
+  iconUrl?: string | null;      // URL for the token logo (may be null)
+  id?: string | null;           // Object ID for the CoinMetadata object (may be null)
 }
 ```
 
 ---
 
-### 5. account_balance
+### 6. account_balance
 
 Query an account's coin balance OR paginated coin objects.
 
@@ -242,7 +262,7 @@ CoinStruct {
 
 ---
 
-### 6. onchain_personal_profile
+### 7. onchain_personal_profile
 
 Query any user's PUBLIC on-chain profile — social links, reputation, personal info, voting history, referrer.
 
@@ -290,7 +310,7 @@ PersonalVote {
 
 ---
 
-### 7. onchain_objects
+### 8. onchain_objects
 
 Batch query on-chain WOWOK objects by ID — supports Service, Machine, Order, Treasury, Reward, Arb, Personal, Contact, and more.
 
@@ -318,7 +338,7 @@ ObjectBase {
 
 ---
 
-### 8. onchain_received
+### 9. onchain_received
 
 Query objects (payments, tokens, NFTs) received by an on-chain object.
 
@@ -368,7 +388,7 @@ WatchQueryOperationsResult {
 }
 ```
 
-The output schema validates all 8 query types with their specific return types. Each query's `result` field is strictly typed:
+The output schema validates all 9 query types with their specific return types. Each query's `result` field is strictly typed:
 - Local queries return arrays (`MarkData[]`, `AccountData[]`, `InfoData[]`, `TokenTypeInfo[]`)
 - `account_balance` returns `{ address, balance? | coin? }`
 - Onchain queries return `ObjectType | undefined` or `{ objects: ObjectBase[] }`

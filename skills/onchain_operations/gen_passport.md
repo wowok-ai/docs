@@ -9,7 +9,7 @@ Generate Verified Passport Object: Create immutable verified credentials (passpo
 ```typescript
 GenPassport {
   // Guard verification
-  guard: string | string[];           // Guard object ID(s) to verify and embed
+  guard: NameOrAddress | NameOrAddress[];  // Guard object ID(s) to verify and embed
   
   // Optional submission data during Guard verification
   info?: SubmissionCall;              // Submission data for Guards requiring user input

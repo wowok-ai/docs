@@ -45,7 +45,7 @@ Demand Component
 │   │               ├── replaceExistName (boolean, optional)
 │   │               └── description (string, optional)
 │   ├── present (optional)
-│   │   ├── recommend (string)
+│   │   ├── recommend (string) - max 4000 bcs characters
 │   │   ├── by_guard (string, optional)
 │   │   └── service (string, optional)
 │   ├── description (string, optional)
@@ -64,7 +64,7 @@ Demand Component
 │   │       │   ├── name_or_address (string, optional)
 │   │       │   └── local_mark_first (boolean, optional)
 │   │       ├── acceptance_score (number, optional, 0-255)
-│   │       └── feedback (string, optional)
+│   │       └── feedback (string, optional) - max 4000 bcs characters
 │   ├── guards (optional)
 │   │   ├── op: "add"
 │   │   │   └── guard (array)
@@ -92,7 +92,7 @@ Demand Component
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -137,10 +137,10 @@ Create a new Demand object for posting service requests.
 | Parameter | Type | Required | Description | Constraints |
 |-----------|------|----------|-------------|-------------|
 | `object` | string/object | Yes | Object name/ID or object definition | Required in all cases |
-| `object.name` | string | No | Local mark name | Max 64 characters |
+| `object.name` | string | No | Local mark name | Max 64 BCS characters |
 | `object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
-| `description` | string | No | Demand description | Max 4000 characters |
-| `location` | string | No | Service location | Max 256 characters |
+| `description` | string | No | Demand description | Max 4000 BCS characters |
+| `location` | string | No | Service location | Max 256 BCS characters |
 
 
 ### Examples
@@ -306,7 +306,7 @@ Recommend a Service to the Demand object.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `present.recommend` | string | Yes | Recommendation description |
+| `present.recommend` | string | Yes | Recommendation description | Max 4000 bcs characters |
 | `present.by_guard` | string | No | Guard ID or name, used to select which Guard's verification to pass through |
 | `present.service` | string | No | Service ID or name to present |
 
@@ -705,7 +705,7 @@ Provide user feedback information for the Demand object.
 | `feedback[].who.name_or_address` | string | No | Account or object name or address |
 | `feedback[].who.local_mark_first` | boolean | No | Whether to prioritize local marks |
 | `feedback[].acceptance_score` | number | No | Acceptance score (0-255), used to evaluate the reception level of the service recommended by the user |
-| `feedback[].feedback` | string | No | Feedback content for the user |
+| `feedback[].feedback` | string | No | Feedback content for the user | Max 4000 bcs characters |
 
 ### Example
 

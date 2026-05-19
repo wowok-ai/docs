@@ -55,21 +55,21 @@ order (Order Object)
 │   ├── arb_confirm (ArbConfirmSchema, optional) - Submit arbitration request
 │   │   ├── arb (NameOrAddress, required) - Arb object ID or name
 │   │   ├── confirm (boolean, required) - Confirm materials valid
-│   │   ├── description (string, optional) - Compensation description (max 4000 chars)
+│   │   ├── description (string, optional) - Compensation description (max 4000 bcs characters)
 │   │   └── proposition (string[], optional) - Compensation claims array
 │   ├── arb_objection (ArbObjectionSchema, optional) - Appeal arbitration result
 │   │   ├── arb (NameOrAddress, required) - Arb object ID or name
 │   │   └── objection (string, required) - Objection description (max 4000 chars)
 │   ├── arb_claim_compensation (ArbClaimCompensationSchema, optional) - Claim compensation
 │   │   └── arb (NameOrAddress, required) - Adjudicated Arb object ID or name
-│   ├── receive (ReceivedObjectsOrRecently, optional) - Receive funds/objects
-│   │   ├── Option 1: "recently" (string) - Receive all recent objects
-│   │   ├── Option 2: ReceivedObject[] - Specific objects to receive
-│   │   │   └── [{ id: string, type: string }]
-│   │   └── Option 3: ReceivedBalance - Token balance to receive
-│   │       ├── balance (number|string)
-│   │       ├── token_type (string)
-│   │       └── received (array of { id, balance, payment })
+│   ├── receive (QueryReceivedResult, optional) - Receive funds/objects
+│   │   └── result: one of two options
+│   │       ├── Option 1: ReceivedBalance - Token balance to receive
+│   │       │   ├── balance (number|string)
+│   │       │   ├── token_type (string)
+│   │       │   └── received (array of { id, balance, payment })
+│   │       └── Option 2: ReceivedObject[] - Specific objects to receive
+│   │           └── [{ id: string, type: string, content_raw?: any }]
 │   └── transfer_to (AccountOrMark_Address, optional) - New owner
 │       └── string (name/address) or { name_or_address, local_mark_first }
 ├── env (optional, execution environment)
@@ -503,7 +503,7 @@ Oppose arbitration result, file an appeal, request re-arbitration.
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
 | `data.arb_objection.arb` | string | Yes | Arb object ID or name |
-| `data.arb_objection.objection` | string | Yes | Objection description (max 4000 chars) |
+| `data.arb_objection.objection` | string | Yes | Objection description (max 4000 bcs characters) |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
@@ -602,7 +602,7 @@ Unwrap CoinWrapper objects and other objects received by the order, transfer the
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.receive` | object/array/string | No | Received objects array, balance object, or "recently" to receive all recent objects |
+| `data.receive` | object | No | Received objects or balance object (`{ result: ReceivedBalance | ReceivedObject[] }`) |
 | `env` | object | No | Execution environment |
 
 ### Important Notes

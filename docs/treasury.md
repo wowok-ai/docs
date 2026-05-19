@@ -69,9 +69,9 @@ treasury (Treasury Object)
 │   │       └── name (string, optional) - Name for the new Payment object
 │   ├── withdraw (withdrawal, optional)
 │   │   ├── amount (amount, required)
-│   │   │   ├── Option 1: { fixed: number } - Fixed withdrawal amount (Permission only)
+│   │   │   ├── Option 1: { fixed: number|string } - Fixed withdrawal amount (Permission only)
 │   │   │   └── Option 2: { by_external_withdraw_guard: string } - Guard-verified withdrawal
-│   │   ├── recipient (string) - ID or account to receive assets
+│   │   ├── recipient (AccountOrMark_Address object, required) - Recipient ID
 │   │   ├── payment_info (required)
 │   │   │   ├── for_object (string or null, optional) - Payment for a specific object ID
 │   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
@@ -81,16 +81,20 @@ treasury (Treasury Object)
 │   │       └── name (string, optional) - Name for the new Payment object
 │   ├── external_deposit_guard (optional)
 │   │   ├── op (string) - Operation type: "add", "set", "remove", "clear"
-│   │   └── guards (array, required for add/set/remove) - Array of AmountFromDepositGuard
-│   │       ├── guard (string) - Guard object ID or name
-│   │       ├── identifier (number or null, optional) - Guard Table data index for amount
-│   │       └── store_from_id (number or null, optional) - Guard table index for record storage
+│   │   └── guards (array, required for add/set/remove)
+│   │       ├── For add/set: AmountFromDepositGuard
+│   │       │   ├── guard (string) - Guard object ID or name
+│   │       │   ├── identifier (number or null, optional) - Guard Table data index for amount
+│   │       │   └── store_from_id (number or null, optional) - Guard table index for record storage
+│   │       └── For remove: NameOrAddress (string) - Guard object ID or name only
 │   ├── external_withdraw_guard (optional)
 │   │   ├── op (string) - Operation type: "add", "set", "remove", "clear"
-│   │   └── guards (array, required for add/set/remove) - Array of AmountFromWithdrawGuard
-│   │       ├── guard (string) - Guard object ID or name
-│   │       ├── identifier (number, required) - Guard Table data index for amount
-│   │       └── store_from_id (number or null, optional) - Guard table index for record storage
+│   │   └── guards (array, required for add/set/remove)
+│   │       ├── For add/set: AmountFromWithdrawGuard
+│   │       │   ├── guard (string) - Guard object ID or name
+│   │       │   ├── identifier (number, required) - Guard Table data index for amount
+│   │       │   └── store_from_id (number or null, optional) - Guard table index for record storage
+│   │       └── For remove: NameOrAddress (string) - Guard object ID or name only
 │   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
 │   │   ├── Option 1: "recently" (string) - receive all recent objects
 │   │   ├── Option 2: Array of received objects
@@ -108,7 +112,7 @@ treasury (Treasury Object)
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -190,7 +194,7 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
 | `data.object` | object or string | Yes | Object definition | TypedPermissionObject |
-| `data.description` | string | No | Treasury description | Max 65535 characters |
+| `data.description` | string | No | Treasury description | Max 4000 BCS characters |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
 | `env.network` | enum | No | Network selection | "localnet" or "testnet" |
 

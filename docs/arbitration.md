@@ -45,7 +45,7 @@ arbitration (Arbitration Object)
 │   ├── object (TypedPermissionObject, required) - Arbitration object reference or creation
 │   │   ├── Option 1: Reference existing object (string) - object name or ID
 │   │   └── Option 2: Create new object (object)
-│   │       ├── name (string, optional) - local mark name, max 64 characters
+│   │       ├── name (string, optional) - local mark name, max 64 bcs characters
 │   │       ├── tags (array of string, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       ├── replaceExistName (boolean, optional) - force claim existing name
@@ -57,14 +57,14 @@ arbitration (Arbitration Object)
 │   │               ├── tags (array of string, optional) - tags array
 │   │               ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │               └── replaceExistName (boolean, optional) - force claim existing name
-│   ├── description (string, optional) - arbitration description, max 65535 characters
-│   ├── location (string, optional) - arbitration location, max 256 characters
-│   ├── fee (number, optional) - arbitration fee in smallest units
+│   ├── description (string, optional) - arbitration description, max 4000 bcs characters
+│   ├── location (string, optional) - arbitration location, max 256 bcs characters
+│   ├── fee (number or string, optional) - arbitration fee in smallest units
 │   ├── pause (boolean, optional) - whether to pause arbitration
 │   ├── dispute (Dispute object, optional) - create dispute for order
 │   │   ├── order (string, required) - order object ID or name
-│   │   ├── description (string, optional) - dispute description, max 65535 characters
-│   │   ├── proposition (array of string, required) - list of dispute propositions, each max 256 characters
+│   │   ├── description (string, optional) - dispute description, max 4000 bcs characters
+│   │   ├── proposition (array of string, required) - list of dispute propositions, each max 256 bcs characters
 │   │   ├── fee (CoinParam, required) - dispute processing fee
 │   │   │   ├── Option 1: Balance object (object)
 │   │   │   │   └── balance (number) - balance amount
@@ -86,14 +86,14 @@ arbitration (Arbitration Object)
 │   │   └── voting_guard (string, optional) - voting Guard object ID/name
 │   ├── feedback (Feedback object, optional) - provide arbitration feedback
 │   │   ├── arb (string, required) - Arb object ID or name
-│   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
+│   │   └── feedback (string, required) - arbitration feedback, max 4000 bcs characters
 │   ├── arbitration (ArbitrationAction object, optional) - provide final arbitration result
 │   │   ├── arb (string, required) - Arb object ID or name
-│   │   ├── feedback (string, required) - arbitration feedback, max 65535 characters
+│   │   ├── feedback (string, required) - arbitration feedback, max 4000 bcs characters
 │   │   └── indemnity (number, required) - compensation amount in smallest units
 │   ├── reset (Reset object, optional) - apply to restart arbitration
 │   │   ├── arb (string, required) - Arb object ID or name
-│   │   └── feedback (string, required) - arbitration feedback, max 65535 characters
+│   │   └── feedback (string, required) - arbitration feedback, max 4000 bcs characters
 │   ├── arb_withdraw (ArbWithdraw object, optional) - withdraw arbitration fees
 │   │   └── arb (string, required) - Arb object ID or name
 │   ├── fees_transfer (FeesTransfer object, optional) - distribute arbitration fees
@@ -102,7 +102,7 @@ arbitration (Arbitration Object)
 │   │   │   │   └── allocation (string) - Allocation object ID/name
 │   │   │   └── Option 2: Treasury reference (object)
 │   │   │       └── treasury (string) - Treasury object ID/name
-│   │   ├── payment_remark (string, required) - payment remark, max 64 characters
+│   │   ├── payment_remark (string, required) - payment remark, max 64 bcs characters
 │   │   ├── payment_index (number, required) - payment index
 │   │   └── newPayment (NamedObject, optional) - name for new Payment object
 │   │       ├── name (string, optional) - payment name
@@ -134,7 +134,7 @@ arbitration (Arbitration Object)
 │   └── um (string | null, optional) - Contact object ID/name, null to unbind
 ├── env (CallEnv, optional) - execution environment
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array of string, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -184,15 +184,15 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | object | Yes | Create new Arbitration | TypedPermissionObject structure |
-| `data.object.name` | string | No | Local mark name | Max 64 characters |
+| `data.object.name` | string | No | Local mark name | Max 64 BCS characters |
 | `data.object.tags` | array | No | Tags array | String array |
 | `data.object.onChain` | boolean | No | Whether to mark on-chain | |
 | `data.object.replaceExistName` | boolean | No | Replace existing name | |
 | `data.object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
 | `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
-| `data.description` | string | No | Arbitration description | Max 65535 characters |
-| `data.location` | string | No | Arbitration location | Max 256 characters |
-| `data.fee` | number | No | Arbitration fee in smallest units | No decimals or negatives |
+| `data.description` | string | No | Arbitration description | Max 4000 bcs characters |
+| `data.location` | string | No | Arbitration location | Max 256 BCS characters |
+| `data.fee` | number or string | No | Arbitration fee in smallest units | No decimals or negatives |
 
 ---
 
@@ -288,10 +288,10 @@ Create a new Arb object for an order to initiate dispute arbitration.
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
 | `data.dispute.order` | string | Yes | Order object ID or name | |
-| `data.dispute.description` | string | No | Dispute description | Max 65535 characters |
+| `data.dispute.description` | string | No | Dispute description | Max 4000 bcs characters |
 | `data.dispute.proposition` | array | Yes | List of dispute propositions | String array |
 | `data.dispute.fee` | object/string | Yes | Dispute processing fee | CoinParam structure |
-| `data.dispute.namedArb.name` | string | No | Name for the newly created arbitration object | Max 64 characters |
+| `data.dispute.namedArb.name` | string | No | Name for the newly created arbitration object | Max 64 BCS characters |
 
 ---
 
@@ -501,7 +501,7 @@ Provide arbitration feedback for an Arb object.
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
 | `data.feedback.arb` | string | Yes | Arb object ID or name | |
-| `data.feedback.feedback` | string | Yes | Arbitration feedback | Max 65535 characters |
+| `data.feedback.feedback` | string | Yes | Arbitration feedback | Max 4000 bcs characters |
 
 ---
 
@@ -555,7 +555,7 @@ Provide the final arbitration result.
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
 | `data.arbitration.arb` | string | Yes | Arb object ID or name | |
-| `data.arbitration.feedback` | string | Yes | Arbitration feedback | Max 65535 characters |
+| `data.arbitration.feedback` | string | Yes | Arbitration feedback | Max 4000 bcs characters |
 | `data.arbitration.indemnity` | number | Yes | Compensation amount in smallest units | No decimals or negatives |
 
 ---
@@ -595,7 +595,7 @@ User applies to resubmit materials and restart arbitration.
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
 | `data.reset.arb` | string | Yes | Arb object ID or name | |
-| `data.reset.feedback` | string | Yes | Arbitration feedback | Max 65535 characters |
+| `data.reset.feedback` | string | Yes | Arbitration feedback | Max 4000 bcs characters |
 
 ---
 
@@ -671,9 +671,9 @@ Distribute withdrawn arbitration fees.
 | `data.fees_transfer.to` | object | Yes | Receiving object | Must have either "allocation" or "treasury" |
 | `data.fees_transfer.to.allocation` | string | No | Allocation object ID/name | |
 | `data.fees_transfer.to.treasury` | string | No | Treasury object ID/name | |
-| `data.fees_transfer.payment_remark` | string | Yes | Payment remark | Max 64 characters |
+| `data.fees_transfer.payment_remark` | string | Yes | Payment remark | Max 64 BCS characters |
 | `data.fees_transfer.payment_index` | number | Yes | Payment index | No decimals or negatives |
-| `data.fees_transfer.newPayment.name` | string | No | Name for the newly created Payment object | Max 64 characters |
+| `data.fees_transfer.newPayment.name` | string | No | Name for the newly created Payment object | Max 64 BCS characters |
 
 ---
 

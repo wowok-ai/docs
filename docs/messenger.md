@@ -81,28 +81,46 @@ messenger_operation (Messenger Operations)
 │   │       └── new_messenger_name (optional, string)
 │   ├── "watch_messages"
 │   │   └── filter (optional, MessageFilter)
+│   │       ├── account (optional, string) - Account to filter messages for
 │   │       ├── direction (optional, "sent"/"received")
-│   │       ├── status (optional, "pending"/"confirmed"/"read"/"failed"/"rejected")
+│   │       ├── status (optional, "pending"/"confirmed"/"read"/"failed"/"rejected"/"decrypted"/"decrypt_failed")
 │   │       ├── peerAddress (optional, string | Address/Name) - Can be simple string (name/address) or full object
 │   │       ├── msgType (optional, 1/3)
 │   │       ├── contentType (optional, "text"/"zip"/"wts"/"wip")
 │   │       ├── decryptedOnly (optional, boolean)
 │   │       ├── confirmedOnly (optional, boolean)
-│   │       ├── keyword (optional, string)
+│   │       ├── keyword (optional, string) - Search keyword in plaintext
 │   │       ├── sortOrder (optional, "asc"/"desc")
 │   │       ├── limit (optional, number)
 │   │       ├── offset (optional, number)
+│   │       ├── timeField (optional, "createdAt"/"receivedAt"/"serverTimestamp")
+│   │       ├── startTime (optional, number) - Start timestamp (ms) for timeField filtering
+│   │       ├── endTime (optional, number) - End timestamp (ms) for timeField filtering
+│   │       ├── createdAtStart (optional, number)
+│   │       ├── createdAtEnd (optional, number)
+│   │       ├── receivedAtStart (optional, number)
+│   │       ├── receivedAtEnd (optional, number)
+│   │       ├── serverTimestampStart (optional, number)
+│   │       ├── serverTimestampEnd (optional, number)
+│   │       ├── arkConfirmedOnly (optional, boolean) - Only return ARK confirmed messages
+│   │       ├── arkTimestampStart (optional, number)
+│   │       ├── arkTimestampEnd (optional, number)
+│   │       ├── proofedOnly (optional, boolean) - Only return messages with on-chain proof
 │   │       ├── hasLastReceivedIndexOnly (optional, boolean) - Only return messages with lastReceivedLeafIndex
-│   │       ├── lastReceivedIndexMin (optional, number) - Min lastReceivedLeafIndex
-│   │       ├── lastReceivedIndexMax (optional, number) - Max lastReceivedLeafIndex
-│   │       ├── account (optional, string)
+│   │       ├── lastReceivedIndexMin (optional, number)
+│   │       ├── lastReceivedIndexMax (optional, number)
+│   │       ├── listFilterMode (optional, "friends"/"guard"/"stranger"/"any") - Filter by contact list membership
+│   │       ├── customListFilter (optional, object) - Advanced address-based filtering
+│   │       │   ├── includeAddresses (optional, string[]) - Only return messages from these addresses
+│   │       │   ├── excludeAddresses (optional, string[]) - Exclude messages from these addresses
+│   │       │   └── relation (optional, "union"/"intersection") - How to combine with listFilterMode
 │   │       ├── viewed (optional, boolean) - Filter by viewed status: true=viewed, false=unviewed
 │   │       ├── viewedAtStart (optional, number) - Filter by viewed timestamp start (ms)
 │   │       ├── viewedAtEnd (optional, number) - Filter by viewed timestamp end (ms)
 │   │       └── skipAutoMarkViewed (optional, boolean) - Skip auto-marking messages as viewed
 │   ├── "extract_zip_messages"
 │   │   ├── account (optional, string)
-│   │   ├── messages (required, string[])
+│   │   ├── messages (required, string[] | Message[]) - Array of message IDs or Message objects
 │   │   └── outputDir (required, string)
 │   ├── "generate_wts"
 │   │   └── params (required, WtsGenerationParams)
@@ -132,21 +150,32 @@ messenger_operation (Messenger Operations)
 │   │   └── network (optional, "localnet"/"testnet")
 │   ├── "blacklist"
 │   │   ├── account (optional, string)
-│   │   └── blacklist (required, BlacklistOperation)
-│   │       ├── op (required, "add"/"remove"/"clear"/"get"/"exist")
-│   │       └── users (optional, string[] | ManyAccountOrMark_Address) - Can be array of strings (names/addresses) or full object
+│   │   └── blacklist (required, BlacklistOperation, discriminated by op)
+│   │       ├── op: "add" | "remove"
+│   │       │   └── users (required, string[] | ManyAccountOrMark_Address) - Can be array of strings or full object
+│   │       ├── op: "exist"
+│   │       │   └── users (required, string[] | ManyAccountOrMark_Address)
+│   │       ├── op: "clear" (no additional fields)
+│   │       └── op: "get" (no additional fields)
 │   ├── "friendslist"
 │   │   ├── account (optional, string)
-│   │   └── friendslist (required, FriendslistOperation)
-│   │       ├── op (required, "add"/"remove"/"clear"/"get"/"exist")
-│   │       └── users (optional, string[] | ManyAccountOrMark_Address) - Can be array of strings (names/addresses) or full object
+│   │   └── friendslist (required, FriendslistOperation, discriminated by op)
+│   │       ├── op: "add" | "remove"
+│   │       │   └── users (required, string[] | ManyAccountOrMark_Address) - Can be array of strings or full object
+│   │       ├── op: "exist"
+│   │       │   └── users (required, string[] | ManyAccountOrMark_Address)
+│   │       ├── op: "clear" (no additional fields)
+│   │       └── op: "get" (no additional fields)
 │   └── "guardlist"
 │       ├── account (optional, string)
-│       └── guardlist (required, GuardlistOperation)
-│           ├── op (required, "add"/"remove"/"get")
-│           └── guards (optional, GuardParam[])
-│               ├── guard (required, string)
-│               └── passportValiditySeconds (required, number)
+│       └── guardlist (required, GuardlistOperation, discriminated by op)
+│           ├── op: "add"
+│           │   └── guards (required, GuardParam[], 1-10 items)
+│           │       ├── guard (required, string) - Guard address or name
+│           │       └── passportValiditySeconds (required, number) - 10s to 315360000s
+│           ├── op: "remove"
+│           │   └── guards (required, string[], 1-10 items) - Guard addresses or names to remove
+│           └── op: "get" (no guards field)
 │   ├── "settings"
 │   │   ├── account (optional, string)
 │   │   └── settings (required, SettingsOperation)

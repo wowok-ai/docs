@@ -13,7 +13,7 @@ CallRepository_Data {
   // See _common.md: WithPermissionObject
   object: WithPermissionObject;
   
-  description?: string;               // Repository description
+  description?: string;               // Repository description (max 4000 bcs chars)
   
   // Policy rules (discriminated union)
   policies?: {
@@ -30,17 +30,17 @@ CallRepository_Data {
   data_add?: 
     | {
         name: string;                  // Data item name (must match PolicyRule)
-        write_guard?: string;          // Guard for write permissions
+        write_guard?: NameOrAddress;   // Guard for write permissions
         data: SupportedValue;          // Data value (ID = timestamp or signer)
       }
     | {
         name: string;                  // Data item name
         items: {
           data: {
-            id: string | number;        // Data item ID
+            id: AccountOrMark_Address | number;  // Data item ID
             data: SupportedValue;       // Data value
           }[];
-          write_guard?: string;         // Guard for write permissions
+          write_guard?: NameOrAddress;  // Guard for write permissions
         }[];
       };
   
@@ -48,19 +48,19 @@ CallRepository_Data {
   data_remove?: 
     | {
         name: string;                  // Data item name
-        write_guard?: string;          // Guard for verifying deletion permission
+        write_guard?: NameOrAddress;   // Guard for verifying deletion permission
       }
     | {
         name: string;
         items: {
-          id: (string | number)[];     // Data item IDs
-          write_guard?: string;        // Guard for verifying deletion permission
+          id: (AccountOrMark_Address | number)[]; // Data item IDs
+          write_guard?: NameOrAddress;  // Guard for verifying deletion permission
         }[];
       };
   
   rewards?: ObjectsOp;                 // Reward object list (contribution incentives)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                  // Contact object
+  um?: NameOrAddress | null;          // Contact object
 }
 ```
 

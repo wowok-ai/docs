@@ -59,7 +59,7 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
 |----------------|------|----------|-------------|-------------|
 | `name` | string | No | Account name | Max 64 BCS characters, cannot start with '0x'. Omit or empty string uses default account |
 | `replaceExistName` | boolean | No | Whether to replace existing name | true=replace; false=error if name exists (default) |
-| `m` | string | null | No | Messenger name | Max 64 characters. null=disable messenger; omit=no change |
+| `m` | string | null | No | Messenger name | Max 64 BCS characters. null=disable messenger; omit=no change |
 
 ### Return Result
 
@@ -825,7 +825,7 @@ Enable or disable messenger functionality for an account.
 | Parameter Name | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
 | `name_or_account` | string | No | Account name or address | Empty string '' uses default account |
-| `m` | string \| null | Yes | Messenger name | Max 64 characters. null=disable messenger |
+| `m` | string \| null | Yes | Messenger name | Max 64 BCS characters. null=disable messenger |
 
 ### Return Result
 

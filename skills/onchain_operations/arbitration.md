@@ -15,75 +15,75 @@ CallArbitration_Data {
   
   // Create new Arb object for an order
   dispute?: {
-    order: string;                       // Order ID or name
-    description?: string;                // Dispute description
-    proposition: string[];               // List of dispute propositions
+    order: NameOrAddress;                // Order ID or name
+    description?: string;                // Dispute description (max 4000 bcs chars)
+    proposition: string[];               // List of dispute propositions (each max 256 bcs chars)
     fee: CoinParam;                      // Dispute processing fee
     namedArb?: NamedObject;              // Name for newly created arbitration object
   };
   
-  description?: string;                  // Introduction of the Arbitration object
-  location?: string;                     // Arbitration location
+  description?: string;                  // Introduction of the Arbitration object (max 4000 bcs chars)
+  location?: string;                     // Arbitration location (max 256 bcs chars)
   fee?: string | number;                 // Arbitration fee
   pause?: boolean;                       // Whether to pause arbitration
   
   // Confirm materials submitted for arbitration
   confirm?: {
-    arb: string;                         // Arb object ID or name
-    voting_deadline?: number | null;     // Voting deadline
+    arb: NameOrAddress;                  // Arb object ID or name
+    voting_deadline: number | null;      // Voting deadline
   };
   
   // Change voting deadline
   voting_deadline_change?: {
-    arb: string;                         // Arb object ID or name
-    voting_deadline?: number | null;     // New voting deadline
+    arb: NameOrAddress;                  // Arb object ID or name
+    voting_deadline: number | null;      // New voting deadline
   };
   
   // Vote on propositions
   vote?: {
-    arb: string;                         // Arb object ID or name
+    arb: NameOrAddress;                  // Arb object ID or name
     votes: number[];                     // Vote values (per proposition, 0-255)
-    voting_guard?: string;               // Voting Guard object ID or name
+    voting_guard?: NameOrAddress;        // Voting Guard object ID or name
   };
   
   // Provide arbitration feedback
   feedback?: {
-    arb: string;                         // Arb object ID or name
-    feedback: string;                    // Arbitration feedback
+    arb: NameOrAddress;                  // Arb object ID or name
+    feedback: string;                    // Arbitration feedback (max 4000 bcs chars)
   };
   
   // Provide definitive arbitration result
   arbitration?: {
-    arb: string;                         // Arb object ID or name
-    feedback: string;                    // Arbitration feedback
+    arb: NameOrAddress;                  // Arb object ID or name
+    feedback: string;                    // Arbitration feedback (max 4000 bcs chars)
     indemnity: number;                   // Indemnity amount (int >= 0)
   };
   
   // User applies to resubmit materials and restart arbitration
   reset?: {
-    arb: string;                         // Arb object ID or name
-    feedback: string;                    // Arbitration feedback
+    arb: NameOrAddress;                  // Arb object ID or name
+    feedback: string;                    // Arbitration feedback (max 4000 bcs chars)
   };
   
   // Withdraw arbitration fees
   arb_withdraw?: {
-    arb: string;                         // Arb object ID or name
+    arb: NameOrAddress;                  // Arb object ID or name
   };
   
   // Distribute withdrawn arbitration fees
   fees_transfer?: {
     to: 
-      | { allocation: string }           // Transfer to Allocation object
-      | { treasury: string };            // Transfer to Treasury object
-    payment_remark: string;              // Payment remark
+      | { allocation: NameOrAddress }     // Transfer to Allocation object
+      | { treasury: NameOrAddress };      // Transfer to Treasury object
+    payment_remark: string;              // Payment remark (max 64 bcs chars)
     payment_index: number;               // Payment index (int >= 0)
     newPayment?: NamedObject;            // Name for new payment object
   };
   
-  usage_guard?: string | null;           // Guard for verifying when users apply
+  usage_guard?: NameOrAddress | null;    // Guard for verifying when users apply
   voting_guard?: VotingGuardAction;      // Guard for verifying during voting
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                    // Contact object
+  um?: NameOrAddress | null;            // Contact object
 }
 
 // Voting guard operations (discriminated union)
@@ -94,7 +94,7 @@ VotingGuardAction =
     }
   | {
       op: "remove";
-      guards: string[];                  // Guard IDs or names to remove
+      guards: NameOrAddress[];             // Guard IDs or names to remove
     }
   | {
       op: "clear";

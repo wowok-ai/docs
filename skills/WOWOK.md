@@ -262,6 +262,7 @@ CoinParam =
 - `wowok_buildin_info`
 - `guard2file`
 - `machineNode2file`
+- `documents_and_learn`
 
 ---
 

@@ -66,7 +66,7 @@ WIP (Witness Immutable Promise) provides immutable, verifiable product and servi
 - ⚠️ **Signature Trust** - Only signatures from trusted accounts should be considered valid
 - ⚠️ **URL Accessibility** - The WIP file must remain accessible at the specified URL
 
-**→ [View WIP Detailed Documentation →](wip.md)**
+**→ [View WIP Detailed Documentation →](../WIP.md)**
 
 ---
 
@@ -172,9 +172,6 @@ Create a Service with sales products that include WIP URL and hash as product de
   "operation_type": "service",
   "data": {
     "object": {
-      "new": true
-    },
-    "namedNew": {
       "name": "software_license_service"
     },
     "sales": {
@@ -207,21 +204,44 @@ Create a distribution rule that splits profits between two recipients
   "operation_type": "allocation",
   "data": {
     "object": {
-      "new": true
-    },
-    "namedNew": {
       "name": "profit_sharing"
     },
-    "receiver_add": [
-      {
-        "to": "partner1_address",
-        "ratio": "500000000"
-      },
-      {
-        "to": "partner2_address",
-        "ratio": "500000000"
-      }
-    ]
+    "allocators": {
+      "description": "Profit sharing between two partners",
+      "threshold": "0",
+      "allocators": [
+        {
+          "guard": "simple_guard",
+          "sharing": [
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "partner1_address"
+                }
+              },
+              "sharing": "5000",
+              "mode": "Rate"
+            },
+            {
+              "who": {
+                "Entity": {
+                  "name_or_address": "partner2_address"
+                }
+              },
+              "sharing": "5000",
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    },
+    "coin": {
+      "balance": "0"
+    },
+    "payment_info": {
+      "remark": "Profit sharing payment",
+      "index": "0"
+    }
   }
 }
 ```

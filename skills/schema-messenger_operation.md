@@ -8,7 +8,7 @@
 
 ```typescript
 MessengerOperation {
-  operation: string;            // One of 15 operation types (see below)
+  operation: string;            // One of 16 operation types (see below)
   // Operation-specific fields
   ...
 }

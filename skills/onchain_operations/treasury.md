@@ -13,7 +13,7 @@ CallTreasury_Data {
   // See _common.md: TypedPermissionObject
   object: TypedPermissionObject;
   
-  description?: string;                     // Treasury description
+  description?: string;                     // Treasury description (max 4000 bcs chars)
   
   // Unwrap and deposit received CoinWrappers
   receive?: ReceivedBalanceOrRecently;
@@ -42,7 +42,7 @@ CallTreasury_Data {
     guards: AmountFromDepositGuard[];       // Deposit Guard list
   } | {
     op: "remove";
-    guards: string[];                       // Guard IDs or names to remove
+    guards: NameOrAddress[];                // Guard IDs or names to remove
   } | {
     op: "clear";
   };
@@ -53,13 +53,13 @@ CallTreasury_Data {
     guards: AmountFromWithdrawGuard[];      // Withdraw Guard list
   } | {
     op: "remove";
-    guards: string[];                       // Guard IDs or names to remove
+    guards: NameOrAddress[];                // Guard IDs or names to remove
   } | {
     op: "clear";
   };
   
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                       // Contact object
+  um?: NamedObject | null;                  // Contact object ({ name?, tags?, onChain?, replaceExistName? })
 }
 ```
 

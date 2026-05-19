@@ -48,7 +48,7 @@ repository (Repository Object)
 │   ├── description (description, optional)
 │   ├── policies (policy rules, optional)
 │   │   ├── op (operation: "add" | "set" | "remove" | "clear")
-│   │   └── policy (array of PolicyRule, for add/set) | policy_name (array of strings, for remove)
+│   │   └── policy (array of PolicyRule for add/set, array of strings for remove)
 │   │       └── PolicyRule structure (when op is "add" or "set"):
 │   │           ├── name (string) - policy rule name
 │   │           ├── description (string) - policy rule description
@@ -112,7 +112,7 @@ repository (Repository Object)
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "mainnet"
+│   ├── network (string, optional) - "testnet" or "localnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -188,7 +188,7 @@ Create a new Repository object for storing structured data.
 | ------------------ | ---------------- | -------- | ---------------------- | ------------------------------------ |
 | `operation_type`   | string           | Yes      | Operation type         | Fixed value "repository"             |
 | `data.object`      | object or string | Yes      | Object definition      | WithPermissionObject                 |
-| `data.description` | string           | No       | Repository description | Max 65535 characters                 |
+| `data.description` | string           | No       | Repository description | Max 4000 BCS characters                 |
 | `env.account`      | string           | No       | Use specified account  | Empty string '' uses default account |
 | `env.network`      | enum             | No       | Network selection      | "localnet" or "testnet"              |
 

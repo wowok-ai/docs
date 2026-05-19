@@ -17,7 +17,7 @@ CallService_Data {
   order_new?: {
     buy: {
       items: {
-        name: string;              // Product name
+        name: string;              // Product name (max 256 bcs chars)
         stock: string | number;    // Quantity
         wip_hash: string;          // WIP file hash
       }[];
@@ -34,8 +34,8 @@ CallService_Data {
     namedNewProgress?: NamedObject;      // Name for new Progress
   };
   
-  description?: string;              // Service description
-  location?: string;                 // Service location
+  description?: string;              // Service description (max 4000 bcs chars)
+  location?: string;                 // Service location (max 256 bcs chars)
   
   // Sales operations (discriminated union)
   sales?: {
@@ -43,7 +43,7 @@ CallService_Data {
     sales: ServiceSale[];            // Array of sale items (REQUIRED for add/set)
   } | {
     op: "remove";
-    sales_name: string[];            // Sale names to remove (REQUIRED)
+    sales_name: string[];            // Sale names to remove (REQUIRED) (each max 256 bcs chars)
   } | {
     op: "clear";
   };
@@ -51,23 +51,23 @@ CallService_Data {
   repositories?: ObjectsOp;          // Repository operations
   rewards?: ObjectsOp;               // Reward operations
   arbitrations?: ObjectsOp;          // Arbitration operations
-  machine?: string | null;           // Machine object ID
+  machine?: NameOrAddress | null;    // Machine object ID
   
   // Discount coupon
   discount?: Discount;
   
-  discount_destroy?: string[];       // Discount IDs to destroy
-  customer_required?: string[];      // Required info names (non-empty strings)
+  discount_destroy?: NameOrAddress[];  // Discount IDs to destroy
+  customer_required?: NotEmptyName[];  // Required info names (non-empty strings)
   
   // Order fund allocators
   order_allocators?: Allocators | null;
   
-  buy_guard?: string | null;         // Purchase Guard ID or name
+  buy_guard?: NameOrAddress | null;    // Purchase Guard ID or name
   compensation_fund_add?: CoinParam; // Compensation fund
   setting_locked_time_add?: number;  // Additional lock time (ms), extends 30-day default
   compensation_fund_receive?: ReceivedBalanceOrRecently;
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                // Contact object ID or name
+  um?: NameOrAddress | null;         // Contact object ID or name
   pause?: boolean;                   // Pause new orders
   publish?: boolean;                 // Publish service (immutable after)
 }

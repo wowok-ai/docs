@@ -17,9 +17,9 @@ CallAllocation_Data =
     }
   // OPERATE: Operate on existing Allocation object
   | {
-      object: string;                  // Allocation object ID or name
+      object: NameOrAddress;                  // Allocation object ID or name
       received_coins?: ReceivedBalanceOrRecently;  // Unwrap received CoinWrappers into pending balance
-      alloc_by_guard?: string;        // Verify Guard and execute fund allocation
+      alloc_by_guard?: NameOrAddress;    // Verify Guard and execute fund allocation
     };
 ```
 
