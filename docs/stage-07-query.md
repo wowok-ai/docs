@@ -13,7 +13,7 @@ In this stage, you will learn about data queries in WoWok, including:
 - How to use **query_toolkit** to query local and on-chain data
 - How to use **onchain_events** to query on-chain events
 - How to use **wowok_buildin_info** to query protocol information
-- How to use **documents_and_learn** to get documentation and learning resources
+- How to use **schema_query** to get tool schemas and operation definitions
 - How to query Messenger messages via **messenger_operation**
 
 ---
@@ -30,7 +30,7 @@ WoWok provides five specialized query tools:
 | **onchain_table_data** | Dynamic table data query | Object dynamic fields tables, table items (permission, repository, reward, etc.) |
 | **onchain_events** | On-chain event query | Arbitration events, order events, progress events, etc. |
 | **wowok_buildin_info** | Protocol information query | Constants, permissions, Guard instructions, network info, etc. |
-| **documents_and_learn** | Documentation and learning resources | Get official documentation URLs for users and AI to get help |
+| **schema_query** | Tool schema query | Get JSON schemas for all WoWok MCP tools and operations |
 
 **⚠️ Important Note**: Messenger message queries do not go through the above tools; you need to use the **messenger_operation** tool with the appropriate parameters.
 
@@ -322,57 +322,74 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ---
 
-### 7.5 documents_and_learn (Documentation and Learning Resources 📚)
+### 7.5 schema_query (Tool Schema Query 📋)
 
-**Why do we need documents_and_learn?**
+**Why do we need schema_query?**
 
-When you need to learn more about WoWok, you can use this tool to get official documentation URLs. This is useful for:
+When you need to understand the exact structure required for calling WoWok MCP tools, you can use this tool to get JSON schemas. This is useful for:
 
-- Users who want to learn how to use WoWok
-- AI that needs more context to answer user questions
-- Finding detailed documentation on specific topics
+- AI that needs exact parameter formats for tool calls
+- Developers who want to understand tool interfaces
+- Finding detailed schema definitions for specific operations
 
 **Features:**
 
-- Provide official documentation link: `https://github.com/wowok-ai/docs#`
-- Support specifying topic parameters to jump directly to relevant documentation
-- Return structured documentation information
+- List all available tool schemas
+- Get specific schema by name (e.g., `onchain_operations`, `account_operation`)
+- Search schemas by keyword
+- List all on-chain operations
+
+**Actions:**
+
+- `list` — List all available schemas
+- `get` — Get a specific schema by name
+- `search` — Search schemas by keyword
+- `list_operations` — List all on-chain operations
 
 ---
 
-#### Example 12: Get Documentation Home Page
+#### Example 12: List All Available Schemas
 
-Get the WoWok official documentation home page link:
-
-```json
-{}
-```
-
-Or explicitly call:
+Get a list of all available tool schemas:
 
 ```json
 {
-  "topic": ""
+  "action": "list"
 }
 ```
 
 ---
 
-#### Example 13: Get Documentation for Specific Topic
+#### Example 13: Get Schema for Specific Tool
 
-Get documentation link about Guard:
+Get the JSON schema for `onchain_operations`:
 
 ```json
 {
-  "topic": "guard"
+  "action": "get",
+  "name": "onchain_operations"
 }
 ```
 
-Get documentation link about Service:
+Get the schema for a specific operation type:
 
 ```json
 {
-  "topic": "service"
+  "action": "get",
+  "name": "onchain_operations_permission"
+}
+```
+
+---
+
+#### Example 14: Search Schemas
+
+Search for schemas related to "guard":
+
+```json
+{
+  "action": "search",
+  "query": "guard"
 }
 ```
 
@@ -388,7 +405,7 @@ Use the `messenger_operation` tool, specifying `operation` as `"watch_messages"`
 
 ---
 
-#### Example 14: View Conversation List
+#### Example 15: View Conversation List
 
 ```json
 {
@@ -399,7 +416,7 @@ Use the `messenger_operation` tool, specifying `operation` as `"watch_messages"`
 
 ---
 
-#### Example 15: View Message History
+#### Example 16: View Message History
 
 View all messages:
 
@@ -525,19 +542,23 @@ Query detailed information of a Service object:
 
 ---
 
-### Exercise 7: Get Documentation Link
+### Exercise 7: Query Tool Schema
 
-Get WoWok official documentation link:
-
-```json
-{}
-```
-
-Get documentation about a specific topic:
+Get the JSON schema for onchain_operations:
 
 ```json
 {
-  "topic": "guard"
+  "action": "get",
+  "name": "onchain_operations"
+}
+```
+
+Search for schemas related to "guard":
+
+```json
+{
+  "action": "search",
+  "query": "guard"
 }
 ```
 
@@ -553,7 +574,7 @@ Congratulations on reaching the final stage! Please confirm that you have:
 - [ ] Used onchain_table_data to query dynamic table data
 - [ ] Used onchain_events to query on-chain events
 - [ ] Used wowok_buildin_info to query protocol information
-- [ ] Used documents_and_learn to get documentation links
+- [ ] Used schema_query to get tool schemas
 - [ ] Used messenger_operation to query Messenger messages
 - [ ] Understood how to query various data
 
