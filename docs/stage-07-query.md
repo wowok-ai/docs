@@ -11,9 +11,12 @@
 In this stage, you will learn about data queries in WoWok, including:
 
 - How to use **query_toolkit** to query local and on-chain data
+- How to use **onchain_table_data** to query dynamic table data
 - How to use **onchain_events** to query on-chain events
 - How to use **wowok_buildin_info** to query protocol information
 - How to use **schema_query** to get tool schemas and operation definitions
+- How to use **guard2file** to export Guard definitions to files
+- How to use **machineNode2file** to export Machine node definitions to files
 - How to query Messenger messages via **messenger_operation**
 
 ---
@@ -22,7 +25,7 @@ In this stage, you will learn about data queries in WoWok, including:
 
 ### 7.1 Query Tools Overview
 
-WoWok provides five specialized query tools:
+WoWok provides seven specialized query tools:
 
 | Tool Name | Purpose | Main Functions |
 |---------|------|---------|
@@ -31,6 +34,8 @@ WoWok provides five specialized query tools:
 | **onchain_events** | On-chain event query | Arbitration events, order events, progress events, etc. |
 | **wowok_buildin_info** | Protocol information query | Constants, permissions, Guard instructions, network info, etc. |
 | **schema_query** | Tool schema query | Get JSON schemas for all WoWok MCP tools and operations |
+| **guard2file** | Export Guard definitions | Export Guard object definitions to JSON or Markdown files |
+| **machineNode2file** | Export Machine nodes | Export Machine node definitions to JSON or Markdown files |
 
 **⚠️ Important Note**: Messenger message queries do not go through the above tools; you need to use the **messenger_operation** tool with the appropriate parameters.
 
@@ -102,6 +107,19 @@ Query detailed information of multiple objects:
 {
   "query_type": "onchain_objects",
   "objects": ["0x1234...abcd", "0x5678...efgh"]
+}
+```
+
+---
+
+#### Example 4: Query Local Names
+
+Query local names (account name and local mark name) for a list of addresses:
+
+```json
+{
+  "query_type": "local_names",
+  "addresses": ["0x1234...abcd", "0x5678...efgh"]
 }
 ```
 
@@ -228,6 +246,21 @@ Use pagination cursor to query arbitration events:
 
 **The response includes `nextCursor` for the next page query:**
 
+Response structure:
+```json
+{
+  "result": {
+    "data": [...],
+    "hasNextPage": true,
+    "nextCursor": {
+      "txDigest": "0xabc...",
+      "eventSeq": "123"
+    }
+  }
+}
+```
+
+Use `nextCursor` for the next query:
 ```json
 {
   "type": "ArbEvent",
@@ -395,7 +428,117 @@ Search for schemas related to "guard":
 
 ---
 
-### 7.6 Messenger Message Query 💬
+### 7.6 guard2file (Export Guard Definitions 📄)
+
+**Why do we need guard2file?**
+
+When you want to understand or reuse an existing Guard's validation logic, you can export its definition to a local file. This is useful for:
+
+- **Learning**: Study how existing Guards are structured
+- **Reusing**: Modify existing Guard definitions to create new Guard objects
+
+**Features:**
+
+- Export Guard definitions to JSON (for programmatic use)
+- Export Guard definitions to Markdown (for human reading)
+- Query Guard objects by ID or name
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `guard` | string | Yes | Guard object ID or name to export |
+| `file_path` | string | Yes | Output file path (absolute or relative) |
+| `format` | string | No | Output format: "json" (default) or "markdown" |
+
+---
+
+#### Example 15: Export Guard to JSON
+
+Export a Guard definition to a JSON file:
+
+```json
+{
+  "guard": "my_guard",
+  "file_path": "./exported_guard.json",
+  "format": "json"
+}
+```
+
+---
+
+#### Example 16: Export Guard to Markdown
+
+Export a Guard definition to a Markdown file for easy reading:
+
+```json
+{
+  "guard": "0x1234...abcd",
+  "file_path": "./guard_definition.md",
+  "format": "markdown"
+}
+```
+
+**→ [View guard2file Detailed Documentation →](guard.md#sub-feature-18-export-guard-definitions-with-guard2file)**
+
+---
+
+### 7.7 machineNode2file (Export Machine Node Definitions ⚙️)
+
+**Why do we need machineNode2file?**
+
+When you want to understand or reuse an existing Machine's workflow structure, you can export its node definitions to a local file. This is useful for:
+
+- **Learning**: Study how existing Machines define workflows
+- **Reusing**: Copy and modify existing node definitions
+- **Templating**: Create new Machines based on existing ones
+
+**Features:**
+
+- Export Machine node definitions to JSON (for programmatic use)
+- Export Machine node definitions to Markdown (for human reading)
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `machine` | string | Yes | Machine object ID or name to export |
+| `file_path` | string | Yes | Output file path (absolute or relative) |
+| `format` | string | No | Output format: "json" (default) or "markdown" |
+
+---
+
+#### Example 17: Export Machine Nodes to JSON
+
+Export a Machine's node definitions to a JSON file:
+
+```json
+{
+  "machine": "my_workflow",
+  "file_path": "./exported_nodes.json",
+  "format": "json"
+}
+```
+
+---
+
+#### Example 18: Export Machine Nodes to Markdown
+
+Export a Machine's node definitions to a Markdown file:
+
+```json
+{
+  "machine": "0x5678...efgh",
+  "file_path": "./workflow_nodes.md",
+  "format": "markdown"
+}
+```
+
+**→ [View machineNode2file Detailed Documentation →](machine.md#sub-feature-19-export-node-definitions-with-machinenode2file)**
+
+---
+
+### 7.8 Messenger Message Query 💬
 
 **⚠️ Important Note**: Messenger message queries **do not** go through `query_toolkit`; you need to use the dedicated **messenger_operation** tool.
 
@@ -405,18 +548,20 @@ Use the `messenger_operation` tool, specifying `operation` as `"watch_messages"`
 
 ---
 
-#### Example 15: View Conversation List
+#### Example 19: View Conversation List
 
 ```json
 {
   "operation": "watch_conversations",
-  "account": "my_account"
+  "filter": {
+    "account": "my_account"
+  }
 }
 ```
 
 ---
 
-#### Example 16: View Message History
+#### Example 20: View Message History
 
 View all messages:
 
@@ -432,9 +577,7 @@ View messages with a specific user:
 {
   "operation": "watch_messages",
   "filter": {
-    "peerAddress": {
-      "name_or_address": "friend_address"
-    }
+    "peerAddress": "friend_address"
   }
 }
 ```
@@ -527,6 +670,18 @@ View your Messenger conversation list:
 }
 ```
 
+Specify account and filter options:
+
+```json
+{
+  "operation": "watch_conversations",
+  "filter": {
+    "account": "my_account",
+    "unreadOnly": true
+  }
+}
+```
+
 ---
 
 ### Exercise 6: Query Object Details
@@ -564,17 +719,47 @@ Search for schemas related to "guard":
 
 ---
 
+### Exercise 8: Export Guard Definition
+
+Export a Guard definition to a JSON file:
+
+```json
+{
+  "guard": "my_guard",
+  "file_path": "./my_guard.json",
+  "format": "json"
+}
+```
+
+---
+
+### Exercise 9: Export Machine Nodes
+
+Export a Machine's node definitions to a Markdown file:
+
+```json
+{
+  "machine": "my_workflow",
+  "file_path": "./my_workflow.md",
+  "format": "markdown"
+}
+```
+
+---
+
 ## 🏆 Stage Checklist
 
 Congratulations on reaching the final stage! Please confirm that you have:
 
-- [ ] Understood the differences and uses of the five query tools
+- [ ] Understood the differences and uses of the seven query tools
 - [ ] Used query_toolkit to query account list
 - [ ] Used query_toolkit to query account balance
 - [ ] Used onchain_table_data to query dynamic table data
 - [ ] Used onchain_events to query on-chain events
 - [ ] Used wowok_buildin_info to query protocol information
 - [ ] Used schema_query to get tool schemas
+- [ ] Used guard2file to export Guard definitions
+- [ ] Used machineNode2file to export Machine node definitions
 - [ ] Used messenger_operation to query Messenger messages
 - [ ] Understood how to query various data
 
