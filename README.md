@@ -127,6 +127,12 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 │  ├─ Messenger - Private Communication                         │
 │  └─ Contact - Public Contact Information                      │
 ├─────────────────────────────────────────────────────────────────┤
+│  Stage 3.5: Deep Dive into Messenger 💬                        │
+│  ├─ Triple-Trust Security Model                               │
+│  ├─ Message Delivery Mechanisms                               │
+│  ├─ Anti-Spam Protection System                               │
+│  └─ WTS Evidence Generation                                   │
+├─────────────────────────────────────────────────────────────────┤
 │  Stage 4: Transaction Execution 💼                             │
 │  ├─ Allocation - Automatic Fund Distribution                  │
 │  ├─ Service + Order - WYSIWYG Product Trading                │
@@ -171,6 +177,9 @@ Choose a stage to begin your WoWok journey:
 
 ### [🤝 Stage 3: Open Collaboration →](docs/stage-03-collaboration.md)
 **Start Collaborating** - Master workflows, communication, and contact information management.
+
+### [💬 Stage 3.5: Deep Dive into Messenger →](docs/stage-03b-messenger.md)
+**Secure Communication** - Learn Messenger's triple-trust model, message delivery mechanisms, anti-spam protection, and WTS evidence generation for tamper-proof business communication.
 
 ### [💼 Stage 4: Transaction Execution →](docs/stage-04-transaction.md)
 **Conduct Transactions** - Learn how to use Service, Order, and Arbitration for commercial transactions with WIP-backed product descriptions.

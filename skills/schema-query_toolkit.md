@@ -346,7 +346,10 @@ Query objects (payments, tokens, NFTs) received by an on-chain object.
 {
   query_type: "onchain_received";
   name_or_address: string | AccountOrMark_Address; // Account name, address, or mark. Supports shorthand string (e.g. "alice") or full {name_or_address, local_mark_first} object
-  all_type?: boolean;           // Set to true to query all token types; defaults to the object's Token type '0x2::payment::CoinWrapper<TOKEN>' (Coins wrapper sent via Payment). Fails if object has no Token type.
+  type?: string | "CoinWrapper" | null;  // Type filter for querying received objects:
+                                        // - undefined/null: query all types (equivalent to old all_type=true)
+                                        // - "CoinWrapper": query object's CoinWrapper type (equivalent to old all_type=false)
+                                        // - string: query specific StructType (e.g., "0x2::payment::CoinWrapper<0x2::wow::WOW>")
   cursor?: string | null;       // Pagination cursor from previous page
   limit?: number | null;        // Max records per page
   no_cache?: boolean;
@@ -357,19 +360,25 @@ Query objects (payments, tokens, NFTs) received by an on-chain object.
 **Result**: `ReceivedBalance | ReceivedNormal[]`
 
 ```typescript
-// When querying a single token type (all_type not set or false):
+// When querying CoinWrapper type (type: "CoinWrapper"):
 ReceivedBalance {
   balance: string;
-  coinType: string;
-  coinObjectCount: number;
-  totalBalance: string;
+  token_type: string;
+  received: { id: string; balance: string; payment: string; }[];
 }
 
-// When querying all types (all_type: true):
+// When querying all types (type: undefined or null):
 ReceivedNormal {
   id: string;
   type: string;
-  // ... object-specific fields
+  content_raw?: any;  // raw content data
+}
+
+// When querying a specific StructType (type: string):
+ReceivedNormal {
+  id: string;
+  type: string;
+  content_raw?: any;  // raw content data
 }
 ```
 

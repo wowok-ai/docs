@@ -28,7 +28,7 @@ Use local queries for account management and address book lookups. Use onchain q
 | 6 | `local_names` | Query local names by blockchain addresses — resolves addresses back to human-readable names. Use to find account/service names from their address. | `Record<string, string>` (address → name mapping) |
 | 6a | `onchain_personal_profile` | Query any user's PUBLIC on-chain profile — social links, reputation (likes/dislikes), personal info records, voting history, referrer. Use to look up a user's public identity and reputation. | `ObjectPersonal \| undefined` |
 | 7 | `onchain_objects` | Batch query on-chain WOWOK objects by ID — supports Service, Machine, Order, Treasury, Reward, Arb, Personal, Contact, and more. Use to inspect one or more objects in a single call. | `{ objects: ObjectBase[] }` |
-| 8 | `onchain_received` | Query objects (payments, tokens, NFTs) received by an on-chain object. Use to track incoming payments or items sent to an on-chain object. Supports pagination and all_type filter. | `ReceivedBalance \| ReceivedNormal[]` |
+| 8 | `onchain_received` | Query objects (payments, tokens, NFTs) received by an on-chain object. Use to track incoming payments or items sent to an on-chain object. Supports pagination and type filter. | `ReceivedBalance \| ReceivedNormal[]` |
 
 ---
 
@@ -63,7 +63,7 @@ query_toolkit (Query Operations)
 │   │   └── network (optional, "localnet" | "testnet")
 │   └── "onchain_received"
 │       ├── name_or_address (required, AccountOrMark_Address)
-│       ├── all_type (optional, boolean) — Set to true to query all token types; defaults to the object's Token type '0x2::payment::CoinWrapper<TOKEN>' (Coins wrapper sent via Payment). Fails if object has no Token type.
+│       ├── type (optional, string | "CoinWrapper" | null) — Type filter: undefined/null queries all types; "CoinWrapper" queries object's CoinWrapper type; string queries specific StructType
 │       ├── cursor (optional, string | null)
 │       ├── limit (optional, number | null)
 │       ├── no_cache (optional, boolean)
@@ -240,7 +240,6 @@ Please help me query all types of received objects for the treasury 'service_wal
 {
   "query_type": "onchain_received",
   "name_or_address": "service_wallet",
-  "all_type": true,
   "cursor": null,
   "limit": 50
 }
