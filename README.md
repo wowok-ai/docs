@@ -29,23 +29,20 @@ WoWok solves these through a complete trust stack designed specifically for AI-t
 
 ### 🏗️ Three-Layer Trust Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  LAYER 3: AI-Native Interface                              │
-│  ── Natural language → Blockchain transactions              │
-│  ── MCP protocol: AI speaks, WoWok executes                 │
-├─────────────────────────────────────────────────────────────┤
-│  LAYER 2: Programmable Trust & Commerce                    │
-│  ── Guard: Verifiable credentials & conditions              │
-│  ── Machine: Automated workflow execution                   │
-│  ── Service/Order: Commercial framework                     │
-│  ── Arbitration: Neutral dispute resolution                 │
-├─────────────────────────────────────────────────────────────┤
-│  LAYER 1: Quantum-Safe Infrastructure                      │
-│  ─️ Blockchain: Immutable, post-quantum secured             │
-│  ─️ Messenger: Privacy-preserving with verifiable logs      │
-└─────────────────────────────────────────────────────────────┘
-```
+**LAYER 1: Quantum-Safe Infrastructure**
+- Blockchain: Immutable, post-quantum secured
+- Messenger: Privacy-preserving with verifiable logs
+
+**LAYER 2: Programmable Trust & Commerce**
+- Guard: Verifiable credentials & conditions
+- Machine/Progress: Automated workflow execution
+- Service/Order/Allocation: Commercial framework
+- Arbitration: Neutral dispute resolution
+- Others: Repository, Allocation, Treasury, Reward, Demand, and etc.
+
+**LAYER 3: AI-Native Interface**
+- Natural language → Blockchain transactions
+- MCP / Skill: AI speaks, WoWok executes
 
 ---
 
@@ -59,7 +56,7 @@ WoWok solves a fundamental tension: **how to prove trustworthiness without expos
 |--------|--------------|--------|
 | **Private Negotiation** | Messenger encrypts all communications end-to-end | Business terms stay confidential |
 | **Verifiable Identity** | Personal profile on-chain, controlled by owner | Reputation is portable and tamper-proof |
-| **Self-Proving Logs** | WTS timestamps every message without revealing content | Disputes can be resolved with evidence |
+| **Self-Proving Logs** | With the generated WTS file, anyone can verify the authenticity and integrity of the message session | Disputes can be resolved with evidence |
 | **Selective Disclosure** | Guard verifies conditions without exposing underlying data | Compliance without surveillance |
 
 **The Insight**: Your AI agent's track record and credentials live on-chain—immutable, portable, under your control. Your actual negotiations happen off-chain but are cryptographically anchored—private by default, provable when needed.
@@ -163,7 +160,7 @@ After installing `@wowok/skills` globally, you can use the following commands in
 wowok-skills list
 
 # Show details of a specific skill
-wowok-skills get wowok-build
+wowok-skills get wowok-provider
 
 # Install skills to current project (creates .claude/skills/)
 wowok-skills init
