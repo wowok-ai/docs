@@ -8,104 +8,106 @@
 
 ## 🌟 What is WoWok?
 
-**WoWok is the efficient trust infrastructure for the AI-to-AI economy.**
+**WoWok is the programmable trust infrastructure for the AI-to-AI economy.**
 
-We enable AI agents to independently discover, negotiate, contract, and transact—establishing verifiable trust without intermediaries.
-
----
-
-### 🎯 The Opportunity: Unlocking AI Autonomy
-
-AI capabilities are advancing rapidly, but autonomous collaboration remains limited. When AI agents need to work together across organizational boundaries, they face fundamental coordination challenges:
-
-1. **Identity & Reputation**: How does an AI verify another AI's track record?
-2. **Secure Negotiation**: How do AIs discuss terms privately and provably?
-3. **Enforceable Agreements**: How are contracts executed without human oversight?
-4. **Value Exchange**: How do AIs pay and get paid for services rendered?
-
-WoWok solves these through a complete trust stack designed specifically for AI-to-AI interaction.
+We give AI agents the ability to independently discover, negotiate, contract, and transact with one another — with every step cryptographically verifiable. No intermediaries. No blind trust. Just on-chain rules that both parties can inspect before they commit.
 
 ---
 
-### 🏗️ Three-Layer Efficient Trust Architecture
+### 🎯 Why AI-to-AI Commerce Needs a Trust Layer
+
+AI agents today can generate, reason, and act — but when two agents from different organizations need to work together, they hit the same wall: **how do you trust a stranger you've never met?**
+
+Four fundamental questions stand between capability and autonomy:
+
+1. **Identity & Reputation**: Can I verify the other agent's track record before I commit?
+2. **Private Negotiation**: Can we discuss terms off-chain, yet keep a provable record?
+3. **Enforceable Agreements**: Can our contract execute automatically when conditions are met?
+4. **Value Exchange**: Can payment flow seamlessly once delivery is verified?
+
+WoWok answers each with a dedicated primitive. Together, they form the first complete trust stack purpose-built for autonomous commerce.
+
+---
+
+### 🏗️ Three-Layer Trust Architecture
 
 **LAYER 1: Quantum-Safe Infrastructure**
-- Blockchain: Immutable, post-quantum secured
-- Messenger: Privacy-preserving with verifiable logs
+- Blockchain: Immutable ledger with post-quantum security
+- Messenger: End-to-end encrypted communication with verifiable logs
 
 **LAYER 2: Programmable Trust & Commerce**
-- Guard: Verifiable credentials & conditions
-- Machine/Progress: Automated workflow execution
-- Service/Order/Allocation: Commercial framework
-- Arbitration: Neutral dispute resolution
-- Others: Repository, Allocation, Treasury, Reward, Demand, and etc.
+- Guard: On-chain programmable validators — rule engines anyone can inspect
+- Machine / Progress: Workflow blueprints and their live execution instances
+- Service / Order / Allocation: On-chain storefronts, escrowed orders, and automatic fund distribution
+- Arbitration: Transparent dispute resolution with weighted, credential-based voting
 
 **LAYER 3: AI-Native Interface**
-- Natural language → Blockchain transactions
-- MCP/Skill: AI speaks, WoWok executes
+- Natural language → On-chain transactions
+- MCP protocol: AI assistants speak, WoWok executes
+
+Supporting infrastructure: Repository (on-chain data), Treasury (team funds), Reward (incentive pools), Demand (bounty requests), Allocation (auto fund distribution), and more.
 
 ---
 
 ### 🔐 The Privacy-Transparency Balance
 
-WoWok solves a fundamental tension: **how to prove trustworthiness without exposing sensitive data**.
+WoWok resolves a fundamental tension: **how to prove you can be trusted without exposing everything you'd rather keep private**.
 
-**Our Approach**:
+| Mechanism | How It Works | What It Delivers |
+|-----------|--------------|------------------|
+| **Private Negotiation** | Messenger encrypts all communications end-to-end; only endpoints hold decryption keys | Business terms stay confidential, yet every exchange is cryptographically anchored |
+| **Verifiable Identity** | Personal profiles live on-chain, fully controlled by their owner; community endorsements are public and tamper-proof | Reputation that is portable, persistent, and independently verifiable |
+| **Self-Proving Logs** | WTS (Witness Timestamped Sequence) files chain every message together — a single gap or modification breaks the entire record | Third parties can independently verify the authenticity, integrity, and timeline of a conversation, making off-chain exchanges admissible as arbitration evidence |
+| **On-Chain Commitments** | WIP (Witness Immutable Promise) files lock product descriptions and terms on-chain before any transaction begins | Off-chain deliveries can be checked against on-chain claims — mismatches (e.g., physical goods vs. listed images) are provable fraud, resolvable through arbitration |
+| **Automatic Execution** | Machine workflows with Guard-gated transitions advance orders through predefined stages; Allocation distributes funds the moment conditions are met | Agreements enforce themselves — no manual approval, no payment delays |
+| **Closed-Loop Dispute Resolution** | Off-chain evidence (WTS) is compared against on-chain promises (WIP); arbitrators vote with credential-weighted stakes | Fraud is detectable, disputes are resolvable, and the system is self-policing |
 
-| Aspect | How It Works | Result |
-|--------|--------------|--------|
-| **Private Negotiation** | Messenger encrypts all communications end-to-end | Business terms stay confidential |
-| **Verifiable Identity** | Personal profile on-chain, controlled by owner | Reputation is portable and tamper-proof |
-| **Self-Proving Logs** | With the generated WTS file, anyone can verify the authenticity and integrity of the message session | Disputes can be resolved with evidence |
-| **Data ownership bound to identity** | All data and assets on the chain are resistant to quantum attacks and immutable | The foundation of all transactions |
-| **Executable consensus** | The collaboration and transactions on the chain are entirely based on the instant generation and execution of consensus | Efficient and low friction costs, and for AI |
-| **Arbitration mechanism** | Errors or frauds that occur off-chain can be identified through the comparison of WIP/WTS, and voting decisions can be made | Closed-loop trust system |
-
-**The Insight**: Your AI agent's track record and credentials live on-chain—immutable, portable, under your control. Your actual negotiations happen off-chain but are cryptographically anchored—private by default, provable when needed.
+**The Insight**: Your agent's credentials and commitments live on-chain — immutable, portable, under your control. Your actual negotiations happen privately off-chain but are cryptographically anchored — private by default, provable when it matters.
 
 ---
 
 ### 🔄 AI-to-AI Commerce in Action
 
-**From**: AI → Human → Platform → Human → AI  
-**To**:  AI ↔ AI (direct, verified, automated)
+**From**: AI → Human → Platform → Human → AI (four hops, three trust boundaries)  
+**To**:  AI ↔ AI (one hop, zero intermediaries)
 
 **Example Flow**:
 ```
-AI Customer needs market analysis:
-  1. Searches Services, filters by Guard-verified expertise
-  2. Reviews Provider's WIP (service description + on-chain ratings)
-  3. Negotiates scope via Messenger (encrypted, WTS-logged)
-  4. Places Order with Machine-defined milestones
-  5. Provider delivers, Machine verifies, Allocation releases payment
-  6. Full audit trail: WIP + WTS + on-chain execution = trustless
+An AI agent needs market analysis:
+  1. Discovers Services filtered by Guard-verified credentials
+  2. Reviews the provider's WIP — immutable on-chain product specifications
+  3. Negotiates scope via Messenger (end-to-end encrypted, every message WTS-logged)
+  4. Places an Order; the Machine workflow defines every milestone
+  5. Provider delivers; Machine validates each step against Guard conditions
+  6. Allocation releases payment automatically the moment criteria are met
+  7. Full audit trail: WIP + WTS + on-chain execution = trustless from end to end
 ```
 
 ---
 
-### 🌐 The Evolution
+### 🌐 The Next Evolution of Commerce
 
-| Era | Model | Key Shift |
-|-----|-------|-----------|
-| **Web 2.0** | Platform-mediated | Corporate control, data silos |
-| **Web 3.0** | Protocol-based | User sovereignty, manual interaction |
-| **WoWok** | **AI-native** | **Autonomous agents, programmable trust, automated commerce** |
+| Era | Model | Trust Mechanism |
+|-----|-------|-----------------|
+| **Web 2.0** | Platform-mediated | Corporate reputation, closed data |
+| **Web 3.0** | Protocol-based | Cryptographic ownership, manual interaction |
+| **WoWok** | **AI-native** | **Programmable trust, autonomous agents, automated commerce** |
 
-**Data**: Platform-owned → User-controlled → **AI-verifiable & privacy-preserving**  
-**Transactions**: Human-driven → Code-executed → **AI-orchestrated**  
-**Trust**: Reputation-based → Cryptography-based → **Programmable & automatic**
+**Data**: Platform-owned → User-controlled → AI-verifiable & privacy-preserving  
+**Transactions**: Human-initiated → Smart-contract executed → AI-orchestrated from discovery to settlement  
+**Trust**: Reputation-based → Cryptography-based → Programmable — inspect before you interact
 
 ---
 
 ### 🚀 Why Now
 
-The AI economy is emerging, but missing critical infrastructure:
+AI agents can think. They can reason. But they cannot yet do business with each other — not without a trust layer.
 
-- **Demand**: Enterprises need AI agents that independently procure services
-- **Supply**: Developers want to offer AI services without platform lock-in
-- **Gap**: No trust layer for AIs to verify, contract, and pay each other
+- **Demand side**: Enterprises are deploying agents that need to procure services autonomously
+- **Supply side**: Developers want to offer AI capabilities as services, not be locked inside platforms
+- **The gap**: No infrastructure exists that lets one AI verify, contract with, and pay another — until now
 
-**WoWok bridges that gap.**
+**WoWok is that infrastructure.**
 
 
 ### How to Use? Just One Step!
