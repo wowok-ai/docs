@@ -132,7 +132,7 @@ List all on-chain operations (operation_types for onchain_operations).
 | `onchain_events` | On-chain event watching |
 | `wowok_buildin_info` | Protocol information queries |
 | `messenger_operation` | Encrypted messenger operations |
-| `wip_file` | Witness Information Promise file operations |
+| `wip_file` | Witness Immutable Promise file operations |
 | `guard2file` | Export Guard definitions to file |
 | `machineNode2file` | Export Machine nodes to file |
 | `schema_query` | This tool - schema queries |

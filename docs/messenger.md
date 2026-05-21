@@ -4,7 +4,7 @@
 
 ## Component Overview
 
-The Messenger component is used for WoWok encrypted message management, including conversation list viewing, sending messages/files, viewing message history, WTS (Witness Timestamped Snapshot) generation, verification, and signing, on-chain proof, blacklist/friendslist/guardlist management, etc.
+The Messenger component is used for WoWok encrypted message management, including conversation list viewing, sending messages/files, viewing message history, WTS (Witness Timestamped Sequence) generation, verification, and signing, on-chain proof, blacklist/friendslist/guardlist management, etc.
 
 ---
 
@@ -19,7 +19,7 @@ The Messenger component is used for WoWok encrypted message management, includin
 | **Mark Messages as Viewed** | Mark specific messages as viewed | Mark messages as read after viewing | Tracks which messages have been seen by user |
 | **Mark Conversation as Viewed** | Mark all messages in a conversation as viewed | Mark entire chat as read | Bulk mark messages as viewed for a conversation |
 | **Extract ZIP Messages** | Extract files from ZIP messages | Download and open shared files | Makes shared files accessible |
-| **Generate WTS** | Create Witness Timestamped Snapshots | Preserve chat history as evidence, legal documentation | Creates verifiable chat records |
+| **Generate WTS** | Create Witness Timestamped Sequence | Preserve chat history as evidence, legal documentation | Creates verifiable chat records |
 | **Verify WTS** | Check WTS file integrity and signatures | Validate chat record authenticity | Ensures WTS hasn't been tampered with |
 | **Sign WTS** | Add digital signatures to WTS files | Certify chat records, legal attestation | Provides non-repudiation for WTS |
 | **WTS to HTML** | Convert WTS files to readable HTML | View chat records in browser, share with others | Makes WTS human-readable |
@@ -984,7 +984,7 @@ Extract and decompress ZIP format message files.
 
 ### Feature Description
 
-Generate WTS (Witness Timestamped Snapshot) file for chat history. WTS files contain complete chat records with timestamps and can be used as legal evidence.
+Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files contain complete chat records with timestamps and can be used as legal evidence.
 
 ### Examples
 

@@ -31,7 +31,7 @@ WoWok balances privacy and open collaboration through innovative mechanisms:
 | **Transparent and Trusted Infrastructure** | Based on WoWok public chain, collaborative data, conditions, and methods are publicly transparent and immutable |
 | **User Data Sovereignty** | Data ownership and usage rights belong to users, who have complete control over their data |
 | **Customizable Trust Rules** | Create custom trust verification rules using Guards based on on-chain data |
-| **WTS Self-Proving Messages** | Witness Timestamped Signature ensures message authenticity, integrity, and self-provability |
+| **WTS Self-Proving Messages** | Witness Timestamped Sequence ensures message authenticity, integrity, and self-provability |
 | **WIP Immutable Commitments** | Witness Immutable Promise ensures commitments are visible and immutable to all participants |
 | **Arbitration Dispute Protection** | Complete evidence chain for broken commitments, with on-chain data and provable messages |
 | **Quantum-Safe Network** | On-chain wallets (Falcon), smart contracts, and Messenger(Kyber) secured by post-quantum cryptography, ensuring network-wide quantum resistance |

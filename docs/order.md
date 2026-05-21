@@ -226,7 +226,7 @@ Set the Contact object for secure communication with service staff. When a servi
 - Information is **never stored on-chain** - only the Contact object reference is recorded
 - Customers retain full control over their private information
 - Service staff can only access the information through secure Messenger conversations
-- **Verifiable Communication**: Messenger supports [WTS (Witness Timestamped Snapshot)](messenger.md#example-7-generate-wts) generation, which creates cryptographically verifiable records of conversations that can prove the authenticity and integrity of chat content
+- **Verifiable Communication**: Messenger supports [WTS (Witness Timestamped Sequence)](messenger.md#example-7-generate-wts) generation, which creates cryptographically verifiable records of conversations that can prove the authenticity and integrity of chat content
 
 ⚠️ **Arbitration Evidence:**
 - In case of disputes, WTS files from Messenger conversations can serve as **legal evidence** in [Arbitration](arbitration.md)
@@ -288,7 +288,7 @@ After setting the Contact, use [Messenger](messenger.md) to send your private in
 ⚠️ **Security Note**: This message is end-to-end encrypted and only readable by you and the service staff. It is never stored on the blockchain.
 
 **WTS for Arbitration:**
-If a dispute arises, you can generate a WTS (Witness Timestamped Snapshot) of this conversation:
+If a dispute arises, you can generate a WTS (Witness Timestamped Sequence) of this conversation:
 1. Use [Generate WTS](messenger.md#example-7-generate-wts) to create a verifiable record of the chat history
 2. [Sign WTS](messenger.md#example-9-sign-wts) to add your cryptographic signature
 3. Submit the WTS as evidence in [Arbitration](arbitration.md) to prove what was agreed upon

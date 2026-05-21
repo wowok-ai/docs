@@ -7,7 +7,7 @@
 
 The Service component is WoWok protocol's service/product publishing and sales management module, used to create and manage service or product listings in the marketplace. Service publishers can bind Machine (workflow templates), Repository (data warehouses), Arbitration (dispute resolution), and other components, configure Order Allocators, set up Discounts, manage Compensation Funds, and handle order creation and payment workflows.
 
-**Critical Integration with WIP**: Service sales items can optionally include a WIP (Witness Information Promise) file that provides immutable, verifiable product/service descriptions. 
+**Critical Integration with WIP**: Service sales items can optionally include a WIP (Witness Immutable Promise) file that provides immutable, verifiable product/service descriptions. 
 
 - **With WIP**: Set `wip` to a local file path or HTTPS URL. The hash is automatically extracted, and customers must provide matching `wip_hash` when purchasing.
 - **Without WIP**: Set `wip` to empty string `""` for simple products where WIP verification is not needed.
@@ -459,7 +459,7 @@ For e-commerce with both merchant withdrawal and customer refund scenarios:
 
 ### Step 4: Configure WIP Files for Products (Optional but Recommended)
 
-WIP (Witness Information Promise) files provide immutable, verifiable product/service descriptions. While optional, using WIP is strongly recommended for building trust.
+WIP (Witness Immutable Promise) files provide immutable, verifiable product/service descriptions. While optional, using WIP is strongly recommended for building trust.
 
 **Two approaches:**
 
@@ -1067,7 +1067,7 @@ Bind a Contact (instant messaging) object to the Service.
 
 ### Feature Description
 
-Add, set, remove, or clear sales products/services from the Service. Each sales item can optionally include a WIP (Witness Information Promise) file that provides immutable, verifiable product/service descriptions.
+Add, set, remove, or clear sales products/services from the Service. Each sales item can optionally include a WIP (Witness Immutable Promise) file that provides immutable, verifiable product/service descriptions.
 
 ### Parameter Description
 
@@ -1088,7 +1088,7 @@ Add, set, remove, or clear sales products/services from the Service. Each sales 
 ### Important Notes About WIP
 
 **What is WIP?**
-WIP (Witness Information Promise) is a cryptographically signed JSON file that contains product/service descriptions, images, and metadata. It ensures:
+WIP (Witness Immutable Promise) is a cryptographically signed JSON file that contains product/service descriptions, images, and metadata. It ensures:
 - **Immutability**: Once created, the content cannot be altered
 - **Verifiability**: Customers can verify the product description matches what was promised
 - **Trust**: Builds confidence between buyers and sellers
@@ -1871,13 +1871,13 @@ To enable arbitration for your service:
 
 ---
 
-# Witness Information Promise (WIP) File Operations
+# Witness Immutable Promise (WIP) File Operations
 
 ---
 
 ## Component Overview
 
-The Witness Information Promise (WIP) file format is a cryptographically verifiable JSON format for transmitting immutable promise information. WIP files can be created from markdown and images, verified for integrity, signed with accounts, and converted to HTML. WIP is closely integrated with the Service component, where every sales item must reference a WIP file hash to ensure product/service description immutability.
+The Witness Immutable Promise (WIP) file format is a cryptographically verifiable JSON format for transmitting immutable promise information. WIP files can be created from markdown and images, verified for integrity, signed with accounts, and converted to HTML. WIP is closely integrated with the Service component, where every sales item must reference a WIP file hash to ensure product/service description immutability.
 
 ---
 

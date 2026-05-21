@@ -45,7 +45,7 @@ The Contact component is the **foundation of end-to-end encrypted messaging** in
 | Scenario | Without Contact | With Contact |
 |----------|----------------|--------------|
 | **Service Purchase** | No way to send shipping address privately | Customer sends encrypted address via Messenger linked to Contact |
-| **Dispute Resolution** | No verifiable communication history | WTS (Witness Timestamped Snapshot) provides cryptographic proof of conversations |
+| **Dispute Resolution** | No verifiable communication history | WTS (Witness Timestamped Sequence) provides cryptographic proof of conversations |
 | **Team Collaboration** | No secure team communication channel | Team members communicate via encrypted channels linked to Contact identities |
 | **Customer Support** | Public on-chain messages expose sensitive data | Private end-to-end encrypted support conversations |
 

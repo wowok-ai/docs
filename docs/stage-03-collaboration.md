@@ -58,7 +58,7 @@ Collaboration requires communication. Messenger provides end-to-end encrypted se
 
 **Core Concepts:**
 - 🔒 **End-to-End Encryption** - Only communication parties can see the content
-- 📝 **WTS** - Witness Timestamped Signature, verifiable chat records (can be used as legal evidence)
+- 📝 **WTS** - Witness Timestamped Sequence, verifiable chat records (can be used as legal evidence)
 - 📎 **File Transfer** - Securely send files
 - ⏰ **On-Chain Proof** - Generate on-chain timestamp proof for messages
 

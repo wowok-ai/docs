@@ -13,7 +13,7 @@ In this stage, you will gain a deep understanding of WoWok Messenger, including:
 - The triple-trust security model and core architectural principles
 - Message delivery mechanisms (normal messages, stranger messages, guard messages)
 - Anti-spam protection systems (blacklist, friends list, guard list)
-- WTS (Witness Transaction Statement) evidence generation and verification
+- WTS (Witness Timestamped Sequence) evidence generation and verification
 - Practical usage patterns for secure business communication
 
 ---
@@ -185,7 +185,7 @@ Incoming Message
 
 ---
 
-### 3.5.5 WTS (Witness Transaction Statement) 📜
+### 3.5.5 WTS (Witness Timestamped Sequence) 📜
 
 #### What is WTS?
 
@@ -221,6 +221,7 @@ A **tamper-proof, self-verifying export** of a conversation containing:
 4. **Convert to HTML**: Human-readable view with acknowledgment tracking
 5. **On-Chain Proof**: Anchor message Merkle root to blockchain
 
+Anyone can use a WTS file to verify the authenticity, continuity, and integrity of the conversation content.
 ---
 
 ### 3.5.6 Session and Message Sequence 🔗

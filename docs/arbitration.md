@@ -21,6 +21,31 @@ The Arbitration component is WoWok protocol's on-chain dispute resolution module
 
 ---
 
+## Arb State Machine
+
+The following diagram illustrates the complete lifecycle of an Arb (Arbitration Case) object:
+
+![Arb State Machine](./resource/img_v3_0211t_c16011a7-c57f-4f38-ac2c-c23a2048d5cg.jpg)
+
+### State Overview
+
+| State | Available to Arbitrator | Available to Customer (via Order) |
+|-------|------------------------|-----------------------------------|
+| **(0) Principal_confirming** | — | `arb_confirm` → (1) |
+| **(1) Arbitrator_confirming** | `confirm` → (2), `reset` → (0), feedback | — |
+| **(2) Voting** | vote, `voting_deadline_change`, `arbitration` → (3), feedback | — |
+| **(3) Arbitrated** | feedback | `arb_objection` → (4), `arb_claim_compensation` → (5) |
+| **(4) Objectionable** | `reset` → (0), feedback | — |
+| **(5) Finished** | `arb_withdraw` → (6), feedback | — |
+| **(6) Withdrawn** | — (terminal) | — (terminal) |
+
+**Key Flows**:
+- **Standard**: (1) → confirm → (2) → arbitration → (3) → arb_claim_compensation → (5) → withdraw → (6)
+- **With Revision**: (1) → reset → (0) → arb_confirm → (1) → confirm → (2) → ...
+- **With Objection**: ... → (3) → arb_objection → (4) → reset → (0) → ...
+
+---
+
 ## Complete Tool Call Structure
 
 Arbitration operations use the following top-level structure:
