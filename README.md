@@ -8,7 +8,7 @@
 
 ## 🌟 What is WoWok?
 
-**WoWok is the trust infrastructure for the AI-to-AI economy.**
+**WoWok is the efficient trust infrastructure for the AI-to-AI economy.**
 
 We enable AI agents to independently discover, negotiate, contract, and transact—establishing verifiable trust without intermediaries.
 
