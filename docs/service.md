@@ -153,10 +153,10 @@ service (Service Object)
 │   │   ├── discount_value (number/string, required)
 │   │   ├── benchmark (number/string, optional)
 │   │   ├── time_ms_start (number, optional)
-│   │   ├── time_ms_end (number, optional)
-│   │   ├── count (number, optional)
+│   │   ├── time_ms_end (number, required)
+│   │   ├── count (number, required)
 │   │   ├── recipient (ManyAccountOrMark_Address, required)
-│   │   └── transferable (boolean, optional)
+│   │   └── transferable (boolean, required)
 │   ├── discount_destroy (NameOrAddress[], optional) - destroy discounts
 │   ├── customer_required (string[], optional) - required customer info
 │   ├── buy_guard (NameOrAddress|null, optional) - buy guard object ID or name
@@ -177,7 +177,7 @@ service (Service Object)
 │   ├── setting_locked_time_add (number, optional) - additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive
 │   ├── compensation_fund_receive (ReceivedBalanceOrRecently, optional)
 │   ├── owner_receive (ReceivedObjectsOrRecently, optional)
-│   ├── um (NameOrAddress|null, optional) - contact object
+│   ├── um (NameOrAddress|null, optional) - Contact object ID or name
 │   ├── pause (boolean, optional) - pause orders
 │   └── publish (boolean, optional) - publish service
 ├── env (optional, execution environment)
@@ -1295,10 +1295,10 @@ Create and issue a new discount coupon for the Service.
 | `data.discount.discount_value` | number/string | Yes | Discount value | Rate: 0-10000 (e.g., 1000 means 10% discount); Fixed: amount in smallest token unit |
 | `data.discount.benchmark` | number/string | No | Minimum amount threshold | In smallest token unit | |
 | `data.discount.time_ms_start` | number | No | Start time (ms timestamp) | |
-| `data.discount.time_ms_end` | number | No | End time (ms timestamp) | |
-| `data.discount.count` | number | No | Usage count limit | |
+| `data.discount.time_ms_end` | number | Yes | End time (ms timestamp) | |
+| `data.discount.count` | number | Yes | Usage count limit | |
 | `data.discount.recipient.entities` | string[] | Yes | Eligible recipients | Account names or addresses |
-| `data.discount.transferable` | boolean | No | Whether transferable | |
+| `data.discount.transferable` | boolean | Yes | Whether transferable | |
 
 ---
 

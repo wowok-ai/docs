@@ -83,7 +83,7 @@ CallArbitration_Data {
   usage_guard?: NameOrAddress | null;    // Guard for verifying when users apply
   voting_guard?: VotingGuardAction;      // Guard for verifying during voting
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NameOrAddress | null;            // Contact object
+  um?: NameOrAddress | null;            // Contact object ID or name
 }
 
 // Voting guard operations (discriminated union)

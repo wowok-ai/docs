@@ -29,7 +29,7 @@ CallReward_Data {
   guard_expiration_time?: number | null;   // Expiration time (ms, >= 1) — blocks new Guard additions until expired
   
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NameOrAddress | null;              // Contact object
+  um?: NameOrAddress | null;              // Contact object ID or name
 }
 ```
 

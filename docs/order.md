@@ -41,7 +41,7 @@ order (Order Object)
 ├── operation_type: "order" (fixed value)
 ├── data (Order operation data)
 │   ├── object (NameOrAddress, required) - Order object ID or name
-│   ├── agents (ManyAccountOrMark_Address, optional) - Order agents
+│   ├── agent (ManyAccountOrMark_Address, optional) - Order agent
 │   │   └── entities (AccountOrMark_Address[]) - Array of agent references
 │   │       └── Each item: string (name/address) or { name_or_address, local_mark_first }
 │   ├── required_info (NameOrAddress | null, optional) - Contact object ID for secure messaging with service staff
@@ -123,11 +123,11 @@ Order operations use the following top-level structure:
 
 ---
 
-## Function 1: Set Order Agents (agents)
+## Function 1: Set Order Agent (agent)
 
 ### Description
 
-Set order agents. Agents can operate the order (such as canceling, modifying status, etc.) but cannot receive funds received by the order.
+Set order agent. Agents can operate the order (such as canceling, modifying status, etc.) but cannot receive funds received by the order.
 
 ### Parameters
 
@@ -135,7 +135,7 @@ Set order agents. Agents can operate the order (such as canceling, modifying sta
 |------|------|----------|-------------|
 | `operation_type` | string | Yes | Fixed value "order" |
 | `data.object` | string | Yes | Order object ID or name |
-| `data.agents` | array | No | Array of agent names/addresses. Set to empty array [] to clear all agents |
+| `data.agent` | array | No | Array of agent names/addresses. Set to empty array [] to clear all agents |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
@@ -159,7 +159,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "operation_type": "order",
   "data": {
     "object": "customer_order_123",
-    "agents": ["order_manager"]
+    "agent": ["order_manager"]
   }
 }
 ```
@@ -175,7 +175,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "operation_type": "order",
   "data": {
     "object": "service_order_456",
-    "agents": ["agent_alice", "agent_bob", "agent_charlie"]
+    "agent": ["agent_alice", "agent_bob", "agent_charlie"]
   }
 }
 ```
@@ -191,7 +191,7 @@ Returns transaction block information (WowTransactionBlockSchema).
   "operation_type": "order",
   "data": {
     "object": "old_order_789",
-    "agents": []
+    "agent": []
   }
 }
 ```
@@ -734,7 +734,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
   "operation_type": "order",
   "data": {
     "object": "combined_order_701",
-    "agents": ["operations_manager"],
+    "agent": ["operations_manager"],
     "progress": {
       "operation": {
         "next_node_name": "active",
@@ -779,7 +779,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
   "operation_type": "order",
   "data": {
     "object": "full_order_703",
-    "agents": ["agent_1", "agent_2"],
+    "agent": ["agent_1", "agent_2"],
     "required_info": "customer_contact",
     "progress": {
       "operation": {

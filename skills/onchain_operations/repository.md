@@ -60,7 +60,7 @@ CallRepository_Data {
   
   rewards?: ObjectsOp;                 // Reward object list (contribution incentives)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NameOrAddress | null;          // Contact object
+  um?: NameOrAddress | null;          // Contact object ID or name
 }
 ```
 

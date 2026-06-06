@@ -59,7 +59,7 @@ CallPermission_Data {
   apply?: NameOrAddress[];            // Object IDs to apply permission to
   builder?: AccountOrMark_Address;    // Set/transfer ownership
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: string | null;                 // Contact object
+  um?: NameOrAddress | null;          // Contact object ID or name
 }
 ```
 

@@ -44,7 +44,7 @@ CallDemand_Data {
   };
   
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NameOrAddress | null;           // Contact object
+  um?: NameOrAddress | null;           // Contact object ID or name
 }
 ```
 

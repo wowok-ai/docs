@@ -59,7 +59,7 @@ CallTreasury_Data {
   };
   
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NamedObject | null;                  // Contact object ({ name?, tags?, onChain?, replaceExistName? })
+  um?: NameOrAddress | null;                 // Contact object ID or name
 }
 ```
 

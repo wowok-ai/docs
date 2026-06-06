@@ -63,7 +63,7 @@ CallMachine_Data {
   pause?: boolean;                    // Pause new Progress
   publish?: boolean;                  // Publish (nodes immutable after)
   owner_receive?: ReceivedObjectsOrRecently;
-  um?: NameOrAddress | null;          // Contact object
+  um?: NameOrAddress | null;          // Contact object ID or name
 }
 
 // MachineNode definition (referenced by node operations)

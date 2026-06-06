@@ -10,7 +10,7 @@ Track and manage service delivery lifecycle — progress, arbitration, compensat
 CallOrder_Data {
   object: NameOrAddress;                 // Order object ID or name (required)
   
-  agents?: ManyAccountOrMark_Address;   // Order agents (operate, but cannot receive funds)
+  agent?: ManyAccountOrMark_Address;   // Order agent (operate, but cannot receive funds)
   
   required_info?: NameOrAddress | null; // Contact object ID (recipient) or WTS Proof (delivery proof)
   
