@@ -572,6 +572,141 @@ For scenarios where customers need refunds before order completion.
 ```
 ---
 
+### Step 6: Create Guards for Fund Allocation
+
+Before creating the Service, you need to create Guards that validate fund allocation conditions. These Guards ensure funds are only released when specific conditions are met.
+
+#### 6.1 Create Withdraw Guard (Merchant Withdrawal)
+
+Create a Guard that validates the order's Progress has reached the "Completed" node. This Guard uses `convert_witness: 100` (TypeOrderProgress) to query the Order's associated Progress object.
+
+**Prompt**: Create a Guard named "myshop_withdraw_guard_v2" that verifies the order is completed before allowing merchant withdrawal.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "myshop_withdraw_guard_v2",
+      "tags": ["order", "completed", "withdraw"],
+      "onChain": false
+    },
+    "description": "Verify order progress is at Completed node for merchant withdrawal",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "value": "",
+        "name": "order_address"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Completed",
+        "name": "completed_node"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
+            },
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Guard Explanation:**
+- **Table Item 0**: Order address (submitted when activating allocation)
+- **Table Item 1**: Constant string "Completed" (the target node name)
+- **convert_witness: 100**: TypeOrderProgress - converts Order to its associated Progress
+- **Query "progress.current"**: Returns the current node name of the Progress
+- **logic_equal**: Verifies current node equals "Completed"
+
+#### 6.2 Create Refund Guard (Customer Refund)
+
+Create a Guard for customer refunds when order is cancelled (not shipped).
+
+**Prompt**: Create a Guard named "myshop_refund_guard_v2" for customer refund validation.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "myshop_refund_guard_v2",
+      "tags": ["order", "cancelled", "refund"],
+      "onChain": false
+    },
+    "description": "Verify order progress is at Order Confirmation node for customer refund",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "value": "",
+        "name": "order_address"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Order Confirmation",
+        "name": "initial_node"
+      }
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
+            },
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+---
+
 ### Step 7: Create Service (Store)
 
 Create the Service object that represents your online store with products. This step binds all previously created components together.
@@ -591,7 +726,7 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 **Recipient Types:**
 - `{ "Signer": "signer" }` - Transaction sender (merchant)
-- `{ "Entity": { "address": "..." } }` - Specific address
+- `{ "Entity": { "name_or_address": "..." } }` - Specific address or account name
 - `{ "GuardIdentifier": 0 }` - Address from Guard table
 
 #### 7.2 Create and Publish Service
@@ -686,25 +821,32 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 ### Step 8: Create Discount Coupons (Optional)
 
-Create discount coupons for promotional campaigns.
+> **Note**: Discount creation is currently not supported via the Service operation. This feature will be available in a future update. For now, merchants can set up promotional pricing directly in the Service sales configuration.
 
-**Prompt**: Create a 20% discount coupon named "HOLIDAY20" for holiday promotions, valid for 30 days, distributed to customers "alice" and "bob".
+To offer discounts, you can:
+1. Create multiple Service objects with different pricing tiers
+2. Update product prices temporarily using the `sales` operation with `op: "set"`
+3. Create new products with discounted prices
+
+**Example**: Update product price for a promotion:
 
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": "myshop_service_v2",
-    "discount": {
-      "name": "HOLIDAY20",
-      "discount_type": 0,
-      "discount_value": 2000,
-      "benchmark": 0,
-      "time_ms_start": 0,
-      "time_ms_end": 2592000000,
-      "count": 100,
-      "recipient": ["alice", "bob"],
-      "transferable": true
+    "sales": {
+      "op": "set",
+      "sales": [
+        {
+          "name": "Play Purse Set 35PCS",
+          "price": 2400000000,
+          "stock": 100,
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
+        }
+      ]
     }
   },
   "env": {
@@ -786,6 +928,15 @@ Customer creates an order by purchasing products from the Service.
         "total_pay": {
           "balance": 3000000000
         }
+      },
+      "namedNewOrder": {
+        "name": "myshop_test_order"
+      },
+      "namedNewProgress": {
+        "name": "myshop_test_progress"
+      },
+      "namedNewAllocation": {
+        "name": "myshop_test_allocation"
       }
     }
   },
@@ -927,20 +1078,20 @@ Check the current workflow node of the order.
 
 ### Step 5: Merchant Confirms Order
 
-Merchant advances the order from "Order Confirmation" to "Shipping".
+Merchant advances the order from initial state to "Order Confirmation" node.
 
-> **Note**: The merchant (order owner) can use `operation_type: "order"` with `progress` to advance the workflow. Non-owners must use `operation_type: "progress"` with `operate`.
+> **Note**: Use `operation_type: "progress"` with `operate` to advance the workflow. The order is created with an empty initial node "", and the first step is to transition to "Order Confirmation" using "Confirm Order" forward.
 
-**Prompt**: Advance the order "0x5678...9abc" progress from "Order Confirmation" to "Shipping" using the "Confirm Order" forward.
+**Prompt**: Advance the order "myshop_test_order" progress from initial state to "Order Confirmation" using the "Confirm Order" forward.
 
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "progress",
   "data": {
-    "object": "0x5678...9abc",
-    "progress": {
+    "object": "myshop_test_progress",
+    "operate": {
       "operation": {
-        "next_node_name": "Shipping",
+        "next_node_name": "Order Confirmation",
         "forward": "Confirm Order"
       },
       "hold": false,
@@ -957,18 +1108,18 @@ Merchant advances the order from "Order Confirmation" to "Shipping".
 
 ### Step 6: Merchant Ships Order
 
-Merchant ships the order and advances to "In Transit".
+Merchant ships the order and advances from "Order Confirmation" to "Shipping".
 
-**Prompt**: Advance the order "0x5678...9abc" progress from "Shipping" to "In Transit" using the "Ship Goods" forward.
+**Prompt**: Advance the order progress from "Order Confirmation" to "Shipping" using the "Ship Goods" forward.
 
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "progress",
   "data": {
-    "object": "0x5678...9abc",
-    "progress": {
+    "object": "myshop_test_progress",
+    "operate": {
       "operation": {
-        "next_node_name": "In Transit",
+        "next_node_name": "Shipping",
         "forward": "Ship Goods"
       },
       "hold": false,
@@ -987,16 +1138,16 @@ Merchant ships the order and advances to "In Transit".
 
 Merchant or delivery service confirms the order has been delivered.
 
-**Prompt**: Advance the order "0x5678...9abc" progress from "In Transit" to "Completed" using the "Confirm Delivery" forward.
+**Prompt**: Advance the order progress from "Shipping" to "In Transit" using the "Confirm Delivery" forward.
 
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "progress",
   "data": {
-    "object": "0x5678...9abc",
-    "progress": {
+    "object": "myshop_test_progress",
+    "operate": {
       "operation": {
-        "next_node_name": "Completed",
+        "next_node_name": "In Transit",
         "forward": "Confirm Delivery"
       },
       "hold": false,
@@ -1015,15 +1166,13 @@ Merchant or delivery service confirms the order has been delivered.
 
 Customer confirms receipt and completes the order.
 
-> **Important**: Non-order owners (like the customer in this case) must use `operation_type: "progress"` to advance the workflow. Only the order owner (merchant) can use `operation_type: "order"` with progress operations.
-
-**Prompt**: Customer "myshop_customer" completes the order "0x5678...9abc" by advancing from "Completed" node using "Complete Order" forward.
+**Prompt**: Customer "myshop_customer" completes the order by advancing from "In Transit" to "Completed" node using "Complete Order" forward.
 
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "0x1234...5678",
+    "object": "myshop_test_progress",
     "operate": {
       "operation": {
         "next_node_name": "Completed",
@@ -1051,34 +1200,34 @@ After order completion, the merchant needs to:
 
 First, activate the Allocation by submitting the Guard verification with the Order ID.
 
-> **Note**: You can get the Allocation object ID from the Order object's `allocation` field, or by naming it during order creation with `namedNewAllocation`.
+> **Note**: You can get the Allocation object ID from the Order object's `allocation` field, or by naming it during order creation with `namedNewAllocation`. You also need the Guard's on-chain address (not just the local name).
 
-**Prompt**: Activate allocation "0xdef0...1234" by verifying the withdraw guard with order "0x5678...9abc".
+**Prompt**: Activate allocation "myshop_test_allocation" by verifying the withdraw guard with order "myshop_test_order".
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
-    "object": "0x248f01d944de8f6712ec06f9b4c54f93fe4132e5323488b2d24c83d7487069de",
-    "alloc_by_guard": "myshop_withdraw_guard_v2"
+    "object": "myshop_test_allocation",
+    "alloc_by_guard": "0xefff7879211ce5b7d9b0bd7feca621eaf2af53c59e8b55689f252e7708419c78"
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "myshop_withdraw_guard_v2",
+        "object": "0xefff7879211ce5b7d9b0bd7feca621eaf2af53c59e8b55689f252e7708419c78",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "myshop_withdraw_guard_v2",
+        "guard": "0xefff7879211ce5b7d9b0bd7feca621eaf2af53c59e8b55689f252e7708419c78",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "0x497ea4f7a5bb098802c23deedd8ed7122d6b501979394ce111aa66432d2ba0ca"
+            "value": "0x686ee8ae89b24b1608744781f242be3099e677d4648028f39920977c3e834261"
           }
         ]
       }
@@ -1091,6 +1240,8 @@ First, activate the Allocation by submitting the Guard verification with the Ord
   }
 }
 ```
+
+> **Note**: The Guard address `0xefff...9c78` and Order address `0x686e...4261` are examples. Use the actual addresses from your created objects.
 
 #### 9.2 Withdraw Funds from Service
 
