@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Shipping",
+    "pairs": [
+      {
+        "prev_node": "Order Confirmation",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Ship Goods",
+            "weight": 1,
+            "namedOperator": null,
+            "permissionIndex": 1001
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Completed",
+    "pairs": [
+      {
+        "prev_node": "In Transit",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Complete Order",
+            "weight": 1,
+            "namedOperator": "",
+            "permissionIndex": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "In Transit",
+    "pairs": [
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Confirm Delivery",
+            "weight": 1,
+            "namedOperator": null,
+            "permissionIndex": 1002
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Order Confirmation",
+    "pairs": [
+      {
+        "prev_node": "",
+        "threshold": 0,
+        "forwards": [
+          {
+            "name": "Confirm Order",
+            "weight": 1,
+            "namedOperator": null,
+            "permissionIndex": 1000
+          },
+          {
+            "name": "Cancel Order",
+            "weight": 1,
+            "namedOperator": "",
+            "permissionIndex": null
+          }
+        ]
+      }
+    ]
+  }
+]

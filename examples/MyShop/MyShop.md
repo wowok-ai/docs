@@ -311,6 +311,17 @@ Add the workflow nodes to the Machine for order processing.
                   "weight": 1
                 }
               ]
+            },
+            {
+              "prev_node": "Order Confirmation",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Ship Goods",
+                  "permissionIndex": 1001,
+                  "weight": 1
+                }
+              ]
             }
           ]
         },
@@ -441,6 +452,11 @@ Create a Contact object to enable encrypted communication between customers and 
   }
 }
 ```
+
+> **Note**: The `at` field accepts an **account name** (not messenger name). It will be resolved to the account's address. If you get "Address not found" error, ensure:
+> 1. The account name is spelled correctly
+> 2. The account exists in local storage (created with `gen` operation)
+> 3. Alternatively, use the full address directly: `"at": "0x53d3750ee84204f12bc17b9a02c549f1823eb68c274db9209f8543591735ddd3"`
 
 ---
 
