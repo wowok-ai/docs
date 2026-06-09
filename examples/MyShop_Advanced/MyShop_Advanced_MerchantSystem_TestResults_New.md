@@ -689,12 +689,19 @@ Create 2 Service guards for order_allocators.
           "pairs": [
             {
               "prev_node": "Shipping",
-              "threshold": 1,
+              "threshold": 2,
               "forwards": [
                 {
-                  "name": "Confirm Receipt",
+                  "name": "Confirm Delivery with Merkle Root",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "guard": { "guard": "machine_merkle_root_v2" }
+                },
+                {
+                  "name": "Timeout Auto-Complete (10 days)",
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": { "guard": "machine_time_10d_v2" }
                 }
               ]
             }
@@ -704,11 +711,11 @@ Create 2 Service guards for order_allocators.
           "name": "Wonderful",
           "pairs": [
             {
-              "prev_node": "Shipping",
+              "prev_node": "Delivery Complete",
               "threshold": 1,
               "forwards": [
                 {
-                  "name": "Rate Wonderful",
+                  "name": "Rate as Wonderful",
                   "permissionIndex": 1001,
                   "weight": 1
                 }
@@ -720,6 +727,23 @@ Create 2 Service guards for order_allocators.
           "name": "Order Complete",
           "pairs": [
             {
+              "prev_node": "Delivery Complete",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Complete Order",
+                  "permissionIndex": 1001,
+                  "weight": 1
+                },
+                {
+                  "name": "Auto Complete from Delivery",
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": { "guard": "machine_time_2d_v2" }
+                }
+              ]
+            },
+            {
               "prev_node": "Shipping",
               "threshold": 1,
               "forwards": [
@@ -728,18 +752,6 @@ Create 2 Service guards for order_allocators.
                   "permissionIndex": 1001,
                   "weight": 1,
                   "guard": { "guard": "machine_time_10d_v2" }
-                }
-              ]
-            },
-            {
-              "prev_node": "Delivery Complete",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Auto Complete from Delivery",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_time_2d_v2" }
                 }
               ]
             }
@@ -1187,6 +1199,7 @@ Create 2 Service guards for order_allocators.
 3. **Sales Configuration**: Added proper sales configuration with WIP hash verification
 4. **Permission Index Usage**: Clarified usage of permissionIndex 1000 vs 1001
 5. **replaceExistName Flag**: All object creation operations include `replaceExistName: true` as required
+6. **value_type Format**: All value_type fields use string names like "Address", "String", "U64" instead of numeric values
 
 ---
 

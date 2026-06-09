@@ -266,7 +266,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 
 ```
 Phase 1: Foundation
-└── 1. Create Permission (myshop_permission_v2)
+└── 1. Create Permission (myshop_perm_v2)
     └── Add permission indexes (1000 for Order Confirmed/Cancel, 1001 for other operations)
 
 Phase 2: Service Creation
@@ -333,14 +333,14 @@ Ensure both accounts have sufficient testnet WOW tokens.
 
 Create a new permission object for the advanced shop.
 
-**Prompt**: Create permission object "myshop\_permission\_v2".
+**Prompt**: Create permission object "myshop\_perm\_v2".
 
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "myshop_permission_v2",
+      "name": "myshop_perm_v2",
       "replaceExistName": true
     },
     "description": "Permission object for MyShop Advanced e-commerce system"
@@ -364,7 +364,7 @@ Add custom permission indexes for advanced operations.
 {
   "operation_type": "permission",
   "data": {
-    "object": "myshop_permission_v2",
+    "object": "myshop_perm_v2",
     "remark": {
       "op": "set",
       "index": 1000,
@@ -391,7 +391,7 @@ Add custom permission indexes for advanced operations.
 {
   "operation_type": "permission",
   "data": {
-    "object": "myshop_permission_v2",
+    "object": "myshop_perm_v2",
     "remark": {
       "op": "set",
       "index": 1001,
@@ -418,7 +418,7 @@ Add custom permission indexes for advanced operations.
 
 Create the Service without publishing to obtain its address for Guard creation.
 
-**Prompt**: Create Service "three\_body\_signature\_service\_v2" with permission "myshop\_permission\_v2", do not publish.
+**Prompt**: Create Service "three\_body\_signature\_service\_v2" with permission "myshop\_perm\_v2", do not publish.
 
 ```json
 {
@@ -426,10 +426,10 @@ Create the Service without publishing to obtain its address for Guard creation.
   "data": {
     "object": {
       "name": "three_body_signature_service_v2",
-      "permission": "myshop_permission_v2"
+      "permission": "myshop_perm_v2"
     },
     "description": "Three-Body Problem Signature Edition - Limited collector's item with WIP verification",
-    "publish": false
+    "pause": false
   },
   "env": {
     "account": "myshop_merchant",
@@ -452,29 +452,24 @@ Create Guards using the Service address. Guards verify order state and service o
 {
   "operation_type": "guard",
   "data": {
-    "object": {
+    "namedNew": {
       "name": "machine_merkle_root_v2",
       "replaceExistName": true
     },
     "description": "Verify Merkle Root string length is 64 characters",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "String"},
+      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "64"}
+    ],
     "root": {
-      "type": "logic_as_u256_equal",
-      "nodes": [
-        {
-          "type": "string_length",
-          "nodes": [
-            {
-              "type": "identifier",
-              "identifier": 0
-            }
-          ]
-        },
-        {
-          "type": "constant",
-          "value": 64,
-          "value_type": "U256"
-        }
-      ]
+      "type": "node",
+      "node": {
+        "type": "logic_as_u256_equal",
+        "nodes": [
+          {"type": "calc_string_length", "node": {"type": "identifier", "identifier": 0}},
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
     }
   },
   "env": {
@@ -490,32 +485,30 @@ Create Guards using the Service address. Guards verify order state and service o
 {
   "operation_type": "guard",
   "data": {
-    "object": {
+    "namedNew": {
       "name": "machine_time_10d_v2",
       "replaceExistName": true
     },
     "description": "Verify time elapsed >= 10 days (864000000 ms)",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "U64"},
+      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "864000000"}
+    ],
     "root": {
-      "type": "logic_as_u256_greater_or_equal",
-      "nodes": [
-        {
-          "type": "calc_number_subtract",
-          "nodes": [
-            {
-              "type": "context",
-              "context": "Clock"
-            },
-            {
-              "type": "identifier",
-              "identifier": 0
-            }
-          ]
-        },
-        {
-          "type": "identifier",
-          "identifier": 1
-        }
-      ]
+      "type": "node",
+      "node": {
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          {
+            "type": "calc_number_subtract",
+            "nodes": [
+              {"type": "context", "context": "Clock"},
+              {"type": "identifier", "identifier": 0}
+            ]
+          },
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
     }
   },
   "env": {
@@ -525,60 +518,63 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard 3: service_merchant_win_v2** - Verify node in [Order Complete, Wonderful, Return Fail]
+**Guard 3: service_merchant_win_v2** - Verify order at merchant win nodes AND order belongs to this service
 
 ```json
 {
   "operation_type": "guard",
   "data": {
-    "object": {
+    "namedNew": {
       "name": "service_merchant_win_v2",
       "replaceExistName": true
     },
-    "description": "Verify order at merchant win nodes: Order Complete, Wonderful, Return Fail",
+    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
+      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Wonderful"},
+      {"identifier": 3, "b_submission": false, "value_type": "String", "value": "Return Fail"}
+    ],
     "root": {
-      "type": "logic_or",
-      "nodes": [
-        {
-          "type": "logic_as_string_equal",
-          "nodes": [
-            {
-              "type": "progress_current_node"
-            },
-            {
-              "type": "constant",
-              "value": "Order Complete",
-              "value_type": "String"
-            }
-          ]
-        },
-        {
-          "type": "logic_as_string_equal",
-          "nodes": [
-            {
-              "type": "progress_current_node"
-            },
-            {
-              "type": "constant",
-              "value": "Wonderful",
-              "value_type": "String"
-            }
-          ]
-        },
-        {
-          "type": "logic_as_string_equal",
-          "nodes": [
-            {
-              "type": "progress_current_node"
-            },
-            {
-              "type": "constant",
-              "value": "Return Fail",
-              "value_type": "String"
-            }
-          ]
-        }
-      ]
+      "type": "node",
+      "node": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_or",
+            "nodes": [
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                  {"type": "identifier", "identifier": 1}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                  {"type": "identifier", "identifier": 2}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                  {"type": "identifier", "identifier": 3}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+              {"type": "query", "query": 1001, "object": {"type": "context", "context": "Guard"}, "parameters": []}
+            ]
+          }
+        ]
+      }
     }
   },
   "env": {
@@ -588,47 +584,44 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard 4: service_customer_win_v2** - Verify node in [Lost, Return Complete]
+**Guard Logic:**
+1. 验证订单当前节点是 Order Complete、Wonderful 或 Return Fail（商家胜利节点）
+2. 验证订单的 Service 地址等于当前 Guard 所属的 Service 地址（使用 `order.service` 查询指令 ID 1563）
+```
+
+**Guard 4: machine_service_order_v2** - Verify order belongs to this Service
 
 ```json
 {
   "operation_type": "guard",
   "data": {
-    "object": {
-      "name": "service_customer_win_v2",
+    "namedNew": {
+      "name": "machine_service_order_v2",
       "replaceExistName": true
     },
-    "description": "Verify order at customer win nodes: Lost, Return Complete",
+    "description": "Verify order belongs to three_body_signature_service_v2",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"}
+    ],
     "root": {
-      "type": "logic_or",
-      "nodes": [
-        {
-          "type": "logic_as_string_equal",
-          "nodes": [
-            {
-              "type": "progress_current_node"
-            },
-            {
-              "type": "constant",
-              "value": "Lost",
-              "value_type": "String"
-            }
-          ]
-        },
-        {
-          "type": "logic_as_string_equal",
-          "nodes": [
-            {
-              "type": "progress_current_node"
-            },
-            {
-              "type": "constant",
-              "value": "Return Complete",
-              "value_type": "String"
-            }
-          ]
-        }
-      ]
+      "type": "node",
+      "node": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1201,
+            "object": {"identifier": 0, "convert_witness": 100},
+            "parameters": []
+          },
+          {
+            "type": "query",
+            "query": 1001,
+            "object": {"type": "context", "context": "Guard"},
+            "parameters": []
+          }
+        ]
+      }
     }
   },
   "env": {
@@ -640,11 +633,76 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ***
 
+**Guard 5: service_customer_win_v2** - Verify order at customer win nodes AND order belongs to this service
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "service_customer_win_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
+      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Return Complete"}
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_or",
+            "nodes": [
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                  {"type": "identifier", "identifier": 1}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                  {"type": "identifier", "identifier": 2}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+              {"type": "query", "query": 1001, "object": {"type": "context", "context": "Guard"}, "parameters": []}
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Guard Logic:**
+1. 验证订单当前节点是 Lost 或 Return Complete（客户胜利节点）
+2. 验证订单的 Service 地址等于当前 Guard 所属的 Service 地址（使用 `order.service` 查询指令 ID 1563）
+```
+
+***
+
 ### Step 5: Create Machine (Multi-Path Workflow)
 
 Create Machine with all nodes and guards in a single operation.
 
-**Prompt**: Create Machine "myshop\_advanced\_machine\_v2" with permission "myshop\_permission\_v2" and all nodes.
+**Prompt**: Create Machine "myshop\_advanced\_machine\_v2" with permission "myshop\_perm\_v2" and all nodes.
 
 ```json
 {
@@ -653,7 +711,7 @@ Create Machine with all nodes and guards in a single operation.
     "object": {
       "name": "myshop_advanced_machine_v2",
       "replaceExistName": true,
-      "permission": "myshop_permission_v2"
+      "permission": "myshop_perm_v2"
     },
     "description": "Multi-path order processing with delivery confirmation, wonderful rating, lost handling and return processing - Complete workflow with guards",
     "node": {
@@ -997,19 +1055,63 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 }
 ```
 
+**Note**: Arbitration object is automatically published upon creation. No separate publish step is required.
+```
+
 ***
 
-### Step 10: Update Service with Arbitration and Publish
+### Step 10: Configure Order Allocators and Publish
 
-Update Service with arbitration binding, and publish.
+Configure order_allocators to define fund distribution rules, then publish the Service.
 
-**Prompt**: Update service "three\_body\_signature\_service\_v2" with arbitration and publish.
+**IMPORTANT**: Service must have order_allocators configured before publishing. Once published, order_allocators becomes immutable.
+
+**Prompt**: Configure order_allocators and publish service "three\_body\_signature\_service\_v2".
 
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": "three_body_signature_service_v2",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "The Three-Body Problem + Author Signature",
+          "price": 5000000000,
+          "stock": 100,
+          "suspension": false,
+          "wip": "https://example.com/three_body.wip",
+          "wip_hash": ""
+        }
+      ]
+    },
+    "order_allocators": {
+      "description": "Order fund allocation - 100% to Service when order complete/wonderful/return fail, 100% to Order when lost/return complete",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "service_merchant_win_v2",
+          "sharing": [
+            {
+              "who": {"Object": "three_body_signature_service_v2"},
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "service_customer_win_v2",
+          "sharing": [
+            {
+              "who": "Order",
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    },
     "arbitrations": {
       "op": "add",
       "objects": ["myshop_arbitration_v2"]
@@ -1021,6 +1123,18 @@ Update Service with arbitration binding, and publish.
     "network": "testnet"
   }
 }
+```
+
+**Fund Allocation Rules:**
+
+| Guard | Condition | Recipient | Amount |
+|-------|-----------|-----------|--------|
+| service_merchant_win_v2 | Node is Order Complete / Wonderful / Return Fail | Service (merchant) | 100% |
+| service_customer_win_v2 | Node is Lost / Return Complete | Order (customer) | 100% |
+
+**Recipient Types:**
+- **Service**: 资金分配给 Service 对象（商家收款）
+- **Order**: 资金分配给 Order 对象（客户收款，订单所有者可以提取）
 ```
 
 ***
@@ -1063,6 +1177,105 @@ Create guards for reward verification:
 | 7 | `reward_wonderful_v2` | Verify order at Wonderful node | 10000 |
 | 8 | `reward_lost_v2` | Verify order at Lost node | 20000 |
 | 9 | `reward_shipping_timeout_v2` | Verify order at Shipping node > 2 days | 30000 |
+
+**Guard 7: reward_wonderful_v2**
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "reward_wonderful_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order at Wonderful node for reward",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Wonderful"}
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_string_nocase_equal",
+        "nodes": [
+          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Guard 8: reward_lost_v2**
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "reward_lost_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order at Lost node for compensation",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"}
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_string_nocase_equal",
+        "nodes": [
+          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+**Guard 9: reward_shipping_timeout_v2**
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "reward_shipping_timeout_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify order at Shipping node for shipping timeout compensation",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"}
+    ],
+    "root": {
+      "type": "node",
+      "node": {
+        "type": "logic_string_nocase_equal",
+        "nodes": [
+          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
 
 ***
 
@@ -1164,10 +1377,10 @@ Merchant confirms order by submitting Merkle Root.
     "operate": {
       "operation": {
         "next_node_name": "Order Confirmed",
-        "forward": "Submit Messenger Merkle Root"
+        "forward": "Confirm Order"
       },
       "hold": false,
-      "message": "Order confirmed - Merkle Root submitted"
+      "message": "Order confirmed by merchant"
     }
   },
   "submission": {
@@ -1274,10 +1487,10 @@ Customer confirms receipt of goods.
     "operate": {
       "operation": {
         "next_node_name": "Delivery Complete",
-        "forward": "Confirm Receipt"
+        "forward": "Confirm Delivery with Merkle Root"
       },
       "hold": false,
-      "message": "Delivery confirmed - goods received"
+      "message": "Delivery confirmed with Merkle Root - goods received"
     }
   },
   "env": {
@@ -1304,7 +1517,7 @@ Alternatively, customer can rate as Wonderful (very satisfied).
     "operate": {
       "operation": {
         "next_node_name": "Wonderful",
-        "forward": "Rate Wonderful"
+        "forward": "Rate as Wonderful"
       },
       "hold": false,
       "message": "Rated as Wonderful - very satisfied with the service"
@@ -1331,22 +1544,19 @@ Customer claims Wonderful reward from reward pool.
   "operation_type": "reward",
   "data": {
     "object": "myshop_reward_v2",
-    "claim": {
-      "guard": "guard_wonderful_v2",
-      "reward_object": "myshop_order_v2"
-    }
+    "claim": "reward_wonderful_v2"
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_wonderful_v2",
+        "object": "reward_wonderful_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_wonderful_v2",
+        "guard": "reward_wonderful_v2",
         "submission": [
           {
             "identifier": 0,
@@ -1547,22 +1757,19 @@ If package is lost, customer reports and merchant confirms.
   "operation_type": "reward",
   "data": {
     "object": "myshop_reward_v2",
-    "claim": {
-      "guard": "guard_lost_v2",
-      "reward_object": "myshop_order_v2"
-    }
+    "claim": "reward_lost_v2"
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "guard_lost_v2",
+        "object": "reward_lost_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "guard_lost_v2",
+        "guard": "reward_lost_v2",
         "submission": [
           {
             "identifier": 0,

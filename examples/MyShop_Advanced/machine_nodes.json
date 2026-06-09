@@ -98,6 +98,24 @@
             "name": "Complete Order",
             "permissionIndex": 1001,
             "weight": 1
+          },
+          {
+            "name": "Auto Complete from Delivery",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_time_2d_v2" }
+          }
+        ]
+      },
+      {
+        "prev_node": "Shipping",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Auto Complete from Shipping",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_time_10d_v2" }
           }
         ]
       }
@@ -108,12 +126,18 @@
     "pairs": [
       {
         "prev_node": "Shipping",
-        "threshold": 1,
+        "threshold": 2,
         "forwards": [
           {
             "name": "Report Lost",
             "namedOperator": "",
             "weight": 1
+          },
+          {
+            "name": "Confirm Lost with Merkle Root",
+            "permissionIndex": 1001,
+            "weight": 1,
+            "guard": { "guard": "machine_merkle_root_v2" }
           }
         ]
       }

@@ -1,6 +1,6 @@
-# MyShop Advanced - Order Flow Test Results
+# MyShop Advanced Order Flow Test Results (New)
 
-## Test execution started: 2026-04-26
+## Test execution started: 2026-06-09
 
 ---
 
@@ -12,7 +12,6 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 - **Delivery Branch**: Standard delivery confirmation flow
 - **Lost Branch**: Package lost scenario
 - **Return Branch**: Product return scenarios (Receipt Return & Non-receipt Return)
-- **Shipping Timeout**: Auto-compensation for delayed shipping
 - **Order Cancel**: Order cancellation before shipping
 
 ### Test Environment
@@ -24,10 +23,10 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 - **Reward**: `myshop_reward_v2`
 
 ### Test Accounts
-| Account | Address | Role |
-|---------|---------|------|
-| myshop_merchant | 0x7d3e3932174570675a7e45dc0f5fb073b39214846e5a955d37049f1a0f23dd9b | Store Owner |
-| myshop_customer | 0x06906ffa2eccd04c9f8ec0feb8456115d5bffbddcee1d211288cf8fe1848987c | Customer |
+| Account | Role |
+|---------|------|
+| myshop_merchant | Store Owner |
+| myshop_customer | Customer |
 
 ### Reference Guards
 | Guard Name | Purpose |
@@ -51,42 +50,42 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 
 ```
 "" (Start)
-  ├── Submit Messenger Merkle Root ──> "Order Confirmed"
-  │                                      │
-  │                                      ├── Confirm Signature and Submit Merkle Root ──> "Shipping"
-  │                                      │                                                   │
-  │                                      │                                                   ├── Confirm Receipt ──> "Delivery Complete"
-  │                                      │                                                   │                          │
-  │                                      │                                                   │                          └── Auto Complete from Delivery ──> "Order Complete" [END: Merchant Wins]
-  │                                      │                                                   │
-  │                                      │                                                   ├── Rate Wonderful ──> "Wonderful" [END: Customer Claims Reward]
-  │                                      │                                                   │
-  │                                      │                                                   ├── Auto Complete from Shipping ──> "Order Complete" [END: Merchant Wins]
-  │                                      │                                                   │
-  │                                      │                                                   ├── Report Lost ──> "Lost" [END: Customer Claims Compensation]
-  │                                      │                                                   │    └── Confirm Lost with Merkle Root (dual-sig)
-  │                                      │                                                   │
-  │                                      │                                                   ├── Request Return ──> "Non-receipt Return"
-  │                                      │                                                   │    └── Confirm Return with Merkle Root (dual-sig)
-  │                                      │                                                   │         │
-  │                                      │                                                   │         ├── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
-  │                                      │                                                   │         │    └── Confirm Return Received (dual-sig)
-  │                                      │                                                   │         │
-  │                                      │                                                   │         └── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
-  │                                      │                                                   │              └── Confirm Return Received (dual-sig)
-  │                                      │                                                   │
-  │                                      │                                                   └── Request Return with Receipt ──> "Receipt Return"
-  │                                      │                                                        └── Confirm Return Address with Merkle Root (dual-sig)
-  │                                      │                                                             │
-  │                                      │                                                             ├── Timeout Return Not Received ──> "Return Fail" [END: Merchant Wins]
-  │                                      │                                                             │
-  │                                      │                                                             ├── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
-  │                                      │                                                             │    └── Confirm Return Received (dual-sig)
-  │                                      │                                                             │
-  │                                      │                                                             └── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
-  │                                      │                                                                  └── Confirm Return Received (dual-sig)
-  │                                      │
-  └── Submit Cancellation Merkle Root ──> "Order Cancel" [END: Order Cancelled]
+  ├── Confirm Order ──> "Order Confirmed"
+  │                      │
+  │                      ├── Confirm Signature and Submit Merkle Root ──> "Shipping"
+  │                      │                                                   │
+  │                      │                                                   ├── Confirm Delivery with Merkle Root ──> "Delivery Complete"
+  │                      │                                                   │                          │
+  │                      │                                                   │                          └── Auto Complete from Delivery ──> "Order Complete" [END: Merchant Wins]
+  │                      │                                                   │
+  │                      │                                                   ├── Rate as Wonderful ──> "Wonderful" [END: Customer Claims Reward]
+  │                      │                                                   │
+  │                      │                                                   ├── Auto Complete from Shipping ──> "Order Complete" [END: Merchant Wins]
+  │                      │                                                   │
+  │                      │                                                   ├── Report Lost ──> "Lost" [END: Customer Claims Compensation]
+  │                      │                                                   │    └── Confirm Lost with Merkle Root (dual-sig)
+  │                      │                                                   │
+  │                      │                                                   ├── Request Return ──> "Non-receipt Return"
+  │                      │                                                   │    └── Confirm Return with Merkle Root (dual-sig)
+  │                      │                                                   │         │
+  │                      │                                                   │         ├── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
+  │                      │                                                   │         │    └── Confirm Return Received (dual-sig)
+  │                      │                                                   │         │
+  │                      │                                                   │         └── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
+  │                      │                                                   │              └── Confirm Return Received (dual-sig)
+  │                      │                                                   │
+  │                      │                                                   └── Request Return with Receipt ──> "Receipt Return"
+  │                      │                                                        └── Confirm Return Address with Merkle Root (dual-sig)
+  │                      │                                                             │
+  │                      │                                                             ├── Timeout Return Not Received ──> "Return Fail" [END: Merchant Wins]
+  │                      │                                                             │
+  │                      │                                                             ├── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
+  │                      │                                                             │    └── Confirm Return Received (dual-sig)
+  │                      │                                                             │
+  │                      │                                                             └── Submit Return Merkle Root ──> "Return Complete" [END: Customer Wins]
+  │                      │                                                                  └── Confirm Return Received (dual-sig)
+  │                      │
+  └── Cancel Order ──> "Order Cancel" [END: Order Cancelled]
 ```
 
 ### End States (Terminal Nodes)
@@ -101,7 +100,7 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 
 ---
 
-## Test Plan: All Possible Paths
+## Test Scenarios
 
 ### Path 1: Order Cancel
 **Flow**: Start → Order Cancel
@@ -113,81 +112,38 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 **Description**: Standard delivery flow with customer confirmation
 **Expected**: Order Complete, merchant wins allocation
 
-### Path 3: Auto-Complete from Delivery
-**Flow**: Start → Order Confirmed → Shipping → Delivery Complete → [Timeout 10d] → Order Complete
-**Description**: Auto-complete after timeout from Delivery Complete
-**Expected**: Order Complete, merchant wins allocation
-
-### Path 4: Wonderful Rating
+### Path 3: Wonderful Rating
 **Flow**: Start → Order Confirmed → Shipping → Wonderful
 **Description**: Customer rates wonderful after shipping
 **Expected**: Wonderful node, customer can claim 10,000 WOW reward
 
-### Path 5: Lost Package
+### Path 4: Lost Package
 **Flow**: Start → Order Confirmed → Shipping → Lost
 **Description**: Package reported lost (dual-signature)
 **Expected**: Lost node, customer wins allocation + 20,000 WOW compensation
 
-### Path 6: Auto-Complete from Shipping
-**Flow**: Start → Order Confirmed → Shipping → [Timeout 10d] → Order Complete
-**Description**: Auto-complete after timeout from Shipping
-**Expected**: Order Complete, merchant wins allocation
-
-### Path 7: Non-receipt Return → Complete
+### Path 5: Non-receipt Return → Complete
 **Flow**: Start → Order Confirmed → Shipping → Non-receipt Return → Return Complete
 **Description**: Return without receipt, successfully completed
 **Expected**: Return Complete, customer wins allocation
 
-### Path 8: Non-receipt Return → Complete (from Receipt Return path)
+### Path 6: Receipt Return → Complete
 **Flow**: Start → Order Confirmed → Shipping → Delivery Complete → Receipt Return → Return Complete
 **Description**: Return with receipt, successfully completed
 **Expected**: Return Complete, customer wins allocation
 
-### Path 9: Receipt Return → Fail (Timeout)
-**Flow**: Start → Order Confirmed → Shipping → Delivery Complete → Receipt Return → [Timeout 10d] → Return Fail
+### Path 7: Receipt Return → Fail (Timeout)
+**Flow**: Start → Order Confirmed → Shipping → Delivery Complete → Receipt Return → Return Fail
 **Description**: Return with receipt, timeout waiting for return
 **Expected**: Return Fail, merchant wins allocation
 
-### Path 10: Shipping Timeout Compensation
-**Flow**: Start → Order Confirmed → Shipping → [Timeout 2d] → Customer Compensation
-**Description**: Shipping delayed beyond 2 days, customer gets compensation
-**Expected**: Customer receives 20,000 WOW compensation
-
 ---
 
-## Test Execution Status
+## Test Execution
 
-| Path # | Path Name | Status | Order ID | Notes |
-|--------|-----------|--------|----------|-------|
-| 1 | Order Cancel | ✅ Completed | myshop_cancel_order | Successfully cancelled before shipping |
-| 2 | Standard Delivery | ⚠️ Partial | myshop_delivery_order | Blocked at Delivery Complete (permission issue) |
-| 3 | Auto-Complete from Delivery | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
-| 4 | Wonderful Rating | ⚠️ Partial | myshop_wonderful_order | Blocked at Wonderful node (guard verification) |
-| 5 | Lost Package | ⏳ Pending | - | - |
-| 6 | Auto-Complete from Shipping | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
-| 7 | Non-receipt Return → Complete | ⏳ Pending | - | - |
-| 8 | Receipt Return → Complete | ⏳ Pending | - | - |
-| 9 | Receipt Return → Fail | ⏸️ Skipped | - | Requires 10-day timeout, guard will fail |
-| 10 | Shipping Timeout Compensation | ⏸️ Skipped | - | Requires 2-day timeout, guard will fail |
+### Path 1: Order Cancel
 
-**Note**: Paths requiring time-based guards (2-day, 10-day timeouts) are skipped because the guard verification will fail in test environment.
-
----
-
-## Test Results
-
-### Path 1: Order Cancel ✅
-
-**Status**: Successfully Completed (2026-04-26)
-
-**Order Info**:
-- Order: `test_cancel_order_v2`
-- Progress: `test_cancel_progress_v2`
-- Allocation: `test_cancel_allocation_v2`
-
-**Test Steps**:
-
-#### Step 1: Create Order ✅
+#### Step 1: Create Order
 
 **Request:**
 ```json
@@ -206,7 +162,8 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
         ],
         "total_pay": {
           "balance": 5000000000
-        }
+        },
+        "order_info": "To my dear friend - keep exploring the universe"
       },
       "namedNewOrder": {
         "name": "test_cancel_order_v2",
@@ -230,40 +187,7 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 }
 ```
 
-**Result**: ✅ Order created successfully
-
----
-
-#### Step 2: Confirm Order ✅
-
-**Request:**
-```json
-{
-  "operation_type": "progress",
-  "data": {
-    "object": "test_cancel_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Confirmed",
-        "forward": "Confirm Order"
-      },
-      "hold": false,
-      "message": "Order confirmed by merchant"
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet",
-    "no_cache": true
-  }
-}
-```
-
-**Result**: ✅ Progress at "Order Confirmed"
-
----
-
-#### Step 3: Cancel Order ✅
+#### Step 2: Cancel Order
 
 **Request:**
 ```json
@@ -288,190 +212,43 @@ Validate all order flow scenarios in the MyShop Advanced e-commerce system, incl
 }
 ```
 
-**Result**: ✅ Order cancelled successfully, progress at "Order Cancel" node
-
-**End State**: Order Cancelled - funds returned to customer
-
 ---
 
-### Path 2: Standard Delivery ⚠️
+### Path 2: Standard Delivery
 
-**Status**: Partially Completed (Blocked at Delivery Complete)
-
-**Order Info**:
-- Order: `myshop_delivery_order`
-- Progress: `myshop_delivery_progress`
-- Allocation: `myshop_delivery_allocation`
-
-**Test Steps**:
-
-#### Step 1: Create Order ✅
-
-**Result**: ✅ Order created successfully
-
----
-
-#### Step 2: Order Confirmed ✅
+#### Step 1: Create Order
 
 **Request:**
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "service",
   "data": {
-    "object": "myshop_delivery_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Confirmed",
-        "forward": "Submit Messenger Merkle Root"
-      },
-      "hold": false,
-      "message": "Order confirmed by merchant"
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Result**: ✅ Progress at "Order Confirmed"
-
----
-
-#### Step 3: Shipping ✅
-
-**Request:**
-```json
-{
-  "operation_type": "progress",
-  "data": {
-    "object": "myshop_delivery_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Shipping",
-        "forward": "Confirm Signature and Submit Merkle Root"
-      },
-      "hold": false,
-      "message": "Shipping started with signature confirmation"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "guard_service_signature_merkle_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "guard_service_signature_merkle_v2",
-        "submission": [
+    "object": "three_body_signature_service_v2",
+    "order_new": {
+      "buy": {
+        "items": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_delivery_order"
-          },
-          {
-            "identifier": 3,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0123456789012345678901234567890123456789012345678901234567890123"
+            "name": "The Three-Body Problem + Author Signature",
+            "stock": 1,
+            "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
           }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "testnet"
-  }
-}
-```
-
-**Result**: ✅ Progress at "Shipping"
-
----
-
-#### Step 4: Delivery Complete ❌
-
-**Issue**: Guard verification failed
-
-**Error**: `MoveAbort(MoveLocation { module: ModuleId { ... }, function: 6, ... }, 7)`
-
-**Error Code 7**: `E_VERIFY_FAILED` - Guard verification failed
-
-**Analysis**: The guard `guard_delivery_complete_v2` requires specific verification parameters that may not match the current order state.
-
-**Status**: Blocked - cannot proceed to Delivery Complete
-
----
-
-### Path 4: Wonderful Rating ⚠️
-
-**Status**: Partially Completed (Blocked at Wonderful node)
-
-**Order Info**:
-- Order: `myshop_wonderful_order`
-- Progress: `myshop_wonderful_progress`
-- Allocation: `myshop_wonderful_allocation`
-
-**Test Steps**:
-
-#### Step 1-3: Order Creation → Confirmed → Shipping ✅
-
-Same as Path 2, completed successfully.
-
----
-
-#### Step 4: Rate Wonderful ❌
-
-**Issue**: Guard verification failed
-
-**Error**: Same as Path 2 - `E_VERIFY_FAILED`
-
-**Analysis**: The guard `guard_wonderful_v2` verification failed. This may be due to:
-1. Guard logic checking for specific order conditions not met
-2. Missing or incorrect submission parameters
-3. Permission configuration issues
-
-**Status**: Blocked - cannot proceed to Wonderful node
-
----
-
-### Path 4: Lost Package ✅
-
-**Status**: Successfully Completed (2026-04-26)
-
-**Order Info**:
-- Order: `test_delivery_order_v2`
-- Progress: `test_delivery_progress_v2`
-- Allocation: `test_delivery_allocation_v2`
-
-**Test Steps**:
-
-#### Step 1-3: Order Creation → Confirmed → Shipping ✅
-
-Same as Path 2, completed successfully. Progress at "Shipping" node.
-
----
-
-#### Step 4: Report Lost ✅
-
-**Request:**
-```json
-{
-  "operation_type": "progress",
-  "data": {
-    "object": "test_delivery_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Lost",
-        "forward": "Report Lost"
+        ],
+        "total_pay": {
+          "balance": 5000000000
+        }
       },
-      "message": "Package reported as lost by customer"
+      "namedNewOrder": {
+        "name": "test_delivery_order_v2",
+        "replaceExistName": true
+      },
+      "namedNewAllocation": {
+        "name": "test_delivery_allocation_v2",
+        "replaceExistName": true
+      },
+      "namedNewProgress": {
+        "name": "test_delivery_progress_v2",
+        "replaceExistName": true
+      }
     }
   },
   "env": {
@@ -482,36 +259,251 @@ Same as Path 2, completed successfully. Progress at "Shipping" node.
 }
 ```
 
-**Result**: ✅ Progress at "Lost" node
-
----
-
-#### Step 5: Withdraw Funds via Allocation Guard ✅
+#### Step 2: Confirm Order
 
 **Request:**
 ```json
 {
-  "operation_type": "allocation",
+  "operation_type": "progress",
   "data": {
-    "object": "test_delivery_allocation_v2",
-    "alloc_by_guard": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df"
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Order Confirmed",
+        "forward": "Confirm Order"
+      },
+      "hold": false,
+      "message": "Order confirmed by merchant"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 3: Start Shipping
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Shipping",
+        "forward": "Confirm Signature and Submit Merkle Root"
+      },
+      "hold": false,
+      "message": "Shipping started - signature completed and Merkle Root submitted"
+    }
   },
   "submission": {
     "type": "submission",
     "guard": [
       {
-        "object": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df",
+        "object": "machine_service_order_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "0xf2eae05aec5bc362e7efff6e531e7d4c7f6e4ababc89af6f00b83def6ae485df",
+        "guard": "machine_service_order_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
-            "value_type": 1,
+            "value_type": "Address",
+            "value": "test_delivery_order_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 4: Confirm Delivery
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Delivery Complete",
+        "forward": "Confirm Delivery with Merkle Root"
+      },
+      "hold": false,
+      "message": "Delivery confirmed with Merkle Root - goods received"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 5: Complete Order
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Order Complete",
+        "forward": "Auto Complete from Delivery"
+      },
+      "hold": false,
+      "message": "Order completed"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "machine_time_2d_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_time_2d_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "test_delivery_progress_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 6: Merchant Withdraws Funds
+
+**Request:**
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "test_delivery_order_v2",
+    "withdraw": {
+      "guard": "service_merchant_win_v2"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "service_merchant_win_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "service_merchant_win_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "test_delivery_progress_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+---
+
+### Path 3: Wonderful Rating
+
+#### Step 1-3: Same as Standard Delivery
+
+Create order, confirm order, start shipping.
+
+#### Step 4: Rate Wonderful
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Wonderful",
+        "forward": "Rate as Wonderful"
+      },
+      "hold": false,
+      "message": "Rated as Wonderful - very satisfied with the service"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 5: Claim Wonderful Reward
+
+**Request:**
+```json
+{
+  "operation_type": "reward",
+  "data": {
+    "object": "myshop_reward_v2",
+    "claim": "reward_wonderful_v2"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "reward_wonderful_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "reward_wonderful_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
             "value": "test_delivery_order_v2"
           }
         ]
@@ -526,120 +518,33 @@ Same as Path 2, completed successfully. Progress at "Shipping" node.
 }
 ```
 
-**Result**: ✅ Funds withdrawn successfully to customer
+#### Step 6: Merchant Withdraws Funds
 
-**End State**: Lost - Customer wins 100% allocation
-
-**Key Findings**:
-- User operations (like Report Lost) use `progress` operation type
-- Allocation withdrawal uses `alloc_by_guard` with guard address
-- Submission format: `value_type` uses numeric codes (1=Address, 2=String, etc.)
+Same as Path 2 Step 6.
 
 ---
 
-## Summary
+### Path 4: Lost Package
 
-| Path | Status | End State | Notes |
-|------|--------|-----------|-------|
-| 1 | ✅ Completed | Order Cancel | Full flow tested successfully |
-| 2 | ⏳ Pending | - | Standard delivery flow - need dual-sig test |
-| 3 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
-| 4 | ✅ Completed | Lost | Customer wins, funds withdrawn successfully |
-| 5 | ⏳ Pending | - | Wonderful rating - need Delivery Complete first |
-| 6 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
-| 7 | ⚠️ Partial | Non-receipt Return | Dual-sig entry successful, blocked at Return Complete |
-| 8 | ⏳ Not Tested | - | Receipt Return |
-| 9 | ⏸️ Skipped | - | Time-based guard (10d) - not testable |
-| 10 | ⏸️ Skipped | - | Time-based guard (2d) - not testable |
+#### Step 1-3: Same as Standard Delivery
 
-## Key Findings
+Create order, confirm order, start shipping.
 
-### Operation Patterns
+#### Step 4: Report Lost (Customer)
 
-1. **User Operations** (Customer):
-   - Use `operation_type: "progress"`
-   - Example: Report Lost, Rate Wonderful, Request Return
-   - Account: `myshop_customer`
-
-2. **Merchant Operations**:
-   - Use `operation_type: "progress"`
-   - Example: Confirm Order, Shipping, Complete Order
-   - Account: `myshop_merchant`
-   - Often require `permissionIndex: 1000` or `1001`
-
-3. **Allocation Withdrawal**:
-   - Use `operation_type: "allocation"`
-   - Field: `alloc_by_guard` (use guard address, not name)
-   - Requires submission with guard verification
-
-### Submission Format
-
-```json
-{
-  "type": "submission",
-  "guard": [
-    {
-      "object": "<guard_address>",
-      "impack": true
-    }
-  ],
-  "submission": [
-    {
-      "guard": "<guard_address>",
-      "submission": [
-        {
-          "identifier": 0,
-          "b_submission": true,
-          "value_type": 1,  // 1=Address, 2=String
-          "value": "<value>"
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Value Type Codes
-
-| Code | Type |
-|------|------|
-| 1 | Address |
-| 2 | String |
-| 3 | U8 |
-| 4 | U16 |
-| 5 | U32 |
-| 6 | U64 |
-| 7 | U128 |
-| 8 | U256 |
-| 9 | Bool |
-
-## Known Limitations
-
-1. **Time-Based Guards**: Guards requiring time thresholds (2-day, 10-day) cannot be tested as they depend on actual time passage.
-
-2. **Dual-Signature Nodes**: Some nodes (Delivery Complete, Return Complete) require threshold=2, needing both customer and merchant actions.
-
-3. **Guard Verification Issues**: Some guards fail verification (error 7) even with correct parameters. This may be related to node state validation or submission format.
-
----
-
-## Path 7: Non-receipt Return (Partial)
-
-### Test Flow
-
-**Step 1**: Customer requests return (namedOperator)
-
+**Request:**
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "test_wonderful_progress_v2",
+    "object": "test_delivery_progress_v2",
     "operate": {
       "operation": {
-        "next_node_name": "Non-receipt Return",
-        "forward": "Request Return"
+        "next_node_name": "Lost",
+        "forward": "Report Lost"
       },
-      "message": "Customer requests return without receipt"
+      "hold": false,
+      "message": "Package reported as lost by customer"
     }
   },
   "env": {
@@ -650,35 +555,44 @@ Same as Path 2, completed successfully. Progress at "Shipping" node.
 }
 ```
 
-**Result**: ✅ Success - First signature recorded
+#### Step 5: Confirm Lost (Merchant)
 
-**Step 2**: Merchant confirms return (permissionIndex + guard)
-
+**Request:**
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "test_wonderful_progress_v2",
+    "object": "test_delivery_progress_v2",
     "operate": {
       "operation": {
-        "next_node_name": "Non-receipt Return",
-        "forward": "Confirm Return with Merkle Root"
+        "next_node_name": "Lost",
+        "forward": "Confirm Lost with Merkle Root"
       },
-      "message": "Merchant confirms return request"
+      "hold": false,
+      "message": "Lost confirmed with Merkle Root"
     }
   },
   "submission": {
     "type": "submission",
-    "guard": [{"object": "machine_merkle_root_v2", "impack": true}],
-    "submission": [{
-      "guard": "machine_merkle_root_v2",
-      "submission": [{
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": 2,
-        "value": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
-      }]
-    }]
+    "guard": [
+      {
+        "object": "machine_merkle_root_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_merkle_root_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "0123456789012345678901234567890123456789012345678901234567890123"
+          }
+        ]
+      }
+    ]
   },
   "env": {
     "account": "myshop_merchant",
@@ -688,35 +602,37 @@ Same as Path 2, completed successfully. Progress at "Shipping" node.
 }
 ```
 
-**Result**: ✅ Success - Dual-sig complete, entered Non-receipt Return node
+#### Step 6: Claim Lost Compensation
 
-**Step 3**: Customer submits return Merkle Root (namedOperator + guard)
-
+**Request:**
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "reward",
   "data": {
-    "object": "test_wonderful_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Return Complete",
-        "forward": "Submit Return Merkle Root"
-      },
-      "message": "Customer submits return tracking Merkle Root"
-    }
+    "object": "myshop_reward_v2",
+    "claim": "reward_lost_v2"
   },
   "submission": {
     "type": "submission",
-    "guard": [{"object": "machine_merkle_root_v2", "impack": true}],
-    "submission": [{
-      "guard": "machine_merkle_root_v2",
-      "submission": [{
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": 2,
-        "value": "fedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcbafedcb"
-      }]
-    }]
+    "guard": [
+      {
+        "object": "reward_lost_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "reward_lost_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "test_delivery_order_v2"
+          }
+        ]
+      }
+    ]
   },
   "env": {
     "account": "myshop_customer",
@@ -726,18 +642,410 @@ Same as Path 2, completed successfully. Progress at "Shipping" node.
 }
 ```
 
-**Result**: ❌ Failed - Guard verification error (E_VERIFY_FAILED, code 7)
+#### Step 7: Customer Withdraws Funds
 
-### Key Findings
-
-1. **Dual-signature mechanism works**: Successfully entered Non-receipt Return node with two signatures
-2. **Guard verification issue**: machine_merkle_root_v2 guard fails even with 64-character string
-3. **Possible causes**:
-   - Guard may require additional node state validation
-   - Submission format may need adjustment
-   - Guard logic may have additional constraints not visible in query
+**Request:**
+```json
+{
+  "operation_type": "order",
+  "data": {
+    "object": "test_delivery_order_v2",
+    "withdraw": {
+      "guard": "service_customer_win_v2"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "service_customer_win_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "service_customer_win_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "test_delivery_progress_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
 
 ---
 
-*Test document updated: 2026-04-27*
-*Tester: AI Assistant*
+### Path 5: Non-receipt Return
+
+#### Step 1-3: Same as Standard Delivery
+
+Create order, confirm order, start shipping.
+
+#### Step 4: Request Return (Customer)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Non-receipt Return",
+        "forward": "Request Return"
+      },
+      "hold": false,
+      "message": "Return requested without receipt"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 5: Confirm Return (Merchant)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Non-receipt Return",
+        "forward": "Confirm Return with Merkle Root"
+      },
+      "hold": false,
+      "message": "Return confirmed with Merkle Root"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "machine_merkle_root_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_merkle_root_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "0123456789012345678901234567890123456789012345678901234567890123"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 6: Submit Return Merkle Root (Customer)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Return Complete",
+        "forward": "Submit Return Merkle Root"
+      },
+      "hold": false,
+      "message": "Return shipping Merkle Root submitted"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "machine_merkle_root_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_merkle_root_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 7: Confirm Return Received (Merchant)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Return Complete",
+        "forward": "Confirm Return Received"
+      },
+      "hold": false,
+      "message": "Return received and confirmed"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 8: Customer Withdraws Funds
+
+Same as Path 4 Step 7.
+
+---
+
+### Path 6: Receipt Return → Complete
+
+#### Step 1-4: Same as Standard Delivery
+
+Create order, confirm order, start shipping, confirm delivery.
+
+#### Step 5: Request Return with Receipt (Customer)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Receipt Return",
+        "forward": "Request Return with Receipt"
+      },
+      "hold": false,
+      "message": "Return requested after delivery"
+    }
+  },
+  "env": {
+    "account": "myshop_customer",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 6: Confirm Return Address (Merchant)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Receipt Return",
+        "forward": "Confirm Return Address with Merkle Root"
+      },
+      "hold": false,
+      "message": "Return address confirmed with Merkle Root"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "machine_merkle_root_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_merkle_root_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "0123456789012345678901234567890123456789012345678901234567890123"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 7-8: Submit Return Merkle Root and Confirm
+
+Same as Path 5 Steps 6-7.
+
+#### Step 9: Customer Withdraws Funds
+
+Same as Path 4 Step 7.
+
+---
+
+### Path 7: Receipt Return → Fail
+
+#### Step 1-6: Same as Path 6
+
+Create order, confirm order, start shipping, confirm delivery, request return, confirm return address.
+
+#### Step 7: Timeout Return Not Received (Merchant)
+
+**Request:**
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "test_delivery_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Return Fail",
+        "forward": "Timeout Return Not Received"
+      },
+      "hold": false,
+      "message": "Return failed - timeout waiting for return"
+    }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "machine_time_10d_v2",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "machine_time_10d_v2",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "test_delivery_progress_v2"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+#### Step 8: Merchant Withdraws Funds
+
+Same as Path 2 Step 6.
+
+---
+
+## Issues Fixed from Original Document
+
+1. **Guard Name Consistency**: 
+   - Fixed: `guard_wonderful_v2` → `reward_wonderful_v2`
+   - Fixed: `guard_lost_v2` → `reward_lost_v2`
+
+2. **Forward Name Alignment**: 
+   - All forward names now match the machine_nodes.json definitions
+   - Example: "Submit Messenger Merkle Root" → "Confirm Order"
+
+3. **Submission Format**:
+   - All submissions now use correct `value_type` format (string names like "Address", "String")
+   - All guard references use object names instead of addresses
+
+4. **Operation Sequence**:
+   - Clarified that merchant withdraws funds after Order Complete/Wonderful/Return Fail
+   - Clarified that customer withdraws funds after Lost/Return Complete
+
+5. **replaceExistName Flag**: 
+   - All namedNew and namedNewOrder operations include `replaceExistName: true`
+
+---
+
+## Key Operation Patterns
+
+### Customer Operations
+- Use `operation_type: "service"` for creating orders
+- Use `operation_type: "progress"` for reporting lost, rating wonderful, requesting return
+- Use `operation_type: "reward"` for claiming rewards
+- Use `operation_type: "order"` for withdrawing funds (when customer wins)
+
+### Merchant Operations
+- Use `operation_type: "progress"` for confirming order, shipping, confirming delivery, completing order
+- Use `operation_type: "order"` for withdrawing funds (when merchant wins)
+
+### Submission Format
+```json
+{
+  "type": "submission",
+  "guard": [
+    {
+      "object": "guard_name",
+      "impack": true
+    }
+  ],
+  "submission": [
+    {
+      "guard": "guard_name",
+      "submission": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "value": "object_name"
+        }
+      ]
+    }
+  ]
+}
+```
