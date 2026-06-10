@@ -20,7 +20,7 @@ A complete example demonstrating how to create an outdoor accident insurance ser
 1. **Time-Lock via Witness Conversion**: The Complete node Guard uses `convert_witness: 100` (TypeOrderProgress) to convert the submitted Order ID into its associated Progress object, then queries `progress.current_time` to verify the time-lock condition.
 2. **Simple Two-Node Workflow**: Insurance claims follow a straightforward Start -> Complete path, keeping the workflow simple and predictable.
 3. **Order ID as Submission**: The Order ID is submitted at runtime (`b_submission: true`) and used for witness conversion.
-4. **Machine Creation Pattern**: Machine must be created first, then nodes added separately, then published. Creating machine with nodes and publish in one transaction does not work correctly.
+4. **Machine Creation Pattern**: Machine can be created with nodes and published in a single transaction (as shown in this example).
 
 ---
 
@@ -115,7 +115,7 @@ Before running this example, ensure you have:
 
 ## Step 1: Create Permission Object
 
-Create a Permission object to manage access control for the insurance service.
+Create a Permission object to manage access control for the insurance service. The Permission must include all permission indexes that will be used in the Machine workflow.
 
 **Prompt**: Create a Permission object named "insurance_permission" for the insurance service.
 
@@ -140,6 +140,13 @@ Create a Permission object to manage access control for the insurance service.
   }
 }
 ```
+
+> **Important**: The `index` array must include all permission indexes used in Machine forwards:
+> - `1000`: for `start_claim` forward (Start node)
+> - `1001`: for `complete_claim` forward (Complete node)
+> - Additional indexes for future operations
+>
+> Without these permissions, advancing Progress will fail with `MoveAbort code: 7`.
 
 ---
 
@@ -180,34 +187,31 @@ clock > progress.current_time + 1000
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater",
-        "nodes": [
-          {
-            "type": "context",
-            "context": "Clock"
-          },
-          {
-            "type": "calc_number_add",
-            "nodes": [
-              {
-                "type": "query",
-                "query": "progress.current_time",
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
+      "type": "logic_as_u256_greater",
+      "nodes": [
+        {
+          "type": "context",
+          "context": "Clock"
+        },
+        {
+          "type": "calc_number_add",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current_time",
+              "object": {
+                "identifier": 0,
+                "convert_witness": 100
               },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          }
-        ]
-      }
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
+        }
+      ]
     }
   },
   "env": {
@@ -260,25 +264,22 @@ Create a Guard that allows the insurance provider to withdraw funds after the or
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": "progress.current",
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": "progress.current",
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
           },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -292,7 +293,12 @@ Create a Guard that allows the insurance provider to withdraw funds after the or
 
 ## Step 4: Create, Configure and Publish Machine
 
-Create a Machine with workflow nodes and publish it in a single transaction. **IMPORTANT**: Machine nodes must be added during creation (in the same transaction) before publishing. Adding nodes after creation in separate transactions may not persist correctly.
+Create a Machine with workflow nodes and publish it in a single transaction.
+
+> **IMPORTANT**: 
+> - Machine nodes are added during creation in the same transaction
+> - Once published, Machine nodes become immutable and cannot be modified
+> - If you need to change nodes after publishing, you must create a new Machine
 
 **Prompt**: Create a Machine named "insurance_machine" with the claim processing workflow and publish it.
 
@@ -364,13 +370,16 @@ Create a Machine with workflow nodes and publish it in a single transaction. **I
 
 ---
 
-## Step 7: Create and Publish Service
+## Step 5: Create and Publish Service
 
 Create the insurance service with machine, order_allocators, sales, and publish in a single transaction.
 
-> **Important**: Service must include `order_allocators` when publishing. After publishing, `machine`, `order_allocators`, and `arbitrations` become immutable.
+> **Important**: 
+> - Service must include `order_allocators` when publishing
+> - After publishing, `machine`, `order_allocators`, and `arbitrations` become immutable
+> - Ensure the Machine is properly configured before creating the Service
 
-**Prompt**: Create and publish a Service named "insurance_service" with machine, order allocation, and insurance product.
+**Prompt**: Create and publish a Service named "insurance_service_v1" with machine, order allocation, and insurance product.
 
 ```json
 {
@@ -424,17 +433,17 @@ Create the insurance service with machine, order_allocators, sales, and publish 
 
 ---
 
-## Step 8: Unpause Service
+## Step 6: Unpause Service
 
 Unpause the service to allow order creation.
 
-**Prompt**: Unpause "insurance_service".
+**Prompt**: Unpause "insurance_service_v1".
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "insurance_service",
+    "object": "insurance_service_v1",
     "pause": false
   },
   "env": {
@@ -446,34 +455,35 @@ Unpause the service to allow order creation.
 
 ---
 
-## Step 9: Verify Service Configuration
+## Step 7: Verify Service Configuration
 
 Query the service to verify all configurations are correct.
 
-**Prompt**: Query "insurance_service" to verify configuration.
+**Prompt**: Query "insurance_service_v1" to verify configuration.
 
 ```json
 {
   "query_type": "onchain_objects",
-  "objects": ["insurance_service"]
+  "objects": ["insurance_service_v1"],
+  "network": "testnet"
 }
 ```
 
 ---
 
-## Step 10: Test Order Creation and Progress
+## Step 8: Test Order Creation and Progress
 
-### 10.1 Create Insurance Order
+### 8.1 Create Insurance Order
 
 Create an order on the insurance service using the `order_new` field of the `service` operation. In production, this would be done by the travel service provider as a supply chain sub-order.
 
-**Prompt**: Create an order on "insurance_service" using account "insurance_provider".
+**Prompt**: Create an order on "insurance_service_v1" using account "insurance_provider_v1".
 
 ```json
 {
   "operation_type": "service",
   "data": {
-    "object": "insurance_service",
+    "object": "insurance_service_v1",
     "order_new": {
       "buy": {
         "items": [
@@ -500,7 +510,7 @@ Create an order on the insurance service using the `order_new` field of the `ser
 }
 ```
 
-### 10.2 Advance Progress: Initial -> Start
+### 8.2 Advance Progress: Initial -> Start
 
 First, advance the progress from initial state to Start node.
 
@@ -525,7 +535,12 @@ First, advance the progress from initial state to Start node.
 }
 ```
 
-### 10.3 Advance Progress: Start -> Complete
+> **Note**: 
+> - Both `next_node_name` and `forward` fields are required in the operation object
+> - Use simple forward name (e.g., `"start_claim"`) without node prefix. The system automatically resolves the path from current node
+> - The Progress object ID can be obtained by querying the Order object (it has a `progress` field)
+
+### 8.3 Advance Progress: Start -> Complete
 
 Wait at least 1 second after entering Start node, then advance the progress to Complete with the Order ID as submission.
 
@@ -542,10 +557,6 @@ Wait at least 1 second after entering Start node, then advance the progress to C
         "forward": "complete_claim"
       }
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   },
   "submission": {
     "type": "submission",
@@ -568,27 +579,93 @@ Wait at least 1 second after entering Start node, then advance the progress to C
         ]
       }
     ]
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
   }
 }
 ```
 
-> **Note**: Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 10.1.
+> **Note**: 
+> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 10.1
+> - Both `next_node_name` and `forward` fields are required in the operation object
+> - Use simple forward name `"complete_claim"` without node prefix
+> - The `submission` field is at the root level of the request, not inside `operate.operation`
+
+---
+
+## Troubleshooting
+
+### Error: MoveAbort code: 7 (Permission Error)
+
+**Symptom**: When advancing Progress, you get `MoveAbort in 4th command, abort code: 7`
+
+**Cause**: The operating account does not have the required permission index for the forward operation.
+
+**Solution**: Ensure the Permission object includes all permission indexes used in Machine forwards:
+- Add indexes [1000, 1001, ...] when creating the Permission object
+- Use `table.op: "add perm by entity"` to assign permissions to the operating account
+
+### Error: Forward validation failed
+
+**Symptom**: `Connection from current node "" to target node "Complete" does not exist`
+
+**Cause**: Using incorrect forward path format.
+
+**Solution**: Use simple forward names without node prefix:
+- ✅ Correct: `"forward": "start_claim"`
+- ❌ Incorrect: `"forward": "Start.start_claim"`
+- ❌ Incorrect: `"forward": ".start_claim"`
+
+### Error: Missing required field 'next_node_name'
+
+**Symptom**: `Input validation error: Invalid arguments for tool onchain_operations: Required at path ["data","operate","operation","next_node_name"]`
+
+**Cause**: The progress operation requires both `next_node_name` and `forward` fields.
+
+**Solution**: Include both fields in the operation object:
+```json
+{
+  "operation": {
+    "next_node_name": "Start",
+    "forward": "start_claim"
+  }
+}
+```
+
+### Error: Data not found / stale data
+
+**Symptom**: Query returns old data after successful transactions.
+
+**Cause**: MCP server caches query results; chain data needs time to reach consensus.
+
+**Solution**: 
+- Add 5-second delays between operations
+- Use `no_cache: true` parameter for critical queries
+- Wait for transaction confirmation before next operation
+
+### Error: Machine modification failed
+
+**Symptom**: `MoveAbort code: 3` when trying to modify Machine nodes.
+
+**Cause**: Published Machine nodes are immutable.
+
+**Solution**: Create a new Machine with the correct configuration if changes are needed.
 
 ---
 
 ## Execution Checklist
 
-- [ ] Create `insurance_provider` account
-- [ ] Get test tokens for `insurance_provider`
-- [ ] Step 1: Create `insurance_permission`
-- [ ] Step 2: Create `insurance_complete_guard`
-- [ ] Step 3: Create `insurance_withdraw_guard`
-- [ ] Step 4: Create `insurance_machine` (without nodes)
-- [ ] Step 5: Add nodes to Machine (Start, Complete)
-- [ ] Step 6: Publish Machine
-- [ ] Step 7: Create and publish `insurance_service` (with machine, order_allocators, sales)
-- [ ] Step 8: Unpause Service
-- [ ] Step 9: Verify Service configuration
-- [ ] Step 10.1: Create test insurance order
-- [ ] Step 10.2: Advance progress Initial -> Start
-- [ ] Step 10.3: Wait 1s, then advance progress Start -> Complete
+- [ ] Create `insurance_provider_v1` account
+- [ ] Get test tokens for `insurance_provider_v1`
+- [ ] Step 1: Create `insurance_permission_v1` with all required indexes
+- [ ] Step 2: Create `insurance_complete_guard_v1`
+- [ ] Step 3: Create `insurance_withdraw_guard_v1`
+- [ ] Step 4: Create `insurance_machine_v1` with nodes and publish
+- [ ] Step 5: Create and publish `insurance_service_v1` (with machine, order_allocators, sales)
+- [ ] Step 6: Unpause Service
+- [ ] Step 7: Verify Service configuration
+- [ ] Step 8.1: Create test insurance order
+- [ ] Step 8.2: Advance progress Initial -> Start (wait 5s after)
+- [ ] Step 8.3: Advance progress Start -> Complete with submission

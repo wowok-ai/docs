@@ -1,35 +1,18 @@
-# Insurance Service Example - Test Results
+# Insurance Service Test Results
 
-This document records the actual execution results of the Insurance example on the WoWok testnet.
+This document contains the actual testnet execution results for the Insurance Service example.
 
-## Test Environment
-- **Network**: testnet
-- **Test Date**: 2026-05-03
-- **SDK Version**: WoWok TypeScript SDK (local build)
-
-## Overview
-
-This example demonstrates an outdoor accident insurance service with time-lock completion guards. The service uses a simple two-node workflow (Start -> Complete) where the completion requires a time-lock guard to prevent premature order finalization.
-
-## Key Object Addresses
-
-| Object Type | Name | Object Address |
-|-------------|------|----------------|
-| Permission | insurance_permission_v1 | 0x93221f078e5aff1bab5f6486f9a0922268c3734a1ed5a9535109439bb7dd17e4 |
-| Guard (Complete) | insurance_complete_guard_v1 | 0x3c07695d6f01c875c718bef8fae78cdf9ee19bcb174a9b35bb6213c29816f200 |
-| Guard (Withdraw) | insurance_withdraw_guard_v1 | 0xc736a8296bd502aeae7802aadaf9a8d194ce2d498f5a1ed8fe63c33981f523b3 |
-| Machine | insurance_machine_v1 | 0xd66d95bc0ed855ba0c0a650368f025871f817ca2145d6ea09b9566a2f17f74b3 |
-| Service | insurance_service_v1 | 0x161b4a7398dd2fca54559e924c7f1619169f88e81c36bbad06ebb2931f5f2e32 |
-| Test Order | test_insurance_order_v1 | 0xf0809ed1ee30e4d7cf1e8fc91c00e70e2d219f6d447aaa633b28a8d83f9ea243 |
-| Progress | - | 0x5d06b916e8d6ce8fb75ad2b46426335c297d890d60a99cdbc8c59c6616ab0f8c |
+> **Execution Date**: 2026-06-10
+> **Network**: Testnet
+> **Account**: insurance_provider_v1 (0x52ae555b313bf4906df000218e87c9d26d916ff629bbaee3bfdf1c8454a8526f)
 
 ---
 
-## Part 1: Merchant System Setup - Actual Execution Results
+## Prerequisites
 
-### Create Merchant Account and Get Test Tokens
+### 1. Create Insurance Provider Account
 
-**Create Account:**
+**Request**:
 ```json
 {
   "gen": {
@@ -39,17 +22,21 @@ This example demonstrates an outdoor accident insurance service with time-lock c
 }
 ```
 
-**Execution Result:**
+**Response**:
 ```json
 {
   "gen": {
-    "address": "0xda54ebfdbeecec5cae8ae8cdb2d0bf741dfc4e1051c0b4c7bb9968b441067e02",
+    "address": "0x52ae555b313bf4906df000218e87c9d26d916ff629bbaee3bfdf1c8454a8526f",
     "name": "insurance_provider_v1"
   }
 }
 ```
 
-**Get Test Tokens:**
+---
+
+### 2. Get Test Tokens
+
+**Request**:
 ```json
 {
   "faucet": {
@@ -59,23 +46,52 @@ This example demonstrates an outdoor accident insurance service with time-lock c
 }
 ```
 
-**Execution Result:** Successfully received 5 WOW tokens (5,000,000,000 MIST).
+**Response**:
+```json
+{
+  "faucet": {
+    "name_or_address": "insurance_provider_v1",
+    "result": [
+      {
+        "amount": 1000000000,
+        "id": "0x90684a2990f83f51abbbff317457f4efafa8619954723e5e69072a1f7adb8b2d",
+        "transferTxDigest": "5FetwozjKsEcMThgiJxVMqA8pYZzMCdVNUANhYokKWqd"
+      },
+      {
+        "amount": 1000000000,
+        "id": "0xc208c8b120695965d06cab4e3ebbc3b5b360830be5cbd900c04d6937da1910ef",
+        "transferTxDigest": "5FetwozjKsEcMThgiJxVMqA8pYZzMCdVNUANhYokKWqd"
+      },
+      {
+        "amount": 1000000000,
+        "id": "0xec0ad61e089184255600ff7cf3f76a858529107f39b6716db6100160af9e3e7a",
+        "transferTxDigest": "5FetwozjKsEcMThgiJxVMqA8pYZzMCdVNUANhYokKWqd"
+      }
+    ],
+    "network": "testnet"
+  }
+}
+```
 
 ---
 
-### Step 1: Create Permission Object
+## Step 1: Create Permission Object
 
-**Prompt:**
+**Request**:
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
       "name": "insurance_permission_v1",
-      "tags": ["insurance", "outdoor", "accident"],
       "replaceExistName": true
     },
-    "description": "Permission for outdoor accident insurance service"
+    "description": "Permission for outdoor accident insurance service",
+    "table": {
+      "op": "add perm by entity",
+      "entity": {"name_or_address": "insurance_provider_v1"},
+      "index": [1000, 1001, 1002, 1003, 1004, 1005]
+    }
   },
   "env": {
     "account": "insurance_provider_v1",
@@ -84,135 +100,191 @@ This example demonstrates an outdoor accident insurance service with time-lock c
 }
 ```
 
-**Execution Result:**
-- **Object Address**: 0x93221f078e5aff1bab5f6486f9a0922268c3734a1ed5a9535109439bb7dd17e4
-- **Transaction**: 58gPUwgwM6npS7cs5XbpmCg7SVoTodE8PpTCMLYAMt6m
-- **Status**: Success
-
----
-
-### Step 2: Create Insurance Complete Guard (Time-Lock)
-
-**Guard Definition** (`insurance_complete_guard_v1.json`):
+**Response**:
 ```json
-{
-  "namedNew": {
-    "name": "insurance_complete_guard_v1",
-    "tags": ["insurance", "complete", "time-lock"],
-    "replaceExistName": true
+[
+  {
+    "type": "TableItem_PermissionPerm",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::parent_linked_table::Node<address, vector<u16>>>",
+    "object": "0x80f6fdd386012bb1b10762f978b8940f8434cc2963aa8fdbf0e8849d91a7c843",
+    "version": "1272164",
+    "owner": {"ObjectOwner": "0xc97f38d2ee4c0fafd2fb64b2b31708ac8b652a4e419c712f8fddb0d264402069"},
+    "change": "created"
   },
-  "description": "Time-lock guard for insurance claim completion",
-  "table": [
-    {
-      "identifier": 0,
-      "b_submission": true,
-      "value_type": "Address",
-      "name": "Order ID (submitted at runtime)"
-    },
-    {
-      "identifier": 1,
-      "b_submission": false,
-      "value_type": "U64",
-      "value": "1000",
-      "name": "Time-lock duration in ms"
-    }
-  ],
-  "root": {
-    "type": "logic_as_u256_greater",
-    "nodes": [
-      {
-        "type": "context",
-        "context": "Clock"
-      },
-      {
-        "type": "calc_number_add",
-        "nodes": [
-          {
-            "type": "query",
-            "query": "progress.current_time",
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
-    ]
+  {
+    "type": "Permission",
+    "type_raw": "0x2::permission::Permission",
+    "object": "0xc97f38d2ee4c0fafd2fb64b2b31708ac8b652a4e419c712f8fddb0d264402069",
+    "version": "1272164",
+    "owner": {"Shared": {"initial_shared_version": 1272164}},
+    "change": "created"
   }
-}
+]
 ```
 
-**Key Design Pattern**: Uses `convert_witness: 100` (WitnessType.TypeOrderProgress) to convert the submitted Order ID to access its associated Progress object's `current_time` field.
-
-**Execution Result:**
-- **Object Address**: 0x3c07695d6f01c875c718bef8fae78cdf9ee19bcb174a9b35bb6213c29816f200
-- **Transaction**: Bi6ykn7kewLsAjhUGLMKeErVJ9J7yvm8UsW78Y7F9We1
-- **Status**: Success
+**Created Objects**:
+- **Permission**: `0xc97f38d2ee4c0fafd2fb64b2b31708ac8b652a4e419c712f8fddb0d264402069`
 
 ---
 
-### Step 3: Create Insurance Withdraw Guard
+## Step 2: Create Time-Lock Complete Guard
 
-**Guard Definition** (`insurance_withdraw_guard_v1.json`):
+**Request**:
 ```json
 {
-  "namedNew": {
-    "name": "insurance_withdraw_guard_v1",
-    "tags": ["insurance", "withdraw"],
-    "replaceExistName": true
-  },
-  "description": "Allow insurance provider to withdraw funds after order is completed.",
-  "table": [
-    {
-      "identifier": 0,
-      "b_submission": true,
-      "value_type": "Address",
-      "name": "order_id"
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "insurance_complete_guard_v1",
+      "tags": ["insurance", "time-lock", "complete"],
+      "replaceExistName": true
     },
-    {
-      "identifier": 1,
-      "b_submission": false,
-      "value_type": "String",
-      "value": "Complete",
-      "name": "complete_node"
-    }
-  ],
-  "root": {
-    "type": "logic_equal",
-    "nodes": [
+    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 1000ms (1 second for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness=TypeOrderProgress(100).",
+    "table": [
       {
-        "type": "query",
-        "query": "progress.current",
-        "object": {
-          "identifier": 0,
-          "convert_witness": 100
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "name": "Order ID (submitted at runtime)"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "U64",
+        "value": 1000
+      }
+    ],
+    "root": {
+      "type": "logic_as_u256_greater",
+      "nodes": [
+        {
+          "type": "context",
+          "context": "Clock"
         },
-        "parameters": []
-      },
-      {
-        "type": "identifier",
-        "identifier": 1
-      }
-    ]
+        {
+          "type": "calc_number_add",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current_time",
+              "object": {
+                "identifier": 0,
+                "convert_witness": 100
+              },
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
   }
 }
 ```
 
-**Execution Result:**
-- **Object Address**: 0xc736a8296bd502aeae7802aadaf9a8d194ce2d498f5a1ed8fe63c33981f523b3
-- **Transaction**: FrL3z1jExLrs652vFr12faL9Xb5XMzh9vT9hZWPdgJyz
-- **Status**: Success
+**Response**:
+```json
+[
+  {
+    "type": "Guard",
+    "type_raw": "0x2::guard::Guard",
+    "object": "0x6de2d450eb16127d469d37147e9b9e803c4ae1915cc9ae6c91ec9e88c8832dce",
+    "version": "1272404",
+    "owner": "Immutable",
+    "change": "created"
+  }
+]
+```
+
+**Created Objects**:
+- **Guard**: `0x6de2d450eb16127d469d37147e9b9e803c4ae1915cc9ae6c91ec9e88c8832dce`
 
 ---
 
-### Step 4: Create Insurance Machine
+## Step 3: Create Withdraw Guard for Order Allocators
 
-**Prompt:**
+**Request**:
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "insurance_withdraw_guard_v1",
+      "tags": ["insurance", "withdraw"],
+      "replaceExistName": true
+    },
+    "description": "Allow insurance provider to withdraw funds after order is completed.",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "name": "order_id"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Complete",
+        "name": "complete_node"
+      }
+    ],
+    "root": {
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": "progress.current",
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
+          },
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+**Response**:
+```json
+[
+  {
+    "type": "Guard",
+    "type_raw": "0x2::guard::Guard",
+    "object": "0xf03328cc50fd911deef72891da5614cea621cba3c489b07c11ce5355d2a9a6e4",
+    "version": "1272608",
+    "owner": "Immutable",
+    "change": "created"
+  }
+]
+```
+
+**Created Objects**:
+- **Guard**: `0xf03328cc50fd911deef72891da5614cea621cba3c489b07c11ce5355d2a9a6e4`
+
+---
+
+## Step 4: Create, Configure and Publish Machine
+
+**Request**:
 ```json
 {
   "operation_type": "machine",
@@ -225,17 +297,18 @@ This example demonstrates an outdoor accident insurance service with time-lock c
     "description": "Insurance claim processing workflow: Start -> Complete (with time-lock guard)",
     "node": {
       "op": "add",
-      "data": [
+      "nodes": [
         {
           "name": "Start",
           "pairs": [
             {
               "prev_node": "",
+              "threshold": 0,
               "forwards": [
                 {
-                  "name": "claim",
-                  "guard": [],
-                  "next_node_name": "Complete"
+                  "name": "start_claim",
+                  "permissionIndex": 1000,
+                  "weight": 1
                 }
               ]
             }
@@ -246,11 +319,15 @@ This example demonstrates an outdoor accident insurance service with time-lock c
           "pairs": [
             {
               "prev_node": "Start",
+              "threshold": 1,
               "forwards": [
                 {
                   "name": "complete_claim",
-                  "guard": ["insurance_complete_guard_v1"],
-                  "next_node_name": ""
+                  "permissionIndex": 1001,
+                  "weight": 1,
+                  "guard": {
+                    "guard": "insurance_complete_guard_v1"
+                  }
                 }
               ]
             }
@@ -267,51 +344,92 @@ This example demonstrates an outdoor accident insurance service with time-lock c
 }
 ```
 
-**Execution Result:**
-- **Object Address**: 0xd66d95bc0ed855ba0c0a650368f025871f817ca2145d6ea09b9566a2f17f74b3
-- **Transaction**: BBjtFHkZQc7ag4uHziGNmB719g9w4vMNRX4j1AB4EQMq
-- **Status**: Success
-- **Node Count**: 2
-- **Published**: Yes
+**Response**:
+```json
+[
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x6347a2522082a1da90a91752b4f0d93a7e8fd3f9e7ffd17a0fc7fcee6cfa7113",
+    "version": "1272839",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_MachineNode",
+    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+    "object": "0x7fadff337d8dca18f91edcfde124fdb1e3c0b381fcac114609947770ed610589",
+    "version": "1272839",
+    "owner": {"ObjectOwner": "0xfe59f4e474b5b2d38c627347fd663929a25a3211d645b650a3b0960223f0f1da"},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_MachineNode",
+    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+    "object": "0xb5c0d23287ca90e952d7928800ddd978c3a359dc254415dce1934f6187513e36",
+    "version": "1272839",
+    "owner": {"ObjectOwner": "0xfe59f4e474b5b2d38c627347fd663929a25a3211d645b650a3b0960223f0f1da"},
+    "change": "created"
+  },
+  {
+    "type": "Machine",
+    "type_raw": "0x2::machine::Machine",
+    "object": "0xfe59f4e474b5b2d38c627347fd663929a25a3211d645b650a3b0960223f0f1da",
+    "version": "1272839",
+    "owner": {"Shared": {"initial_shared_version": 1272839}},
+    "change": "created"
+  }
+]
+```
+
+**Created Objects**:
+- **Machine**: `0xfe59f4e474b5b2d38c627347fd663929a25a3211d645b650a3b0960223f0f1da`
+- **Start Node**: `0x7fadff337d8dca18f91edcfde124fdb1e3c0b381fcac114609947770ed610589`
+- **Complete Node**: `0xb5c0d23287ca90e952d7928800ddd978c3a359dc254415dce1934f6187513e36`
 
 ---
 
-### Step 5: Create Insurance Service
+## Step 5: Create and Publish Service
 
-**Prompt:**
+**Request**:
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": {
       "name": "insurance_service_v1",
+      "type_parameter": "0x2::wow::WOW",
       "permission": "insurance_permission_v1",
       "replaceExistName": true
     },
     "description": "Outdoor accident insurance for Iceland travel. Provides coverage for ice scooting and other outdoor activities.",
     "machine": "insurance_machine_v1",
-    "sales": [
-      {
-        "name": "Outdoor Accident Insurance",
-        "price": "100000000",
-        "stock": "999"
-      }
-    ],
     "order_allocators": {
       "description": "Insurance order revenue allocation",
-      "threshold": "0",
+      "threshold": 0,
       "allocators": [
         {
           "guard": "insurance_withdraw_guard_v1",
           "sharing": [
             {
-              "who": "Signer",
-              "sharing": "10000",
-              "mode": 1
+              "who": {"Signer": "signer"},
+              "sharing": 10000,
+              "mode": "Rate"
             }
-          ],
-          "fix": "0",
-          "max": null
+          ]
+        }
+      ]
+    },
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "Outdoor Accident Insurance",
+          "price": 100000000,
+          "stock": 1000,
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
         }
       ]
     },
@@ -324,44 +442,50 @@ This example demonstrates an outdoor accident insurance service with time-lock c
 }
 ```
 
-**Execution Result:**
-- **Object Address**: 0x161b4a7398dd2fca54559e924c7f1619169f88e81c36bbad06ebb2931f5f2e32
-- **Transaction**: ju5K75sakrHsWnSLDv42kNTE37Q9LKF3Ue9ML9c2taT
-- **Status**: Success
-- **Published**: Yes
-- **Paused**: No
+**Response**:
+```json
+[
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x6347a2522082a1da90a91752b4f0d93a7e8fd3f9e7ffd17a0fc7fcee6cfa7113",
+    "version": "1273054",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x15f01d762deb2bc8976c4f78abd4d222c509054c70e5cd6a9e109596aa76e20d",
+    "version": "1273054",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  },
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x3cd3240476aaca35f58d07bdd58312d6ee4a1ca782cf878d3481350b2a72342a",
+    "version": "1273054",
+    "owner": {"Shared": {"initial_shared_version": 1273054}},
+    "change": "created"
+  }
+]
+```
+
+**Created Objects**:
+- **Service**: `0x3cd3240476aaca35f58d07bdd58312d6ee4a1ca782cf878d3481350b2a72342a`
 
 ---
 
-### Step 6: Unpause Service
+## Step 6: Unpause Service
 
-The service was already unpaused after creation. Verified configuration:
-- **Service Status**: Active
-- **Machine Bound**: insurance_machine_v1
-- **Sales**: 1 item available
-- **Order Allocators**: 1 allocator configured
-
----
-
-## Part 2: Order Workflow Test
-
-### Test Order Creation
-
-**Prompt:**
+**Request**:
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "service",
   "data": {
-    "object": {
-      "name": "test_insurance_order_v1",
-      "replaceExistName": true
-    },
-    "service": "insurance_service_v1",
-    "item": {
-      "name": "Outdoor Accident Insurance",
-      "price": "100000000",
-      "quantity": 1
-    }
+    "object": "insurance_service_v1",
+    "pause": false
   },
   "env": {
     "account": "insurance_provider_v1",
@@ -370,27 +494,46 @@ The service was already unpaused after creation. Verified configuration:
 }
 ```
 
-**Execution Result:**
-- **Order Address**: 0xf0809ed1ee30e4d7cf1e8fc91c00e70e2d219f6d447aaa633b28a8d83f9ea243
-- **Progress Address**: 0x5d06b916e8d6ce8fb75ad2b46426335c297d890d60a99cdbc8c59c6616ab0f8c
-- **Transaction**: ju5K75sakrHsWnSLDv42kNTE37Q9LKF3Ue9ML9c2taT
-- **Amount**: 100,000,000 MIST (0.1 WOW)
+**Response**:
+```json
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x3cd3240476aaca35f58d07bdd58312d6ee4a1ca782cf878d3481350b2a72342a",
+    "version": "1273233",
+    "owner": {"Shared": {"initial_shared_version": 1273054}},
+    "change": "mutated"
+  }
+]
+```
 
 ---
 
-### Progress Workflow Test
+## Step 7: Create Test Order
 
-#### Initial -> Start
-**Prompt:**
+**Request**:
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "service",
   "data": {
-    "object": "test_insurance_order_v1",
-    "operate": {
-      "operation": {
-        "next_node_name": "Start",
-        "forward": "claim"
+    "object": "insurance_service_v1",
+    "order_new": {
+      "buy": {
+        "items": [
+          {
+            "name": "Outdoor Accident Insurance",
+            "stock": 1,
+            "wip_hash": ""
+          }
+        ],
+        "total_pay": {
+          "balance": 100000000
+        }
+      },
+      "namedNewOrder": {
+        "name": "test_insurance_order_v1",
+        "replaceExistName": true
       }
     }
   },
@@ -401,16 +544,204 @@ The service was already unpaused after creation. Verified configuration:
 }
 ```
 
-**Result**: Success - Progress moved from "" to "Start"
+**Response**:
+```json
+[
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x15f01d762deb2bc8976c4f78abd4d222c509054c70e5cd6a9e109596aa76e20d",
+    "version": "1273412",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "mutated"
+  },
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x3cd3240476aaca35f58d07bdd58312d6ee4a1ca782cf878d3481350b2a72342a",
+    "version": "1273412",
+    "owner": {"Shared": {"initial_shared_version": 1273054}},
+    "change": "mutated"
+  },
+  {
+    "type": "Progress",
+    "type_raw": "0x2::progress::Progress",
+    "object": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2",
+    "version": "1273412",
+    "owner": {"Shared": {"initial_shared_version": 1273412}},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x3e6751e25512c8acb4f5b7877eb34e9c8309e4cb8afac475fd39168f051062d4",
+    "version": "1273412",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  },
+  {
+    "type": "Order",
+    "type_raw": "0x2::order::Order",
+    "object": "0x5143e0d98cd26482c4d53053f81d693e11d7f65356696a2f5a7fb33b0829a36a",
+    "version": "1273412",
+    "owner": {"Shared": {"initial_shared_version": 1273412}},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x6d2ef54b75ffd021b2a1482e6c7b3a9b84b340fab21c4a00e95433fc0250dabf",
+    "version": "1273412",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  },
+  {
+    "type": "Allocation",
+    "type_raw": "0x2::allocation::Allocation<0x2::wow::WOW>",
+    "object": "0xa0db24ead389f9ae2673fa449b23644c92d586f5a352efb927e3e7db04203436",
+    "version": "1273412",
+    "owner": {"Shared": {"initial_shared_version": 1273412}},
+    "change": "created"
+  }
+]
+```
 
-#### Start -> Complete (Time-Lock Test)
+**Created Objects**:
+- **Order**: `0x5143e0d98cd26482c4d53053f81d693e11d7f65356696a2f5a7fb33b0829a36a`
+- **Progress**: `0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2`
+- **Allocation**: `0xa0db24ead389f9ae2673fa449b23644c92d586f5a352efb927e3e7db04203436`
 
-**Attempt 1 (Immediate - Should Fail):**
+---
+
+## Step 8: Advance Progress - Initial to Start
+
+**Request**:
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "test_insurance_order_v1",
+    "object": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Start",
+        "forward": "start_claim"
+      }
+    }
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+**Response**:
+```json
+[
+  {
+    "type": "Progress",
+    "type_raw": "0x2::progress::Progress",
+    "object": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2",
+    "version": "1273871",
+    "owner": {"Shared": {"initial_shared_version": 1273412}},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_ProgressHistory",
+    "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+    "object": "0x63e1a30afe299e198ddf3bd85aeb465226d757cfd530f750bbc6b4b88276d11b",
+    "version": "1273871",
+    "owner": {"ObjectOwner": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2"},
+    "change": "created"
+  }
+]
+```
+
+---
+
+## Summary of Created Objects
+
+| Object Type | Name | Object ID |
+|-------------|------|-----------|
+| Account | insurance_provider_v1 | 0x52ae555b313bf4906df000218e87c9d26d916ff629bbaee3bfdf1c8454a8526f |
+| Permission | insurance_permission_v1 | 0xc97f38d2ee4c0fafd2fb64b2b31708ac8b652a4e419c712f8fddb0d264402069 |
+| Guard | insurance_complete_guard_v1 | 0x6de2d450eb16127d469d37147e9b9e803c4ae1915cc9ae6c91ec9e88c8832dce |
+| Guard | insurance_withdraw_guard_v1 | 0xf03328cc50fd911deef72891da5614cea621cba3c489b07c11ce5355d2a9a6e4 |
+| Machine | insurance_machine_v1 | 0xfe59f4e474b5b2d38c627347fd663929a25a3211d645b650a3b0960223f0f1da |
+| Service | insurance_service_v1 | 0x3cd3240476aaca35f58d07bdd58312d6ee4a1ca782cf878d3481350b2a72342a |
+| Order | test_insurance_order_v1 | 0x5143e0d98cd26482c4d53053f81d693e11d7f65356696a2f5a7fb33b0829a36a |
+| Progress | (associated with order) | 0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2 |
+| Allocation | (associated with order) | 0xa0db24ead389f9ae2673fa449b23644c92d586f5a352efb927e3e7db04203436 |
+
+---
+
+## Issues Found and Corrections
+
+### Issue 1: Progress Operation Schema
+
+**Original Documentation Issue**:
+The original documentation showed progress operation with only `forward` field:
+```json
+{
+  "operation": {
+    "forward": "start_claim"
+  }
+}
+```
+
+**Correction**:
+The actual schema requires BOTH `next_node_name` and `forward` fields:
+```json
+{
+  "operation": {
+    "next_node_name": "Start",
+    "forward": "start_claim"
+  }
+}
+```
+
+### Issue 2: Progress Object Reference
+
+**Original Documentation Issue**:
+The documentation suggested using the order name to reference the progress:
+```json
+{
+  "object": "test_insurance_order_v1"
+}
+```
+
+**Correction**:
+The progress operation requires the actual Progress object ID, not the order name. The Progress object ID can be obtained from the order query:
+```json
+{
+  "object": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2"
+}
+```
+
+Or you can query the order first to get the progress ID:
+```json
+{
+  "query_type": "onchain_objects",
+  "objects": ["test_insurance_order_v1"]
+}
+```
+The response will contain the `progress` field with the Progress object ID.
+
+---
+
+## Next Steps (Not Executed)
+
+To complete the test, you would need to:
+
+1. **Wait at least 1 second** after entering the Start node
+2. **Advance Progress from Start to Complete** with the Order ID as submission
+
+**Request**:
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "0x14b58995e9d5ef8b40847f0f96fa52ba916b910f7f8e041d7e8e77bd41c318a2",
     "operate": {
       "operation": {
         "next_node_name": "Complete",
@@ -420,16 +751,25 @@ The service was already unpaused after creation. Verified configuration:
   },
   "submission": {
     "type": "submission",
-    "guard": [{"object": "insurance_complete_guard_v1", "impack": true}],
-    "submission": [{
-      "guard": "insurance_complete_guard_v1",
-      "submission": [{
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "value": "0xf0809ed1ee30e4d7cf1e8fc91c00e70e2d219f6d447aaa633b28a8d83f9ea243"
-      }]
-    }]
+    "guard": [
+      {
+        "object": "insurance_complete_guard_v1",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "insurance_complete_guard_v1",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "0x5143e0d98cd26482c4d53053f81d693e11d7f65356696a2f5a7fb33b0829a36a"
+          }
+        ]
+      }
+    ]
   },
   "env": {
     "account": "insurance_provider_v1",
@@ -438,44 +778,4 @@ The service was already unpaused after creation. Verified configuration:
 }
 ```
 
-**Result**: Guard validation failed - Time-lock not yet expired (expected behavior)
-
-**Attempt 2 (After 1.5s - Should Succeed):**
-
-Waited 1.5 seconds and retried the same operation.
-
-**Result**: Success - Progress moved from "Start" to "Complete"
-- **Transaction**: mqLXfDYKwGwJPg3jytvzC9NnPeykSkioV6nKqKgvmFt
-- **Current Node**: Complete
-- **History Count**: 2
-
----
-
-## Summary
-
-### Test Results
-
-| Test Case | Expected | Actual | Status |
-|-----------|----------|--------|--------|
-| Account Creation | Success | Success | ✅ |
-| Permission Creation | Success | Success | ✅ |
-| Guard Creation (Complete) | Success | Success | ✅ |
-| Guard Creation (Withdraw) | Success | Success | ✅ |
-| Machine Creation | Success | Success | ✅ |
-| Service Creation | Success | Success | ✅ |
-| Order Creation | Success | Success | ✅ |
-| Progress: Initial -> Start | Success | Success | ✅ |
-| Progress: Start -> Complete (Immediate) | Fail (Time-Lock) | Failed as expected | ✅ |
-| Progress: Start -> Complete (After 1.5s) | Success | Success | ✅ |
-
-### Key Learnings
-
-1. **Time-Lock Implementation**: The `convert_witness: 100` (TypeOrderProgress) is essential for accessing Progress data from an Order ID submission.
-
-2. **Guard Submission Schema**: Guard submissions require `b_submission` and `value_type` fields to be explicitly specified.
-
-3. **Machine Node Structure**: The `prev_node: ""` (empty string) defines the entry point from the initial Progress state.
-
-4. **Submission Parameter Location**: Guard submissions must be passed as a top-level `submission` parameter, not nested within `data.operate`.
-
----
+**Note**: This final step requires waiting for the time-lock (1 second) to pass before the Guard will allow the transition to Complete.

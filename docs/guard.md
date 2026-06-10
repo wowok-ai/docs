@@ -1164,9 +1164,11 @@ Step 2: Use Passport in Messenger (see [messenger.md](messenger.md)) to verify s
 
 | Node Type | Return Type | Description | Parameters |
 |-----------|-------------|-------------|------------|
-| `query_reward_record_find` | Value | Find first/last reward record matching filters | `object: { identifier: number }`, `find: "first" \| "last"`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
-| `query_reward_record_count` | U64 | Count reward records matching filters | `object: { identifier: number }`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
-| `query_reward_record_exists` | Bool | Check if reward record exists matching filters | `object: { identifier: number }`, `recipient: GuardNode`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+| `query_reward_record_find` | Value | Find first/last reward record matching filters | `object: { identifier: number }`, `find: "first" \| "last"`, `recipient?: { identifier: number }`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+| `query_reward_record_count` | U64 | Count reward records matching filters | `object: { identifier: number }`, `recipient?: { identifier: number }`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+| `query_reward_record_exists` | Bool | Check if reward record exists matching filters | `object: { identifier: number }`, `recipient?: { identifier: number }`, `where: { guard?, timeMin?, timeMax?, amountMin?, amountMax?, storeFromId? }` |
+
+**Note on `recipient`**: The `recipient` parameter is optional. If not specified, the query uses the transaction signer address as the recipient. This is useful when you want to check if the current user has claimed a reward without explicitly specifying their address.
 
 ### Progress History Query Nodes
 

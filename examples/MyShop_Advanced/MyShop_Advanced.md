@@ -1,4 +1,4 @@
-﻿# MyShop Advanced E-Commerce Example
+# MyShop Advanced E-Commerce Example
 
 An advanced e-commerce example demonstrating escrow with multiple order fund allocation modes, multi-party allocation, arbitration with voting guards, and WIP-based product verification.
 
@@ -181,9 +181,15 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  │   _win_v2       │    │   _win_v2       │    │     _v2         │         │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘         │
 │                                                                             │
-│  Phase 2b: Reward Guards                                                    │
-│  ═══════════════════════                                                    │
+│  Phase 2b: Reward System (Empty Object First)                               │
+│  ════════════════════════════════════════════                               │
 │                                                                             │
+│  ┌─────────────────┐                                                       │
+│  │  Empty Reward   │◄─── Create empty reward object first                  │
+│  │myshop_reward_v2 │     Guards will reference this object                 │
+│  └────────┬────────┘                                                        │
+│           │                                                                 │
+│           ▼                                                                 │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
 │  │ reward_wonderful│    │  reward_lost    │    │ reward_shipping │         │
 │  │     _v2         │    │     _v2         │    │ _timeout_v2     │         │
@@ -226,12 +232,13 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  │  and Publish    │     Requires: All Guards, Arbitration                 │
 │  └─────────────────┘                                                        │
 │                                                                             │
-│  Phase 7: Reward Pool                                                       │
-│  ═════════════════════                                                      │
+│  Phase 7: Reward Pool Configuration                                         │
+│  ══════════════════════════════════                                         │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
-│  │     Reward      │◄─── Requires: Service (for guard verification)        │
-│  │myshop_reward_v2 │     Add: reward_guards for Wonderful/Lost/Timeout     │
+│  │  Add Guards to  │◄─── Add reward guards with store_from_id              │
+│  │     Reward      │     Enables double-claim protection                   │
+│  │myshop_reward_v2 │                                                        │
 │  └─────────────────┘                                                        │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -249,7 +256,10 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 | 5     | **Machine Binding**  | Service, Machine     | Bind Machine to Service before publishing. Once published, Machine cannot be bound.                           |
 | 6     | **Arbitration**      | None                 | Arbitration is independent but needs to be bound to Service. Create before Service update.                    |
 | 7     | **Service (Update)** | Guards, Arb, Machine | Update Service with order\_allocators, sales, arbitrations, machine binding. Then publish.                     |
-| 8     | **Reward**           | Service, Guards      | Reward pool needs Service name in guards for claim verification. Create after Service is available.           |
+| 8     | **Empty Reward**     | None                 | Create empty reward object first. This object is referenced by reward guards for double-claim protection.     |
+| 9     | **Reward Guards**    | Reward (by name)     | Create reward guards that reference the reward object by name. Guards verify order node + no prior claim.     |
+| 10    | **Add Guards to Reward** | Reward, Guards   | Add reward guards to the reward object with store\_from\_id set. This enables order-based double-claim protection. |
+| 11    | **Deposit to Reward** | Reward              | Deposit WOW tokens to reward pool for claim distribution.                                                      |
 
 ### Key Design Decisions
 
@@ -259,8 +269,9 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 4. **Guards Before Machine**: Machine nodes reference guards for verification. Create all guards first, then create Machine with guard references.
 5. **Machine Binding Before Publish**: Bind Machine to Service before publishing. Once published, Machine cannot be bound.
 6. **Arbitration Before Service Update**: Arbitration must be created before Service update so it can be bound to Service.
-6. **Service Publishing Last**: Only publish Service after all guards, machine, and arbitration are ready.
-7. **Reward Last**: Reward references Service address in guards for claim verification. Create after Service is available.
+7. **Service Publishing Last**: Only publish Service after all guards, machine, and arbitration are ready.
+8. **Empty Reward Before Reward Guards**: Create an empty reward object first. Reward guards reference this object by name to verify no double-claiming.
+9. **Reward Guards Before Adding to Reward**: Create reward guards that check both order node and no prior claim, then add them to the reward object with store_from_id set.
 
 ### Simplified Build Sequence
 
@@ -307,11 +318,25 @@ Phase 7: Service Configuration
     ├── Add arbitrations binding
     └── Publish service
 
-Phase 8: Reward Pool
-└── 8. Create Reward (myshop_reward_v2)
-    ├── Deposit initial balance
-    ├── Create reward_guards (reward_wonderful_v2, reward_lost_v2, reward_shipping_timeout_v2)
-    └── Add reward_guards (Wonderful: 10000, Lost: 20000, Shipping Timeout: 30000)
+Phase 8: Reward Pool Setup
+└── 8. Create Empty Reward (myshop_reward_v2)
+    └── Create empty reward object first (guards will reference it)
+
+Phase 9: Reward Guards Creation
+└── 9. Create Reward Guards (3 guards)
+    ├── reward_wonderful_v2 (verify Wonderful node + no prior claim)
+    ├── reward_lost_v2 (verify Lost node + no prior claim)
+    └── reward_shipping_timeout_v2 (verify Shipping node + no prior claim)
+
+Phase 10: Reward Guards Configuration
+└── 10. Add Guards to Reward Object
+    ├── Add reward_wonderful_v2 (amount: 10000, store_from_id: 0)
+    ├── Add reward_lost_v2 (amount: 20000, store_from_id: 0)
+    └── Add reward_shipping_timeout_v2 (amount: 30000, store_from_id: 0)
+
+Phase 11: Deposit to Reward Pool
+└── 11. Deposit WOW tokens to reward pool
+    └── Add sufficient balance for all reward payments
 ```
 
 ***
@@ -426,6 +451,7 @@ Create the Service without publishing to obtain its address for Guard creation.
   "data": {
     "object": {
       "name": "three_body_signature_service_v2",
+      "replaceExistName": true,
       "permission": "myshop_perm_v2"
     },
     "description": "Three-Body Problem Signature Edition - Limited collector's item with WIP verification",
@@ -462,14 +488,11 @@ Create Guards using the Service address. Guards verify order state and service o
       {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "64"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_equal",
-        "nodes": [
-          {"type": "calc_string_length", "node": {"type": "identifier", "identifier": 0}},
-          {"type": "identifier", "identifier": 1}
-        ]
-      }
+      "type": "logic_as_u256_equal",
+      "nodes": [
+        {"type": "calc_string_length", "node": {"type": "identifier", "identifier": 0}},
+        {"type": "identifier", "identifier": 1}
+      ]
     }
   },
   "env": {
@@ -495,20 +518,17 @@ Create Guards using the Service address. Guards verify order state and service o
       {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "864000000"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          {
-            "type": "calc_number_subtract",
-            "nodes": [
-              {"type": "context", "context": "Clock"},
-              {"type": "identifier", "identifier": 0}
-            ]
-          },
-          {"type": "identifier", "identifier": 1}
-        ]
-      }
+      "type": "logic_as_u256_greater_or_equal",
+      "nodes": [
+        {
+          "type": "calc_number_subtract",
+          "nodes": [
+            {"type": "context", "context": "Clock"},
+            {"type": "identifier", "identifier": 0}
+          ]
+        },
+        {"type": "identifier", "identifier": 1}
+      ]
     }
   },
   "env": {
@@ -533,48 +553,46 @@ Create Guards using the Service address. Guards verify order state and service o
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
       {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
       {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Wonderful"},
-      {"identifier": 3, "b_submission": false, "value_type": "String", "value": "Return Fail"}
+      {"identifier": 3, "b_submission": false, "value_type": "String", "value": "Return Fail"},
+      {"identifier": 4, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_or",
-            "nodes": [
-              {
-                "type": "logic_string_nocase_equal",
-                "nodes": [
-                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-                  {"type": "identifier", "identifier": 1}
-                ]
-              },
-              {
-                "type": "logic_string_nocase_equal",
-                "nodes": [
-                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-                  {"type": "identifier", "identifier": 2}
-                ]
-              },
-              {
-                "type": "logic_string_nocase_equal",
-                "nodes": [
-                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-                  {"type": "identifier", "identifier": 3}
-                ]
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
-              {"type": "query", "query": 1001, "object": {"type": "context", "context": "Guard"}, "parameters": []}
-            ]
-          }
-        ]
-      }
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_or",
+          "nodes": [
+            {
+              "type": "logic_string_nocase_equal",
+              "nodes": [
+                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "identifier", "identifier": 1}
+              ]
+            },
+            {
+              "type": "logic_string_nocase_equal",
+              "nodes": [
+                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "identifier", "identifier": 2}
+              ]
+            },
+            {
+              "type": "logic_string_nocase_equal",
+              "nodes": [
+                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "identifier", "identifier": 3}
+              ]
+            }
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 4}
+          ]
+        }
+      ]
     }
   },
   "env": {
@@ -601,27 +619,23 @@ Create Guards using the Service address. Guards verify order state and service o
     },
     "description": "Verify order belongs to three_body_signature_service_v2",
     "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"}
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1201,
-            "object": {"identifier": 0, "convert_witness": 100},
-            "parameters": []
-          },
-          {
-            "type": "query",
-            "query": 1001,
-            "object": {"type": "context", "context": "Guard"},
-            "parameters": []
-          }
-        ]
-      }
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": 1563,
+          "object": {"identifier": 0},
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -647,41 +661,39 @@ Create Guards using the Service address. Guards verify order state and service o
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
       {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
-      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Return Complete"}
+      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Return Complete"},
+      {"identifier": 3, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_or",
-            "nodes": [
-              {
-                "type": "logic_string_nocase_equal",
-                "nodes": [
-                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-                  {"type": "identifier", "identifier": 1}
-                ]
-              },
-              {
-                "type": "logic_string_nocase_equal",
-                "nodes": [
-                  {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-                  {"type": "identifier", "identifier": 2}
-                ]
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
-              {"type": "query", "query": 1001, "object": {"type": "context", "context": "Guard"}, "parameters": []}
-            ]
-          }
-        ]
-      }
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_or",
+          "nodes": [
+            {
+              "type": "logic_string_nocase_equal",
+              "nodes": [
+                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "identifier", "identifier": 1}
+              ]
+            },
+            {
+              "type": "logic_string_nocase_equal",
+              "nodes": [
+                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "identifier", "identifier": 2}
+              ]
+            }
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 3}
+          ]
+        }
+      ]
     }
   },
   "env": {
@@ -1094,7 +1106,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
           "guard": "service_merchant_win_v2",
           "sharing": [
             {
-              "who": {"Object": "three_body_signature_service_v2"},
+              "who": {"Entity": {"name_or_address": "three_body_signature_service_v2"}},
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -1104,7 +1116,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
           "guard": "service_customer_win_v2",
           "sharing": [
             {
-              "who": "Order",
+              "who": {"Signer": "signer"},
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -1139,11 +1151,11 @@ Configure order_allocators to define fund distribution rules, then publish the S
 
 ***
 
-### Step 11: Create Reward Pool (Optional)
+### Step 11: Create Empty Reward Object (Optional)
 
-Create reward pool with initial balance for rewards and compensation.
+Create an empty reward object first. This object will be referenced by reward guards to prevent double-claiming.
 
-**Prompt**: Create reward object "myshop\_reward\_v2" with initial balance.
+**Prompt**: Create empty reward object.
 
 ```json
 {
@@ -1151,17 +1163,14 @@ Create reward pool with initial balance for rewards and compensation.
   "data": {
     "object": {
       "name": "myshop_reward_v2",
-      "replaceExistName": true
+      "replaceExistName": true,
+      "permission": "myshop_perm_v2"
     },
-    "description": "Reward pool for MyShop advanced - Wonderful rewards (10000), Lost compensation (20000), Shipping timeout compensation (30000)",
-    "coin_add": {
-      "balance": 150000000
-    }
+    "description": "MyShop reward pool for wonderful service and compensation"
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
-    "no_cache": true
+    "network": "testnet"
   }
 }
 ```
@@ -1170,14 +1179,10 @@ Create reward pool with initial balance for rewards and compensation.
 
 ### Step 12: Create Reward Guards (Optional)
 
-Create guards for reward verification:
+Create guards for reward verification with double-claim protection:
 
 | # | Guard Name | Purpose | Reward Amount |
 |---|------------|---------|---------------|
-| 7 | `reward_wonderful_v2` | Verify order at Wonderful node | 10000 |
-| 8 | `reward_lost_v2` | Verify order at Lost node | 20000 |
-| 9 | `reward_shipping_timeout_v2` | Verify order at Shipping node > 2 days | 30000 |
-
 **Guard 7: reward_wonderful_v2**
 
 ```json
@@ -1188,20 +1193,48 @@ Create guards for reward verification:
       "name": "reward_wonderful_v2",
       "replaceExistName": true
     },
-    "description": "Verify order at Wonderful node for reward",
+    "description": "Verify order at Wonderful node for reward, signer must be order owner, order belongs to this service, and not claimed before",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Wonderful"}
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Wonderful"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_string_nocase_equal",
-        "nodes": [
-          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-          {"type": "identifier", "identifier": 1}
-        ]
-      }
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_string_nocase_equal",
+          "nodes": [
+            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "identifier", "identifier": 1}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "context", "context": "Signer"}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 3}
+          ]
+        },
+        {
+          "type": "logic_not",
+          "node": {
+            "type": "query_reward_record_exists",
+            "object": {"identifier": 2},
+            "where": {
+              "storeFromId": {"identifier": 0}
+            }
+          }
+        }
+      ]
     }
   },
   "env": {
@@ -1221,20 +1254,48 @@ Create guards for reward verification:
       "name": "reward_lost_v2",
       "replaceExistName": true
     },
-    "description": "Verify order at Lost node for compensation",
+    "description": "Verify order at Lost node for compensation, signer must be order owner, order belongs to this service, and not claimed before",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"}
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_string_nocase_equal",
-        "nodes": [
-          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-          {"type": "identifier", "identifier": 1}
-        ]
-      }
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_string_nocase_equal",
+          "nodes": [
+            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "identifier", "identifier": 1}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "context", "context": "Signer"}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 3}
+          ]
+        },
+        {
+          "type": "logic_not",
+          "node": {
+            "type": "query_reward_record_exists",
+            "object": {"identifier": 2},
+            "where": {
+              "storeFromId": {"identifier": 0}
+            }
+          }
+        }
+      ]
     }
   },
   "env": {
@@ -1254,20 +1315,48 @@ Create guards for reward verification:
       "name": "reward_shipping_timeout_v2",
       "replaceExistName": true
     },
-    "description": "Verify order at Shipping node for shipping timeout compensation",
+    "description": "Verify order at Shipping node for timeout compensation, signer must be order owner, order belongs to this service, and not claimed before",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"}
+      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_string_nocase_equal",
-        "nodes": [
-          {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
-          {"type": "identifier", "identifier": 1}
-        ]
-      }
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_string_nocase_equal",
+          "nodes": [
+            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "identifier", "identifier": 1}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "context", "context": "Signer"}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 3}
+          ]
+        },
+        {
+          "type": "logic_not",
+          "node": {
+            "type": "query_reward_record_exists",
+            "object": {"identifier": 2},
+            "where": {
+              "storeFromId": {"identifier": 0}
+            }
+          }
+        }
+      ]
     }
   },
   "env": {
@@ -1279,11 +1368,11 @@ Create guards for reward verification:
 
 ***
 
-### Step 13: Add Reward Guards (Optional)
+### Step 13: Add Reward Guards to Reward Object (Optional)
 
-Add reward guards for Wonderful (10000), Lost (20000), and Shipping timeout (30000) compensation.
+Add reward guards to the reward object with `store_from_id` set to the order identifier. This enables double-claim protection by storing the order ID in reward records.
 
-**Prompt**: Add reward guards.
+**Prompt**: Add reward guards with store_from_id.
 
 ```json
 {
@@ -1294,17 +1383,20 @@ Add reward guards for Wonderful (10000), Lost (20000), and Shipping timeout (300
       {
         "guard": "reward_wonderful_v2",
         "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 10000}
+        "amount": {"type": "Fixed", "value": 10000},
+        "store_from_id": 0
       },
       {
         "guard": "reward_lost_v2",
         "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 20000}
+        "amount": {"type": "Fixed", "value": 20000},
+        "store_from_id": 0
       },
       {
         "guard": "reward_shipping_timeout_v2",
         "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 30000}
+        "amount": {"type": "Fixed", "value": 30000},
+        "store_from_id": 0
       }
     ]
   },
@@ -1313,6 +1405,31 @@ Add reward guards for Wonderful (10000), Lost (20000), and Shipping timeout (300
     "network": "testnet"
   }
 }
+
+***
+
+### Step 14: Deposit to Reward Pool (Optional)
+
+Deposit WOW tokens to the reward pool for rewards and compensation.
+
+**Prompt**: Deposit to reward object "myshop\_reward\_v2".
+
+```json
+{
+  "operation_type": "reward",
+  "data": {
+    "object": "myshop_reward_v2",
+    "coin_add": {
+      "balance": 150000000
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
 
 ***
 
