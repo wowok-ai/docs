@@ -538,7 +538,45 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard 3: service_merchant_win_v2** - Verify order at merchant win nodes AND order belongs to this service
+**Guard 3: machine_time_2d_v2** - Verify 2-day timeout (172800000 ms)
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "machine_time_2d_v2",
+      "replaceExistName": true
+    },
+    "description": "Verify time elapsed >= 2 days (172800000 ms)",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "U64"},
+      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "172800000"}
+    ],
+    "root": {
+      "type": "logic_as_u256_greater_or_equal",
+      "nodes": [
+        {
+          "type": "calc_number_subtract",
+          "nodes": [
+            {"type": "context", "context": "Clock"},
+            {"type": "identifier", "identifier": 0}
+          ]
+        },
+        {"type": "identifier", "identifier": 1}
+      ]
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "testnet"
+  }
+}
+```
+
+***
+
+**Guard 4: service_merchant_win_v2** - Verify order at merchant win nodes AND order belongs to this service
 
 ```json
 {
@@ -714,6 +752,8 @@ Create Guards using the Service address. Guards verify order state and service o
 
 Create Machine with all nodes and guards in a single operation.
 
+**Important Note on `namedOperator`**: In Machine forwards, setting `namedOperator: ""` (empty string) allows the **customer** to operate the Progress through their Order. This is required for all forwards that should be triggered by the customer via the order system. Forwards without `namedOperator` or with a specific named operator require the merchant or designated operator to execute.
+
 **Prompt**: Create Machine "myshop\_advanced\_machine\_v2" with permission "myshop\_perm\_v2" and all nodes.
 
 ```json
@@ -788,7 +828,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Confirm Receipt",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 }
               ]
             }
@@ -804,7 +845,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Rate as Wonderful",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 }
               ]
             }
@@ -848,7 +890,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Report Lost",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 },
                 {
                   "name": "Confirm Lost with Merkle Root",
@@ -870,7 +913,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Request Return",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 },
                 {
                   "name": "Confirm Return with Merkle Root",
@@ -892,7 +936,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Request Return with Receipt",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 },
                 {
                   "name": "Confirm Return Address with Merkle Root",
@@ -937,7 +982,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Confirm Return Received",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 }
               ]
             },
@@ -954,7 +1000,8 @@ Create Machine with all nodes and guards in a single operation.
                 {
                   "name": "Confirm Return Received",
                   "permissionIndex": 1001,
-                  "weight": 1
+                  "weight": 1,
+                  "namedOperator": ""
                 }
               ]
             }
@@ -1093,7 +1140,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
           "price": 5000000000,
           "stock": 100,
           "suspension": false,
-          "wip": "https://example.com/three_body.wip",
+          "wip": "https://wowok.net/test/three_body.wip",
           "wip_hash": ""
         }
       ]
@@ -1452,22 +1499,25 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
           {
             "name": "The Three-Body Problem + Author Signature",
             "stock": 1,
-            "wip_hash": "sha256:1db6dc86d8be68bafb33418628a30e7bfcbce48de9c099d3d9cb21def3af8b43"
+            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
           }
         ],
         "total_pay": {
           "balance": 5000000000
         },
-        "order_info": "To my dear friend - keep exploring the universe"
+        "payment_remark": "To my dear friend - keep exploring the universe"
       },
       "namedNewOrder": {
-        "name": "myshop_order_v2"
+        "name": "myshop_order_v2",
+        "replaceExistName": true
       },
       "namedNewAllocation": {
-        "name": "myshop_allocation_v2"
+        "name": "myshop_allocation_v2",
+        "replaceExistName": true
       },
       "namedNewProgress": {
-        "name": "myshop_progress_v2"
+        "name": "myshop_progress_v2",
+        "replaceExistName": true
       }
     }
   },
@@ -1516,7 +1566,7 @@ Merchant confirms order by submitting Merkle Root.
             "identifier": 0,
             "b_submission": true,
             "value_type": "String",
-            "value": "0xabc123...def456"
+            "value": "0xabc1234567890def4567890abc1234567890def4567890abc1234567890def4"
           }
         ]
       }
@@ -1536,7 +1586,7 @@ Merchant confirms order by submitting Merkle Root.
 
 Merchant starts shipping after signature service is completed.
 
-**Prompt**: Merchant starts shipping with signature verification and Merkle Root.
+**Prompt**: Merchant starts shipping with Merkle Root submission.
 
 ```json
 {
@@ -1556,25 +1606,19 @@ Merchant starts shipping after signature service is completed.
     "type": "submission",
     "guard": [
       {
-        "object": "machine_service_order_v2",
+        "object": "machine_merkle_root_v2",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "machine_service_order_v2",
+        "guard": "machine_merkle_root_v2",
         "submission": [
           {
             "identifier": 0,
             "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_order_v2"
-          },
-          {
-            "identifier": 1,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "three_body_signature_service_v2"
+            "value_type": "String",
+            "value": "0xabc1234567890def4567890abc1234567890def4567890abc1234567890def4"
           }
         ]
       }
@@ -1588,6 +1632,8 @@ Merchant starts shipping after signature service is completed.
 }
 ```
 
+**Note**: The `machine_merkle_root_v2` Guard expects a 66-character string (including "0x" prefix). The Guard validates that the string length equals 66 characters.
+
 ***
 
 ### Step 4: Customer Confirms Delivery
@@ -1598,16 +1644,15 @@ Customer confirms receipt of goods.
 
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "order",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
+    "object": "myshop_order_v2",
+    "progress": {
       "operation": {
         "next_node_name": "Delivery Complete",
-        "forward": "Confirm Delivery with Merkle Root"
+        "forward": "Confirm Receipt"
       },
-      "hold": false,
-      "message": "Delivery confirmed with Merkle Root - goods received"
+      "message": "Delivery confirmed - goods received"
     }
   },
   "env": {
@@ -1628,15 +1673,14 @@ Alternatively, customer can rate as Wonderful (very satisfied).
 
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "order",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
+    "object": "myshop_order_v2",
+    "progress": {
       "operation": {
         "next_node_name": "Wonderful",
         "forward": "Rate as Wonderful"
       },
-      "hold": false,
       "message": "Rated as Wonderful - very satisfied with the service"
     }
   },
