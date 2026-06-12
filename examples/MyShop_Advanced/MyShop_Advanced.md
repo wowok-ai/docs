@@ -827,7 +827,6 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Confirm Receipt",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 }
@@ -844,7 +843,6 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Rate as Wonderful",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 }
@@ -889,7 +887,6 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Report Lost",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 },
@@ -912,7 +909,6 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Request Return",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 },
@@ -935,7 +931,6 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Request Return with Receipt",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 },
@@ -975,13 +970,12 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 1001,
                   "weight": 1,
+                  "namedOperator": "",
                   "guard": { "guard": "machine_merkle_root_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 }
@@ -993,13 +987,12 @@ Create Machine with all nodes and guards in a single operation.
               "forwards": [
                 {
                   "name": "Submit Return Merkle Root",
-                  "permissionIndex": 1001,
                   "weight": 1,
+                  "namedOperator": "",
                   "guard": { "guard": "machine_merkle_root_v2" }
                 },
                 {
                   "name": "Confirm Return Received",
-                  "permissionIndex": 1001,
                   "weight": 1,
                   "namedOperator": ""
                 }

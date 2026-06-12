@@ -100,7 +100,8 @@ Before starting, ensure you have:
 ```json
 {
   "gen": {
-    "name": "myshop_merchant"
+    "name": "myshop_merchant",
+    "replaceExistName": true
   }
 }
 ```
@@ -133,7 +134,8 @@ First, create a Permission object to manage access control for your store operat
     "object": {
       "name": "myshop_permission_v2",
       "tags": ["ecommerce", "toys", "shop"],
-      "onChain": false
+      "onChain": false,
+      "replaceExistName": true
     },
     "description": "Permission management for MyShop toy store"
   },
@@ -158,7 +160,8 @@ Create a Machine to define the order processing workflow. This includes nodes fo
   "data": {
     "object": {
       "name": "myshop_machine_v2",
-      "permission": "myshop_permission_v2"
+      "permission": "myshop_permission_v2",
+      "replaceExistName": true
     },
     "description": "Order processing workflow for MyShop toy store"
   },
@@ -433,7 +436,8 @@ Create a Contact object to enable encrypted communication between customers and 
   "data": {
     "object": {
       "name": "myshop_aftersales_contact_v2",
-      "permission": "myshop_permission_v2"
+      "permission": "myshop_permission_v2",
+      "replaceExistName": true
     },
     "description": "MyShop after-sales support contact - we're here to help with orders, shipping, and returns",
     "ims": {
@@ -476,7 +480,8 @@ This Guard checks if the order has reached "Completed" status before allowing th
   "data": {
     "namedNew": {
       "name": "myshop_withdraw_guard_v2",
-      "tags": ["ecommerce", "withdraw", "merchant"]
+      "tags": ["ecommerce", "withdraw", "merchant"],
+      "replaceExistName": true
     },
     "description": "Verify order is completed before merchant can withdraw funds. Submit order object ID.",
     "table": [
@@ -495,25 +500,22 @@ This Guard checks if the order has reached "Completed" status before allowing th
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": 1253,
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
           },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -540,7 +542,8 @@ For scenarios where customers need refunds before order completion.
   "data": {
     "namedNew": {
       "name": "myshop_refund_guard_v2",
-      "tags": ["ecommerce", "refund", "customer"]
+      "tags": ["ecommerce", "refund", "customer"],
+      "replaceExistName": true
     },
     "description": "Allow refund for orders not yet shipped. Submit order object ID.",
     "table": [
@@ -559,25 +562,22 @@ For scenarios where customers need refunds before order completion.
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": 1253,
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
           },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -586,6 +586,9 @@ For scenarios where customers need refunds before order completion.
   }
 }
 ```
+
+> **Note**: The Guard `root` field should directly specify the node type (e.g., "logic_equal"), not wrap it in a `type: "node"` object.
+
 ---
 
 ### Step 6: Create Guards for Fund Allocation
@@ -605,7 +608,8 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
     "namedNew": {
       "name": "myshop_withdraw_guard_v2",
       "tags": ["order", "completed", "withdraw"],
-      "onChain": false
+      "onChain": false,
+      "replaceExistName": true
     },
     "description": "Verify order progress is at Completed node for merchant withdrawal",
     "table": [
@@ -625,25 +629,22 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": 1253,
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
           },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -673,7 +674,8 @@ Create a Guard for customer refunds when order is cancelled (not shipped).
     "namedNew": {
       "name": "myshop_refund_guard_v2",
       "tags": ["order", "cancelled", "refund"],
-      "onChain": false
+      "onChain": false,
+      "replaceExistName": true
     },
     "description": "Verify order progress is at Order Confirmation node for customer refund",
     "table": [
@@ -693,25 +695,22 @@ Create a Guard for customer refunds when order is cancelled (not shipped).
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": 1253,
+          "object": {
+            "identifier": 0,
+            "convert_witness": 100
           },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+          "parameters": []
+        },
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "env": {
@@ -758,7 +757,8 @@ The `order_allocators` configuration defines how order payments are distributed:
       "type_parameter": "0x2::wow::WOW",
       "permission": "myshop_permission_v2",
       "tags": ["ecommerce", "toys", "store"],
-      "onChain": false
+      "onChain": false,
+      "replaceExistName": true
     },
     "description": "MyShop - Top quality toys for children",
     "location": "Online Store",

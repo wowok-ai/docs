@@ -131,24 +131,27 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
       "replaceExistName": true
     },
     "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service.",
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "context",
-            "context": "Signer"
-          },
-          {
-            "type": "value",
-            "value": {
-              "type": "Address",
-              "value": "three_body_author"
-            }
-          }
-        ]
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": false,
+        "value_type": "Address",
+        "value": "three_body_author",
+        "name": "Author address"
       }
+    ],
+    "root": {
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "context",
+          "context": "Signer"
+        },
+        {
+          "type": "identifier",
+          "identifier": 0
+        }
+      ]
     }
   },
   "env": {
@@ -157,6 +160,8 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
   }
 }
 ```
+
+> **Note**: The Guard uses a `table` to define constant values with identifiers, then references them in the `root` logic using `identifier` node type.
 
 **Expected Result**:
 ```json
@@ -844,3 +849,25 @@ PUBLISH (LAST STEP!)
 - Confirm state changes
 
 The `query_toolkit` and `onchain_table_data` are essential for validating every step of the way.
+---
+
+## Test Validation Record
+
+This example has been tested and validated on testnet.
+
+### Test Environment
+- **Network**: testnet
+- **Test Account**: three_body_author
+- **Test Date**: 2026-06-11
+
+### Issues Found and Fixed
+
+#### Issue 1: Guard Root Node Format
+**Problem**: The original Guard definition used an invalid `value` node type.
+
+**Solution**: Use `table` to define constant values with `identifier` references (see Step 2 for corrected format).
+
+### Test Results
+
+All 8 main steps executed successfully on testnet.
+

@@ -170,20 +170,20 @@ clock > progress.current_time + 1000
       "tags": ["insurance", "time-lock", "complete"],
       "replaceExistName": true
     },
-    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 1000ms (1 second for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness=TypeOrderProgress(100).",
+    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 10000ms (10 seconds for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness=TypeOrderProgress(100).",
+
     "table": [
       {
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {
         "identifier": 1,
         "b_submission": false,
         "value_type": "U64",
-        "value": 1000
+        "value": 10000
       }
     ],
     "root": {
@@ -198,7 +198,7 @@ clock > progress.current_time + 1000
           "nodes": [
             {
               "type": "query",
-              "query": "progress.current_time",
+              "query": 1272,
               "object": {
                 "identifier": 0,
                 "convert_witness": 100
@@ -225,10 +225,10 @@ clock > progress.current_time + 1000
 
 | identifier | b_submission | value_type | value | Purpose |
 |------------|-------------|-----------|-------|---------|
-| 0 | **true** | Address | 0x0...0 (placeholder) | Order ID submitted at runtime, converted to Progress via convert_witness |
-| 1 | false | U64 | 1000 | Time-lock duration in ms (1 second for testing) |
+| 0 | **true** | Address | (submitted at runtime) | Order ID submitted at runtime, converted to Progress via convert_witness |
+| 1 | false | U64 | 10000 | Time-lock duration in ms (10 seconds for testing) |
 
-> **Important**: `1000` ms (1 second) is for testing only. In production, set to a reasonable duration (e.g., 8 hours = 28800000 ms).
+> **Important**: `10000` ms (10 seconds) is for testing only. In production, set to a reasonable duration (e.g., 8 hours = 28800000 ms).
 
 ---
 
@@ -268,7 +268,7 @@ Create a Guard that allows the insurance provider to withdraw funds after the or
       "nodes": [
         {
           "type": "query",
-          "query": "progress.current",
+          "query": 1253,
           "object": {
             "identifier": 0,
             "convert_witness": 100
@@ -401,9 +401,9 @@ Create the insurance service with machine, order_allocators, sales, and publish 
           "guard": "insurance_withdraw_guard_v1",
           "sharing": [
             {
-              "who": {"Signer": "signer"},
+              "who": {"Signer": null},
               "sharing": 10000,
-              "mode": "Rate"
+              "mode": 0
             }
           ]
         }
@@ -430,6 +430,10 @@ Create the insurance service with machine, order_allocators, sales, and publish 
   }
 }
 ```
+
+> **Important**: 
+> - `mode: 0` represents Rate allocation mode (0=Rate, 1=Amount, 2=Surplus)
+> - `who: {"Signer": null}` represents the transaction signer
 
 ---
 
@@ -544,6 +548,8 @@ First, advance the progress from initial state to Start node.
 
 Wait at least 1 second after entering Start node, then advance the progress to Complete with the Order ID as submission.
 
+> ⚠️ **Critical**: The `submission` field in the JSON below must be placed at the **root level** of the request (at the same level as `operation_type`, `data`, and `env`). Do NOT place it inside the `data` object or inside `operate.operation`. Incorrect placement will result in a validation error: `Unrecognized key(s) in object: 'submission'`.
+
 **Prompt**: Advance progress to Complete, submitting the Order ID. Wait 1 second before executing.
 
 ```json
@@ -587,11 +593,12 @@ Wait at least 1 second after entering Start node, then advance the progress to C
 }
 ```
 
+> **⚠️ Important**: The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `operate.operation`. Incorrect placement will cause validation errors.
+>
 > **Note**: 
-> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 10.1
+> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 8.1
 > - Both `next_node_name` and `forward` fields are required in the operation object
 > - Use simple forward name `"complete_claim"` without node prefix
-> - The `submission` field is at the root level of the request, not inside `operate.operation`
 
 ---
 
