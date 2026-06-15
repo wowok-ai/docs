@@ -401,9 +401,9 @@ Create the insurance service with machine, order_allocators, sales, and publish 
           "guard": "insurance_withdraw_guard_v1",
           "sharing": [
             {
-              "who": {"Signer": null},
+              "who": {"Signer": "signer"},
               "sharing": 10000,
-              "mode": 0
+              "mode": "Rate"
             }
           ]
         }
@@ -432,8 +432,8 @@ Create the insurance service with machine, order_allocators, sales, and publish 
 ```
 
 > **Important**: 
-> - `mode: 0` represents Rate allocation mode (0=Rate, 1=Amount, 2=Surplus)
-> - `who: {"Signer": null}` represents the transaction signer
+> - `mode: "Rate"` represents Rate allocation mode (valid values: `"Amount"`, `"Rate"`, `"Surplus"`)
+> - `who: {"Signer": "signer"}` represents the transaction signer
 
 ---
 
@@ -546,11 +546,61 @@ First, advance the progress from initial state to Start node.
 
 ### 8.3 Advance Progress: Start -> Complete
 
-Wait at least 1 second after entering Start node, then advance the progress to Complete with the Order ID as submission.
+Wait at least 10 seconds after entering Start node, then advance the progress to Complete with the Order ID as submission.
 
-> ⚠️ **Critical**: The `submission` field in the JSON below must be placed at the **root level** of the request (at the same level as `operation_type`, `data`, and `env`). Do NOT place it inside the `data` object or inside `operate.operation`. Incorrect placement will result in a validation error: `Unrecognized key(s) in object: 'submission'`.
+> **Two-Phase Submission Loop**: When a forward has a Guard that requires user submission (`b_submission: true`), the MCP server uses a two-phase approach:
+> 
+> **Phase 1**: Call WITHOUT the `submission` field at root level. The server will return a `submission` prompt containing the Guard addresses and submission structure that needs to be filled.
+> 
+> **Phase 2**: Call WITH the `submission` field at root level, populated with the `value` fields from the Phase 1 prompt. The prompt shows which `identifier` expects a value of which `value_type`.
 
-**Prompt**: Advance progress to Complete, submitting the Order ID. Wait 1 second before executing.
+**Phase 1 Prompt**: Call progress operation WITHOUT `submission` field.
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "<insurance_progress_id>",
+    "operate": {
+      "operation": {
+        "next_node_name": "Complete",
+        "forward": "complete_claim"
+      }
+    }
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+The server will return a `submission` prompt like:
+
+```json
+{
+  "type": "submission",
+  "guard": [
+    { "object": "0x1508ded8...", "impack": true }
+  ],
+  "submission": [
+    {
+      "guard": "0x1508ded8...",
+      "submission": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)",
+          "object_type": "Order"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Phase 2**: Fill in the `value` field with the Order ID and resubmit. The `submission` field must be placed at the **root level** of the request (sibling to `operation_type`, `data`, and `env`).
 
 ```json
 {
@@ -568,13 +618,13 @@ Wait at least 1 second after entering Start node, then advance the progress to C
     "type": "submission",
     "guard": [
       {
-        "object": "insurance_complete_guard_v1",
+        "object": "0x1508ded8...",
         "impack": true
       }
     ],
     "submission": [
       {
-        "guard": "insurance_complete_guard_v1",
+        "guard": "0x1508ded8...",
         "submission": [
           {
             "identifier": 0,
@@ -593,26 +643,37 @@ Wait at least 1 second after entering Start node, then advance the progress to C
 }
 ```
 
-> **⚠️ Important**: The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `operate.operation`. Incorrect placement will cause validation errors.
->
-> **Note**: 
-> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 8.1
-> - Both `next_node_name` and `forward` fields are required in the operation object
-> - Use simple forward name `"complete_claim"` without node prefix
+> **⚠️ Important**: 
+> - The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `operate.operation`.
+> - The `guard` objects in the submission use on-chain addresses (not names), as returned by the Phase 1 prompt.
+> - The `value` field must be populated with the actual Order ID. The `value_type` is `"Address"` (string), which is the readable form of the enum value `1`.
+> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 8.1.
+> - Both `next_node_name` and `forward` fields are required in the operation object.
+> - Use simple forward name `"complete_claim"` without node prefix.
 
 ---
 
 ## Troubleshooting
 
-### Error: MoveAbort code: 7 (Permission Error)
+### Error: MoveAbort code: 7 (Guard Verification Failed)
 
-**Symptom**: When advancing Progress, you get `MoveAbort in 4th command, abort code: 7`
+**Symptom**: When advancing Progress, you get `MoveAbort in 4th command, abort code: 7 (Verify failed), in '0x2::passport::result_for_permission'`
 
-**Cause**: The operating account does not have the required permission index for the forward operation.
+**Cause**: The Guard's verification logic returned `false`. In the passport module, `result_for_permission()` calls `result()` which asserts `self.result == true`, aborting with `E_VERIFY_FAILED` (code 7). This means the Guard condition (e.g., time-lock: `clock > progress.current_time + lock_duration`) was not satisfied.
 
-**Solution**: Ensure the Permission object includes all permission indexes used in Machine forwards:
-- Add indexes [1000, 1001, ...] when creating the Permission object
-- Use `table.op: "add perm by entity"` to assign permissions to the operating account
+**Solution**: 
+1. Wait longer than the time-lock duration before retrying
+2. Verify the time-lock duration is correct (10000ms = 10 seconds)
+3. Check that the submitted Order ID is correct and corresponds to the Progress being advanced
+
+**Technical Detail**: The error path is:
+```
+result_for_permission() → assert!(result()) → E_VERIFY_FAILED
+  ↓
+result() → returns self.result (false)
+  ↓
+verify() → verify_guard() returned false → guard_info.impack=true → set self.result=false
+```
 
 ### Error: Forward validation failed
 
