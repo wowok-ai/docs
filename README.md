@@ -225,6 +225,9 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 │  ├─ MyShop_Advanced - Advanced E-Commerce Example             │
 │  ├─ Insurance - Time-Lock Insurance Claim Processing          │
 │  └─ Travel - Weather-Dependent Travel with Sub-Orders         │
+├─────────────────────────────────────────────────────────────────┤
+│  Stage 9: Cross-Chain Bridge 🪙                                │
+│  └─ Bridge - WOW ↔ EVM (Ethereum mainnet) Asset Transfers     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -269,6 +272,9 @@ Choose a stage to begin your WoWok journey:
 | [Insurance](examples/Insurance/) | Time-Lock Guards | Insurance claims with time-lock verification using convert_witness |
 | [Travel](examples/Travel/) | Multi-Node Workflow | Iceland travel service with weather-dependent activities and sub-orders |
 
+### [🪙 Stage 9: Cross-Chain Bridge →](docs/stage-09-bridge.md)
+**Cross-Chain Asset Transfers** - Bridge assets between WOW mainnet and EVM (Ethereum mainnet) via a single `bridge_operation` tool with 10 operation types.
+
 ---
 
 ## 📋 Quick Reference
@@ -301,6 +307,7 @@ Choose a stage to begin your WoWok journey:
 | [MyShop_Advanced Example](examples/MyShop_Advanced/) | Example | 8 | Advanced merchant system with arbitration |
 | [Insurance Example](examples/Insurance/) | Example | 8 | Time-lock insurance claims with convert_witness |
 | [Travel Example](examples/Travel/) | Example | 8 | Multi-node workflow with weather checks and sub-orders |
+| [Bridge](docs/bridge.md) | Cross-Chain | 9 | WOW ↔ EVM (Ethereum mainnet) cross-chain asset transfers |
 
 ---
 

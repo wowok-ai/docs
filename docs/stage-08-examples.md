@@ -181,4 +181,4 @@ Now it's time to build your own application! We recommend:
 
 ---
 
-**[← Return to Main Directory](../README.md)**
+**[← Return to Main Directory](../README.md) | [Stage 9: Cross-Chain Bridge →](stage-09-bridge.md)**
