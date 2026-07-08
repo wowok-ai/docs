@@ -1,16 +1,16 @@
 [
   {
-    "name": "Shipping",
+    "name": "Cancelled",
     "pairs": [
       {
-        "prev_node": "Order Confirmation",
-        "threshold": 1,
+        "prev_node": "",
+        "threshold": 0,
         "forwards": [
           {
-            "name": "Ship Goods",
+            "name": "Cancel Order",
             "weight": 1,
-            "namedOperator": null,
-            "permissionIndex": 1001
+            "namedOperator": "",
+            "permissionIndex": null
           }
         ]
       }
@@ -62,12 +62,23 @@
             "weight": 1,
             "namedOperator": null,
             "permissionIndex": 1000
-          },
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Shipping",
+    "pairs": [
+      {
+        "prev_node": "Order Confirmation",
+        "threshold": 1,
+        "forwards": [
           {
-            "name": "Cancel Order",
+            "name": "Ship Goods",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": null
+            "namedOperator": null,
+            "permissionIndex": 1001
           }
         ]
       }

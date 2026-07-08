@@ -8,7 +8,7 @@ A complete example demonstrating how to create a service for book signing by the
 
 This example demonstrates:
 
- **Service with Buy Guard**: The buy_guard allows you to define various conditions for users to purchase products, such as identity verification, completing KYC, or being on an allowlist. In this example, only the service creator (author) can purchase this service
+**Service with Buy Guard**: The buy_guard allows you to define various conditions for users to purchase products, such as identity verification, completing KYC, or being on an allowlist. In this example, only the service creator (author) can purchase this service.
 
 ### Key Design Decisions
 
@@ -33,6 +33,7 @@ Before running this example, ensure you have:
 {
   "query_type": "account_balance",
   "name_or_address": "three_body_author",
+  "balance": true,
   "network": "testnet"
 }
 ```
@@ -87,10 +88,10 @@ Create a Permission object to manage the service.
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "three_body_permission_v2",
+      "name": "three_body_permission",
       "replaceExistName": true
     },
-    "description": "Permission for Three-Body Signature Service v2",
+    "description": "Permission for Three-Body Signature Service",
     "table": {
       "op": "add perm by entity",
       "entity": {"name_or_address": "three_body_author"},
@@ -126,7 +127,7 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "three_body_buy_guard_v2",
+      "name": "three_body_buy_guard",
       "tags": ["signature", "book", "buy-guard"],
       "replaceExistName": true
     },
@@ -161,7 +162,7 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 }
 ```
 
-> **Note**: The Guard uses a `table` to define constant values with identifiers, then references them in the `root` logic using `identifier` node type.
+> **Note**: The Guard uses a `table` to define constant values with identifiers, then references them in the `root` logic using `identifier` node type. The `root` is a direct GuardNode (no wrapper).
 
 **Expected Result**:
 ```json
@@ -187,11 +188,11 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
   "operation_type": "machine",
   "data": {
     "object": {
-      "name": "three_body_machine_v2",
-      "permission": "three_body_permission_v2",
+      "name": "three_body_machine",
+      "permission": "three_body_permission",
       "replaceExistName": true
     },
-    "description": "Three-Body signature service workflow v2: Book Delivery -> Signature Completion",
+    "description": "Three-Body signature service workflow: Book Delivery -> Signature Completion",
     "node": {
       "op": "add",
       "nodes": [
@@ -260,12 +261,12 @@ Create the Three-Body signature service without publishing. The Service must be 
   "operation_type": "service",
   "data": {
     "object": {
-      "name": "three_body_signature_service_v2",
+      "name": "three_body_signature_service",
       "type_parameter": "0x2::wow::WOW",
-      "permission": "three_body_permission_v2",
+      "permission": "three_body_permission",
       "replaceExistName": true
     },
-    "description": "Three-Body author book signature service v2. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+    "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
     "publish": false
   },
   "env": {
@@ -296,8 +297,8 @@ Bind the published Machine to the Service. **Important**: The Service must be un
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "machine": "three_body_machine_v2"
+    "object": "three_body_signature_service",
+    "machine": "three_body_machine"
   },
   "env": {
     "account": "three_body_author",
@@ -316,14 +317,6 @@ Bind the published Machine to the Service. **Important**: The Service must be un
 }]
 ```
 
-**Verification** (with no_cache: true):
-```json
-{
-  "machine": "three_body_machine_v2",
-  "bPublished": false
-}
-```
-
 ---
 
 ## Step 6: Set Buy Guard
@@ -335,8 +328,8 @@ Configure the Buy Guard to restrict purchases to the author only.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "buy_guard": "three_body_buy_guard_v2"
+    "object": "three_body_signature_service",
+    "buy_guard": "three_body_buy_guard"
   },
   "env": {
     "account": "three_body_author",
@@ -366,13 +359,13 @@ Set up fund allocation: 100% to the author upon order completion.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_allocators": {
       "description": "Three-Body signature service fund allocation - 100% to author",
       "threshold": 0,
       "allocators": [
         {
-          "guard": "three_body_buy_guard_v2",
+          "guard": "three_body_buy_guard",
           "sharing": [
             {
               "who": {
@@ -415,7 +408,7 @@ Add sales items and publish the service to make it available for orders.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "sales": {
       "op": "add",
       "sales": [
@@ -459,7 +452,7 @@ Unpause the service to allow order creation.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "pause": false
   },
   "env": {
@@ -489,7 +482,7 @@ Query the service to verify all configurations.
 ```json
 {
   "query_type": "onchain_objects",
-  "objects": ["three_body_signature_service_v2"],
+  "objects": ["three_body_signature_service"],
   "no_cache": true,
   "network": "testnet"
 }
@@ -498,9 +491,9 @@ Query the service to verify all configurations.
 **Expected Result**:
 ```json
 {
-  "object": "three_body_signature_service_v2",
+  "object": "three_body_signature_service",
   "type": "Service",
-  "description": "Three-Body author book signature service v2. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+  "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
   "sales": [
     {
       "name": "Three-Body Book Signature",
@@ -511,12 +504,12 @@ Query the service to verify all configurations.
       "wip_hash": ""
     }
   ],
-  "buy_guard": "three_body_buy_guard_v2",
-  "machine": "three_body_machine_v2",
+  "buy_guard": "three_body_buy_guard",
+  "machine": "three_body_machine",
   "bPublished": true,
   "bPaused": false,
   "customer_required": ["phone", "email", "shipping_address"],
-  "permission": "three_body_permission_v2"
+  "permission": "three_body_permission"
 }
 ```
 
@@ -533,7 +526,7 @@ The author (`three_body_author`) should be able to purchase the service.
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_new": {
       "buy": {
         "items": [
@@ -548,11 +541,15 @@ The author (`three_body_author`) should be able to purchase the service.
         }
       },
       "namedNewOrder": {
-        "name": "three_body_order_v2",
+        "name": "three_body_order",
         "replaceExistName": true
       },
       "namedNewProgress": {
-        "name": "three_body_progress_v2",
+        "name": "three_body_progress",
+        "replaceExistName": true
+      },
+      "namedNewAllocation": {
+        "name": "three_body_allocation",
         "replaceExistName": true
       }
     }
@@ -566,22 +563,26 @@ The author (`three_body_author`) should be able to purchase the service.
 
 **Expected Result**:
 ```json
-[{
-  "type": "Progress",
-  "object": "three_body_progress_v2",
-  "version": "...",
-  "change": "created"
-},{
-  "type": "Order",
-  "object": "three_body_order_v2",
-  "version": "...",
-  "change": "created"
-},{
-  "type": "Allocation",
-  "object": "three_body_allocation_v2",
-  "version": "...",
-  "change": "created"
-}]
+[
+  {
+    "type": "Progress",
+    "object": "three_body_progress",
+    "version": "...",
+    "change": "created"
+  },
+  {
+    "type": "Order",
+    "object": "three_body_order",
+    "version": "...",
+    "change": "created"
+  },
+  {
+    "type": "Allocation",
+    "object": "three_body_allocation",
+    "version": "...",
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -595,7 +596,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
 {
   "operation_type": "service",
   "data": {
-    "object": "three_body_signature_service_v2",
+    "object": "three_body_signature_service",
     "order_new": {
       "buy": {
         "items": [
@@ -612,7 +613,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
     }
   },
   "env": {
-    "account": "myshop_customer",
+    "account": "three_body_customer",
     "network": "testnet"
   }
 }
@@ -621,7 +622,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
 **Expected Result** (Error):
 ```json
 {
-  "error": "Guard verification failed: Buy Guard check failed. Only the author can purchase this service."
+  "error": "Transaction resolution failed: MoveAbort in 8th command, abort code: 7 (Verify failed), in '0x2::passport::result_for_guard'"
 }
 ```
 
@@ -640,7 +641,7 @@ The author confirms the book has been delivered.
 {
   "operation_type": "progress",
   "data": {
-    "object": "three_body_progress_v2",
+    "object": "three_body_progress",
     "operate": {
       "operation": {
         "next_node_name": "Book Delivered",
@@ -659,7 +660,7 @@ The author confirms the book has been delivered.
 ```json
 [{
   "type": "Progress",
-  "object": "three_body_progress_v2",
+  "object": "three_body_progress",
   "version": "...",
   "change": "mutated"
 }]
@@ -669,12 +670,14 @@ The author confirms the book has been delivered.
 
 The author completes the signature.
 
+> **Important**: Use `no_cache: true` in the `env` for sequential Progress operations on the same object. This ensures the SDK reads the latest on-chain state (including the updated `current` node) instead of using a cached version.
+
 **Request**:
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "three_body_progress_v2",
+    "object": "three_body_progress",
     "operate": {
       "operation": {
         "next_node_name": "Signature Completed",
@@ -684,7 +687,8 @@ The author completes the signature.
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -693,7 +697,7 @@ The author completes the signature.
 ```json
 [{
   "type": "Progress",
-  "object": "three_body_progress_v2",
+  "object": "three_body_progress",
   "version": "...",
   "change": "mutated"
 }]
@@ -714,13 +718,13 @@ This example demonstrates:
 
 | Object | Name |
 |--------|------|
-| Permission | three_body_permission_v2 |
-| Buy Guard | three_body_buy_guard_v2 |
-| Machine | three_body_machine_v2 |
-| Service | three_body_signature_service_v2 |
-| Order | three_body_order_v2 |
-| Allocation | three_body_allocation_v2 |
-| Progress | three_body_progress_v2 |
+| Permission | three_body_permission |
+| Buy Guard | three_body_buy_guard |
+| Machine | three_body_machine |
+| Service | three_body_signature_service |
+| Order | three_body_order |
+| Allocation | three_body_allocation |
+| Progress | three_body_progress |
 
 ---
 
@@ -748,126 +752,18 @@ The two-node workflow provides clear tracking:
 
 Each node transition requires the author's confirmation, ensuring accountability.
 
----
+### Best Practices
 
-## Execution Experience & Best Practices
+1. **Naming Strategy**: Use consistent naming conventions and `replaceExistName: true` to enforce name usage. All operations use names instead of addresses for readability.
 
-### 1. Naming Strategy (Critical!)
+2. **Execution Order Matters**: Publish operations lock objects. Follow this order:
+   - Permission first (foundation)
+   - Machine (create workflow before service)
+   - Service (unpublished)
+   - Guards (need Service address for verification logic)
+   - Configure Service (add machine, buy_guard, order_allocators)
+   - Publish Service (LAST - once published, many changes are blocked)
 
-**Always establish naming conventions first** :
+3. **Use `no_cache: true` for Sequential Operations**: When performing multiple operations on the same object in sequence (especially Progress workflow advancement), always set `no_cache: true` in the `env` to ensure the SDK reads the latest on-chain state.
 
-- **Example**: Use consistent suffixes or no suffixes at all
-  - Good: `three_body_permission_v2`, `three_body_buy_guard_v2`, `three_body_machine_v2`
-  - Good: All names follow the same pattern
-  - Provide naming rules for AI to manage object names automatically; avoid conflicts with other naming conventions such as version/timestamp/random numbers for unique names
-  - Strongly recommend using the `replaceExistName` method in `LocalMarkOperationSchema` to enforce name usage (even if already exists)
-  - All operations use names instead of addresses (much easier!)
-  - Local marks map names to addresses automatically
-  - Easier to read, test, and document
-
-**Recommendation**:
-1. Decide on naming before starting
-2. Stick to it throughout the entire workflow
-3. Document your naming pattern in the test results
-
-### 2. Execution Order Matters (Critical!)
-
-**Publish operations lock objects** - plan carefully:
-
-#### Correct Order (Must Follow!)
-1. **Permission** first - foundation for all other objects
-2. **Machine** - create workflow before service
-3. **Service (unpublished)** - get address for Guards
-4. **Guards** - need Service address for verification logic
-5. **Configure Service** - add machine, buy_guard, order_allocators
-6. **Publish Service** - LAST! Once published, many changes are blocked
-
-### 3. Guard Creation Tips
-
-**Guards often depend on other objects**:
-- Buy Guards: May reference Service address
-- Progress Guards: May need Machine or Service information
-- Order Allocator Guards: Should be created before Service publish
-
-**Best Practice**:
-1. Create empty Service with name first (unpublished)
-2. Create all required Guards using that name
-3. Configure Service with Guards
-4. Publish Service
-
-### 4. Machine Workflow Setup
-
-**Machine nodes require permission indexes**:
-- If you use permissionIndex, make sure they exist!
-- Create permission indexes before adding machine nodes
-
-**Machine Publish**:
-- Must publish Machine before binding to Service
-- Published Machine can still have nodes added/modified
-
-### 5. Service Configuration Flow
-
-**Configure everything before publishing**:
-```
-Service Created (unpublished)
-    ↓
-Add Sales Items
-    ↓
-Bind Machine
-    ↓
-Set Buy Guard
-    ↓
-Configure Order Allocators
-    ↓
-Set Arbitration (if needed)
-    ↓
-PUBLISH (LAST STEP!)
-```
-
-### 6. Testing Strategy
-
-**Test incrementally, not all at once**:
-1. Test each step as you go
-2. Verify object creation with queries
-3. Don't proceed to next step until current one is verified
-4. Keep track of all object IDs in a test results file
-
-### 7. Common Pitfalls to Avoid
-
-1. **Price Units**: WOW tokens use 9 decimals, but testnet examples often use simple numbers (888 tokens)
-2. **Local Marks**: Verify objects exist with `local_mark_list` queries
-3. **Account Balance**: Always check balance before starting - gas fees add up!
-
-### 8. Let AI Manage Object Naming for You
-
-### 9. Query Toolkit is Your Best Friend
-
-**Use queries constantly**:
-- Verify objects exist
-- Check configurations
-- Debug issues
-- Confirm state changes
-
-The `query_toolkit` and `onchain_table_data` are essential for validating every step of the way.
----
-
-## Test Validation Record
-
-This example has been tested and validated on testnet.
-
-### Test Environment
-- **Network**: testnet
-- **Test Account**: three_body_author
-- **Test Date**: 2026-06-11
-
-### Issues Found and Fixed
-
-#### Issue 1: Guard Root Node Format
-**Problem**: The original Guard definition used an invalid `value` node type.
-
-**Solution**: Use `table` to define constant values with `identifier` references (see Step 2 for corrected format).
-
-### Test Results
-
-All 8 main steps executed successfully on testnet.
-
+4. **Query Toolkit is Your Best Friend**: Use queries constantly to verify objects exist, check configurations, debug issues, and confirm state changes.

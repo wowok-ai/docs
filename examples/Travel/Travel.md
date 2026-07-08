@@ -2,20 +2,18 @@
 
 A complete example demonstrating how to create an Iceland travel service using WoWok protocol. This service integrates weather-dependent activities, insurance sub-orders, and multi-node workflow management.
 
-> **Note**: All steps in this document have been tested and verified to work correctly with the WoWok MCP server.
-
 ---
 
 ## Core Requirements & Features
 
 | Requirement | Description | Implementation |
 |-------------|-------------|----------------|
-| **Weather-Dependent Activities** | Ice scooting requires sunny weather | Guard queries weather Repository for the activity date |
-| **Insurance Sub-Order** | Travel provider purchases insurance as supply chain sub-order | Machine forward creates insurance Order via Progress |
+| **Weather Data Query** | Demonstrate querying weather Repository | Guard checks if weather data exists for a given date |
 | **Multi-Node Workflow** | Start -> Buy Insurance -> SPA -> Ice Scooting -> Complete | Machine with 5 nodes and conditional paths |
 | **Time-Lock Completion** | Prevent premature order completion | Guard using Order + convert_witness(TypeOrderProgress) |
-| **Cancellation Support** | Allow order cancellation before completion | Cancel forward with permission-based access |
+| **Cancellation Support** | Allow order cancellation from Ice Scooting node | Cancel forward with permission-based access |
 | **Arbitration** | Dispute resolution for order conflicts | Arbitration object bound to Service |
+| **Revenue Allocation** | Distribute funds based on progress state | Three allocation Guards for different refund scenarios |
 
 ---
 
@@ -23,9 +21,9 @@ A complete example demonstrating how to create an Iceland travel service using W
 
 Before running this example, ensure you have:
 
-1. An account named `travel_provider_v1` with sufficient WOW tokens
-2. An account named `weather_provider_v1` with sufficient WOW tokens
-3. An account named `alice_v1` (test customer) with sufficient WOW tokens
+1. An account named `travel_provider` with sufficient WOW tokens
+2. An account named `weather_provider` with sufficient WOW tokens
+3. An account named `alice` (test customer) with sufficient WOW tokens
 4. Access to the WoWok MCP server
 
 ### Create Accounts
@@ -35,7 +33,7 @@ Before running this example, ensure you have:
 ```json
 {
   "gen": {
-    "name": "travel_provider_v1",
+    "name": "travel_provider",
     "replaceExistName": true
   }
 }
@@ -44,7 +42,7 @@ Before running this example, ensure you have:
 ```json
 {
   "gen": {
-    "name": "weather_provider_v1",
+    "name": "weather_provider",
     "replaceExistName": true
   }
 }
@@ -53,7 +51,7 @@ Before running this example, ensure you have:
 ```json
 {
   "gen": {
-    "name": "alice_v1",
+    "name": "alice",
     "replaceExistName": true
   }
 }
@@ -67,7 +65,7 @@ Before running this example, ensure you have:
 {
   "faucet": {
     "network": "testnet",
-    "name_or_address": "travel_provider_v1"
+    "name_or_address": "travel_provider"
   }
 }
 ```
@@ -76,7 +74,7 @@ Before running this example, ensure you have:
 {
   "faucet": {
     "network": "testnet",
-    "name_or_address": "weather_provider_v1"
+    "name_or_address": "weather_provider"
   }
 }
 ```
@@ -85,7 +83,7 @@ Before running this example, ensure you have:
 {
   "faucet": {
     "network": "testnet",
-    "name_or_address": "alice_v1"
+    "name_or_address": "alice"
   }
 }
 ```
@@ -94,39 +92,53 @@ Before running this example, ensure you have:
 
 ## Step 0: Setup Weather Data
 
-Before creating the travel service, set up the weather Repository with recent 5-day weather data.
+Before creating the travel service, set up the weather Repository with the next 5 days of weather data. The weather data is keyed by timestamp, and the `weather_check_guard` (Step 3.1) will query this repository at runtime when the customer enters the "Ice Scooting" node (Step 7.3). You must use timestamps that are valid at the time you run this example.
 
 ### 0.1 Calculate Weather Timestamps
 
-Use the following JavaScript to calculate future 5-day UTC timestamps:
+The weather record `id` is a UTC timestamp (in milliseconds). It must be **aligned to UTC 00:00:00** so that the same timestamp can be reproduced and submitted later in Step 7.3. Run the following JavaScript (also available as `calc-weather-timestamps.js` in this example folder):
 
 ```js
-const DAY_MS = 86400000;
+const DAY_MS = 86400000; // 24 * 60 * 60 * 1000
 const now = Date.now();
+// Align to UTC 00:00:00 of today, then compute the next 5 days.
+// Repository data is keyed by timestamp, so the submitted activity date
+// must match exactly the id used when adding weather data.
 const todayStart = Math.floor(now / DAY_MS) * DAY_MS;
-// Future 5 days UTC day start timestamps (for testing weather-dependent activities)
 for (let i = 1; i <= 5; i++) {
   const ts = todayStart + i * DAY_MS;
   console.log(`Day ${i}: ${ts} (${new Date(ts).toISOString()})`);
 }
 ```
 
+**Sample output** (run on 2026-07-08 — re-run the script to get current values for your test time):
+
+```
+Day 1: 1783555200000 (2026-07-09T00:00:00.000Z)
+Day 2: 1783641600000 (2026-07-10T00:00:00.000Z)
+Day 3: 1783728000000 (2026-07-11T00:00:00.000Z)
+Day 4: 1783814400000 (2026-07-12T00:00:00.000Z)
+Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
+```
+
+> **Important**: Always re-run the script at test time — the timestamps depend on the current date. Copy the 5 printed values; they will be used in Step 0.4 (as repository data `id`) and Step 7.3 (as the submitted `activity_date`). The two must match exactly, otherwise the Guard query `repository.data has("Condition", convert_number_address(activity_date))` will return false.
+
 ### 0.2 Create Weather Permission
 
-**Prompt**: Create a Permission object named "weather_permission_v1".
+**Prompt**: Create a Permission object named "weather_permission".
 
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "weather_permission_v1",
+      "name": "weather_permission",
       "replaceExistName": true
     },
     "description": "Weather repository permission"
   },
   "env": {
-    "account": "weather_provider_v1",
+    "account": "weather_provider",
     "network": "testnet"
   }
 }
@@ -134,15 +146,15 @@ for (let i = 1; i <= 5; i++) {
 
 ### 0.3 Create Weather Repository with Policies
 
-**Prompt**: Create a Repository named "weather_repo_v2" with "Condition" policy.
+**Prompt**: Create a Repository named "weather_repo" with "Condition" policy.
 
 ```json
 {
   "operation_type": "repository",
   "data": {
     "object": {
-      "name": "weather_repo_v2",
-      "permission": "weather_permission_v1",
+      "name": "weather_repo",
+      "permission": "weather_permission",
       "replaceExistName": true
     },
     "description": "Weather data repository for Iceland travel activities",
@@ -160,7 +172,7 @@ for (let i = 1; i <= 5; i++) {
     }
   },
   "env": {
-    "account": "weather_provider_v1",
+    "account": "weather_provider",
     "network": "testnet"
   }
 }
@@ -168,15 +180,15 @@ for (let i = 1; i <= 5; i++) {
 
 ### 0.4 Add Weather Data
 
-Add 5 days of weather data. The last day is "rainy" to test the weather check Guard's rejection behavior.
+Add 5 days of weather data. The `weather_check_guard` (Step 3.1) only verifies that a record **exists** for the activity date (via `repository.data has`), so all 5 days will pass the Guard regardless of the condition value. The "rainy" value on Day 5 is informational only — to actually reject based on weather condition, you would need a Guard that queries `repository.data` and compares the value, which is more complex and not used in this example.
 
-**Prompt**: Add weather data to "weather_repo_v2" with policy "Condition".
+**Prompt**: Add weather data to "weather_repo" with policy "Condition".
 
 ```json
 {
   "operation_type": "repository",
   "data": {
-    "object": "weather_repo_v2",
+    "object": "weather_repo",
     "data_add": {
       "name": "Condition",
       "items": [
@@ -193,39 +205,46 @@ Add 5 days of weather data. The last day is "rainy" to test the weather check Gu
     }
   },
   "env": {
-    "account": "weather_provider_v1",
+    "account": "weather_provider",
     "network": "testnet"
   }
 }
 ```
 
-> **Note**: Replace `<DAY1_TIMESTAMP>` through `<DAY5_TIMESTAMP>` with actual values from step 0.1.
+> **Note**: Replace `<DAY1_TIMESTAMP>` through `<DAY5_TIMESTAMP>` with the actual values from Step 0.1. The `id` field is the timestamp (as a number) that keys the weather record — it must **exactly match** the timestamp you submit later in Step 7.3.
 
 ---
 
 ## Step 1: Create Permission Object
 
-Create a Permission object to manage access control for the travel service.
+Create a Permission object to manage access control for the travel service. Add permission indices for the travel_provider account.
 
-**Prompt**: Create a Permission object named "travel_permission_v1" for the travel service.
+**Prompt**: Create a Permission object named "travel_permission" for the travel service.
 
 ```json
 {
   "operation_type": "permission",
   "data": {
     "object": {
-      "name": "travel_permission_v1",
+      "name": "travel_permission",
       "tags": ["travel", "iceland", "tourism"],
       "replaceExistName": true
     },
-    "description": "Permission for Iceland travel service"
+    "description": "Permission for Iceland travel service",
+    "table": {
+      "op": "add perm by entity",
+      "entity": {"name_or_address": "travel_provider"},
+      "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
+    }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
 ```
+
+> **Note**: Permission indices 1000-1009 are used for different workflow forwards. Index 306 is a reserved administrative permission. The travel_provider account is granted all these permissions.
 
 ---
 
@@ -233,21 +252,21 @@ Create a Permission object to manage access control for the travel service.
 
 Create an Arbitration object for dispute resolution.
 
-**Prompt**: Create an Arbitration named "travel_arbitration_v1".
+**Prompt**: Create an Arbitration named "travel_arbitration".
 
 ```json
 {
   "operation_type": "arbitration",
   "data": {
     "object": {
-      "name": "travel_arbitration_v1",
-      "permission": "travel_permission_v1",
+      "name": "travel_arbitration",
+      "permission": "travel_permission",
       "replaceExistName": true
     },
     "description": "Arbitration for Iceland travel service disputes"
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
@@ -257,23 +276,25 @@ Create an Arbitration object for dispute resolution.
 
 ## Step 3: Create Guards
 
+Create all Guards needed for the workflow and fund allocation. Guards are immutable once created, so create them before the Machine and Service.
+
 ### 3.1 Weather Check Guard
 
-Creates a Guard that verifies weather data exists for a given date.
+Creates a Guard that verifies weather data exists for a given date. This Guard is bound to the "go_ice_scooting" forward (entering the weather-dependent Ice Scooting activity) to ensure the activity date has a weather record in the repository.
 
 **Guard Logic**:
 ```
 repository.data has("Condition", convert_number_address(activity_date))
 ```
 
-**Prompt**: Create a Guard named "weather_check_guard_v1" for weather condition verification.
+**Prompt**: Create a Guard named "weather_check_guard" for weather condition verification.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "weather_check_guard_v1",
+      "name": "weather_check_guard",
       "tags": ["weather", "check", "travel"],
       "replaceExistName": true
     },
@@ -283,7 +304,7 @@ repository.data has("Condition", convert_number_address(activity_date))
         "identifier": 0,
         "b_submission": false,
         "value_type": "Address",
-        "value": "weather_repo_v2",
+        "value": "weather_repo",
         "name": "Weather Repository address"
       },
       {
@@ -302,31 +323,20 @@ repository.data has("Condition", convert_number_address(activity_date))
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "query",
-        "query": "repository.data has",
-        "object": {
-          "identifier": 0
-        },
-        "parameters": [
-          {
-            "type": "identifier",
-            "identifier": 1
-          },
-          {
-            "type": "convert_number_address",
-            "node": {
-              "type": "identifier",
-              "identifier": 2
-            }
-          }
-        ]
-      }
+      "type": "query",
+      "query": "repository.data has",
+      "object": {"identifier": 0},
+      "parameters": [
+        {"type": "identifier", "identifier": 1},
+        {
+          "type": "convert_number_address",
+          "node": {"type": "identifier", "identifier": 2}
+        }
+      ]
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
@@ -336,7 +346,7 @@ repository.data has("Condition", convert_number_address(activity_date))
 
 | identifier | b_submission | value_type | value | Purpose |
 |------------|-------------|-----------|-------|---------|
-| 0 | false | Address | weather_repo_v2 | Weather Repository to query |
+| 0 | false | Address | weather_repo | Weather Repository to query |
 | 1 | false | String | "Condition" | Repository policy name |
 | 2 | **true** | U64 | 0 (placeholder) | Activity date timestamp, submitted at runtime |
 
@@ -350,14 +360,14 @@ clock > progress.current_time + 1000
 (progress accessed via Order + convert_witness=TypeOrderProgress)
 ```
 
-**Prompt**: Create a Guard named "travel_complete_guard_v1" for time-lock verification.
+**Prompt**: Create a Guard named "travel_complete_guard" for time-lock verification.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "travel_complete_guard_v1",
+      "name": "travel_complete_guard",
       "tags": ["travel", "time-lock", "complete"],
       "replaceExistName": true
     },
@@ -379,38 +389,26 @@ clock > progress.current_time + 1000
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater",
-        "nodes": [
-          {
-            "type": "context",
-            "context": "Clock"
-          },
-          {
-            "type": "calc_number_add",
-            "nodes": [
-              {
-                "type": "query",
-                "query": "progress.current_time",
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          }
-        ]
-      }
+      "type": "logic_as_u256_greater",
+      "nodes": [
+        {"type": "context", "context": "Clock"},
+        {
+          "type": "calc_number_add",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current_time",
+              "object": {"identifier": 0, "convert_witness": 100},
+              "parameters": []
+            },
+            {"type": "identifier", "identifier": 1}
+          ]
+        }
+      ]
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
@@ -429,14 +427,14 @@ clock > progress.current_time + 1000
 
 Creates a Guard that allows order cancellation. This Guard always passes (returns true), as cancellation is controlled by permission-based access.
 
-**Prompt**: Create a Guard named "travel_cancel_guard_v1" for order cancellation.
+**Prompt**: Create a Guard named "travel_cancel_guard" for order cancellation.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "travel_cancel_guard_v1",
+      "name": "travel_cancel_guard",
       "tags": ["travel", "cancel"],
       "replaceExistName": true
     },
@@ -451,277 +449,29 @@ Creates a Guard that allows order cancellation. This Guard always passes (return
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "identifier",
-        "identifier": 0
-      }
+      "type": "identifier",
+      "identifier": 0
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
 ```
 
----
-
-## Step 4: Create Machine with Workflow
-
-Create a Machine to define the travel service workflow with all nodes and forwards.
-
-**Prompt**: Create a Machine named "travel_machine_v1" with the complete travel workflow.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": {
-      "name": "travel_machine_v1",
-      "permission": "travel_permission_v1",
-      "replaceExistName": true
-    },
-    "description": "Iceland travel service workflow: (init) -> Buy Insurance -> SPA -> Ice Scooting -> Complete/Cancel",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Buy Insurance",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "buy_insurance",
-                  "weight": 1,
-                  "permissionIndex": 1000
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "SPA",
-          "pairs": [
-            {
-              "prev_node": "Buy Insurance",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "go_spa",
-                  "weight": 1,
-                  "permissionIndex": 1000
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Ice Scooting",
-          "pairs": [
-            {
-              "prev_node": "SPA",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "go_ice_scooting",
-                  "weight": 1,
-                  "permissionIndex": 1000
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Complete",
-          "pairs": [
-            {
-              "prev_node": "Ice Scooting",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "complete_trip",
-                  "weight": 1,
-                  "permissionIndex": 1000,
-                  "guard": {
-                    "guard": "travel_complete_guard_v1",
-                    "retained_submission": []
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Cancel",
-          "pairs": [
-            {
-              "prev_node": "Ice Scooting",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "cancel_trip",
-                  "weight": 1,
-                  "permissionIndex": 1000,
-                  "guard": {
-                    "guard": "travel_cancel_guard_v1",
-                    "retained_submission": []
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
-  }
-}
-```
-
----
-
-## Step 5: Create Travel Service
-
-Create and publish the travel service.
-
-> **Important**: The Service requires `order_allocators` to be set for publication. Service must be created in three steps:
-> 1. Create Service (unpublished)
-> 2. Configure order_allocators
-> 3. Publish Service
-
-### 5.1 Create Service (Unpublished)
-
-**Prompt**: Create a Service named "travel_service_v1" (without publishing).
-
-```json
-{
-  "operation_type": "service",
-  "data": {
-    "object": {
-      "name": "travel_service_v1",
-      "permission": "travel_permission_v1",
-      "replaceExistName": true
-    },
-    "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
-    "machine": "travel_machine_v1",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Iceland Travel Package",
-          "price": "500000000",
-          "stock": "99",
-          "suspension": false,
-          "wip": "",
-          "wip_hash": ""
-        }
-      ]
-    },
-    "arbitrations": {
-      "op": "add",
-      "objects": ["travel_arbitration_v1"]
-    },
-    "publish": false
-  },
-  "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
-  }
-}
-```
-
-### 5.2 Configure Order Allocators
-
-**Prompt**: Configure order_allocators for the Service (without publishing).
-
-```json
-{
-  "operation_type": "service",
-  "data": {
-    "object": "travel_service_v1",
-    "order_allocators": {
-      "description": "Travel order revenue allocation",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "travel_complete_guard_v1",
-          "sharing": [
-            {
-              "who": {"Signer": "signer"},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "publish": false
-  },
-  "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
-  }
-}
-```
-
-### 5.3 Publish Service
-
-**Prompt**: Publish the Service to make it available for orders.
-
-```json
-{
-  "operation_type": "service",
-  "data": {
-    "object": "travel_service_v1",
-    "publish": true
-  },
-  "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
-  }
-}
-```
-
-**order_allocators Field Reference**:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `description` | string | Description of the allocation strategy |
-| `threshold` | number | Minimum threshold for allocation (0 = no minimum) |
-| `allocators` | array | Array of allocator configurations |
-| `allocators[].guard` | string | Guard name/ID that must pass for this allocation |
-| `allocators[].sharing` | array | Array of sharing rules |
-| `allocators[].sharing[].who` | object | Recipient object: `{"Signer": "signer"}` for order signer |
-| `allocators[].sharing[].sharing` | number | Amount in basis points (10000 = 100%) |
-| `allocators[].sharing[].mode` | string | Allocation mode ("Rate" or "Amount") |
-| `allocators[].fix` | string (optional) | Fixed amount to allocate ("0" = none) |
-| `allocators[].max` | string \| null (optional) | Maximum amount (null = no limit) |
-
----
-
-## Step 6: Create Allocation Guards (Optional but Recommended)
-
-Create Guards for different revenue allocation scenarios. These Guards are used in `order_allocators` to determine fund distribution based on order progress state.
-
-### 6.1 Merchant Victory Guard (100% to Service)
+### 3.4 Merchant Victory Guard (100% to Service)
 
 Checks if order progress current node is "Complete". If passed, merchant receives 100% of funds.
 
-**Prompt**: Create Guard "merchant_victory_guard_v1".
+**Prompt**: Create Guard "merchant_victory_guard".
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "merchant_victory_guard_v1",
+      "name": "merchant_victory_guard",
       "tags": ["merchant", "victory", "complete"],
       "replaceExistName": true
     },
@@ -743,46 +493,37 @@ Checks if order progress current node is "Complete". If passed, merchant receive
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": "progress.current",
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": "progress.current",
+          "object": {"identifier": 0, "convert_witness": 100},
+          "parameters": []
+        },
+        {"type": "identifier", "identifier": 1}
+      ]
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
 ```
 
-### 6.2 No Ice Scooting Guard (80% Service, 20% Refund)
+### 3.5 No Ice Scooting Guard (80% Service, 20% Refund)
 
 Checks if progress current is "Cancel" or "Ice Scooting". If passed, merchant gets 80%, user gets 20% refund.
 
-**Prompt**: Create Guard "no_ice_scooting_guard_v1".
+**Prompt**: Create Guard "no_ice_scooting_guard".
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "no_ice_scooting_guard_v1",
+      "name": "no_ice_scooting_guard",
       "tags": ["user", "cancel", "ice_scooting"],
       "replaceExistName": true
     },
@@ -811,69 +552,54 @@ Checks if progress current is "Cancel" or "Ice Scooting". If passed, merchant ge
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_or",
-        "nodes": [
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": "progress.current",
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": "progress.current",
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 2
-              }
-            ]
-          }
-        ]
-      }
+      "type": "logic_or",
+      "nodes": [
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current",
+              "object": {"identifier": 0, "convert_witness": 100},
+              "parameters": []
+            },
+            {"type": "identifier", "identifier": 1}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current",
+              "object": {"identifier": 0, "convert_witness": 100},
+              "parameters": []
+            },
+            {"type": "identifier", "identifier": 2}
+          ]
+        }
+      ]
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
 ```
 
-### 6.3 No SPA Guard (5% Service, 95% Refund)
+### 3.6 No SPA Guard (5% Service, 95% Refund)
 
 Checks if progress current is "SPA". If passed, merchant gets 5%, user gets 95% refund.
 
-**Prompt**: Create Guard "no_spa_guard_v1".
+**Prompt**: Create Guard "no_spa_guard".
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "no_spa_guard_v1",
+      "name": "no_spa_guard",
       "tags": ["user", "cancel", "spa"],
       "replaceExistName": true
     },
@@ -895,29 +621,20 @@ Checks if progress current is "SPA". If passed, merchant gets 5%, user gets 95% 
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": "progress.current",
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
-            },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
-      }
+      "type": "logic_equal",
+      "nodes": [
+        {
+          "type": "query",
+          "query": "progress.current",
+          "object": {"identifier": 0, "convert_witness": 100},
+          "parameters": []
+        },
+        {"type": "identifier", "identifier": 1}
+      ]
     }
   },
   "env": {
-    "account": "travel_provider_v1",
+    "account": "travel_provider",
     "network": "testnet"
   }
 }
@@ -925,9 +642,328 @@ Checks if progress current is "SPA". If passed, merchant gets 5%, user gets 95% 
 
 ---
 
+## Step 4: Create and Publish Machine
+
+Create a Machine to define the travel service workflow with all nodes and forwards. The Machine must be published before it can be bound to a Service.
+
+> **Important**: In the Machine node structure, each node's `pairs` define how to ENTER that node. The `prev_node` specifies the source node, and `forwards` are the operation names used to advance from `prev_node` to this node.
+
+**Prompt**: Create and publish a Machine named "travel_machine" with the complete travel workflow.
+
+```json
+{
+  "operation_type": "machine",
+  "data": {
+    "object": {
+      "name": "travel_machine",
+      "permission": "travel_permission",
+      "replaceExistName": true
+    },
+    "description": "Iceland travel service workflow: (init) -> Buy Insurance -> SPA -> Ice Scooting -> Complete/Cancel",
+    "node": {
+      "op": "add",
+      "bReplace": true,
+      "nodes": [
+        {
+          "name": "Buy Insurance",
+          "pairs": [
+            {
+              "prev_node": "",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "buy_insurance",
+                  "weight": 1,
+                  "permissionIndex": 1000
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "SPA",
+          "pairs": [
+            {
+              "prev_node": "Buy Insurance",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "go_spa",
+                  "weight": 1,
+                  "permissionIndex": 1001
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ice Scooting",
+          "pairs": [
+            {
+              "prev_node": "SPA",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "go_ice_scooting",
+                  "weight": 1,
+                  "permissionIndex": 1004,
+                  "guard": {
+                    "guard": "weather_check_guard",
+                    "retained_submission": []
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Complete",
+          "pairs": [
+            {
+              "prev_node": "Ice Scooting",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "complete_trip",
+                  "weight": 1,
+                  "permissionIndex": 1002,
+                  "guard": {
+                    "guard": "travel_complete_guard",
+                    "retained_submission": []
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Cancel",
+          "pairs": [
+            {
+              "prev_node": "Ice Scooting",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "cancel_trip",
+                  "weight": 1,
+                  "permissionIndex": 1003,
+                  "guard": {
+                    "guard": "travel_cancel_guard",
+                    "retained_submission": []
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "publish": true
+  },
+  "env": {
+    "account": "travel_provider",
+    "network": "testnet"
+  }
+}
+```
+
+**Machine Workflow Diagram**:
+
+```
+("") --buy_insurance--> [Buy Insurance] --go_spa--> [SPA] --go_ice_scooting--[weather_check]--> [Ice Scooting]
+                                                                                                  |
+                                                                                                  +--complete_trip--[time-lock]--> [Complete]
+                                                                                                  +--cancel_trip-------------> [Cancel]
+```
+
+**Node Pair Structure**:
+
+| Node | prev_node | Forward | Permission Index | Guard |
+|------|-----------|---------|-----------------|-------|
+| Buy Insurance | "" (entry) | buy_insurance | 1000 | - |
+| SPA | Buy Insurance | go_spa | 1001 | - |
+| Ice Scooting | SPA | go_ice_scooting | 1004 | weather_check_guard |
+| Complete | Ice Scooting | complete_trip | 1002 | travel_complete_guard |
+| Cancel | Ice Scooting | cancel_trip | 1003 | travel_cancel_guard |
+
+> **Note**: The `prev_node` field uses an empty string `""` to denote the entry point. Each node defines how to enter it from a previous node. The `threshold` field (required) specifies the minimum forward weight needed to trigger node advancement.
+
+---
+
+## Step 5: Create and Publish Service
+
+Create the travel service with all configurations and publish it in one operation. The Service requires:
+- Machine binding (must be published first)
+- Sales items (product listing)
+- Arbitration binding
+- Order allocators (fund distribution rules)
+- `pause: false` and `publish: true` to make it active
+
+**Prompt**: Create and publish a Service named "travel_service".
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "travel_service",
+      "permission": "travel_permission",
+      "replaceExistName": true
+    },
+    "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
+    "machine": "travel_machine",
+    "sales": {
+      "op": "add",
+      "sales": [
+        {
+          "name": "Iceland Travel Package",
+          "price": "500000000",
+          "stock": "99",
+          "suspension": false,
+          "wip": "",
+          "wip_hash": ""
+        }
+      ]
+    },
+    "arbitrations": {
+      "op": "add",
+      "objects": ["travel_arbitration"]
+    },
+    "order_allocators": {
+      "description": "Travel order revenue allocation based on progress state",
+      "threshold": 0,
+      "allocators": [
+        {
+          "guard": "merchant_victory_guard",
+          "fix": "0",
+          "sharing": [
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "no_ice_scooting_guard",
+          "fix": "0",
+          "sharing": [
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 8000,
+              "mode": "Rate"
+            },
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 2000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "no_spa_guard",
+          "fix": "0",
+          "sharing": [
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 500,
+              "mode": "Rate"
+            },
+            {
+              "who": {"Signer": "signer"},
+              "sharing": 9500,
+              "mode": "Rate"
+            }
+          ]
+        }
+      ]
+    },
+    "pause": false,
+    "publish": true
+  },
+  "env": {
+    "account": "travel_provider",
+    "network": "testnet"
+  }
+}
+```
+
+**order_allocators Field Reference**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | string | Description of the allocation strategy |
+| `threshold` | number | Minimum threshold for allocation (0 = no minimum) |
+| `allocators` | array | Array of allocator configurations |
+| `allocators[].guard` | string | Guard name/ID that must pass for this allocation |
+| `allocators[].fix` | string | Fixed amount per recipient ("0" = none) |
+| `allocators[].sharing` | array | Array of sharing rules |
+| `allocators[].sharing[].who` | object | Recipient: `{"Signer": "signer"}` for transaction signer |
+| `allocators[].sharing[].sharing` | number | Amount in basis points (10000 = 100%) |
+| `allocators[].sharing[].mode` | string | Allocation mode ("Rate" or "Amount") |
+
+**Allocation Logic**:
+
+| Guard | Condition | Service Receives | Customer Receives |
+|-------|-----------|-----------------|-------------------|
+| merchant_victory_guard | Progress is "Complete" | 100% | 0% |
+| no_ice_scooting_guard | Progress is "Cancel" or "Ice Scooting" | 80% | 20% |
+| no_spa_guard | Progress is "SPA" | 5% | 95% |
+
+---
+
+## Step 6: Place Order (Customer Purchase)
+
+The customer (Alice) purchases the travel package. This creates an Order, a Progress (initialized at the entry node ""), and an Allocation object automatically.
+
+**Prompt**: Alice purchases the Iceland Travel Package from the service.
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": "travel_service",
+    "order_new": {
+      "buy": {
+        "items": [
+          {
+            "name": "Iceland Travel Package",
+            "stock": "1",
+            "wip_hash": ""
+          }
+        ],
+        "total_pay": {"balance": "500000000"}
+      },
+      "namedNewOrder": {
+        "name": "alice_travel_order",
+        "replaceExistName": true
+      },
+      "namedNewProgress": {
+        "name": "alice_travel_progress",
+        "replaceExistName": true
+      },
+      "namedNewAllocation": {
+        "name": "alice_travel_allocation",
+        "replaceExistName": true
+      }
+    }
+  },
+  "env": {
+    "account": "alice",
+    "network": "testnet"
+  }
+}
+```
+
+> **Note**: The `total_pay.balance` of `500000000` equals 0.5 WOW (1 WOW = 10^9 base units). The customer account must have sufficient balance. The operation creates three named objects: Order, Progress, and Allocation.
+
+---
+
 ## Step 7: Progress Operations (Order Workflow)
 
-After a customer places an order, the service provider operates the Progress to move through the workflow nodes.
+The service provider advances the Progress through the workflow nodes. Each operation moves the Progress from the current node to the next node via a specified forward.
+
+> **Important**: Add `"no_cache": true` to the `env` field for all Progress operations to avoid stale cache issues.
 
 ### 7.1 Progress to Buy Insurance
 
@@ -939,7 +975,7 @@ Move from initial node ("") to "Buy Insurance" node.
 {
   "operation_type": "progress",
   "data": {
-    "object": "alice_travel_progress_v1",
+    "object": "alice_travel_progress",
     "operate": {
       "operation": {
         "next_node_name": "Buy Insurance",
@@ -948,8 +984,9 @@ Move from initial node ("") to "Buy Insurance" node.
     }
   },
   "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -964,7 +1001,7 @@ Move from "Buy Insurance" to "SPA" node.
 {
   "operation_type": "progress",
   "data": {
-    "object": "alice_travel_progress_v1",
+    "object": "alice_travel_progress",
     "operate": {
       "operation": {
         "next_node_name": "SPA",
@@ -973,23 +1010,24 @@ Move from "Buy Insurance" to "SPA" node.
     }
   },
   "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
-### 7.3 Progress to Ice Scooting
+### 7.3 Progress to Ice Scooting (with Weather Guard Submission)
 
-Move from "SPA" to "Ice Scooting" node.
+Move from "SPA" to "Ice Scooting" node. This forward has a Guard (`weather_check_guard`) that verifies weather data exists in the repository for the activity date. You must submit the activity date timestamp (one of the sunny-day timestamps from Step 0.1) at runtime.
 
-**Prompt**: Operate progress to move to Ice Scooting node.
+**Prompt**: Operate progress to move to Ice Scooting node with weather Guard submission.
 
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "alice_travel_progress_v1",
+    "object": "alice_travel_progress",
     "operate": {
       "operation": {
         "next_node_name": "Ice Scooting",
@@ -997,24 +1035,52 @@ Move from "SPA" to "Ice Scooting" node.
       }
     }
   },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "weather_check_guard",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "weather_check_guard",
+        "submission": [
+          {
+            "identifier": 2,
+            "b_submission": true,
+            "value_type": "U64",
+            "value": <ACTIVITY_DATE_TIMESTAMP>,
+            "name": "Activity date timestamp"
+          }
+        ]
+      }
+    ]
+  },
   "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
-### 7.4 Complete Trip
+> **Note**: Replace `<ACTIVITY_DATE_TIMESTAMP>` with one of the sunny-day timestamps from Step 0.1 (e.g., `1783555200000` for Day 1). The timestamp **must exactly match** the `id` used when adding weather data to the repository in Step 0.4 — Repository data is keyed by timestamp, and the Guard queries `repository.data has("Condition", convert_number_address(activity_date))`.
+>
+> **Key**: Only `identifier: 2` (the activity date) is submitted at runtime. Identifiers 0 (weather_repo) and 1 ("Condition") are fixed in the Guard table and do not need to be submitted. The `submission` field is at the **top level** of the input (alongside `data` and `env`), NOT inside `data`.
 
-Move from "Ice Scooting" to "Complete" node (requires time-lock guard).
+### 7.4 Complete Trip (with Guard Submission)
 
-**Prompt**: Operate progress to complete the trip.
+Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_complete_guard`) that requires the Order ID to be submitted for time-lock verification.
+
+**Prompt**: Operate progress to complete the trip with Guard submission.
 
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "alice_travel_progress_v1",
+    "object": "alice_travel_progress",
     "operate": {
       "operation": {
         "next_node_name": "Complete",
@@ -1022,24 +1088,52 @@ Move from "Ice Scooting" to "Complete" node (requires time-lock guard).
       }
     }
   },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "travel_complete_guard",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "travel_complete_guard",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "<ORDER_OBJECT_ID>",
+            "name": "Order ID"
+          }
+        ]
+      }
+    ]
+  },
   "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
-### 7.5 Cancel Trip
+> **Note**: Replace `<ORDER_OBJECT_ID>` with the actual Order object ID (e.g., `0x7cc9f2228e130c2f6b585bb9c4666fd4d03252d38048355678f46e31b682eb38`). You can query the Progress object to find the `task` field which contains the Order ID.
+>
+> **Key**: The `submission` field is at the **top level** of the input (alongside `data` and `env`), NOT inside `data`. The `impack: true` means the Guard verification result affects the final outcome.
 
-Move from "Ice Scooting" to "Cancel" node.
+### 7.5 Cancel Trip (Alternative Path)
 
-**Prompt**: Operate progress to cancel the trip.
+> **Note**: This is an **alternative** to Step 7.4. Once the trip is Completed, it cannot be Cancelled (and vice versa). Use this path only if cancelling from the "Ice Scooting" node.
+
+**Prompt**: Operate progress to cancel the trip with Guard submission.
 
 ```json
 {
   "operation_type": "progress",
   "data": {
-    "object": "alice_travel_progress_v1",
+    "object": "alice_travel_progress",
     "operate": {
       "operation": {
         "next_node_name": "Cancel",
@@ -1047,106 +1141,140 @@ Move from "Ice Scooting" to "Cancel" node.
       }
     }
   },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "travel_cancel_guard",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "travel_cancel_guard",
+        "submission": []
+      }
+    ]
+  },
   "env": {
-    "account": "travel_provider_v1",
-    "network": "testnet"
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
+
+> **Note**: The `travel_cancel_guard` always passes (returns true), so no submission data is needed. The empty `submission: []` is sufficient.
 
 **Progress Operation Structure**:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `object` | string | Progress object name/ID |
-| `operate.operation.next_node_name` | string | Target node name to move to |
-| `operate.operation.forward` | string | Forward name defined in Machine |
-
----
-
-## Known Issues
-
-None. All documented steps have been tested and verified to work correctly via MCP server.
+| `data.object` | string | Progress object name/ID |
+| `data.operate.operation.next_node_name` | string | Target node name to move to |
+| `data.operate.operation.forward` | string | Forward name defined in Machine |
+| `submission` | object | Guard verification data (top-level, required when forward has Guard) |
+| `env.no_cache` | boolean | Set to `true` to avoid stale cache issues |
 
 ---
 
 ## Best Practices
 
-### 1. Machine Node Configuration
+### 1. Guard Root Format
 
-- Use `node.op: "add"` with `nodes` array (not `data`)
-- Each forward must have either `permissionIndex` or `namedOperator`
-- Guard references use object format: `{ guard: "guard_name", retained_submission: [] }`
-
-### 2. Service Sales Format
-
-Use object format with operation:
+Guards use a direct GuardNode as the `root` field — no wrapper needed:
 ```json
-{
-  "op": "add",
-  "sales": [
-    {
-      "name": "...",
-      "price": "...",
-      "stock": "...",
-      "suspension": false,
-      "wip": "",
-      "wip_hash": ""
-    }
-  ]
+"root": {
+  "type": "logic_equal",
+  "nodes": [...]
 }
 ```
 
-### 3. Service Arbitrations Format
+### 2. Machine Node Structure
 
-Use object format with operation:
+Each node's `pairs` define how to **enter** that node. The `prev_node` specifies the source, and `forwards` are the operations to advance:
 ```json
 {
-  "op": "add",
-  "objects": ["arbitration_name"]
+  "name": "TargetNode",
+  "pairs": [{
+    "prev_node": "SourceNode",
+    "threshold": 1,
+    "forwards": [{"name": "forward_name", "weight": 1, "permissionIndex": 1000}]
+  }]
 }
 ```
 
-### 4. Repository Data Format
+- Use `prev_node` (not `prior_node`)
+- `threshold` is required for every pair
+- Consolidate forwards with the same `prev_node` into one pair
 
-Use `data_add` with nested structure:
+### 3. Machine Publish Before Service
+
+The Machine must be published (`"publish": true`) before binding it to a Service. Unpublished Machines cannot be referenced by Services.
+
+### 4. Service Creation in One Step
+
+Create the Service with all configurations — including `pause: false` and `publish: true` — in a single operation:
 ```json
 {
-  "name": "policy_name",
-  "items": [
-    {
-      "data": [
-        {"id": ..., "data": "..."}
-      ]
-    }
-  ]
+  "pause": false,
+  "publish": true,
+  "order_allocators": {...},
+  "sales": {...},
+  "machine": "...",
+  "arbitrations": {...}
 }
 ```
 
-### 5. Guard Query Types
+### 5. Guard Submission for Progress
 
-- For existence checks: use `"repository.data has"`
-- For value retrieval: use `"repository.data"` (may have limitations)
-- For progress time: use `"progress.current_time"` with `convert_witness: 100`
-
-### 6. Progress Operations
-
-- Use `operate.operation` structure with `next_node_name` and `forward` fields
-- `object` field specifies the Progress name/ID
-- `forward` must match the forward name defined in the Machine node
-- Example structure:
+When a forward has a Guard, the Progress operation requires a `submission` field at the **top level** (not inside `data`):
 ```json
 {
   "operation_type": "progress",
+  "data": {...},
+  "submission": {
+    "type": "submission",
+    "guard": [{"object": "guard_name", "impack": true}],
+    "submission": [{
+      "guard": "guard_name",
+      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "0x...", "name": "Order ID"}]
+    }]
+  },
+  "env": {"no_cache": true, ...}
+}
+```
+
+### 6. Cache Management
+
+Add `"no_cache": true` to the `env` field for all Progress operations and queries after mutations to avoid stale cache issues.
+
+### 7. Weather Data Timestamps
+
+Weather data in the Repository is keyed by timestamp (`id`). The `weather_check_guard` queries `repository.data has("Condition", convert_number_address(activity_date))` — the `activity_date` submitted at runtime in Step 7.3 **must exactly match** the `id` used when adding data in Step 0.4.
+
+- Always align timestamps to UTC 00:00:00 (`Math.floor(now / DAY_MS) * DAY_MS`) so they are reproducible.
+- Re-run `calc-weather-timestamps.js` at test time — the values depend on the current date.
+- The Guard only checks data **existence**, not the condition value. A "rainy" day will still pass. To reject by condition value, use a Guard querying `repository.data` with a value comparison.
+
+### 8. Order Placement
+
+Customers place orders using the `order_new` field in the Service operation. This automatically creates Order, Progress, and Allocation objects:
+```json
+{
+  "operation_type": "service",
   "data": {
-    "object": "progress_name",
-    "operate": {
-      "operation": {
-        "next_node_name": "TargetNode",
-        "forward": "forward_name"
-      }
+    "object": "service_name",
+    "order_new": {
+      "buy": {
+        "items": [{"name": "Product", "stock": "1", "wip_hash": ""}],
+        "total_pay": {"balance": "price_amount"}
+      },
+      "namedNewOrder": {"name": "order_name", "replaceExistName": true},
+      "namedNewProgress": {"name": "progress_name", "replaceExistName": true},
+      "namedNewAllocation": {"name": "allocation_name", "replaceExistName": true}
     }
   },
-  "env": {...}
+  "env": {"account": "customer", "network": "testnet"}
 }
 ```

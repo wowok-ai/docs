@@ -2,8 +2,6 @@
 
 A complete example demonstrating how to create an outdoor accident insurance service using WoWok protocol. This insurance service is designed to be purchased by travel service providers as part of a travel package (supply chain sub-order).
 
-> **View Actual Execution Results**: See [Insurance_TestResults.md](Insurance_TestResults.md) for real testnet execution results with actual object addresses and transaction outputs.
-
 ---
 
 ## Core Requirements & Features
@@ -110,6 +108,8 @@ Before running this example, ensure you have:
   }
 }
 ```
+
+> **Best Practice — `no_cache: true`**: When building multiple interdependent objects in one session, set `"no_cache": true` in the `env` object of every on-chain operation to ensure fresh chain state. The examples below omit it for brevity.
 
 ---
 
@@ -514,6 +514,17 @@ Create an order on the insurance service using the `order_new` field of the `ser
 }
 ```
 
+> **Get the Progress ID**: After creating the order, query it to obtain the Progress object ID needed for the next steps:
+> ```json
+> {
+>   "query_type": "onchain_objects",
+>   "objects": ["test_insurance_order_v1"],
+>   "network": "testnet",
+>   "no_cache": true
+> }
+> ```
+> The response includes a `progress` field containing the Progress object ID, and an `allocation` field containing the Allocation object ID.
+
 ### 8.2 Advance Progress: Initial -> Start
 
 First, advance the progress from initial state to Start node.
@@ -542,7 +553,7 @@ First, advance the progress from initial state to Start node.
 > **Note**: 
 > - Both `next_node_name` and `forward` fields are required in the operation object
 > - Use simple forward name (e.g., `"start_claim"`) without node prefix. The system automatically resolves the path from current node
-> - The Progress object ID can be obtained by querying the Order object (it has a `progress` field)
+> - The Progress object ID can be obtained by querying the Order object (it has a `progress` field) — see Step 8.1
 
 ### 8.3 Advance Progress: Start -> Complete
 
@@ -600,6 +611,8 @@ The server will return a `submission` prompt like:
 }
 ```
 
+> **Note**: The Phase 1 response returns `value_type` as a numeric enum ID (e.g., `1` = Address). When filling in Phase 2, you can use either the numeric form (`1`) or the string name (`"Address"`) — both are accepted.
+
 **Phase 2**: Fill in the `value` field with the Order ID and resubmit. The `submission` field must be placed at the **root level** of the request (sibling to `operation_type`, `data`, and `env`).
 
 ```json
@@ -630,6 +643,8 @@ The server will return a `submission` prompt like:
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
+            "name": "Order ID (submitted at runtime)",
+            "object_type": "Order",
             "value": "<insurance_order_id>"
           }
         ]
@@ -645,8 +660,8 @@ The server will return a `submission` prompt like:
 
 > **⚠️ Important**: 
 > - The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `operate.operation`.
-> - The `guard` objects in the submission use on-chain addresses (not names), as returned by the Phase 1 prompt.
-> - The `value` field must be populated with the actual Order ID. The `value_type` is `"Address"` (string), which is the readable form of the enum value `1`.
+> - The `guard` objects in the submission use on-chain addresses (not names), as returned by the Phase 1 response.
+> - Fill in the `value` field with the actual Order ID (or Order name). Keep the other fields (`identifier`, `value_type`, `name`, `object_type`) as returned by Phase 1.
 > - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 8.1.
 > - Both `next_node_name` and `forward` fields are required in the operation object.
 > - Use simple forward name `"complete_claim"` without node prefix.
@@ -655,44 +670,21 @@ The server will return a `submission` prompt like:
 
 ## Troubleshooting
 
-### Error: MoveAbort code: 7 (Guard Verification Failed)
+### MoveAbort code: 7 (Guard Verification Failed)
 
-**Symptom**: When advancing Progress, you get `MoveAbort in 4th command, abort code: 7 (Verify failed), in '0x2::passport::result_for_permission'`
+When advancing Progress, if you get `abort code: 7 (Verify failed)`, the Guard condition was not satisfied. For the time-lock Guard:
+- Wait longer than the time-lock duration (10000ms = 10 seconds) before advancing to Complete
+- Verify the submitted Order ID is correct and corresponds to the Progress being advanced
 
-**Cause**: The Guard's verification logic returned `false`. In the passport module, `result_for_permission()` calls `result()` which asserts `self.result == true`, aborting with `E_VERIFY_FAILED` (code 7). This means the Guard condition (e.g., time-lock: `clock > progress.current_time + lock_duration`) was not satisfied.
+### Forward validation failed
 
-**Solution**: 
-1. Wait longer than the time-lock duration before retrying
-2. Verify the time-lock duration is correct (10000ms = 10 seconds)
-3. Check that the submitted Order ID is correct and corresponds to the Progress being advanced
-
-**Technical Detail**: The error path is:
-```
-result_for_permission() → assert!(result()) → E_VERIFY_FAILED
-  ↓
-result() → returns self.result (false)
-  ↓
-verify() → verify_guard() returned false → guard_info.impack=true → set self.result=false
-```
-
-### Error: Forward validation failed
-
-**Symptom**: `Connection from current node "" to target node "Complete" does not exist`
-
-**Cause**: Using incorrect forward path format.
-
-**Solution**: Use simple forward names without node prefix:
+If you see `Connection from current node "" to target node "Complete" does not exist`, use simple forward names without node prefix:
 - ✅ Correct: `"forward": "start_claim"`
 - ❌ Incorrect: `"forward": "Start.start_claim"`
-- ❌ Incorrect: `"forward": ".start_claim"`
 
-### Error: Missing required field 'next_node_name'
+### Missing required field 'next_node_name'
 
-**Symptom**: `Input validation error: Invalid arguments for tool onchain_operations: Required at path ["data","operate","operation","next_node_name"]`
-
-**Cause**: The progress operation requires both `next_node_name` and `forward` fields.
-
-**Solution**: Include both fields in the operation object:
+The progress operation requires both `next_node_name` and `forward` fields in the operation object:
 ```json
 {
   "operation": {
@@ -702,24 +694,15 @@ verify() → verify_guard() returned false → guard_info.impack=true → set se
 }
 ```
 
-### Error: Data not found / stale data
+### Data not found / stale data
 
-**Symptom**: Query returns old data after successful transactions.
-
-**Cause**: MCP server caches query results; chain data needs time to reach consensus.
-
-**Solution**: 
-- Add 5-second delays between operations
+If queries return old data after successful transactions:
 - Use `no_cache: true` parameter for critical queries
-- Wait for transaction confirmation before next operation
+- Wait for transaction confirmation before the next operation
 
-### Error: Machine modification failed
+### Machine modification failed
 
-**Symptom**: `MoveAbort code: 3` when trying to modify Machine nodes.
-
-**Cause**: Published Machine nodes are immutable.
-
-**Solution**: Create a new Machine with the correct configuration if changes are needed.
+Published Machine nodes are immutable (`MoveAbort code: 3`). Create a new Machine with the correct configuration if changes are needed.
 
 ---
 
@@ -735,5 +718,5 @@ verify() → verify_guard() returned false → guard_info.impack=true → set se
 - [ ] Step 6: Unpause Service
 - [ ] Step 7: Verify Service configuration
 - [ ] Step 8.1: Create test insurance order
-- [ ] Step 8.2: Advance progress Initial -> Start (wait 5s after)
-- [ ] Step 8.3: Advance progress Start -> Complete with submission
+- [ ] Step 8.2: Advance progress Initial -> Start
+- [ ] Step 8.3: Advance progress Start -> Complete with submission (wait 10s after Step 8.2)
