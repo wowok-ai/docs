@@ -287,7 +287,7 @@ Phase 2: Service Creation
 
 Phase 3: Guard Creation (Machine Guards)
 └── 3. Create Machine Guards (4 guards)
-    ├── machine_merkle_root_v2 (verify string length = 64)
+    ├── machine_merkle_root_v2 (verify string length = 66)
     ├── machine_service_order_v2 (verify order service + node)
     ├── machine_time_10d_v2 (time >= 10 days)
     └── machine_time_2d_v2 (time >= 2 days)
@@ -332,7 +332,7 @@ Phase 10: Reward Guards Configuration
 └── 10. Add Guards to Reward Object
     ├── Add reward_wonderful_v2 (amount: 10000, store_from_id: 0)
     ├── Add reward_lost_v2 (amount: 20000, store_from_id: 0)
-    └── Add reward_shipping_timeout_v2 (amount: 30000, store_from_id: 0)
+    └── Add reward_shipping_timeout_v2 (amount: 20000, store_from_id: 0)
 
 Phase 11: Deposit to Reward Pool
 └── 11. Deposit WOW tokens to reward pool
@@ -372,7 +372,8 @@ Create a new permission object for the advanced shop.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -393,7 +394,7 @@ Add custom permission indexes for advanced operations.
     "remark": {
       "op": "set",
       "index": 1000,
-      "remark": "Order Confirmed and Order Cancel - Merchant confirms or cancels order with Merkle Root"
+      "remark": "Order Confirmed and Order Cancel - Merchant confirms or cancels order"
     },
     "table": {
       "op": "add perm by index",
@@ -405,7 +406,8 @@ Add custom permission indexes for advanced operations.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -420,7 +422,7 @@ Add custom permission indexes for advanced operations.
     "remark": {
       "op": "set",
       "index": 1001,
-      "remark": "Shipping, Order Complete, Lost, Return operations - Merchant logistics operations with Merkle Root"
+      "remark": "Shipping, Order Complete, Lost, Return operations - Merchant logistics operations"
     },
     "table": {
       "op": "add perm by index",
@@ -432,7 +434,8 @@ Add custom permission indexes for advanced operations.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -459,7 +462,8 @@ Create the Service without publishing to obtain its address for Guard creation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -472,7 +476,20 @@ Create the Service without publishing to obtain its address for Guard creation.
 
 Create Guards using the Service address. Guards verify order state and service ownership.
 
-**Guard 1: machine_merkle_root_v2** - Verify Merkle Root string length = 64
+> **Pre-Query Step**: Before designing Guards, query available Guard instructions via `wowok_buildin_info` to confirm correct query IDs, parameter types, and return types. This is mandatory per the skill framework.
+>
+> ```json
+> {
+>   "info": "guard instructions",
+>   "filter": { "scope": "all" }
+> }
+> ```
+>
+> Key instructions used in this example:
+> - Query ID 1563 (`order.service`): Returns the Service address of an Order — used to verify order belongs to this service
+> - Query ID for `progress.node_current`: Returns current node name — used to verify order at specific workflow node
+
+**Guard 1: machine_merkle_root_v2** - Verify Merkle Root string length = 66 (0x prefix + 64 hex chars)
 
 ```json
 {
@@ -482,10 +499,10 @@ Create Guards using the Service address. Guards verify order state and service o
       "name": "machine_merkle_root_v2",
       "replaceExistName": true
     },
-    "description": "Verify Merkle Root string length is 64 characters",
+    "description": "Verify Merkle Root string length is 66 characters (0x prefix + 64 hex)",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "String"},
-      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "64"}
+      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "66"}
     ],
     "root": {
       "type": "logic_as_u256_equal",
@@ -497,7 +514,8 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -515,7 +533,7 @@ Create Guards using the Service address. Guards verify order state and service o
     "description": "Verify time elapsed >= 10 days (864000000 ms)",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "U64"},
-      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "864000000"}
+      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "864000000"}
     ],
     "root": {
       "type": "logic_as_u256_greater_or_equal",
@@ -533,7 +551,8 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -551,7 +570,7 @@ Create Guards using the Service address. Guards verify order state and service o
     "description": "Verify time elapsed >= 2 days (172800000 ms)",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "U64"},
-      {"identifier": 1, "b_submission": false, "value_type": "U256", "value": "172800000"}
+      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "172800000"}
     ],
     "root": {
       "type": "logic_as_u256_greater_or_equal",
@@ -569,7 +588,8 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -635,7 +655,8 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -645,7 +666,7 @@ Create Guards using the Service address. Guards verify order state and service o
 2. 验证订单的 Service 地址等于当前 Guard 所属的 Service 地址（使用 `order.service` 查询指令 ID 1563）
 ```
 
-**Guard 4: machine_service_order_v2** - Verify order belongs to this Service
+**Guard 5: machine_service_order_v2** - Verify order belongs to this Service
 
 ```json
 {
@@ -678,14 +699,15 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
 ***
 
-**Guard 5: service_customer_win_v2** - Verify order at customer win nodes AND order belongs to this service
+**Guard 6: service_customer_win_v2** - Verify order at customer win nodes AND order belongs to this service
 
 ```json
 {
@@ -736,7 +758,8 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -752,7 +775,13 @@ Create Guards using the Service address. Guards verify order state and service o
 
 Create Machine with all nodes and guards in a single operation.
 
-**Important Note on `namedOperator`**: In Machine forwards, setting `namedOperator: ""` (empty string) allows the **customer** to operate the Progress through their Order. This is required for all forwards that should be triggered by the customer via the order system. Forwards without `namedOperator` or with a specific named operator require the merchant or designated operator to execute.
+**Important Notes on Machine Design**:
+
+1. **Entry Node Constraint (Mandatory)**: At least one node MUST have a pair with `prev_node: ""` (empty string). This defines the entry point from the initial state. Without such a node, Progress cannot advance from its initial empty state. In this example, the "Order Confirmed" node has `prev_node: ""` serving as the entry point.
+
+2. **`namedOperator` for Customer Operations**: In Machine forwards, setting `namedOperator: ""` (empty string) allows the **customer** to operate the Progress through their Order. This is required for all forwards that should be triggered by the customer via the order system. Forwards without `namedOperator` or with a specific named operator require the merchant or designated operator to execute.
+
+3. **Permission Index vs namedOperator**: Each forward MUST specify either `permissionIndex` (shared internal role) OR `namedOperator` (per-Progress namespace). Order user operations MUST use `namedOperator("")`.
 
 **Prompt**: Create Machine "myshop\_advanced\_machine\_v2" with permission "myshop\_perm\_v2" and all nodes.
 
@@ -1005,7 +1034,8 @@ Create Machine with all nodes and guards in a single operation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1013,6 +1043,17 @@ Create Machine with all nodes and guards in a single operation.
 ***
 
 ### Step 6: Publish Machine
+
+> **Pre-Publish Verification (Mandatory)**: Before publishing, export and review the Machine node structure using `machineNode2file`. Once published, node settings become immutable. Verify all nodes, forwards, guards, and permission indices are correct.
+>
+> ```json
+> {
+>   "object": "myshop_advanced_machine_v2",
+>   "format": "json"
+> }
+> ```
+>
+> Confirm with the user that the exported structure is correct before proceeding to publish.
 
 Machine must be published before binding to Service.
 
@@ -1025,7 +1066,8 @@ Machine must be published before binding to Service.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1047,7 +1089,8 @@ Bind the Machine to the Service. **Important**: The Service must be unpublished 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1102,7 +1145,8 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1115,6 +1159,19 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 ### Step 10: Configure Order Allocators and Publish
 
 Configure order_allocators to define fund distribution rules, then publish the Service.
+
+> **Pre-Publish Verification (Mandatory)**: Before publishing the Service, verify all bindings are correct: Machine, Arbitration, Rewards, and order_allocators. Once published, all bindings become immutable. Use `query_toolkit` to confirm the Service state:
+>
+> ```json
+> {
+>   "query_type": "service",
+>   "object": "three_body_signature_service_v2",
+>   "network": "testnet",
+>   "no_cache": true
+> }
+> ```
+>
+> Confirm with the user that all bindings and configurations are correct before proceeding to publish.
 
 **IMPORTANT**: Service must have order_allocators configured before publishing. Once published, order_allocators becomes immutable.
 
@@ -1130,7 +1187,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
       "sales": [
         {
           "name": "The Three-Body Problem + Author Signature",
-          "price": 5000000000,
+          "price": 1000000000,
           "stock": 100,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
@@ -1140,7 +1197,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
     },
     "order_allocators": {
       "description": "Order fund allocation - 100% to Service when order complete/wonderful/return fail, 100% to Order when lost/return complete",
-      "threshold": 0,
+      "threshold": 1,
       "allocators": [
         {
           "guard": "service_merchant_win_v2",
@@ -1168,11 +1225,16 @@ Configure order_allocators to define fund distribution rules, then publish the S
       "op": "add",
       "objects": ["myshop_arbitration_v2"]
     },
+    "rewards": {
+      "op": "add",
+      "objects": ["myshop_reward_v2"]
+    },
     "publish": true
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1210,7 +1272,8 @@ Create an empty reward object first. This object will be referenced by reward gu
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1279,7 +1342,8 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1340,7 +1404,8 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1401,7 +1466,8 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1435,14 +1501,15 @@ Add reward guards to the reward object with `store_from_id` set to the order ide
       {
         "guard": "reward_shipping_timeout_v2",
         "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 30000},
+        "amount": {"type": "Fixed", "value": 20000},
         "store_from_id": 0
       }
     ]
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 
@@ -1496,7 +1563,7 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
           }
         ],
         "total_pay": {
-          "balance": 5000000000
+          "balance": 1000000000
         },
         "payment_remark": "To my dear friend - keep exploring the universe"
       },
@@ -1516,7 +1583,8 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
@@ -1525,9 +1593,9 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
 
 ### Step 2: Merchant Confirms Order
 
-Merchant confirms order by submitting Merkle Root.
+Merchant confirms the order. This step uses permission index 1000 (no Guard submission needed).
 
-**Prompt**: Merchant confirms order with Merkle Root.
+**Prompt**: Merchant confirms order.
 
 ```json
 {
@@ -1539,31 +1607,8 @@ Merchant confirms order by submitting Merkle Root.
         "next_node_name": "Order Confirmed",
         "forward": "Confirm Order"
       },
-      "hold": false,
       "message": "Order confirmed by merchant"
     }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_merkle_root_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_merkle_root_v2",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0xabc1234567890def4567890abc1234567890def4567890abc1234567890def4"
-          }
-        ]
-      }
-    ]
   },
   "env": {
     "account": "myshop_merchant",
@@ -1577,7 +1622,7 @@ Merchant confirms order by submitting Merkle Root.
 
 ### Step 3: Merchant Starts Shipping
 
-Merchant starts shipping after signature service is completed.
+Merchant starts shipping after signature service is completed. The merchant submits a Merkle Root (66-character hex string with 0x prefix) proving communication with the customer via Messenger.
 
 **Prompt**: Merchant starts shipping with Merkle Root submission.
 
@@ -1591,7 +1636,6 @@ Merchant starts shipping after signature service is completed.
         "next_node_name": "Shipping",
         "forward": "Confirm Signature and Submit Merkle Root"
       },
-      "hold": false,
       "message": "Shipping started - signature completed and Merkle Root submitted"
     }
   },
@@ -1611,7 +1655,7 @@ Merchant starts shipping after signature service is completed.
             "identifier": 0,
             "b_submission": true,
             "value_type": "String",
-            "value": "0xabc1234567890def4567890abc1234567890def4567890abc1234567890def4"
+            "value": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           }
         ]
       }
@@ -1625,7 +1669,7 @@ Merchant starts shipping after signature service is completed.
 }
 ```
 
-**Note**: The `machine_merkle_root_v2` Guard expects a 66-character string (including "0x" prefix). The Guard validates that the string length equals 66 characters.
+**Note**: The `machine_merkle_root_v2` Guard expects a 66-character string (including "0x" prefix). The Guard validates that the string length equals 66 characters. The Merkle Root is computed from the Messenger conversation between merchant and customer, proving that tracking information was exchanged.
 
 ***
 
@@ -1890,7 +1934,7 @@ If package is lost, customer reports and merchant confirms.
             "identifier": 0,
             "b_submission": true,
             "value_type": "String",
-            "value": "0xlost123...merkle456"
+            "value": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
           }
         ]
       }
@@ -2005,7 +2049,7 @@ Customer requests return after delivery confirmation.
             "identifier": 0,
             "b_submission": true,
             "value_type": "String",
-            "value": "0xreturn789...addr012"
+            "value": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
           }
         ]
       }
@@ -2051,7 +2095,7 @@ Customer requests return after delivery confirmation.
             "identifier": 0,
             "b_submission": true,
             "value_type": "String",
-            "value": "0xshipreturn...track345"
+            "value": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
           }
         ]
       }
@@ -2174,7 +2218,7 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_progress_v2"
+            "value": "myshop_order_v2"
           }
         ]
       }
@@ -2219,7 +2263,7 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
             "identifier": 0,
             "b_submission": true,
             "value_type": "Address",
-            "value": "myshop_progress_v2"
+            "value": "myshop_order_v2"
           }
         ]
       }

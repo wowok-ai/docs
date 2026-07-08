@@ -9,7 +9,6 @@
           {
             "name": "Confirm Order",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1000
           }
         ]
@@ -17,43 +16,18 @@
     ]
   },
   {
-    "name": "Order Cancel",
+    "name": "Shipping",
     "pairs": [
       {
         "prev_node": "Order Confirmed",
         "threshold": 1,
         "forwards": [
           {
-            "name": "Cancel Order",
+            "name": "Confirm Signature and Submit Merkle Root",
             "weight": 1,
-            "namedOperator": null,
-            "permissionIndex": 1000
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "Non-receipt Return",
-    "pairs": [
-      {
-        "prev_node": "Shipping",
-        "threshold": 2,
-        "forwards": [
-          {
-            "name": "Request Return",
-            "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": 1001
-          },
-          {
-            "name": "Confirm Return with Merkle Root",
-            "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001,
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
             }
           }
         ]
@@ -70,8 +44,7 @@
           {
             "name": "Confirm Receipt",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": 1001
+            "namedOperator": ""
           }
         ]
       }
@@ -87,7 +60,6 @@
           {
             "name": "Complete Order",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001
           }
         ]
@@ -99,11 +71,9 @@
           {
             "name": "Auto Complete from Shipping",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001,
             "guard": {
-              "guard": "0x6c82c0b0500173a1492ac37841f1b758dc016bfe56b7423a3b470099c184d035",
-              "retained_submission": []
+              "guard": "0x92f0cda993e72cace125a026862e204b9dd78a5013f4bc9f9251559cb1c73525"
             }
           }
         ]
@@ -111,21 +81,16 @@
     ]
   },
   {
-    "name": "Return Fail",
+    "name": "Wonderful",
     "pairs": [
       {
-        "prev_node": "Receipt Return",
+        "prev_node": "Delivery Complete",
         "threshold": 1,
         "forwards": [
           {
-            "name": "Timeout Return Not Received",
+            "name": "Rate as Wonderful",
             "weight": 1,
-            "namedOperator": null,
-            "permissionIndex": 1001,
-            "guard": {
-              "guard": "0x6c82c0b0500173a1492ac37841f1b758dc016bfe56b7423a3b470099c184d035",
-              "retained_submission": []
-            }
+            "namedOperator": ""
           }
         ]
       }
@@ -141,17 +106,14 @@
           {
             "name": "Report Lost",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": 1001
+            "namedOperator": ""
           },
           {
             "name": "Confirm Lost with Merkle Root",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001,
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
             }
           }
         ]
@@ -168,17 +130,14 @@
           {
             "name": "Request Return with Receipt",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": 1001
+            "namedOperator": ""
           },
           {
             "name": "Confirm Return Address with Merkle Root",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001,
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
             }
           }
         ]
@@ -186,20 +145,42 @@
     ]
   },
   {
-    "name": "Shipping",
+    "name": "Non-receipt Return",
     "pairs": [
       {
-        "prev_node": "Order Confirmed",
+        "prev_node": "Shipping",
+        "threshold": 2,
+        "forwards": [
+          {
+            "name": "Request Return",
+            "weight": 1,
+            "namedOperator": ""
+          },
+          {
+            "name": "Confirm Return with Merkle Root",
+            "weight": 1,
+            "permissionIndex": 1001,
+            "guard": {
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Return Fail",
+    "pairs": [
+      {
+        "prev_node": "Receipt Return",
         "threshold": 1,
         "forwards": [
           {
-            "name": "Confirm Signature and Submit Merkle Root",
+            "name": "Timeout Return Not Received",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001,
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x92f0cda993e72cace125a026862e204b9dd78a5013f4bc9f9251559cb1c73525"
             }
           }
         ]
@@ -216,17 +197,14 @@
           {
             "name": "Submit Return Merkle Root",
             "weight": 1,
-            "namedOperator": null,
-            "permissionIndex": 1001,
+            "namedOperator": "",
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
             }
           },
           {
             "name": "Confirm Return Received",
             "weight": 1,
-            "namedOperator": "",
             "permissionIndex": 1001
           }
         ]
@@ -238,34 +216,14 @@
           {
             "name": "Submit Return Merkle Root",
             "weight": 1,
-            "namedOperator": null,
-            "permissionIndex": 1001,
+            "namedOperator": "",
             "guard": {
-              "guard": "0x2241787c32171bcdb511561c535ba637c0252bf99a0ae19fe9f360c894acc4d6",
-              "retained_submission": []
+              "guard": "0x272321315a12d7d0ced20039b661fdfe6a840e44628c096f27a07d6a4cac87ab"
             }
           },
           {
             "name": "Confirm Return Received",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": 1001
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "Wonderful",
-    "pairs": [
-      {
-        "prev_node": "Delivery Complete",
-        "threshold": 1,
-        "forwards": [
-          {
-            "name": "Rate as Wonderful",
-            "weight": 1,
-            "namedOperator": "",
             "permissionIndex": 1001
           }
         ]
