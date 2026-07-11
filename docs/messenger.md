@@ -147,7 +147,7 @@ messenger_operation (Messenger Operations)
 │   ├── "proof_message"
 │   │   ├── account (optional, string)
 │   │   ├── messageId (required, string)
-│   │   └── network (optional, "localnet"/"testnet")
+│   │   └── network (optional, "localnet"/"testnet"/"mainnet")
 │   ├── "blacklist"
 │   │   ├── account (optional, string)
 │   │   └── blacklist (required, BlacklistOperation, discriminated by op)
@@ -166,7 +166,7 @@ messenger_operation (Messenger Operations)
 │   │       │   └── users (required, string[] | ManyAccountOrMark_Address)
 │   │       ├── op: "clear" (no additional fields)
 │   │       └── op: "get" (no additional fields)
-│   └── "guardlist"
+│   ├── "guardlist"
 │       ├── account (optional, string)
 │       └── guardlist (required, GuardlistOperation, discriminated by op)
 │           ├── op: "add"
@@ -936,7 +936,7 @@ Extract and decompress ZIP format message files.
 
 ### Examples
 
-#### Example 5.1: Extract Single Message
+#### Example 6.1: Extract Single Message
 
 **Prompt**: Extract ZIP file from message "012d6212_58f9dbc0_6_c72e", save to "./extracted/".
 
@@ -965,7 +965,7 @@ Extract and decompress ZIP format message files.
 
 ---
 
-#### Example 5.2: Extract Multiple Messages
+#### Example 6.2: Extract Multiple Messages
 
 **Prompt**: Extract ZIP files from messages "msg_002", "msg_003", and "msg_004", using account "my_account".
 
@@ -988,7 +988,7 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ### Examples
 
-#### Example 6.1: Generate Complete WTS
+#### Example 7.1: Generate Complete WTS
 
 **Prompt**: Generate complete chat history WTS between "mcp_test_alice_7x9" and "mcp_test_bob_3k5", save to "./wts_output/".
 
@@ -1027,7 +1027,7 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ---
 
-#### Example 6.2: Generate by Time Range
+#### Example 7.2: Generate by Time Range
 
 **Prompt**: Generate WTS for January 2024, exclude plaintext content for privacy.
 
@@ -1050,7 +1050,7 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ---
 
-#### Example 6.3: Generate by Message ID Range
+#### Example 7.3: Generate by Message ID Range
 
 **Prompt**: Generate WTS from message ID "msg_100" to "msg_200".
 
@@ -1080,7 +1080,7 @@ Verify WTS file integrity and signatures.
 
 ### Examples
 
-#### Example 7.1: Verify WTS File
+#### Example 8.1: Verify WTS File
 
 **Prompt**: Verify the WTS file at "./wts_output/0x012d_0x58f9_0-6.wts".
 
@@ -1120,7 +1120,7 @@ Sign WTS file using an account.
 
 ### Examples
 
-#### Example 8.1: Sign with Default Account
+#### Example 9.1: Sign with Default Account
 
 **Prompt**: Sign the WTS file "./wts/chat_history.wts" using default account.
 
@@ -1133,7 +1133,7 @@ Sign WTS file using an account.
 
 ---
 
-#### Example 8.2: Sign with Specified Account
+#### Example 9.2: Sign with Specified Account
 
 **Prompt**: Sign WTS file using "mcp_test_alice_7x9" account, save to "./wts_output/0x012d_0x58f9_0-6_signed.wts".
 
@@ -1159,8 +1159,6 @@ Sign WTS file using an account.
 - WTS file successfully signed by mcp_test_alice_7x9
 - Signed file saved to specified output path
 - Signature can be verified using verify_wts operation
-}
-```
 
 ---
 
@@ -1172,7 +1170,7 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ### Examples
 
-#### Example 9.1: Convert Single File
+#### Example 10.1: Convert Single File
 
 **Prompt**: Convert "./wts/chat_history.wts" to HTML with light theme.
 
@@ -1189,7 +1187,7 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ---
 
-#### Example 9.2: Convert and Save to File
+#### Example 10.2: Convert and Save to File
 
 **Prompt**: Convert "./wts_output/0x012d_0x58f9_0-6.wts" to HTML and save to "./wts_output/" directory.
 
@@ -1222,7 +1220,7 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ---
 
-#### Example 9.3: Convert Directory
+#### Example 10.3: Convert Directory
 
 **Prompt**: Convert all WTS files in "./wts/" directory, save to "./html/", use dark theme.
 
@@ -1249,7 +1247,7 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 ### Examples
 
-#### Example 10.1: Create On-chain Proof
+#### Example 11.1: Create On-chain Proof
 
 **Prompt**: Generate on-chain proof for message "msg_12345".
 
@@ -1262,7 +1260,7 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 ---
 
-#### Example 10.2: Proof with Network
+#### Example 11.2: Proof with Network
 
 **Prompt**: Generate on-chain proof for message on testnet network using "mcp_test_alice_7x9".
 
@@ -1306,7 +1304,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ### Examples
 
-#### Example 11.1: Add to Blacklist
+#### Example 12.1: Add to Blacklist
 
 **Prompt**: Add "mcp_test_bob_3k5" to blacklist for "mcp_test_alice_7x9".
 
@@ -1348,7 +1346,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ---
 
-#### Example 11.2: Remove from Blacklist
+#### Example 12.2: Remove from Blacklist
 
 **Prompt**: Remove "old_user" from blacklist using "my_account".
 
@@ -1365,7 +1363,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ---
 
-#### Example 11.3: View and Check Blacklist
+#### Example 12.3: View and Check Blacklist
 
 **Prompt**: View current blacklist.
 
@@ -1386,7 +1384,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ---
 
-#### Example 11.4: Clear Blacklist
+#### Example 12.4: Clear Blacklist
 
 **Prompt**: Clear entire blacklist.
 
@@ -1401,7 +1399,7 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ---
 
-#### Example 11.5: Add Multiple Users with Full Object Format
+#### Example 12.5: Add Multiple Users with Full Object Format
 
 **Prompt**: Add multiple users to blacklist using full object format with explicit control.
 
@@ -1431,7 +1429,7 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ### Examples
 
-#### Example 12.1: Add Friend
+#### Example 13.1: Add Friend
 
 **Prompt**: Add "mcp_test_bob_3k5" to friends list for "mcp_test_alice_7x9".
 
@@ -1473,7 +1471,7 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ---
 
-#### Example 12.2: Remove Friend
+#### Example 13.2: Remove Friend
 
 **Prompt**: Remove "old_friend" from friends list.
 
@@ -1489,7 +1487,7 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ---
 
-#### Example 12.3: View Friends List
+#### Example 13.3: View Friends List
 
 **Prompt**: View current friends list.
 
@@ -1510,7 +1508,7 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ---
 
-#### Example 12.4: Add Multiple Friends with Full Object Format
+#### Example 13.4: Add Multiple Friends with Full Object Format
 
 **Prompt**: Add multiple friends using full object format with explicit control.
 
@@ -1540,7 +1538,7 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ### Examples
 
-#### Example 13.1: Add Guard
+#### Example 14.1: Add Guard
 
 **Prompt**: Add "message_guard" to Guard list, Passport validity is 1 hour (3600 seconds).
 
@@ -1561,7 +1559,7 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ---
 
-#### Example 13.2: Add Multiple Guards
+#### Example 14.2: Add Multiple Guards
 
 **Prompt**: Add multiple Guards with different validity periods: 1 hour and 1 day (86400 seconds).
 
@@ -1636,7 +1634,7 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ### Examples
 
-#### Example 14.1: Get Current Settings
+#### Example 15.1: Get Current Settings
 
 **Prompt**: View current messenger settings for "mcp_test_alice_7x9".
 
@@ -1669,7 +1667,7 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ---
 
-#### Example 14.2: Update Settings
+#### Example 15.2: Update Settings
 
 **Prompt**: Set max inbox size to 500 and disable messages from strangers.
 
@@ -1696,7 +1694,7 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ---
 
-#### Example 14.3: Update Single Setting
+#### Example 15.3: Update Single Setting
 
 **Prompt**: Only update max inbox size to 2000.
 
@@ -1713,7 +1711,7 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ---
 
-#### Example 14.4: Enable Stranger Messages
+#### Example 15.4: Enable Stranger Messages
 
 **Prompt**: Allow receiving messages from strangers.
 
@@ -1757,7 +1755,7 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ### Examples
 
-#### Example 15.1: Mark Single Message as Viewed
+#### Example 16.1: Mark Single Message as Viewed
 
 **Prompt**: Mark message "msg_12345" as viewed.
 
@@ -1816,7 +1814,7 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ---
 
-#### Example 15.3: Mark Messages Without Auto-Mark
+#### Example 16.3: Mark Messages Without Auto-Mark
 
 **Prompt**: First get unviewed messages without auto-marking, then mark them as viewed.
 
@@ -1848,7 +1846,7 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ### Examples
 
-#### Example 16.1: Mark Conversation as Viewed
+#### Example 17.1: Mark Conversation as Viewed
 
 **Prompt**: Mark all messages from "bob" as viewed.
 
@@ -1875,7 +1873,7 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ---
 
-#### Example 16.2: Mark Conversation for Specific Account
+#### Example 17.2: Mark Conversation for Specific Account
 
 **Prompt**: Mark all messages from "0x1234...abcd" as viewed for account "my_account".
 
@@ -1889,7 +1887,7 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ---
 
-#### Example 16.3: Mark Conversation Using Full Object Format
+#### Example 17.3: Mark Conversation Using Full Object Format
 
 **Prompt**: Mark conversation using full object format with explicit local_mark_first control.
 
@@ -1905,7 +1903,7 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ---
 
-#### Example 16.4: Complete Workflow - Check and Mark Unread Conversations
+#### Example 17.4: Complete Workflow - Check and Mark Unread Conversations
 
 **Prompt**: Check unread conversations and mark them as viewed.
 
@@ -1947,7 +1945,7 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ### Examples
 
-#### Example 17.1: Get All Unviewed Messages
+#### Example 18.1: Get All Unviewed Messages
 
 **Prompt**: Get all unviewed received messages.
 
@@ -1965,7 +1963,7 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ---
 
-#### Example 17.2: Get Viewed Messages in Time Range
+#### Example 18.2: Get Viewed Messages in Time Range
 
 **Prompt**: Get messages viewed in the last hour.
 
@@ -1982,7 +1980,7 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ---
 
-#### Example 17.3: Get Unviewed Messages from Specific Peer
+#### Example 18.3: Get Unviewed Messages from Specific Peer
 
 **Prompt**: Get all unviewed messages from "alice" without auto-marking them.
 

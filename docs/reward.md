@@ -45,9 +45,22 @@ Reward operations use the following top-level structure:
 reward (Reward Object)
 ├── operation_type: "reward" (fixed value)
 ├── data (Reward data definition)
-│   ├── object (object definition, required)
-│   │   ├── name|id (reference existing object)
-│   │   └── name|tags|type_parameter|permission (create new object)
+│   ├── object (TypedPermissionObject, required)
+│   │   ├── Option 1: NameOrAddress (string) - reference existing object by name or ID
+│   │   └── Option 2: TypeNamedObjectWithPermission (object) - create new
+│   │       ├── name (string, optional) - object name
+│   │       ├── tags (string[], optional) - object tags
+│   │       ├── onChain (boolean, optional) - sync name to chain
+│   │       ├── replaceExistName (boolean, optional) - overwrite existing
+│   │       ├── type_parameter (string, optional) - token type, default "0x2::wow::WOW"; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag)
+│   │       └── permission (DescriptionObject, optional) - Permission object
+│   │           ├── Option 1: NameOrAddress (string) - reference existing
+│   │           └── Option 2: NamedObjectWithDescription (object) - create new
+│   │               ├── name (string, optional)
+│   │               ├── tags (string[], optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
 │   ├── claim (Guard to claim reward, optional)
 │   ├── description (description, optional)
 │   ├── coin_add (add funds, optional)
@@ -87,7 +100,7 @@ reward (Reward Object)
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -135,13 +148,15 @@ Create a new Reward object for managing rewards.
 | `data.object` | object or string | Yes | Object definition | TypedPermissionObject |
 | `data.description` | string | No | Reward description | Max 65535 bcs characters |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 
 ### Important Notes
 
 ⚠️ **Reward Guards**: Define reward rules using RewardGuard objects, which include recipient, amount, and expiration.
 
 ⚠️ **Guard Verification**: Rewards are only distributed when the specified Guard verification passes.
+
+⚠️ **type_parameter (Payment Token)**: Defaults to `0x2::wow::WOW` (native WOW gas token). You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as the Reward's coin type — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
 
 ---
 
@@ -465,12 +480,13 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 ### Recipient Types
 
 - **Signer**: `{ "Signer": "signer" }` - Current transaction signer
-- **Entity**: `{ "Entity": "name_or_address" }` - Fixed entity ID
+- **Entity**: `{ "Entity": { "name_or_address": "..." } }` - Fixed entity ID
 - **GuardIdentifier**: `{ "GuardIdentifier": number }` - From Guard table
 
 ### Amount Types
 
 - **Fixed**: `{ "type": "Fixed", "value": number }` - Fixed amount
+- **GuardU64Identifier**: `{ "type": "GuardU64Identifier", "value": number }` - Amount from Guard table (0-255)
 
 ---
 
@@ -537,7 +553,7 @@ This indicates that the set `expiration_time` is less than or equal to the curre
       {
         "guard": "referrer_guard",
         "recipient": {
-          "Entity": "referrer"
+          "Entity": { "name_or_address": "referrer" }
         },
         "amount": {
           "type": "Fixed",
@@ -547,7 +563,7 @@ This indicates that the set `expiration_time` is less than or equal to the curre
       {
         "guard": "referee_guard",
         "recipient": {
-          "Entity": "referee"
+          "Entity": { "name_or_address": "referee" }
         },
         "amount": {
           "type": "Fixed",
@@ -797,7 +813,7 @@ Perform multiple operations on existing Reward in a single transaction, such as 
       {
         "guard": "bonus_guard_2",
         "recipient": {
-          "Entity": "team_member"
+          "Entity": { "name_or_address": "team_member" }
         },
         "amount": {
           "type": "Fixed",

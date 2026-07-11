@@ -6,7 +6,7 @@
 
 The LocalInfo component manages local private data, such as delivery addresses, phone numbers, contacts, etc., stored exclusively on the local device.
 
-> **Note**: Use the `watch_and_query` tool to query all or filtered information.
+> **Note**: Use the `query_toolkit` tool to query all or filtered information.
 
 ---
 

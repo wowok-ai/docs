@@ -6,7 +6,7 @@
 
 The LocalMark component manages local address book entries, storing ID names and tags exclusively on the local device. Users can use names to reference and operate on user addresses and object IDs.
 
-> **Note**: Use the `watch_and_query` tool to query all or filtered marks.
+> **Note**: Use the `query_toolkit` tool to query all or filtered marks.
 
 ---
 

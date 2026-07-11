@@ -159,7 +159,7 @@ arbitration (Arbitration Object)
 │   └── um (string | null, optional) - Contact object ID/name, null to unbind
 ├── env (CallEnv, optional) - execution environment
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array of string, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID

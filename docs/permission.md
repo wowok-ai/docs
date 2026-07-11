@@ -19,12 +19,12 @@ WoWok organizes built-in permissions by object type. Each object type has a dedi
 |-------------|-------------------|-------------|------------------|
 | **Repository** | 100-109 | Consensus data storage repositories for storing shared state data | 6 |
 | **Reward** | 150-159 | Incentive pools for distributing rewards and bonuses | 8 |
-| **Machine** | 200-209 | Workflow templates defining automated service delivery processes | 9 |
+| **Machine** | 200-209 | Workflow templates defining automated service delivery processes | 8 |
 | **Progress** | 220-229 | Active workflow executions (instances of Machine templates) | 6 |
 | **Treasury** | 250-260 | Team funds management for holding and distributing team assets | 11 |
-| **Service** | 300-320 | Service marketplace listings for offering and selling services | 21 |
-| **Arbitration** | 350-368 | Dispute resolution system for resolving service conflicts | 19 |
-| **Demand** | 400-408 | Service requests for seeking service providers | 9 |
+| **Service** | 300-320 | Service marketplace listings for offering and selling services | 20 |
+| **Arbitration** | 350-368 | Dispute resolution system for resolving service conflicts | 18 |
+| **Demand** | 400-408 | Service requests for seeking service providers | 8 |
 | **Contact** | 450-454 | Encrypted messenger for secure communication | 5 |
 | **User-defined** | 1000-65535 | Custom permissions for your specific business needs | 64536 |
 
@@ -126,6 +126,8 @@ All built-in permissions are listed below:
 | **454** | Contact | MESSNGER_OWNER_RECEIVE | Receive objects/payments for Messenger |
 | **1000+** | User-defined | Custom | Custom business permissions defined by you |
 
+> **Note on Reserved Indices**: Indices 202 (Machine), 302 (Service), 352 (Arbitration), and 403 (Demand) are reserved as `*_ENDPOINT` constants in the source code but are currently commented out and not active. These gaps in the numbering are intentional.
+
 ---
 
 ## Function List
@@ -175,7 +177,7 @@ permission (Permission Object)
 │   │   └── op: "clear"
 │   ├── table (object, optional) - Permission table operations (requires admin)
 │   │   ├── op: "add perm by index" | "set perm by index" | "remove perm by index"
-│   │   │   ├── index: number (permission index, 0-65535)
+│   │   │   ├── index: number (built-in permission 100-454 or user-defined 1000-65535)
 │   │   │   └── entity: { entities: [{ name_or_address, local_mark_first? }], check_all_founded? }
 │   │   └── op: "add perm by entity" | "set perm by entity" | "remove perm by entity"
 │   │       ├── entity: { name_or_address, local_mark_first? }
@@ -198,7 +200,7 @@ permission (Permission Object)
 │   └── um (string | null, optional) - Contact object name/ID, or null to unbind
 ├── env (optional)
 │   ├── account (string, optional) - account name or address, default: ""
-│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array of strings, optional) - permission guard IDs
 │   ├── no_cache (boolean, optional) - disable cache
 │   └── referrer (string, optional) - referrer ID
@@ -1326,7 +1328,7 @@ Perform multiple operations in a single call, such as creating an object while c
 
 ### Example
 
-#### Example 9.1: Create Permission and Configure Complete Permissions
+#### Example 11.1: Create Permission and Configure Complete Permissions
 
 **Prompt**: Create a complete marketing department permission configuration: 1) Create a Permission named "full_marketing_permission", 2) Add description and tags, 3) Add "marketing_director" as administrator, 4) Add service creation permission (300) to "marketing_specialist_1" and "marketing_specialist_2", 5) Add a remark to permission 1001: "Machine Node 'order confirm': confirm operation".
 
@@ -1395,13 +1397,12 @@ All examples in this document use the **testnet** network and **default account*
   "data": { ... },
   "env": {
     "account": "",              // Empty string for default account, or use account name/address
-    "network": "testnet"        // Options: "localnet" | "testnet"
+    "network": "testnet"        // Options: "localnet" | "testnet" | "mainnet"
   }
 }
 ```
 
 **Note**: If the `env` field is not specified, the operation will use the **default account** and the **last used network** for execution.
-```
 
 ### ⚠️ Permission Index Ranges
 

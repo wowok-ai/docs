@@ -35,8 +35,8 @@ In a decentralized world, we need to clearly define: **who can perform what oper
 ```
 SERVICE_NEW = 300      - Create service
 SERVICE_DESCRIPTION = 301  - Modify service description
-MACHINE_NEW = 500      - Create workflow
-REPOSITORY_NEW = 700    - Create data repository
+MACHINE_NEW = 200      - Create workflow
+REPOSITORY_NEW = 100    - Create data repository
 ... etc
 ```
 
@@ -130,20 +130,26 @@ Transaction completed successfully...
 **📤 Return Result:**
 
 ```json
-[
-  {
-    "type": "Permission",
-    "type_raw": "0x2::permission::Permission",
-    "object": "...",
-    "version": "149",
-    "owner": {
-      "Shared": {
-        "initial_shared_version": 149
+{
+  "message": "Operation completed",
+  "result": {
+    "type": "data",
+    "data": [
+      {
+        "type": "Permission",
+        "type_raw": "0x2::permission::Permission",
+        "object": "...",
+        "version": "149",
+        "owner": {
+          "Shared": {
+            "initial_shared_version": 149
+          }
+        },
+        "change": "created"
       }
-    },
-    "change": "created"
+    ]
   }
-]
+}
 ```
 
 ### Exercise 2: Create a Guard that Anyone Can Pass
@@ -170,11 +176,8 @@ Transaction completed successfully...
       }
     ],
     "root": {
-      "node": {
-        "type": "identifier",
-        "identifier": 0
-      },
-      "type": "node"
+      "type": "identifier",
+      "identifier": 0
     }
   },
   "operation_type": "guard"
@@ -186,16 +189,27 @@ Transaction completed successfully...
 
 ```
 Transaction completed successfully
-[
-  {
-    "type": "Guard",
-    "type_raw": "0x2::guard::Guard",
-    "object": "...",
-    "version": "12687712",
-    "owner": "Immutable",
-    "change": "created"
+```
+
+**📤 Return Result:**
+
+```json
+{
+  "message": "Operation completed",
+  "result": {
+    "type": "data",
+    "data": [
+      {
+        "type": "Guard",
+        "type_raw": "0x2::guard::Guard",
+        "object": "...",
+        "version": "12687712",
+        "owner": "Immutable",
+        "change": "created"
+      }
+    ]
   }
-]
+}
 ```
 
 
@@ -233,24 +247,21 @@ The signer has permission to create service objects in P1 object.
       }
     ],
     "root": {
-      "type": "node",
-      "node": {
-        "query": "permission.entity.perm has",
-        "type": "query",
-        "object": {
-          "identifier": 0
+      "type": "query",
+      "query": "permission.entity.perm has",
+      "object": {
+        "identifier": 0
+      },
+      "parameters": [
+        {
+          "type": "context",
+          "context": "Signer"
         },
-        "parameters": [
-          {
-            "context": "Signer",
-            "type": "context"
-          },
-          {
-            "identifier": 1,
-            "type": "identifier"
-          }
-        ]
-      }
+        {
+          "type": "identifier",
+          "identifier": 1
+        }
+      ]
     }
   },
   "operation_type": "guard"
@@ -262,17 +273,27 @@ The signer has permission to create service objects in P1 object.
 
 ```
 Transaction completed successfully
+```
 
-[
-  {
-    "type": "Guard",
-    "type_raw": "0x2::guard::Guard",
-    "object": "...",
-    "version": "12685347",
-    "owner": "Immutable",
-    "change": "created"
+**📤 Return Result:**
+
+```json
+{
+  "message": "Operation completed",
+  "result": {
+    "type": "data",
+    "data": [
+      {
+        "type": "Guard",
+        "type_raw": "0x2::guard::Guard",
+        "object": "...",
+        "version": "12685347",
+        "owner": "Immutable",
+        "change": "created"
+      }
+    ]
   }
-]
+}
 ```
 
 

@@ -79,7 +79,7 @@ progress (Operate Existing Progress)
 │       └── message (string, optional) - Operation result message
 ├── env (optional)
 │   ├── account (string, optional) - Account name or address, empty string for default
-│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array of strings, optional) - Permission guard IDs
 │   ├── no_cache (boolean, optional) - Disable cache
 │   └── referrer (string, optional) - Referrer ID
@@ -206,74 +206,6 @@ Progress instances are created from published Machine objects using `operation_t
 ---
 
 ## Sub-feature 1: Operate Progress (operate)
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "object": "0x147f5f648a6e993bc5c29ae3a8143b8b5cb2b54a45cecb8ef1f81cf545292a5b",
-      "change": "created"
-    }
-  ]
-}
-```
-
-#### Example 1.2: Create Named Progress
-
-**Prompt**: Create a Progress named "project_gamma" with tags ["mobile", "ecommerce"].
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "sdlc_workflow_v2",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_gamma",
-        "tags": ["mobile", "ecommerce"]
-      }
-    }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
-  }
-}
-```
-
-#### Example 1.3: Create Progress with Named Operators
-
-**Prompt**: Create a Progress and assign "dev_lead_carol" as operator for the "developer" namespace.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "sdlc_workflow_v2",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_delta"
-      },
-      "progress_namedOperator": {
-        "op": "set",
-        "name": "developer",
-        "operators": {
-          "entities": [
-            {"name_or_address": "dev_lead_carol"}
-          ]
-        }
-      }
-    }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
-  }
-}
-```
-
----
-
-## Sub-feature 2: Operate Progress (operate)
 
 ### Feature Description
 
@@ -303,7 +235,7 @@ Advance Progress to the next node by executing node transition operations. There
 
 ### Examples
 
-#### Example 2.1: Advance from Init Node (First Step)
+#### Example 1.1: Advance from Init Node (First Step)
 
 **Prompt**: Advance "project_gamma" from init node (current: "") to "requirement" node using forward "start_project". This is the first step in the workflow.
 
@@ -354,7 +286,7 @@ Advance Progress to the next node by executing node transition operations. There
 
 ---
 
-#### Example 2.2: Execute Accomplish Operation (No Hold)
+#### Example 1.2: Execute Accomplish Operation (No Hold)
 
 **Prompt**: Advance "project_alpha" from current node (requirement) to "design" using forward "submit_design", with message "Requirements approved, proceeding to design phase" and no hold.
 
@@ -420,7 +352,7 @@ Advance Progress to the next node by executing node transition operations. There
 3. The operator must have the required permission (permissionIndex or namedOperator)
 4. The forward name must exactly match the name defined in the Machine node
 
-#### Example 2.3: Execute Hold Operation
+#### Example 1.3: Execute Hold Operation
 
 **Prompt**: Advance "project_alpha" from "design" to "development" using forward "start_development", hold at this node for architect review, with message "Design completed, awaiting architect approval".
 
@@ -479,7 +411,7 @@ Advance Progress to the next node by executing node transition operations. There
 }
 ```
 
-#### Example 2.4: Admin Unhold Operation
+#### Example 1.4: Admin Unhold Operation
 
 **Prompt**: Admin unlock "project_alpha" from hold state, allowing it to advance to "code_review" using forward "submit_code", with message "Design approved by admin, proceeding to development".
 
@@ -568,7 +500,7 @@ Advance Progress to the next node by executing node transition operations. There
 
 ---
 
-## Sub-feature 3: Manage Named Operators (progress_namedOperator)
+## Sub-feature 2: Manage Named Operators (progress_namedOperator)
 
 ### Feature Description
 
@@ -594,7 +526,7 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ### Examples
 
-#### Example 3.1: Set Named Operators (Initial Assignment)
+#### Example 2.1: Set Named Operators (Initial Assignment)
 
 **Prompt**: Set "developer" namespace to have "dev_lead_carol" as the operator for "project_alpha".
 
@@ -639,7 +571,7 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 }
 ```
 
-#### Example 3.2: Add Named Operators
+#### Example 2.2: Add Named Operators
 
 **Prompt**: Add "arch_bob" as an additional developer to "project_alpha" for collaborative development.
 
@@ -693,7 +625,7 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 }
 ```
 
-#### Example 3.4: Multiple Named Operators
+#### Example 2.4: Multiple Named Operators
 
 **Prompt**: Set multiple developers for "project_beta" to enable team collaboration.
 
@@ -724,7 +656,7 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ---
 
-## Sub-feature 4: Set Task (task)
+## Sub-feature 3: Set Task (task)
 
 ### Feature Description
 
@@ -742,7 +674,7 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 
 ### Examples
 
-#### Example 4.1: Set Task ID
+#### Example 3.1: Set Task ID
 
 **Prompt**: Set task "mobile_app_order_001" for "project_alpha" to link it with the corresponding order.
 
@@ -780,7 +712,7 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 }
 ```
 
-#### Example 4.2: Set Task with Service Reference
+#### Example 3.2: Set Task with Service Reference
 
 **Prompt**: Link "project_beta" to service "web_development_service".
 
@@ -800,7 +732,7 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 
 ---
 
-## Sub-feature 5: Manage Repository (repository)
+## Sub-feature 4: Manage Repository (repository)
 
 ### Feature Description
 
@@ -824,7 +756,7 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ### Examples
 
-#### Example 5.1: Add Repositories
+#### Example 4.1: Add Repositories
 
 **Prompt**: Add "project_alpha_specs" and "project_alpha_assets" repositories to "project_alpha" for storing specifications and design assets.
 
@@ -863,7 +795,7 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 }
 ```
 
-#### Example 5.2: Set Repositories
+#### Example 4.2: Set Repositories
 
 **Prompt**: Set "project_alpha" repositories to exactly ["project_alpha_code", "project_alpha_docs"], replacing any existing ones.
 
@@ -884,7 +816,7 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 }
 ```
 
-#### Example 5.3: Remove Repositories
+#### Example 4.3: Remove Repositories
 
 > **⚠️ Note**: The `remove` operation may have limitations on the number of objects that can be removed at once. If you encounter errors, consider using `set` or `clear` operations instead.
 
@@ -907,7 +839,7 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 }
 ```
 
-#### Example 5.4: Clear All Repositories
+#### Example 4.4: Clear All Repositories
 
 **Prompt**: Clear all repositories from "project_alpha" after project completion.
 
@@ -929,7 +861,7 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ---
 
-## Sub-feature 6: Combined Operations
+## Sub-feature 5: Combined Operations
 
 ### Feature Description
 
@@ -937,7 +869,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
 
 ### Examples
 
-#### Example 6.1: Complete Progress Workflow with All Features
+#### Example 5.1: Complete Progress Workflow with All Features
 
 **Prompt**: For "project_alpha": 1) Set task "mobile_app_order_001", 2) Add "project_alpha_deliverables" repository, 3) Add "test_lead_dave" to "reviewers" namespace, 4) Advance to "testing" node with forward "approve_code", hold=false, message "Code review passed, moving to testing phase".
 
@@ -996,7 +928,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
 }
 ```
 
-#### Example 6.2: Hold and Set Operators Together
+#### Example 5.2: Hold and Set Operators Together
 
 **Prompt**: For "project_alpha": 1) Hold at "uat" node with forward "pass_testing", 2) Add "customer_eve" to "approvers" namespace for UAT approval.
 
@@ -1031,7 +963,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
 }
 ```
 
-#### Example 6.3: Project Initialization with Multiple Setup Steps
+#### Example 5.3: Project Initialization with Multiple Setup Steps
 
 **Prompt**: Initialize "project_gamma" with task, repositories, and named operators in one operation.
 
@@ -1548,7 +1480,7 @@ Customer approves UAT and authorizes deployment:
 }
 ```
 
-#### Step 10: Deployment to Completed (Dev Lead)
+#### Step 12: Deployment to Completed (Dev Lead)
 
 Final deployment to production:
 

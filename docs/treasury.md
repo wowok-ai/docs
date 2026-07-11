@@ -44,9 +44,22 @@ Treasury operations use the following top-level structure:
 treasury (Treasury Object)
 ├── operation_type: "treasury" (fixed value)
 ├── data (Treasury data definition)
-│   ├── object (object definition, required)
-│   │   ├── name|id (reference existing object)
-│   │   └── name|tags|type_parameter|permission (create new object)
+│   ├── object (TypedPermissionObject, required)
+│   │   ├── Option 1: NameOrAddress (string) - reference existing object by name or ID
+│   │   └── Option 2: TypeNamedObjectWithPermission (object) - create new
+│   │       ├── name (string, optional) - object name
+│   │       ├── tags (string[], optional) - object tags
+│   │       ├── onChain (boolean, optional) - sync name to chain
+│   │       ├── replaceExistName (boolean, optional) - overwrite existing
+│   │       ├── type_parameter (string, optional) - token type, default "0x2::wow::WOW"; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag)
+│   │       └── permission (DescriptionObject, optional) - Permission object
+│   │           ├── Option 1: NameOrAddress (string) - reference existing
+│   │           └── Option 2: NamedObjectWithDescription (object) - create new
+│   │               ├── name (string, optional)
+│   │               ├── tags (string[], optional)
+│   │               ├── onChain (boolean, optional)
+│   │               ├── replaceExistName (boolean, optional)
+│   │               └── description (string, optional)
 │   ├── description (description, optional)
 │   ├── receive (receive CoinWrapper, optional)
 │   │   ├── Option 1: "recently" (string) - receive all recently received
@@ -65,8 +78,11 @@ treasury (Treasury Object)
 │   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
 │   │   │   ├── remark (string) - Payment record remark
 │   │   │   └── index (number or string) - Payment record index
-│   │   └── namedNewPayment (object, optional) - Create new Payment object after deposit
-│   │       └── name (string, optional) - Name for the new Payment object
+│   │   └── namedNewPayment (NamedObject, optional) - Create new Payment object after deposit
+│   │       ├── name (string, optional) - Name for the new Payment object
+│   │       ├── tags (string[], optional) - object tags
+│   │       ├── onChain (boolean, optional) - sync name to chain
+│   │       └── replaceExistName (boolean, optional) - overwrite existing
 │   ├── withdraw (withdrawal, optional)
 │   │   ├── amount (amount, required)
 │   │   │   ├── Option 1: { fixed: number|string } - Fixed withdrawal amount (Permission only)
@@ -77,8 +93,11 @@ treasury (Treasury Object)
 │   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
 │   │   │   ├── remark (string) - Payment record remark
 │   │   │   └── index (number or string) - Payment record index
-│   │   └── namedNewPayment (object, optional) - Create new Payment object after withdrawal
-│   │       └── name (string, optional) - Name for the new Payment object
+│   │   └── namedNewPayment (NamedObject, optional) - Create new Payment object after withdrawal
+│   │       ├── name (string, optional) - Name for the new Payment object
+│   │       ├── tags (string[], optional) - object tags
+│   │       ├── onChain (boolean, optional) - sync name to chain
+│   │       └── replaceExistName (boolean, optional) - overwrite existing
 │   ├── external_deposit_guard (optional)
 │   │   ├── op (string) - Operation type: "add", "set", "remove", "clear"
 │   │   └── guards (array, required for add/set/remove)
@@ -104,15 +123,11 @@ treasury (Treasury Object)
 │   │       ├── token_type (string)
 │   │       └── received (array of received items)
 │   └── um (Contact object, optional)
-│       ├── Option 1: NamedObject (object) - create a named Contact object
-│       │   ├── name (string, optional) - Contact object name
-│       │   ├── tags (string[], optional) - object tags
-│       │   ├── onChain (boolean, optional) - sync name to chain
-│       │   └── replaceExistName (boolean, optional) - overwrite existing
+│       ├── Option 1: NameOrAddress (string) - reference existing Contact object by name or ID
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -196,13 +211,15 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 | `data.object` | object or string | Yes | Object definition | TypedPermissionObject |
 | `data.description` | string | No | Treasury description | Max 4000 BCS characters |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 
 ### Important Notes
 
 ⚠️ **Permission Object**: Treasury requires Permission to manage permissions, can create new or reference existing.
 
 ⚠️ **External Guard**: Can set external verification rules through `external_deposit_guard` and `external_withdraw_guard`, allowing non-permission users to deposit/withdraw through Guard verification.
+
+⚠️ **type_parameter (Payment Token)**: Defaults to `0x2::wow::WOW` (native WOW gas token). You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as the Treasury's payment/deposit/withdraw token — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
 
 ---
 

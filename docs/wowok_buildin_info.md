@@ -4,7 +4,7 @@
 
 ## Component Overview
 
-The WoWok Build-in Information component is used to query WoWok protocol information, including constants, built-in permissions, guard instructions, current network, and value types.
+The WoWok Build-in Information component is used to query WoWok protocol information, including constants, built-in permissions, guard instructions, current network, value types, and mainnet bridge tokens.
 
 ---
 
@@ -17,6 +17,7 @@ The WoWok Build-in Information component is used to query WoWok protocol informa
 | **Query Guard Instructions** | Get Guard instruction reference | Build Guard logic | Access all available operations |
 | **Query Current Network** | Get current network entrypoint | Check which network is active | Verify environment configuration |
 | **Query Value Types** | Get supported value type mappings | Work with on-chain data types | Understand type system |
+| **Query Mainnet Bridge Tokens** | Get mainnet bridge token list | Use bridged tokens (USDT/USDC/ETH/WBTC/WETH) as payment types | Extend official payment beyond WOW token |
 
 ---
 
@@ -43,7 +44,7 @@ wowok_buildin_info (Build-in Information Operations)
 │   │   └── filter (optional, PermissionFilter)
 │   │       ├── objectType (optional, ObjectType)
 │   │       ├── name (optional, string)
-│   │       ├── index (optional, number)
+│   │       ├── index (optional, PermissionIndexType - builtin permission index or 1000-65535)
 │   │       └── description (optional, string)
 │   ├── "guard instructions"
 │   │   └── filter (optional, GuardInstructFilter)
@@ -54,7 +55,8 @@ wowok_buildin_info (Build-in Information Operations)
 │   │       ├── scope (optional, "instruct"/"object query"/"all")
 │   │       └── objectType (optional, ObjectType, only for "object query" scope)
 │   ├── "current network"
-│   └── "value types"
+│   ├── "value types"
+│   └── "mainnet bridge tokens"
 └── (no other top-level fields)
 ```
 
@@ -211,7 +213,7 @@ Get definitions of built-in permissions, including their indexes, names, descrip
 }
 ```
 
-> **Note**: The result shows 69 built-in permissions across all object types. Indexes below 1000 are reserved for built-in permissions.
+> **Note**: The result shows 90 built-in permissions across all object types. Indexes below 1000 are reserved for built-in permissions.
 
 ---
 
@@ -257,7 +259,7 @@ Get definitions of built-in permissions, including their indexes, names, descrip
 }
 ```
 
-> **Note**: Filtering by "Service" returns 21 permissions specific to Service objects.
+> **Note**: Filtering by "Service" returns 20 permissions specific to Service objects.
 
 ---
 
@@ -505,7 +507,7 @@ Get reference information for Guard instructions and object queries, including t
 }
 ```
 
-> **Note**: Found 21 instructions that accept 2 or more parameters (most instructions support 2-8 parameters).
+> **Note**: Found 21 instructions that accept exactly 2 parameters (most instructions support 2-8 parameters, but paramCount filters for exact match).
 
 ---
 
@@ -536,7 +538,7 @@ Get reference information for Guard instructions and object queries, including t
     {"id": 1100, "name": "payment.amount", "objectType": "Payment", "parameters": [], "return": 6, "description": "Amount of the payment"},
     {"id": 1150, "name": "repository.description", "objectType": "Repository", "parameters": [], "return": 2, "description": "Description of the repository"},
     {"id": 1151, "name": "repository.policy count", "objectType": "Repository", "parameters": [], "return": 6, "description": "Number of policies in the repository"},
-    {"id": 1200, "name": "machine.description", "objectType": "Machine", "parameters": [], "return": 6, "description": "Description of the machine"}
+    {"id": 1200, "name": "machine.description", "objectType": "Machine", "parameters": [], "return": 2, "description": "Description of the machine"}
   ]
 }
 ```
@@ -643,7 +645,7 @@ Get the current network entrypoint to verify which blockchain environment you're
 }
 ```
 
-> **Note**: Current network is "testnet". Other possible values are "localnet" for local development.
+> **Note**: Current network is "testnet". Other possible values are "localnet" for local development and "mainnet" for production.
 
 ---
 
@@ -697,6 +699,123 @@ Get mappings of supported value types, showing both their numeric IDs and string
 
 ---
 
+## Example 6: Query Mainnet Bridge Tokens
+
+### Feature Description
+
+Get the list of tokens deployed on the mainnet bridge. Each token includes its symbol, WOW-side type tag (`wowTypeTag`), EVM-side contract address, decimals, and description.
+
+The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important field: it can be used directly as the `type_parameter` of **Service**, **Treasury**, **Reward**, and **Allocation** objects to set their payment token. This extends the WOW system's official payment types beyond the native WOW token — for example, use USDT's `wowTypeTag` to create a Service that accepts USDT payments.
+
+### Examples
+
+#### Example 6.1: Get All Mainnet Bridge Tokens
+
+**Prompt**: Query all mainnet bridge tokens to see which tokens can be used as payment types.
+
+```json
+{
+  "info": "mainnet bridge tokens"
+}
+```
+
+**Execution Result**:
+```json
+{
+  "status": "success",
+  "result": [
+    {
+      "tokenId": 1,
+      "symbol": "WBTC",
+      "wowTypeTag": "0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC",
+      "evmAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      "evmDecimals": 8,
+      "wowDecimals": 8,
+      "evmChains": [10],
+      "description": "Wrapped BTC (ERC20). Bitcoin price exposure on Ethereum; 1 WBTC = 1 BTC."
+    },
+    {
+      "tokenId": 2,
+      "symbol": "ETH",
+      "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+      "evmAddress": "0x0000000000000000000000000000000000000000",
+      "evmDecimals": 18,
+      "wowDecimals": 8,
+      "evmChains": [10],
+      "description": "Native ETH. Calls bridgeETHV2{value}; vault auto-wraps to WETH internally. 18 decimals on EVM, 8 decimals on WOW."
+    },
+    {
+      "tokenId": 2,
+      "symbol": "WETH",
+      "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+      "evmAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "evmDecimals": 18,
+      "wowDecimals": 8,
+      "evmChains": [10],
+      "description": "Wrapped ETH (ERC20). Calls bridgeERC20V2; shares Token ID 2 and WOW type tag with native ETH."
+    },
+    {
+      "tokenId": 3,
+      "symbol": "USDC",
+      "wowTypeTag": "0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC",
+      "evmAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "evmDecimals": 6,
+      "wowDecimals": 6,
+      "evmChains": [10],
+      "description": "USD Coin (USDC). Fully collateralized USD stablecoin; 6 decimals on both sides."
+    },
+    {
+      "tokenId": 4,
+      "symbol": "USDT",
+      "wowTypeTag": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT",
+      "evmAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "evmDecimals": 6,
+      "wowDecimals": 6,
+      "evmChains": [10],
+      "description": "Tether USD (USDT). Fiat-collateralized stablecoin; 6 decimals on both sides."
+    }
+  ]
+}
+```
+
+> **Note**: The result returns 5 token entries (WBTC, ETH, WETH, USDC, USDT). ETH and WETH share the same `tokenId` (2) and `wowTypeTag` — native ETH is auto-wrapped to WETH internally by the bridge vault. The `evmChains` value `10` corresponds to the bridge protocol's chain ID for ETH mainnet.
+
+#### Using wowTypeTag as type_parameter
+
+The `wowTypeTag` values returned by this query can be used directly as the `type_parameter` field when creating Service, Treasury, Reward, or Allocation objects. For example, to create a Service that accepts USDT payments:
+
+```json
+{
+  "operation_type": "service",
+  "data": {
+    "object": {
+      "name": "my_usdt_service",
+      "type_parameter": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT"
+    }
+  }
+}
+```
+
+If `type_parameter` is omitted, it defaults to `0x2::wow::WOW` (the native WOW gas token).
+
+---
+
+## Mainnet Bridge Token Reference
+
+The following table lists all mainnet bridge tokens with their `wowTypeTag` values. These values are fixed and will not change — they can be used directly in `type_parameter` fields.
+
+| Symbol | Token ID | wowTypeTag (type_parameter) | EVM Address | EVM Decimals | WOW Decimals |
+|--------|----------|-----------------------------|-------------|--------------|--------------|
+| **WBTC** | 1 | `0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC` | 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 | 8 | 8 |
+| **ETH** | 2 | `0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH` | 0x0000000000000000000000000000000000000000 (native) | 18 | 8 |
+| **WETH** | 2 | `0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH` | 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 | 18 | 8 |
+| **USDC** | 3 | `0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC` | 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 | 6 | 6 |
+| **USDT** | 4 | `0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT` | 0xdAC17F958D2ee523a2206206994597C13D831ec7 | 6 | 6 |
+
+> **Note**: ETH and WETH share the same `wowTypeTag` because native ETH is auto-wrapped to WETH by the bridge vault. When using ETH/WETH as a payment type, use the shared `wowTypeTag`. The `decimals` difference (18 on EVM vs 8 on WOW for ETH/WBTC) is handled automatically by the bridge protocol.
+
+---
+
 ## Important Notes
 
 ⚠️ **Constants are protocol-wide** - these values are fixed and consistent across the entire WoWok ecosystem.
@@ -722,7 +841,7 @@ Get mappings of supported value types, showing both their numeric IDs and string
    | 8 | U256 | 17 | VecU256 |
    | | | 18 | VecVecU8 |
 
-⚠️ **Current network indicates environment** - localnet for development, testnet for testing.
+⚠️ **Current network indicates environment** - localnet for development, testnet for testing, mainnet for production.
 
 ⚠️ **Filter behavior**:
    - Name filtering is case-insensitive and matches partial strings

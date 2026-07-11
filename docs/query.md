@@ -25,7 +25,7 @@ Use local queries for account management and address book lookups. Use onchain q
 | 3 | `local_info_list` | Query your LOCAL private info — sensitive data like delivery addresses, phone numbers, contacts stored ONLY on this device. Use to retrieve saved contact/delivery details. | `InfoData[]` (name, default value, contents, timestamps) |
 | 4 | `token_list` | Query cached token metadata — symbol, decimals, icon URL, description for tokens previously fetched from chain. Use to look up token info without an on-chain query. | `TokenTypeInfo[]` (type, alias, name, symbol, decimals, iconUrl) |
 | 5 | `account_balance` | Query an account's coin balance OR paginated coin objects. Use `balance=true` for total amount, or `coin={cursor,limit}` to list individual coin objects. | `{ address, balance? \| coin? }` |
-| 6 | `local_names` | Query local names by blockchain addresses — resolves addresses back to human-readable names. Use to find account/service names from their address. | `Record<string, string>` (address → name mapping) |
+| 6 | `local_names` | Query local names by blockchain addresses — resolves addresses back to human-readable names. Use to find account/service names from their address. | `{ account?, local_mark?, address }[]` (array of name lookups) |
 | 6a | `onchain_personal_profile` | Query any user's PUBLIC on-chain profile — social links, reputation (likes/dislikes), personal info records, voting history, referrer. Use to look up a user's public identity and reputation. | `ObjectPersonal \| undefined` |
 | 7 | `onchain_objects` | Batch query on-chain WOWOK objects by ID — supports Service, Machine, Order, Treasury, Reward, Arb, Personal, Contact, and more. Use to inspect one or more objects in a single call. | `{ objects: ObjectBase[] }` |
 | 8 | `onchain_received` | Query objects (payments, tokens, NFTs) received by an on-chain object. Use to track incoming payments or items sent to an on-chain object. Supports pagination and type filter. | `ReceivedBalance \| ReceivedNormal[]` |
@@ -50,24 +50,24 @@ query_toolkit (Query Operations)
 │   │   ├── balance (optional, boolean)
 │   │   ├── coin (optional, { cursor?, limit? })
 │   │   ├── token_type (optional, TokenType)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_personal_profile"
 │   │   ├── account (optional, NameOrAddress)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "local_names"
 │   │   └── addresses (required, string[])
 │   ├── "onchain_objects"
 │   │   ├── objects (required, NameOrAddress[])
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   └── "onchain_received"
-│       ├── name_or_address (required, AccountOrMark_Address)
+│       ├── name_or_address (required, string | AccountOrMark_Address) - Can be simple string (name/address) or full object
 │       ├── type (optional, string | "CoinWrapper" | null) — Type filter: undefined/null queries all types; "CoinWrapper" queries object's CoinWrapper type; string queries specific StructType
 │       ├── cursor (optional, string | null)
 │       ├── limit (optional, number | null)
 │       ├── no_cache (optional, boolean)
-│       └── network (optional, "localnet" | "testnet")
+│       └── network (optional, "localnet" | "testnet" | "mainnet")
 └── (no other top-level fields)
 ```
 
@@ -78,7 +78,7 @@ query_toolkit (Query Operations)
 | Parameter | Type | Applies To | Description |
 |-----------|------|-----------|-------------|
 | `no_cache` | `boolean` (optional) | All onchain queries | Set to `true` to bypass cache and fetch fresh on-chain data |
-| `network` | `"localnet" \| "testnet"` (optional) | All onchain + account_balance | Network to query; defaults to the configured default network |
+| `network` | `"localnet" \| "testnet" \| "mainnet"` (optional) | All onchain + account_balance | Network to query; defaults to the configured default network |
 | `cursor` | `string \| null` (optional) | onchain_received, account_balance.coin | Pagination cursor from previous page's `nextCursor` |
 | `limit` | `number \| null` (optional) | onchain_received, account_balance.coin | Max items per page for paginated results |
 
@@ -262,7 +262,7 @@ For `onchain_received` and `account_balance.coin`, use `cursor`/`limit` to pagin
 Set `no_cache: true` when you need the latest on-chain data. Leave it unset (default) for faster cached responses.
 
 ### 5. Specify Network Explicitly
-Always specify `network` when you need results from a specific network (`localnet` or `testnet`).
+Always specify `network` when you need results from a specific network (`localnet`, `testnet`, or `mainnet`).
 
 ### 6. Query Balance vs Coin Objects
 Use `balance: true` for a quick total balance check. Use `coin: { cursor, limit }` when you need to inspect individual coin objects.
@@ -291,7 +291,7 @@ The `onchain_table_data` tool is a dedicated tool for querying dynamic table dat
 - **Parent-child relationships**: Each table item belongs to a specific parent object type with well-defined semantics
 - **Independent pagination**: Table queries have their own cursor/limit pagination separate from object queries
 
-### Supported Query Types (11 total)
+### Supported Query Types (12 total)
 
 | # | query_type | Parent Object | Key | Meaning |
 |---|-----------|--------------|-----|---------|
@@ -318,60 +318,62 @@ onchain_table_data (Table Data Query)
 │   │   ├── cursor (optional, string | null)
 │   │   ├── limit (optional, number | null)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_repository_data"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── name (required, string)
 │   │   ├── entity (required, Address | number)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_permission_perm"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── address (required, Address | string)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_entity_registrar"
 │   │   ├── address (required, Address | string)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_entity_linker"
 │   │   ├── address (required, Address | string)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_reward_record"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── address (required, Address)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_demand_presenter"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── address (required, Address)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_treasury_history"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── address (required, Address)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_machine_node"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── key (required, string)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_progress_history"
 │   │   ├── parent (required, NameOrAddress)
 │   │   ├── u64 (required, number | string)
 │   │   ├── no_cache (optional, boolean)
-│   │   └── network (optional, "localnet" | "testnet")
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_address_mark"
-│       ├── parent (required, NameOrAddress)
-│       ├── address (required, Address)
-│       ├── no_cache (optional, boolean)
-│       └── network (optional, "localnet" | "testnet")
+│   │   ├── parent (required, NameOrAddress)
+│   │   ├── address (required, Address)
+│   │   ├── no_cache (optional, boolean)
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   └── "onchain_table_item_generic"
 │       ├── parent (required, NameOrAddress)
 │       ├── key_type (required, string)
-│       └── key_value (required, any)
+│       ├── key_value (required, any)
+│       ├── no_cache (optional, boolean)
+│       └── network (optional, "localnet" | "testnet" | "mainnet")
 ```
 
 ### Output Schema

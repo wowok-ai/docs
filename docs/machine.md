@@ -111,7 +111,7 @@ machine
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -256,7 +256,7 @@ Create a new Machine object. You can set the name, tags, description, and option
 | `data.object.permission` | object/string | No | Permission object | Existing Permission ID/name OR new Permission config |
 | `data.description` | string | No | Machine description | Explain the purpose and workflow |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 
 ### Important Notes
 
@@ -1647,12 +1647,13 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 
 | Parameter Path | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
-| `operation_type` | string | Yes | Operation type | Fixed value "machineNode2file" |
 | `machine` | string | Yes | Machine name or ID | - |
 | `file_path` | string | Yes | Output file path | Absolute or relative path |
 | `format` | string | No | Output format | "json" (default) or "markdown" |
 | `env.account` | string | No | Account to use | Empty string for default |
-| `env.network` | string | No | Network | "localnet" or "testnet" |
+| `env.network` | string | No | Network | "localnet", "testnet", or "mainnet" |
+
+> **Note**: `machineNode2file` is a standalone tool (not an onchain operation). It does NOT use the `operation_type` + `data` structure. Invoke it directly with the parameters shown above.
 
 ### Examples
 
@@ -1662,7 +1663,6 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 
 ```json
 {
-  "operation_type": "machineNode2file",
   "machine": "software_dev_workflow",
   "file_path": "d:\\wowok\\docs\\exported_nodes.json",
   "format": "json",
@@ -1690,7 +1690,6 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 
 ```json
 {
-  "operation_type": "machineNode2file",
   "machine": "software_dev_workflow",
   "file_path": "d:\\wowok\\docs\\workflow_nodes.md",
   "format": "markdown",
@@ -1699,6 +1698,7 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
     "network": "testnet"
   }
 }
+```
 
 ### Important Notes
 
@@ -1755,15 +1755,12 @@ Before creating the Machine workflow, you need to:
 
 ### Step 1: Create Team Accounts
 
-Create accounts for each team member:
+Create accounts for each team member using the `account_operation` tool:
 
 ```json
 {
-  "operation_type": "account",
-  "data": {
-    "gen": {
-      "name": "pm_alice"
-    }
+  "gen": {
+    "name": "pm_alice"
   }
 }
 ```
@@ -2212,11 +2209,10 @@ Add all 8 nodes with their connections:
 
 ### Step 7: Export Node Definitions to File
 
-Export the node definitions for reuse:
+Export the node definitions for reuse using the `machineNode2file` tool:
 
 ```json
 {
-  "operation_type": "machineNode2file",
   "machine": "software_dev_workflow",
   "file_path": "d:\\wowok\\docs\\exported_nodes.json",
   "format": "json",

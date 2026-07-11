@@ -71,18 +71,18 @@ Create a new Service object. Newly created services are in unpublished state by 
 | `data.object.tags` | string[] | No | Tags array | Max 50 tags |
 | `data.object.onChain` | boolean | No | Sync name to chain | Default false |
 | `data.object.replaceExistName` | boolean | No | Overwrite existing name | Default false |
-| `data.object.type_parameter` | string | No | Payment token type | Default "0x2::wow::WOW" |
+| `data.object.type_parameter` | string | No | Payment token type | Default "0x2::wow::WOW"; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag) |
 | `data.object.permission` | object/string | No | Permission object | Reference or create new |
 | `data.description` | string | No | Service description | |
 | `data.location` | string | No | Service location | |
 | `env.account` | string | No | Use specified account | Empty string '' uses default |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 
 ### Important Notes
 
 ⚠️ **After publishing, these fields become immutable:** `machine`, `order_allocators`, `arbitrations`.
 
-⚠️ **`type_parameter` defines the payment token type** accepted by this service.
+⚠️ **`type_parameter` defines the payment token type** accepted by this service. Defaults to `0x2::wow::WOW` (native WOW gas token). You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as payment types — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list of available tokens and their `wowTypeTag` values.
 
 ### Return Result
 
@@ -172,6 +172,7 @@ service (Service Object)
 │   │       │   │   └── Option 3: { Signer: "signer" }
 │   │       │   ├── sharing (number/string, required)
 │   │       │   └── mode (enum, required) - "Amount"|"Rate"|"Surplus"
+│   │       ├── fix (number/string, optional) - Fixed allocation amount
 │   │       └── max (number/string, optional)
 │   ├── compensation_fund_add (CoinParam, optional) - add compensation
 │   ├── setting_locked_time_add (number, optional) - additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive
@@ -182,7 +183,7 @@ service (Service Object)
 │   └── publish (boolean, optional) - publish service
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name/address, "" for default
-│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (string[], optional) - guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -227,9 +228,9 @@ Create a basic Service object with name, description, and optional configuration
   "operation_type": "service",
   "data": {
     "object": {
-      "name": "my_service",
-      "description": "My service description"
-    }
+      "name": "my_service"
+    },
+    "description": "My service description"
   }
 }
 ```
@@ -427,7 +428,7 @@ For e-commerce with both merchant withdrawal and customer refund scenarios:
           "guard": "customer_refund_guard",
           "sharing": [
             {
-              "who": { "Entity": { "address": "" } },
+              "who": { "Entity": { "name_or_address": "" } },
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -471,14 +472,17 @@ WIP (Witness Immutable Promise) files provide immutable, verifiable product/serv
 1. **Generate WIP File** using the `wip_file` tool:
    ```json
    {
-     "operation_type": "wip_file",
-     "data": {
-       "operation": "generate",
+     "type": "generate",
+     "options": {
        "markdown_text": "# Product Name\n\n## Description\nDetailed product description here...",
-       "images": ["https://example.com/product-image.jpg"],
-       "account": "",
-       "output_path": "./product.wip"
-     }
+       "images": [
+         {
+           "source": "https://example.com/product-image.jpg"
+         }
+       ],
+       "account": ""
+     },
+     "outputPath": "./product.wip"
    }
    ```
 
@@ -561,7 +565,7 @@ If your service requires customers to provide personal information (shipping add
      "operation_type": "service",
      "data": {
        "object": "my_service",
-       "contact": "my_contact_object"
+       "um": "my_contact_object"
      }
    }
    ```
@@ -572,7 +576,7 @@ If your service requires customers to provide personal information (shipping add
      "operation_type": "service",
      "data": {
        "object": "my_service",
-       "order_required_info": "shipping_address,phone_number,email"
+       "customer_required": ["shipping_address", "phone_number", "email"]
      }
    }
    ```
@@ -723,7 +727,7 @@ Bind a Machine (workflow template) to the Service. The Machine must be in publis
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.machine` | object/string/null | No | Machine configuration | Reference, create, or null to remove |
+| `data.machine` | string/null | No | Machine object ID or name | Reference existing published Machine, or null to remove |
 
 ### Important Notes
 
@@ -1025,7 +1029,7 @@ Bind a Contact (instant messaging) object to the Service.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.um` | object/string/null | No | Contact configuration | Reference, create, or null to remove |
+| `data.um` | string/null | No | Contact object ID or name | Reference existing Contact, or null to remove |
 
 ---
 
@@ -1081,7 +1085,7 @@ Add, set, remove, or clear sales products/services from the Service. Each sales 
 | `data.sales.sales[].price` | number/string | Yes | Price in smallest token units | No decimals |
 | `data.sales.sales[].stock` | number/string | Yes | Inventory quantity | No decimals |
 | `data.sales.sales[].wip` | string | Yes | WIP file URL or local path | Empty string "" for no WIP |
-| `data.sales.sales[].wip_hash` | string | No | WIP file hash | Auto-extracted from local WIP files |
+| `data.sales.sales[].wip_hash` | string | Yes | WIP file hash | Empty string "" means auto-use hash from WIP file |
 | `data.sales.sales[].suspension` | boolean | Yes | Whether sale is suspended | |
 | `data.sales.sales_name` | string[] | No | Names to remove | Required for remove |
 
@@ -1144,14 +1148,17 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 **Step 1: Generate WIP File**
 ```json
 {
-  "operation_type": "wip_file",
-  "data": {
-    "operation": "generate",
+  "type": "generate",
+  "options": {
     "markdown_text": "# Three-Body Problem (三体)\n\n## Book Information\n- **Author**: Liu Cixin\n- **Genre**: Science Fiction\n- **Pages**: 302\n\n## Description\nThe Three-Body Problem is a science fiction novel that explores humanity's first contact with an alien civilization...",
-    "images": ["https://example.com/three-body-cover.jpg"],
-    "account": "",
-    "output_path": "./three_body.wip"
-  }
+    "images": [
+      {
+        "source": "https://example.com/three-body-cover.jpg"
+      }
+    ],
+    "account": ""
+  },
+  "outputPath": "./three_body.wip"
 }
 ```
 
@@ -1293,11 +1300,11 @@ Create and issue a new discount coupon for the Service.
 | `data.discount.name` | string | Yes | Discount name | |
 | `data.discount.discount_type` | number | Yes | Discount type | 0 (RATES) or 1 (FIXED) |
 | `data.discount.discount_value` | number/string | Yes | Discount value | Rate: 0-10000 (e.g., 1000 means 10% discount); Fixed: amount in smallest token unit |
-| `data.discount.benchmark` | number/string | No | Minimum amount threshold | In smallest token unit | |
+| `data.discount.benchmark` | number/string | No | Minimum amount threshold | In smallest token unit |
 | `data.discount.time_ms_start` | number | No | Start time (ms timestamp) | |
 | `data.discount.time_ms_end` | number | Yes | End time (ms timestamp) | |
 | `data.discount.count` | number | Yes | Usage count limit | |
-| `data.discount.recipient.entities` | string[] | Yes | Eligible recipients | Account names or addresses |
+| `data.discount.recipient.entities` | AccountOrMark_Address[] | Yes | Eligible recipients | Array of {name_or_address: string} objects |
 | `data.discount.transferable` | boolean | Yes | Whether transferable | |
 
 ---
@@ -1322,7 +1329,10 @@ Create and issue a new discount coupon for the Service.
       "time_ms_end": 1738368000000,
       "count": 1000,
       "recipient": {
-        "entities": ["alice", "bob"]
+        "entities": [
+          { "name_or_address": "alice" },
+          { "name_or_address": "bob" }
+        ]
       },
       "transferable": false
     }
@@ -1345,6 +1355,8 @@ Create and issue a new discount coupon for the Service.
       "name": "holiday_50off",
       "discount_type": 1,
       "discount_value": 50000000000,
+      "time_ms_end": 1738368000000,
+      "count": 500,
       "recipient": {
         "entities": []
       },
@@ -1368,7 +1380,7 @@ Destroy existing discount objects.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.discount_destroy` | string[] | Yes | Discount object names or IDs to destroy | Array of object names or addresses |
+| `data.discount_destroy` | string[] | No | Discount object names or IDs to destroy | Array of object names or addresses |
 
 ---
 
@@ -1599,9 +1611,9 @@ Create a new order as a customer and make payment.
 | `data.order_new.buy.discount` | string | No | Discount object | Name or ID |
 | `data.order_new.buy.payment_remark` | string | No | Payment remark | |
 | `data.order_new.buy.payment_index` | number | No | Payment index | |
-| `data.order_new.agents.entities` | string[] | No | Order agents | |
-| `data.order_new.order_required_info` | string | Yes | Contact or WTS Proof | |
-| `data.order_new.transfer` | string | No | New order owner | |
+| `data.order_new.agents.entities` | AccountOrMark_Address[] | No | Order agents | Array of {name_or_address: string} objects |
+| `data.order_new.order_required_info` | string | No | Contact object ID or WTS Proof object | |
+| `data.order_new.transfer` | AccountOrMark_Address | No | New order owner | {name_or_address: string} object |
 | `data.order_new.namedNewOrder` | object | No | Order name | NamedObject |
 | `data.order_new.namedNewAllocation` | object | No | Allocation name | NamedObject |
 | `data.order_new.namedNewProgress` | object | No | Progress name | NamedObject |
@@ -1635,7 +1647,9 @@ Create a new order as a customer and make payment.
         "payment_remark": "First purchase"
       },
       "agents": {
-        "entities": ["agent_account"]
+        "entities": [
+          { "name_or_address": "agent_account" }
+        ]
       },
       "order_required_info": "customer_contact",
       "namedNewOrder": {
@@ -1666,7 +1680,7 @@ Receive compensation funds from orders.
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "service" |
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
-| `data.compensation_fund_receive` | string/object | Yes | Receive configuration | "recently" or ReceivedBalance object |
+| `data.compensation_fund_receive` | string/object | No | Receive configuration | "recently" or ReceivedBalance object |
 
 ---
 
@@ -1778,7 +1792,7 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ⚠️ **After publishing, these fields become immutable:** `machine`, `order_allocators`, `arbitrations`.
 
-⚠️ **`type_parameter` defines the payment token type** accepted by this service, default is "0x2::wow::WOW".
+⚠️ **`type_parameter` defines the payment token type** accepted by this service, default is "0x2::wow::WOW". You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as payment types — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
 
 ⚠️ **All objects support local naming** with `name`, `tags`, `onChain`, and `replaceExistName`.
 
@@ -1841,7 +1855,7 @@ To enable arbitration for your service:
      "operation_type": "service",
      "data": {
        "object": "my_service",
-       "arbitrations": {"objects": ["my_arbitration"]}
+       "arbitrations": {"op": "add", "objects": ["my_arbitration"]}
      }
    }
    ```
@@ -1894,12 +1908,12 @@ The Witness Immutable Promise (WIP) file format is a cryptographically verifiabl
 
 ## Complete Tool Call Structure
 
-WIP operations use the following top-level structure:
+WIP operations use the `wip_file` MCP tool. The input is a discriminated union by `type` field:
 
 ```json
 {
-  "type": "operation_type",
-  // operation-specific fields
+  "type": "generate" | "verify" | "sign" | "wip2html",
+  // operation-specific fields (see Schema Tree below)
 }
 ```
 
@@ -1918,7 +1932,8 @@ wip_file (WIP Operations)
 │   │   └── outputPath (required, string)
 │   ├── "verify"
 │   │   ├── wipFilePath (required, string)
-│   │   └── hash_equal (optional, string)
+│   │   ├── hash_equal (optional, string)
+│   │   └── requireSignature (optional, boolean) - require digital signature
 │   ├── "sign"
 │   │   ├── wipFilePath (required, string)
 │   │   ├── account (optional, string)

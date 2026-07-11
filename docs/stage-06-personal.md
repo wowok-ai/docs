@@ -119,10 +119,16 @@ Add a shipping address
 
 ```json
 {
-  "operation": "add",
-  "name": "shipping_address",
-  "default": true,
-  "contents": ["123 Main St, New York, NY 10001", "10001"]
+  "add": {
+    "op": "add",
+    "data": [
+      {
+        "name": "shipping_address",
+        "default": "123 Main St, New York, NY 10001",
+        "contents": ["10001"]
+      }
+    ]
+  }
 }
 ```
 

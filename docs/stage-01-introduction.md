@@ -78,9 +78,14 @@ Account successfully generated!
 
 ```json
 {
-  "gen": {
-    "address": "...",
-    "name": "my_first_account"
+  "result": {
+    "status": "success",
+    "data": {
+      "gen": {
+        "address": "...",
+        "name": "my_first_account"
+      }
+    }
   }
 }
 ```
@@ -114,9 +119,15 @@ Successfully claimed test tokens from testnet!
 
 ```json
 {
-  "faucet": {
-    "name_or_address": "my_first_account",
-    "result": [...]
+  "result": {
+    "status": "success",
+    "data": {
+      "faucet": {
+        "name_or_address": "my_first_account",
+        "result": [...],
+        "network": "testnet"
+      }
+    }
   }
 }
 ```
@@ -155,15 +166,20 @@ Successfully added mark for my_first_account!
 
 ```json
 {
-  "add": [
-    {
-      "name": "Chat Account",
-      "address": "...",
-      "tags": ["Chat"],
-      "createdAt": ...,
-      "updatedAt": ...
+  "result": {
+    "status": "success",
+    "data": {
+      "add": [
+        {
+          "name": "Chat Account",
+          "address": "...",
+          "tags": ["Chat"],
+          "createdAt": ...,
+          "updatedAt": ...
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 
@@ -202,15 +218,20 @@ Done! Successfully added mark for this address.
 
 ```json
 {
-  "add": [
-    {
-      "name": "Alice",
-      "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
-      "tags": ["My Friend"],
-      "createdAt": ...,
-      "updatedAt": ...
+  "result": {
+    "status": "success",
+    "data": {
+      "add": [
+        {
+          "name": "Alice",
+          "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
+          "tags": ["My Friend"],
+          "createdAt": ...,
+          "updatedAt": ...
+        }
+      ]
     }
-  ]
+  }
 }
 ```
 

@@ -118,7 +118,7 @@ Contact Component
 │   │       └── received (array of received items)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -163,7 +163,6 @@ Create a new Contact object for managing instant messaging contacts.
 | Parameter | Type | Required | Description | Constraints |
 |-----------|------|----------|-------------|-------------|
 | `object.name` | string | No | Local mark name | Max 64 BCS bytes, cannot start with "0x" |
-| `object.id` | string | No | Object ID | 0x prefix + 64 hex characters |
 | `object.permission` | string/object | No | Permission object | Can be existing permission ID/name, or new permission object |
 | `description` | string | No | Contact object description or public information | Max 4000 BCS characters |
 | `location` | string | No | Physical or virtual location of the Contact | Max 256 BCS characters |
@@ -642,13 +641,14 @@ Create a Contact object that will serve as your public identity for secure messa
 
 ### Step 2: Enable Messenger for Your Account
 
-Use the [account operation](account.md) to enable Messenger for your account, linking it to your Contact object:
+Use the `account_operation` tool (see [account.md](account.md)) to enable Messenger for your account by setting a messenger name (here using the Contact object's name):
 
 ```json
 {
-  "operation": "account_operation",
-  "account": "my_account",
-  "messenger": "my_contact"
+  "messenger": {
+    "name_or_account": "my_account",
+    "m": "my_contact"
+  }
 }
 ```
 
@@ -656,7 +656,7 @@ See [account.md](account.md) for detailed messenger configuration.
 
 ### Step 3: Start Secure Conversations
 
-Once Messenger is enabled, you can send encrypted messages to any Contact object:
+Once Messenger is enabled, use the `messenger_operation` tool (see [messenger.md](messenger.md)) to send encrypted messages to any Contact object:
 
 ```json
 {

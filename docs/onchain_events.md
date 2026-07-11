@@ -47,12 +47,12 @@ onchain_events (On-chain Events Operations)
 │   ├── "NewEntityEvent" (New Entity Events)
 │   └── (arbitrary string) - Any other Move event type string (e.g., '0x2::coin::CoinEvent')
 ├── cursor (optional, EventCursor)
-│   ├── eventSeq (required, string)
+│   ├── eventSeq (required, string | number)
 │   └── txDigest (required, string)
-├── limit (optional, number)
-├── order (optional, "ascending"/"descending")
+├── limit (optional, number | null)
+├── order (optional, "ascending"/"descending"/null)
 ├── no_cache (optional, boolean)
-└── network (optional, "localnet"/"testnet")
+└── network (optional, "localnet"/"testnet"/"mainnet")
 ```
 
 ---

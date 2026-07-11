@@ -290,6 +290,7 @@ Query WoWok protocol's built-in information, including system constants, permiss
 | `guard instructions` | Guard instruction list |
 | `current network` | Current network entry point |
 | `value types` | Supported value types |
+| `mainnet bridge tokens` | Mainnet bridge token list (USDT, USDC, ETH, WBTC, WETH) with `wowTypeTag` values usable as `type_parameter` |
 
 ---
 
@@ -355,27 +356,27 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ---
 
-### 7.5 schema_query (Tool Schema Query 📋)
+### 7.5 schema_query (Universal Lookup Skill 📋)
 
 **Why do we need schema_query?**
 
-When you need to understand the exact structure required for calling WoWok MCP tools, you can use this tool to get JSON schemas. This is useful for:
+`schema_query` is a **meta-tool** — it does not query business data; it queries **the tools themselves**. It is the authoritative source for "how do I call this tool?" and "what does this tool return?".
 
-- AI that needs exact parameter formats for tool calls
-- Developers who want to understand tool interfaces
-- Finding detailed schema definitions for specific operations
+**Core principle: before calling any unfamiliar WoWok tool, query its schema first.** This "query-then-call" pattern guarantees parameter accuracy and avoids schema drift between documentation and code.
 
 **Features:**
 
-- List all available tool schemas
-- Get specific schema by name (e.g., `onchain_operations`, `account_operation`)
+- List all available tool schemas (14 tools + 16 on-chain operations)
+- Get the **input** schema of a tool or operation by name
+- Get the **output** schema of a tool by name
 - Search schemas by keyword
-- List all on-chain operations
+- List only on-chain operations
 
 **Actions:**
 
 - `list` — List all available schemas
 - `get` — Get a specific schema by name
+- `get_output` — Get the output schema of a tool by name
 - `search` — Search schemas by keyword
 - `list_operations` — List all on-chain operations
 
@@ -425,6 +426,8 @@ Search for schemas related to "guard":
   "query": "guard"
 }
 ```
+
+**→ [View schema_query Detailed Documentation (Universal Lookup Skill) →](schema-query.md)**
 
 ---
 

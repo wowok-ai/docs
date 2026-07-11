@@ -41,8 +41,8 @@ payment (Payment Object)
 ├── operation_type: "payment" (fixed value)
 ├── data (Payment data definition)
 │   ├── object (object definition, required)
-│   │   ├── name|tags|type_parameter (create new object)
-│   │   └── type_parameter (token type, e.g., 0x2::wow::WOW)
+│   │   ├── name (optional), tags (optional), onChain (optional), replaceExistName (optional)
+│   │   └── type_parameter (token type, default 0x2::wow::WOW; also supports mainnet bridge tokens USDT/USDC/ETH/WBTC/WETH wowTypeTag)
 │   ├── revenue (recipient and amount array, required)
 │   │   └── [] (each item has recipient + amount)
 │   └── info (payment information, required)
@@ -52,7 +52,7 @@ payment (Payment Object)
 │       └── for_guard (optional, Guard verification)
 └── env (optional, execution environment)
     ├── account (string, optional) - account name or address, empty string for default
-    ├── network (string, optional) - "testnet" or "localnet"
+    ├── network (string, optional) - "localnet", "testnet", or "mainnet"
     ├── permission_guard (array, optional) - list of permission guard IDs
     ├── no_cache (boolean, optional) - disable caching
     └── referrer (string, optional) - referrer ID
@@ -71,16 +71,19 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
 | Parameter Path | Type | Required | Description | Constraints |
 |----------|------|------|------|------|
 | `operation_type` | string | Yes | Operation type | Fixed value "payment" |
-| `data.object` | object | Yes | Object configuration | Must include type_parameter |
-| `data.object.type_parameter` | string | Yes | Token type | e.g., "0x2::wow::WOW" |
+| `data.object` | object | Yes | Object configuration | Create new object with optional name/tags/type_parameter |
+| `data.object.type_parameter` | string | No | Token type | Default "0x2::wow::WOW"; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag) |
 | `data.object.name` | string | No | Payment name | Max 64 bcs characters |
 | `data.revenue` | array | Yes | Recipient and amount array | At least one recipient, max 200 |
 | `data.revenue[].recipient` | object | Yes | Recipient | AccountOrMark_Address with name_or_address |
-| `data.revenue[].amount` | object | Yes | Amount | CoinParam with balance field |
-| `data.revenue[].amount.balance` | string/number | Yes | Amount value | Minimum unit, no decimals or negatives |
+| `data.revenue[].amount` | object | Yes | Amount | CoinParam: {balance} or {coin} (choose one) |
+| `data.revenue[].amount.balance` | string/number | No | Amount value (option 1) | Minimum unit, no decimals or negatives |
+| `data.revenue[].amount.coin` | string | No | Coin object ID or name (option 2) | Use a specific Coin object owned by the account |
 | `data.info` | object | Yes | Payment information | Must include remark and index |
 | `data.info.remark` | string | Yes | Payment remark | Description of the payment |
 | `data.info.index` | number/string | Yes | Payment index | Numeric identifier for this payment |
+| `data.info.for_object` | string/null | No | Related object ID | Links payment to a specific WoWok object |
+| `data.info.for_guard` | string/null | No | Guard verification | Payment to satisfy a Guard's verification |
 
 ### Important Notes
 
@@ -489,7 +492,7 @@ Create a Payment with custom environment settings, such as specifying network or
 
 ⚠️ **Maximum 200 recipients per payment!**
 
-⚠️ **type_parameter is required!** Specify token type inside object.
+⚠️ **type_parameter defaults to 0x2::wow::WOW!** Specify inside object to use a different token type. You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as payment types — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
 
 ⚠️ **All amount values must be positive integers!** No decimals or negative values.
 

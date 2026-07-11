@@ -558,9 +558,7 @@ Move 0.001 ETH from `activeEvmAccount` to an external EVM wallet (e.g. your Meta
 ```json
 {
   "txHash": "0x...",
-  "to": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
-  "amount": "1000000000000000",
-  "token": "ETH"
+  "transferId": "br_..."
 }
 ```
 

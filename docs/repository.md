@@ -97,8 +97,12 @@ repository (Repository Object)
 │   │           └── DataRemoveItem structure:
 │   │               ├── id (array of number|string) - data item IDs to remove
 │   │               └── write_guard (string, optional) - Guard ID for delete permission
-│   ├── rewards (reward objects, optional)
-│   │   └── array of strings - Reward object names or IDs to bind
+│   ├── rewards (reward objects, optional, ObjectsOp)
+│   │   ├── op: "add" | "set"
+│   │   │   └── objects (array of strings) - Reward object names or IDs to bind
+│   │   ├── op: "remove"
+│   │   │   └── objects (array of strings) - Reward object names or IDs to remove
+│   │   └── op: "clear"
 │   ├── owner_receive (transfer received coins or NFT objects to owner, optional)
 │   │   ├── Option 1: "recently" (string) - receive all recent objects
 │   │   ├── Option 2: Array of received objects
@@ -112,7 +116,7 @@ repository (Repository Object)
 │       └── Option 2: null (to unbind contact)
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -190,7 +194,7 @@ Create a new Repository object for storing structured data.
 | `data.object`      | object or string | Yes      | Object definition      | WithPermissionObject                 |
 | `data.description` | string           | No       | Repository description | Max 4000 BCS characters                 |
 | `env.account`      | string           | No       | Use specified account  | Empty string '' uses default account |
-| `env.network`      | enum             | No       | Network selection      | "localnet" or "testnet"              |
+| `env.network`      | enum             | No       | Network selection      | "localnet", "testnet", or "mainnet"              |
 
 ### Important Notes
 
@@ -882,7 +886,10 @@ Bind reward objects for data contribution incentives, and process received asset
   "operation_type": "repository",
   "data": {
     "object": "repo_test_1",
-    "rewards": ["test_reward"]
+    "rewards": {
+      "op": "add",
+      "objects": ["test_reward"]
+    }
   },
   "env": {
     "network": "testnet"

@@ -48,7 +48,7 @@ allocation (Allocation Object)
 │   │       ├── tags (array, optional) - tags array
 │   │       ├── onChain (boolean, optional) - whether to sync name to blockchain
 │   │       ├── replaceExistName (boolean, optional) - force claim existing name
-│   │       └── type_parameter (string, optional) - token type, default: 0x2::wow::WOW
+│   │       └── type_parameter (string, optional) - token type, default: 0x2::wow::WOW; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag)
 │   ├── allocators (object, required for create) - fund allocator list
 │   │   ├── description (string, required) - allocators description, max 4000 bcs characters
 │   │   ├── threshold (number or string, required) - threshold amount in smallest units
@@ -86,11 +86,12 @@ allocation (Allocation Object)
 │   │       └── received (array of received items)
 │   │           └── Received item
 │   │               ├── id (string) - CoinWrapper object ID
+│   │               ├── balance (number or string) - received balance amount
 │   │               └── payment (string) - Payment object ID
 │   └── alloc_by_guard (string, optional) - Guard object ID/name to verify and execute distribution
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name or address, empty string for default
-│   ├── network (string, optional) - "testnet" or "localnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (array, optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -140,7 +141,7 @@ Create a new Allocation object with predefined distribution rules. Newly created
 | `data.object.tags` | array | No | Tags array | String array |
 | `data.object.onChain` | boolean | No | Whether to mark on-chain | |
 | `data.object.replaceExistName` | boolean | No | Replace existing name | |
-| `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW |
+| `data.object.type_parameter` | string | No | Token type | Default: 0x2::wow::WOW; also supports mainnet bridge tokens (USDT/USDC/ETH/WBTC/WETH wowTypeTag) |
 | `data.allocators.description` | string | Yes | Allocators description | Max 4000 BCS bytes |
 | `data.allocators.threshold` | number or string | Yes | Threshold amount in smallest units | No decimals or negatives |
 | `data.allocators.allocators` | array | Yes | Allocator list | 1-100 allocators |
@@ -167,6 +168,8 @@ Create a new Allocation object with predefined distribution rules. Newly created
 ⚠️ **Rate Mode Requirements**: When using pure Rate mode (without any Amount mode items), the total rate must equal 10000 (100%). The sharing amounts will be calculated as percentages of the available balance during execution.
 
 ⚠️ **Threshold Check**: For Amount mode allocations, the sum of all amounts must be greater than or equal to the threshold. For Rate mode allocations, the threshold check is performed during execution based on the actual balance.
+
+⚠️ **type_parameter (Payment Token)**: Defaults to `0x2::wow::WOW` (native WOW gas token). You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as the Allocation's coin type — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
 
 ---
 

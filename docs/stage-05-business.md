@@ -97,12 +97,10 @@ Create a data repository and add some data
     "object": {
       "name": "my_data_repo"
     },
-    "data_add": [
-      {
-        "name": "config",
-        "value": "my_config_value"
-      }
-    ]
+    "data_add": {
+      "name": "config",
+      "data": "my_config_value"
+    }
   }
 }
 ```

@@ -115,6 +115,9 @@ Guards can query data from the following on-chain objects:
 | `calc_number_divide` | U256 | Division | `nodes: GuardNode[]` |
 | `calc_number_mod` | U256 | Modulo | `nodes: GuardNode[]` |
 | `calc_string_length` | U64 | String length | `node: GuardNode` |
+| `calc_string_nocase_contains` | Bool | String contains (case-insensitive) | `nodes: GuardNode[]` (2-8 nodes) |
+| `calc_string_nocase_equal` | Bool | String equality (case-insensitive) | `nodes: GuardNode[]` (2-8 nodes) |
+| `calc_string_contains` | Bool | String contains (case-sensitive) | `nodes: GuardNode[]` (2-8 nodes) |
 | `calc_string_indexof` | U64 | Find substring | `nodeLeft, nodeRight, order` |
 | `calc_string_nocase_indexof` | U64 | Find substring (case-insensitive) | `nodeLeft, nodeRight, order` |
 
@@ -218,7 +221,7 @@ guard (Guard Object)
     ├── account (optional, use specified account)
     ├── permission_guard (optional, permission Guard list)
     ├── no_cache (optional, disable cache)
-    ├── network (optional, localnet/testnet)
+    ├── network (optional, localnet/testnet/mainnet)
     └── referrer (optional, referrer ID)
 ```
 
@@ -266,7 +269,7 @@ Create a Guard by directly providing a GuardNode computation tree through `root.
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
 | `env.permission_guard` | array | No | Permission Guard list | Guard ID array |
 | `env.no_cache` | boolean | No | Whether to disable cache | true=disable; false=enable |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 | `env.referrer` | string | No | Referrer ID | Account name or address |
 
 ### Important Notes
@@ -281,7 +284,7 @@ All examples in this document use the **testnet** network and **default account*
   "data": { ... },
   "env": {
     "account": "",              // Empty string for default account, or use account name/address
-    "network": "testnet"        // Options: "testnet" | "localnet"
+    "network": "testnet"        // Options: "testnet" | "localnet" | "mainnet"
   }
 }
 ```
@@ -863,7 +866,7 @@ guard2file (Guard to File)
 | `file_path` | string | Yes | Output file path | Absolute or relative path |
 | `format` | enum | No | Output format | "json" (default) or "markdown" |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 | `env.no_cache` | boolean | No | Disable caching | true=bypass cache |
 
 ### Important Notes
@@ -1002,7 +1005,7 @@ gen_passport (Generate Verified Passport)
 | `guard` | string \| string[] | Yes | Guard object ID(s) to verify and generate passport from | Single guard (string) or multiple guards (array). Supports names or addresses |
 | `info` | object | No | Optional submission data | If not provided, will attempt to get existing submissions from the guard |
 | `env.account` | string | No | Use specified account | Empty string '' uses default account |
-| `env.network` | enum | No | Network selection | "localnet" or "testnet" |
+| `env.network` | enum | No | Network selection | "localnet", "testnet", or "mainnet" |
 
 ### Features
 
@@ -1037,10 +1040,21 @@ Returns the created Passport object.
   "operation_type": "gen_passport",
   "guard": "public_age_check",
   "info": {
-    "submissions": [
+    "type": "submission",
+    "guard": [
+      { "object": "public_age_check", "impack": true }
+    ],
+    "submission": [
       {
-        "identifier": 0,
-        "value": "25"
+        "guard": "public_age_check",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "U64",
+            "value": "25"
+          }
+        ]
       }
     ]
   }
@@ -1067,10 +1081,21 @@ Returns the created Passport object.
   "operation_type": "gen_passport",
   "guard": "identity_verify",
   "info": {
-    "submissions": [
+    "type": "submission",
+    "guard": [
+      { "object": "identity_verify", "impack": true }
+    ],
+    "submission": [
       {
-        "identifier": 0,
-        "value": "verified_user"
+        "guard": "identity_verify",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "verified_user"
+          }
+        ]
       }
     ]
   },
@@ -1090,10 +1115,21 @@ Step 1: Generate Passport
   "operation_type": "gen_passport",
   "guard": "friend_verification",
   "info": {
-    "submissions": [
+    "type": "submission",
+    "guard": [
+      { "object": "friend_verification", "impack": true }
+    ],
+    "submission": [
       {
-        "identifier": 0,
-        "value": "mutual_friend_verified"
+        "guard": "friend_verification",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "String",
+            "value": "mutual_friend_verified"
+          }
+        ]
       }
     ]
   }

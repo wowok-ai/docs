@@ -6,7 +6,7 @@
 
 The Account component manages local wallets, all operations are stored exclusively on the local device. Users can use names to reference and operate on corresponding accounts.
 
-> **Note**: Use the `watch_and_query` tool to query all or filtered accounts.
+> **Note**: Use the `query_toolkit` tool to query all or filtered accounts.
 
 ---
 
@@ -175,7 +175,6 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
 
 ```json
 { "gen": { "name": "alice", "replaceExistName": true } }
-```
 ```
 
 ---
@@ -355,7 +354,6 @@ Remove an account from the active account list. After suspension, the account ca
   }
 }
 ```
-```
 
 ---
 
@@ -424,7 +422,6 @@ Add a suspended account back to the active account list, optionally specifying a
     "success": true
   }
 }
-```
 ```
 
 ---
@@ -513,7 +510,6 @@ Change an account's name. If the new name already exists, an error will be throw
   }
 }
 ```
-```
 
 ---
 
@@ -584,7 +580,6 @@ Swap the names of two accounts.
 ```
 
 **Note**: The `swap_name` function only accepts account names (not addresses) for both parameters, as it swaps the name identifiers between two accounts.
-```
 
 ---
 
@@ -602,7 +597,7 @@ Transfer tokens from one account to another.
 | `name_or_address_to` | string | No | Recipient account name or address | Empty string '' uses default account |
 | `amount` | number \| string | Yes | Transfer amount | Minimum token unit |
 | `token_type` | string | No | Token type | Default "0x2::wow::WOW" |
-| `network` | enum | No | Network type | "localnet" or "testnet" |
+| `network` | enum | No | Network type | "localnet", "testnet", or "mainnet" |
 
 ### Return Result
 
@@ -664,7 +659,6 @@ Returns transaction block information (WowTransactionBlockSchema).
   }
 }
 ```
-```
 
 ---
 
@@ -681,7 +675,7 @@ Query account information and generate a new coin object based on the required b
 | `name_or_address` | string | No | Account name or address | Empty string '' uses default account |
 | `balance_required` | string \| number | Yes | Required balance | Minimum token unit |
 | `token_type` | string | No | Token type | Default "0x2::wow::WOW" |
-| `network` | enum | No | Network type | "localnet" or "testnet" |
+| `network` | enum | No | Network type | "localnet", "testnet", or "mainnet" |
 
 ### Return Result
 

@@ -74,7 +74,7 @@ order (Order Object)
 │       └── string (name/address) or { name_or_address, local_mark_first }
 ├── env (optional, execution environment)
 │   ├── account (string, optional) - account name/address, "" for default
-│   ├── network (string, optional) - "localnet" or "testnet"
+│   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
 │   ├── permission_guard (string[], optional) - list of permission guard IDs
 │   ├── no_cache (boolean, optional) - disable caching
 │   └── referrer (string, optional) - referrer ID
@@ -905,24 +905,14 @@ Instead, use the secure Contact/Messenger system:
 
 #### Method 2: Direct Messenger Communication
 
+Use the `messenger_operation` tool to send an encrypted message directly to the service staff's Contact object:
+
 ```json
 {
-  "operation_type": "messenger",
-  "data": {
-    "action": "send_message",
-    "conversation_id": "service_conversation_id",
-    "content": "Order #12345 - Delivery Information",
-    "attachments": [
-      {
-        "type": "contact_info",
-        "data": {
-          "name": "John Doe",
-          "address": "123 Main St, City, Country",
-          "phone": "+1234567890"
-        }
-      }
-    ]
-  }
+  "operation": "send_message",
+  "from": "your_account",
+  "to": "service_contact_object",
+  "content": "Order #12345 - Delivery Information\nName: John Doe\nAddress: 123 Main St, City, Country\nPhone: +1234567890"
 }
 ```
 
