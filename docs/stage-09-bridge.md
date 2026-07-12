@@ -256,7 +256,7 @@ Before moving on, confirm you have:
 ## 🔗 Next Steps
 
 - **Topic deep dive**: [bridge.md](bridge.md) — Concepts, prerequisites, and worked examples with real MCP server responses.
-- **Schema reference**: [schema-bridge_operation.md](../skills/schema-bridge_operation.md) — Full parameter/type definitions for all 10 operation types.
+- **Schema reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"` — Full parameter/type definitions for all 10 operation types.
 - **Live test script**: [`agent/mcp/scripts/test-bridge.mjs`](../../agent/mcp/scripts/test-bridge.mjs) — Reproducible live tests of all bridge operations.
 - **Live test output**: [`agent/mcp/scripts/test-bridge-output.log`](../../agent/mcp/scripts/test-bridge-output.log) — Real MCP server responses captured during testing.
 

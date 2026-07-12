@@ -62,12 +62,13 @@ messenger_operation (Messenger Operations)
 │   ├── "send_message"
 │   │   ├── from (optional, string)
 │   │   ├── to (required, string | Address/Name) - Recipient can be simple string (name/address) or full object
-│   │   ├── content (required, string)
+│   │   ├── content (required, string, max 10240 bytes)
 │   │   └── options (optional, SendMessageOptions)
-│   │       ├── guardAddress (optional, string)
-│   │       ├── passportAddress (optional, string)
+│   │       ├── guardAddress (optional, string) - REQUIRED for Guard-verified messages
+│   │       ├── passportAddress (optional, string) - REQUIRED for Guard-verified messages
 │   │       ├── force (optional, boolean)
-│   │       └── new_messenger_name (optional, string)
+│   │       ├── new_messenger_name (optional, string)
+│   │       └── network (optional, "localnet"/"testnet"/"mainnet") - REQUIRED when guardAddress + passportAddress are provided (Guard messages and regular messages are independent data systems on different networks)
 │   ├── "send_file"
 │   │   ├── from (optional, string)
 │   │   ├── to (required, string | Address/Name) - Recipient can be simple string (name/address) or full object
@@ -75,10 +76,11 @@ messenger_operation (Messenger Operations)
 │   │   └── options (optional, SendFileOptions)
 │   │       ├── fileName (optional, string)
 │   │       ├── contentType (optional, "wts"/"wip"/"zip")
-│   │       ├── guardAddress (optional, string)
-│   │       ├── passportAddress (optional, string)
+│   │       ├── guardAddress (optional, string) - REQUIRED for Guard-verified files
+│   │       ├── passportAddress (optional, string) - REQUIRED for Guard-verified files
 │   │       ├── force (optional, boolean)
-│   │       └── new_messenger_name (optional, string)
+│   │       ├── new_messenger_name (optional, string)
+│   │       └── network (optional, "localnet"/"testnet"/"mainnet") - REQUIRED when guardAddress + passportAddress are provided (Guard messages and regular messages are independent data systems on different networks)
 │   ├── "watch_messages"
 │   │   └── filter (optional, MessageFilter)
 │   │       ├── account (optional, string) - Account to filter messages for
@@ -147,7 +149,7 @@ messenger_operation (Messenger Operations)
 │   ├── "proof_message"
 │   │   ├── account (optional, string)
 │   │   ├── messageId (required, string)
-│   │   └── network (optional, "localnet"/"testnet"/"mainnet")
+│   │   └── network (required, "localnet"/"testnet"/"mainnet") - Target network for on-chain proof
 │   ├── "blacklist"
 │   │   ├── account (optional, string)
 │   │   └── blacklist (required, BlacklistOperation, discriminated by op)
@@ -404,7 +406,7 @@ Send encrypted text message to specified recipient.
 
 #### Example 2.2: Send with Sender and Options
 
-**Prompt**: Send message from "my_account" to "bob", use Guard "message_guard" for verification, set new messenger name "my_messenger".
+**Prompt**: Send message from "my_account" to "bob", use Guard "message_guard" with Passport "my_passport" for verification on testnet, set new messenger name "my_messenger".
 
 ```json
 {
@@ -417,10 +419,14 @@ Send encrypted text message to specified recipient.
   "content": "This is a protected message with Guard verification",
   "options": {
     "guardAddress": "message_guard",
+    "passportAddress": "my_passport",
+    "network": "testnet",
     "new_messenger_name": "my_messenger"
   }
 }
 ```
+
+> **Note**: When `guardAddress` and `passportAddress` are provided, `network` is REQUIRED. Guard messages and regular messages are independent data systems residing on different networks — the `network` parameter selects which network's RPC to use for Guard verification.
 
 ---
 
@@ -532,7 +538,7 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 
 #### Example 3.3: Send with Guard and Passport
 
-**Prompt**: Send file "contract.docx" to "bob", use Guard "file_guard" and Passport "my_passport".
+**Prompt**: Send file "contract.docx" to "bob", use Guard "file_guard" and Passport "my_passport" for verification on testnet.
 
 ```json
 {
@@ -541,10 +547,13 @@ Send file to specified recipient. Files are compressed to ZIP format before send
   "filePath": "./contract.docx",
   "options": {
     "guardAddress": "file_guard",
-    "passportAddress": "my_passport"
+    "passportAddress": "my_passport",
+    "network": "testnet"
   }
 }
 ```
+
+> **Note**: `network` is REQUIRED here because `guardAddress` + `passportAddress` are provided. Guard-verified files, like Guard-verified messages, operate on an independent data system from regular messages.
 
 ---
 
@@ -1249,14 +1258,17 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 #### Example 11.1: Create On-chain Proof
 
-**Prompt**: Generate on-chain proof for message "msg_12345".
+**Prompt**: Generate on-chain proof for message "msg_12345" on testnet.
 
 ```json
 {
   "operation": "proof_message",
-  "messageId": "msg_12345"
+  "messageId": "msg_12345",
+  "network": "testnet"
 }
 ```
+
+> **Note**: `network` is REQUIRED for `proof_message` — it selects the blockchain network (localnet/testnet/mainnet) where the on-chain timestamp proof transaction will be submitted.
 
 ---
 
@@ -1745,6 +1757,10 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ⚠️ **On-chain proof creates blockchain timestamp** - gives messages legal evidence validity.
 
+⚠️ **Guard messages require `network`** - when `guardAddress` + `passportAddress` are provided in `send_message`/`send_file`, the `network` field is REQUIRED. Guard messages and regular messages are independent data systems residing on different networks; `network` selects which network's RPC to use for Guard verification.
+
+⚠️ **`proof_message` requires `network`** - the `network` parameter is mandatory for on-chain proof operations, selecting the target blockchain (localnet/testnet/mainnet) for the timestamp proof transaction.
+
 ---
 
 ## Example 16: Mark Messages as Viewed
@@ -2016,11 +2032,17 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ⚠️ **On-chain proof creates blockchain timestamp** - gives messages legal evidence validity.
 
+⚠️ **Guard messages require `network`** - when `guardAddress` + `passportAddress` are provided in `send_message`/`send_file`, the `network` field is REQUIRED. Guard messages and regular messages are independent data systems residing on different networks; `network` selects which network's RPC to use for Guard verification.
+
+⚠️ **`proof_message` requires `network`** - the `network` parameter is mandatory for on-chain proof operations, selecting the target blockchain (localnet/testnet/mainnet) for the timestamp proof transaction.
+
 ⚠️ **Viewed status is local-only** - viewedAt timestamp is stored locally and never sent to server or blockchain.
 
 ⚠️ **Auto-mark behavior** - by default, messages retrieved via watch_messages and watch_conversations are automatically marked as viewed unless skipAutoMarkViewed is set to true.
 
 ⚠️ **Unread count** - unreadCount in ConversationInfo represents received messages without viewedAt timestamp.
+
+⚠️ **Message content size limit** - `send_message` content is limited to 10240 bytes (NORMAL_MESSAGE_BYTES_LIMIT), aligned with the on-chain contract constant.
 
 ---
 

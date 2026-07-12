@@ -117,14 +117,16 @@ A **stranger** is any address not in the recipient's friends list:
 
 When recipient blocks strangers, use guard verification:
 
-1. Provide `guardAddress` + `passportAddress` with message
+1. Provide `guardAddress` + `passportAddress` + `network` with message
 2. Server validates addresses and checks pending queue limits
 3. Message stored as `pending` with TTL
-4. Background worker verifies passport against guard rules
+4. Background worker verifies passport against guard rules on the specified `network`
 5. **Confirmed**: Signed into Merkle tree, delivered
 6. **Rejected**: Status updated, sender notified
 
 **When to Use**: When rejected due to stranger settings, obtain a passport from recipient's guard list and retry.
+
+> **Important**: `network` is REQUIRED when `guardAddress` + `passportAddress` are provided. Guard messages and regular messages are independent data systems residing on different networks — the `network` parameter selects which network's RPC to use for Guard verification.
 
 ---
 
@@ -385,7 +387,7 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ### Exercise 8: Send File with Guard Verification
 
-**💬 You**: Send file "contract.pdf" to "stranger_address" using guard "business_guard" and passport "my_passport".
+**💬 You**: Send file "contract.pdf" to "stranger_address" using guard "business_guard" and passport "my_passport" on testnet.
 
 **🤖 AI Generated Request:**
 
@@ -396,12 +398,13 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
   "filePath": "./contract.pdf",
   "options": {
     "guardAddress": "business_guard",
-    "passportAddress": "my_passport"
+    "passportAddress": "my_passport",
+    "network": "testnet"
   }
 }
 ```
 
-**Note**: File is automatically compressed as ZIP before sending. Options include: `fileName` (custom name), `contentType` ("wts"/"wip"/"zip" hint), `guardAddress`, `passportAddress`, `force` (bypass pending checks), `new_messenger_name` (for recipient).
+**Note**: File is automatically compressed as ZIP before sending. Options include: `fileName` (custom name), `contentType` ("wts"/"wip"/"zip" hint), `guardAddress`, `passportAddress`, `network` (REQUIRED when guardAddress + passportAddress are provided — Guard messages are an independent data system), `force` (bypass pending checks), `new_messenger_name` (for recipient).
 
 ---
 

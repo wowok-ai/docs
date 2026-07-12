@@ -464,5 +464,5 @@ OnchainTableDataResult {
 | **[Personal](personal.md)** | Personal on-chain portal |
 | **[On-chain Events](onchain_events.md)** | Watch and query on-chain events |
 | **[WoWok Build-in Info](wowok_buildin_info.md)** | Query protocol constants and info |
-| **[Schema: query_toolkit](../skills/schema-query_toolkit.md)** | query_toolkit input/output schema reference |
-| **[Schema: onchain_table_data](../skills/schema-onchain_table_data.md)** | onchain_table_data input/output schema reference |
+| **Schema: query_toolkit** | Use MCP `schema_query` tool with `tool_name: "query_toolkit"` |
+| **Schema: onchain_table_data** | Use MCP `schema_query` tool with `tool_name: "onchain_table_data"` |

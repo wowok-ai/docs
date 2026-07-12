@@ -8,7 +8,7 @@ The Bridge component is a **simplified cross-chain bridge** between **WOW mainne
 
 All bridge operations are exposed through a single MCP tool: **`bridge_operation`**. The tool is **discriminative** — you select one of 10 operation types via the `operation_type` field, and the rest of the parameters are validated against the corresponding schema.
 
-> **📋 Schema Reference**: For full parameter/type definitions, see [schema-bridge_operation.md](../skills/schema-bridge_operation.md).
+> **📋 Schema Reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"` for full parameter/type definitions.
 
 ---
 
@@ -42,7 +42,7 @@ To cross-chain **from EVM to WOW**, you must **first fund `activeEvmAccount` fro
 
 - **WOW side**: mainnet only. Operations requiring WOW signing/querying validate `env.network === "mainnet"`.
 - **EVM side**: Ethereum mainnet (`chainId=1`, `bridgeChainId=10`). The enum is extensible to BSC/Polygon/Arbitrum in the future.
-- **Tokens**: `ETH` (native), `WETH`, `WBTC`, `USDC`, `USDT`. See the [Token & Amount Conventions](../skills/schema-bridge_operation.md#token--amount-conventions) table in the schema doc.
+- **Tokens**: `ETH` (native), `WETH`, `WBTC`, `USDC`, `USDT`. Query `wowok_buildin_info` with `info: "mainnet bridge tokens"` for the full token list and type tags.
 
 ### 4. Gas Requirements
 
@@ -738,7 +738,7 @@ Step 8  (optional) withdraw from activeEvmAccount to your MetaMask
 
 ## 🔗 See Also
 
-- **Schema reference**: [schema-bridge_operation.md](../skills/schema-bridge_operation.md)
+- **Schema reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"`
 - **Stage entry**: [stage-09-bridge.md](stage-09-bridge.md)
 - **Live test script**: [`agent/mcp/scripts/test-bridge.mjs`](../../agent/mcp/scripts/test-bridge.mjs)
 - **Live test output**: [`agent/mcp/scripts/test-bridge-output.log`](../../agent/mcp/scripts/test-bridge-output.log)
