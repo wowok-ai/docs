@@ -625,6 +625,8 @@ The `order_allocators` configuration defines how order payments are distributed:
 - `{ "Entity": { "name_or_address": "..." } }` - Specific address or account name
 - `{ "GuardIdentifier": 0 }` - Address from Guard table
 
+> **Design Decision — Refund Recipient**: When using `{ "GuardIdentifier": 0 }` in the refund allocation, the refund is sent to the **Order object's on-chain address** (not the customer's wallet address). This is by design: the Order object acts as an escrow holding the refunded payment at its own address. The customer subsequently claims the refund from the Order object via a separate withdraw operation. This two-step design ensures the refund is traceable on-chain and tied to the specific order, providing better dispute resolution and audit trail.
+
 #### 8.2 Create and Publish Service
 
 **Prompt**: Create and publish a Service named "myshop_service_v2" with machine "myshop_machine_v2", order allocation using Guards, after-sales contact, and toy products.
@@ -1294,7 +1296,7 @@ The Service must have a compensation fund balance ≥ the arbitration indemnity 
 {
   "operation_type": "service",
   "data": {
-    "object": "myshop_service",
+    "object": "myshop_service_v2",
     "compensation_fund_add": {"balance": 3000000000}
   },
   "env": {
@@ -1364,7 +1366,7 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
 {
   "operation_type": "service",
   "data": {
-    "object": "myshop_service",
+    "object": "myshop_service_v2",
     "order_new": {
       "buy": {
         "items": [
