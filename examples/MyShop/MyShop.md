@@ -86,7 +86,7 @@ This section guides merchants through setting up their online store.
 ### Prerequisites
 
 Before starting, ensure you have:
-- A WoWok account with testnet WOW tokens
+- A WoWok account with mainnet WOW tokens (gas)
 - Access to the WoWok MCP server
 
 **Create merchant account:**
@@ -102,15 +102,15 @@ Before starting, ensure you have:
 }
 ```
 
-**Get test tokens:**
+**Get mainnet tokens:**
 
-**Prompt**: Request testnet WOW tokens for account "myshop_merchant".
+**Prompt**: Transfer 1 WOW to account "myshop_merchant" from a funded account for gas fees.
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "myshop_merchant"
+  "transfer": {
+    "name_or_address": "myshop_merchant",
+    "amount": 1000000000
   }
 }
 ```
@@ -137,7 +137,7 @@ First, create a Permission object to manage access control for your store operat
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -163,7 +163,7 @@ Create a Machine to define the order processing workflow. This includes nodes fo
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -389,7 +389,7 @@ Add the workflow nodes to the Machine for order processing. The initial pair (pr
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -413,7 +413,7 @@ Publish the Machine to make it available for creating orders.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -463,7 +463,7 @@ Create a Contact object to enable encrypted communication between customers and 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -529,7 +529,7 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -596,7 +596,7 @@ Create a Guard for customer refunds when order is cancelled.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -677,7 +677,7 @@ The `order_allocators` configuration defines how order payments are distributed:
       "sales": [
         {
           "name": "Play Purse Set 35PCS",
-          "price": 3000000000,
+          "price": 50000000,
           "stock": 100,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
@@ -685,7 +685,7 @@ The `order_allocators` configuration defines how order payments are distributed:
         },
         {
           "name": "Little Girls Purse with Accessories",
-          "price": 5000000000,
+          "price": 50000000,
           "stock": 50,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
@@ -693,7 +693,7 @@ The `order_allocators` configuration defines how order payments are distributed:
         },
         {
           "name": "Tree House Building Set",
-          "price": 2000000000,
+          "price": 30000000,
           "stock": 75,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
@@ -706,7 +706,7 @@ The `order_allocators` configuration defines how order payments are distributed:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -722,7 +722,7 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 To offer promotional pricing, update product prices using the `sales` operation with `op: "set"`:
 
-**Prompt**: Update the price of "Play Purse Set 35PCS" to 2.4WOW for a promotion.
+**Prompt**: Update the price of "Play Purse Set 35PCS" to 0.04 WOW for a promotion.
 
 ```json
 {
@@ -734,7 +734,7 @@ To offer promotional pricing, update product prices using the `sales` operation 
       "sales": [
         {
           "name": "Play Purse Set 35PCS",
-          "price": 2400000000,
+          "price": 40000000,
           "stock": 100,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
@@ -745,7 +745,7 @@ To offer promotional pricing, update product prices using the `sales` operation 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -771,18 +771,20 @@ Create a customer account:
 }
 ```
 
-**Get test tokens** (request twice to ensure sufficient balance for order + gas fees):
+**Get mainnet tokens:**
+
+**Prompt**: Transfer 1 WOW to account "myshop_customer" from a funded account for gas fees.
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "myshop_customer"
+  "transfer": {
+    "name_or_address": "myshop_customer",
+    "amount": 1000000000
   }
 }
 ```
 
-> **Note**: The faucet provides 3 WOW per call. Since orders require payment plus gas fees, request faucet tokens twice to ensure sufficient balance.
+> **Note**: Ensure sufficient WOW balance for order payments plus gas fees. If needed, transfer additional tokens from a funded account.
 
 ---
 
@@ -800,13 +802,15 @@ Customers can query the Service to see available products.
 }
 ```
 
+> **AI Note**: Capture the `wip_hash` from the Service query result for each product. When the customer places an order, pass the captured `wip_hash` in `buy.items[].wip_hash`. This is a dispute-prevention mechanism — the on-chain contract compares `item.wip_hash` against the Service's current `sale.wip_hash` to ensure the product hasn't been swapped between browse and purchase time.
+
 ---
 
 ### Step 2: Create Order (Customer Purchase)
 
 Customer creates an order by purchasing products from the Service.
 
-**Prompt**: Create an order for customer "myshop_customer" to purchase "Play Purse Set 35PCS" from "myshop_service_v2" with payment of 3WOW.
+**Prompt**: Create an order for customer "myshop_customer" to purchase "Play Purse Set 35PCS" from "myshop_service_v2" with payment of 0.05 WOW.
 
 ```json
 {
@@ -823,23 +827,26 @@ Customer creates an order by purchasing products from the Service.
           }
         ],
         "total_pay": {
-          "balance": 3000000000
+          "balance": 50000000
         }
       },
       "namedNewOrder": {
-        "name": "myshop_test_order"
+        "name": "myshop_test_order",
+        "replaceExistName": true
       },
       "namedNewProgress": {
-        "name": "myshop_test_progress"
+        "name": "myshop_test_progress",
+        "replaceExistName": true
       },
       "namedNewAllocation": {
-        "name": "myshop_test_allocation"
+        "name": "myshop_test_allocation",
+        "replaceExistName": true
       }
     }
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1003,7 +1010,7 @@ Merchant advances the order from initial state to "Order Confirmation" node.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1032,7 +1039,7 @@ Merchant ships the order and advances from "Order Confirmation" to "Shipping".
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1061,7 +1068,7 @@ Merchant or delivery service confirms the order has been delivered.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1090,7 +1097,7 @@ Customer confirms receipt and completes the order.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1143,7 +1150,7 @@ First, activate the Allocation by submitting the Guard verification with the Ord
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1166,7 +1173,7 @@ After the Allocation is activated, withdraw the funds from the Service.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1197,7 +1204,7 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1222,7 +1229,7 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1265,7 +1272,7 @@ After the order is cancelled, the customer can activate the refund allocation us
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1290,18 +1297,18 @@ This flow handles order disputes through a formal arbitration process. The arbit
 
 The Service must have a compensation fund balance ≥ the arbitration indemnity amount. The merchant pre-funds this before any disputes.
 
-**Prompt**: Merchant adds 3 WOW to the Service compensation fund.
+**Prompt**: Merchant adds 0.05 WOW to the Service compensation fund.
 
 ```json
 {
   "operation_type": "service",
   "data": {
     "object": "myshop_service_v2",
-    "compensation_fund_add": {"balance": 3000000000}
+    "compensation_fund_add": {"balance": 50000000}
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1325,11 +1332,11 @@ Create an Arbitration object for handling order disputes.
     },
     "description": "Arbitration system for MyShop toy store disputes",
     "location": "Online arbitration system",
-    "fee": 100000000
+    "fee": 5000000
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1351,7 +1358,7 @@ The merchant unpauses the Arbitration object to enable dispute submissions.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1375,7 +1382,7 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
             "stock": 1
           }
         ],
-        "total_pay": {"balance": 2000000000}
+        "total_pay": {"balance": 30000000}
       },
       "namedNewOrder": {"name": "myshop_arb_order", "replaceExistName": true},
       "namedNewProgress": {"name": "myshop_arb_progress", "replaceExistName": true},
@@ -1384,7 +1391,7 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1406,18 +1413,18 @@ The customer submits a dispute against the order, creating an Arb object.
       "order": "myshop_arb_order",
       "description": "Product quality issue - the tree house set arrived damaged",
       "proposition": ["Full refund to customer", "Partial refund 50%", "Replace with new product"],
-      "fee": {"balance": 100000000},
+      "fee": {"balance": 5000000},
       "namedArb": {"name": "myshop_arb_case", "replaceExistName": true}
     }
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
 
-> **Note**: The dispute fee (100000000 = 0.1 WOW) must be ≥ the Arbitration object's fee setting. The Arb object is created with status=1 (Arbitrator_confirming).
+> **Note**: The dispute fee (5000000 = 0.005 WOW) must be ≥ the Arbitration object's fee setting. The Arb object is created with status=1 (Arbitrator_confirming).
 
 ### Step 6: Merchant Confirms Materials
 
@@ -1437,7 +1444,7 @@ The merchant confirms the dispute materials are valid and sets the voting deadli
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1448,7 +1455,7 @@ The merchant confirms the dispute materials are valid and sets the voting deadli
 
 The merchant provides the final arbitration result with feedback and indemnity amount.
 
-**Prompt**: Merchant "myshop_merchant" provides arbitration result for Arb "myshop_arb_case" with 2 WOW indemnity.
+**Prompt**: Merchant "myshop_merchant" provides arbitration result for Arb "myshop_arb_case" with 0.03 WOW indemnity.
 
 ```json
 {
@@ -1458,12 +1465,12 @@ The merchant provides the final arbitration result with feedback and indemnity a
     "arbitration": {
       "arb": "myshop_arb_case",
       "feedback": "After investigation, the product quality issue is confirmed. Full refund to customer and return shipping cost covered by merchant.",
-      "indemnity": 2000000000
+      "indemnity": 30000000
     }
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1487,12 +1494,12 @@ The customer claims the compensation from the Service's compensation fund.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
 
-> **Note**: The customer receives the indemnity amount (2 WOW) from the Service's compensation fund. The Arb status changes to 5 (Finished). The Order's `claimed_by` field is updated with the Arb address.
+> **Note**: The customer receives the indemnity amount (0.03 WOW) from the Service's compensation fund. The Arb status changes to 5 (Finished). The Order's `claimed_by` field is updated with the Arb address.
 
 ### Step 9: Query Arbitration Status
 
@@ -1505,7 +1512,7 @@ Check the final status of the arbitration.
   "query_type": "onchain_objects",
   "objects": ["myshop_arb_case"],
   "no_cache": true,
-  "network": "testnet"
+  "network": "mainnet"
 }
 ```
 
@@ -1566,7 +1573,7 @@ When advancing order workflows, use `operation_type: "progress"` with the `opera
   },
   "env": {
     "account": "operator_account",
-    "network": "testnet"
+    "network": "mainnet"
   }
 }
 ```
@@ -1617,5 +1624,5 @@ The operator account depends on the forward definition:
 
 - All addresses shown in examples are truncated for readability (format: 0xabcd...efgh)
 - Use the full 64-character address in actual operations
-- Test on testnet before deploying to mainnet
+- Deploy and run on mainnet
 - Ensure sufficient WOW tokens for transaction fees

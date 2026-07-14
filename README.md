@@ -302,6 +302,7 @@ Choose a stage to begin your WoWok journey:
 | [Query](docs/query.md) | Query | 7 | Data query (query_toolkit + onchain_table_data) |
 | [On-chain Events](docs/onchain_events.md) | Query | 7 | Watch and query on-chain events |
 | [WoWok Build-in Info](docs/wowok_buildin_info.md) | Query | 7 | Query protocol constants and info |
+| [Response Format](docs/response-format.md) | Reference | - | MCP output structure, semantic layer, error classification |
 | [MyShop Example](examples/MyShop/) | Example | 8 | Basic e-commerce store with product listings |
 | [ThreeBody_Signature Example](examples/ThreeBody_Signature/) | Example | 8 | Signed book service with WIP verification |
 | [MyShop_Advanced Example](examples/MyShop_Advanced/) | Example | 8 | Advanced merchant system with arbitration |

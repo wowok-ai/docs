@@ -750,6 +750,19 @@ Export a Machine's node definitions to a Markdown file:
 
 ---
 
+## 📚 Related Documentation
+
+Understanding the response format is essential for processing MCP tool outputs:
+
+| Document | Description |
+|----------|-------------|
+| [Response Format Reference](response-format.md) | MCP output structure, semantic layer, error classification, and harness report |
+| [Query Component](query.md) | Detailed query_toolkit and onchain_table_data API documentation |
+| [On-chain Events](onchain_events.md) | Real-time event watching and querying |
+| [Schema Query](schema-query.md) | JSON schema retrieval for MCP tools |
+
+---
+
 ## 🏆 Stage Checklist
 
 Congratulations on reaching the final stage! Please confirm that you have:
