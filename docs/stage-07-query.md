@@ -50,7 +50,7 @@ query_toolkit is WoWok's core query tool, capable of querying data on local devi
 **Supported Query Types:**
 
 **Local Queries:**
-- 👤 `account_list` — Query your LOCAL accounts (addresses, public keys, messenger status)
+- 👤 `account_list` — Query your LOCAL accounts (addresses, messenger status, suspension state; use `includePubkey=true` in filter to include public keys)
 - 📇 `local_mark_list` — Query your LOCAL address book (name→address mappings with tags)
 - 📝 `local_info_list` — Query your LOCAL private info (delivery addresses, phone numbers, contacts)
 - 🏷️ `local_names` — Query LOCAL names by a list of addresses (returns resolved account and mark names)

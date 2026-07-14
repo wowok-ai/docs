@@ -21,7 +21,7 @@ Use local queries for account management and address book lookups. Use onchain q
 | # | query_type | Description | Returns |
 |---|-----------|-------------|---------|
 | 1 | `local_mark_list` | Query your LOCAL address book — maps human-readable names to blockchain addresses with optional tags. Use to resolve names→addresses or find addresses by tag. | `MarkData[]` (name, address, tags, timestamps) |
-| 2 | `account_list` | Query your LOCAL accounts — view all accounts stored on this device (addresses, public keys, messenger status, suspension state). Use to discover available accounts before operations. | `AccountData[]` (name, address, pubkey, suspended, messenger, timestamps) |
+| 2 | `account_list` | Query your LOCAL accounts — view all accounts stored on this device (addresses, messenger status, suspension state). Use `filter.includePubkey=true` to include public keys (~900 bytes each, omitted by default). | `AccountData[]` (name, address, pubkey?, suspended, messenger, timestamps) |
 | 3 | `local_info_list` | Query your LOCAL private info — sensitive data like delivery addresses, phone numbers, contacts stored ONLY on this device. Use to retrieve saved contact/delivery details. | `InfoData[]` (name, default value, contents, timestamps) |
 | 4 | `token_list` | Query cached token metadata — symbol, decimals, icon URL, description for tokens previously fetched from chain. Use to look up token info without an on-chain query. | `TokenTypeInfo[]` (type, alias, name, symbol, decimals, iconUrl) |
 | 5 | `account_balance` | Query an account's coin balance OR paginated coin objects. Use `balance=true` for total amount, or `coin={cursor,limit}` to list individual coin objects. | `{ address, balance? \| coin? }` |

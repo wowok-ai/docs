@@ -838,7 +838,7 @@ Create the travel service with all configurations and publish it in one operatio
           "fix": "0",
           "sharing": [
             {
-              "who": {"Signer": "signer"},
+              "who": {"Entity": {"name_or_address": "travel_service"}},
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -849,12 +849,12 @@ Create the travel service with all configurations and publish it in one operatio
           "fix": "0",
           "sharing": [
             {
-              "who": {"Signer": "signer"},
+              "who": {"Entity": {"name_or_address": "travel_service"}},
               "sharing": 8000,
               "mode": "Rate"
             },
             {
-              "who": {"Signer": "signer"},
+              "who": {"GuardIdentifier": 0},
               "sharing": 2000,
               "mode": "Rate"
             }
@@ -865,12 +865,12 @@ Create the travel service with all configurations and publish it in one operatio
           "fix": "0",
           "sharing": [
             {
-              "who": {"Signer": "signer"},
+              "who": {"Entity": {"name_or_address": "travel_service"}},
               "sharing": 500,
               "mode": "Rate"
             },
             {
-              "who": {"Signer": "signer"},
+              "who": {"GuardIdentifier": 0},
               "sharing": 9500,
               "mode": "Rate"
             }
@@ -898,17 +898,27 @@ Create the travel service with all configurations and publish it in one operatio
 | `allocators[].guard` | string | Guard name/ID that must pass for this allocation |
 | `allocators[].fix` | string | Fixed amount per recipient ("0" = none) |
 | `allocators[].sharing` | array | Array of sharing rules |
-| `allocators[].sharing[].who` | object | Recipient: `{"Signer": "signer"}` for transaction signer |
+| `allocators[].sharing[].who` | object | Recipient: `{"Entity": {...}}` for fixed address, `{"GuardIdentifier": N}` for Guard table index, `{"Signer": "signer"}` for caller |
 | `allocators[].sharing[].sharing` | number | Amount in basis points (10000 = 100%) |
 | `allocators[].sharing[].mode` | string | Allocation mode ("Rate" or "Amount") |
+
+**Recipient Types**:
+
+| Type | Syntax | Resolves To | Use Case |
+|------|--------|-------------|----------|
+| `Entity` | `{"Entity": {"name_or_address": "travel_service"}}` | The named address | Merchant receipts (Service object) |
+| `GuardIdentifier` | `{"GuardIdentifier": 0}` | Address from Guard table index 0 (submitted at runtime) | Customer refunds (Order ID submitted to Guard) |
+| `Signer` | `{"Signer": "signer"}` | The caller of `alloc_by_guard` | When caller should receive all funds |
+
+> **Important**: All allocation Guards (merchant_victory_guard, no_ice_scooting_guard, no_spa_guard) have `identifier: 0` as a submission field accepting the Order ID at runtime. `{"GuardIdentifier": 0}` resolves to this submitted Order ID, so funds are sent to the Order object — the customer (Order builder) can then withdraw.
 
 **Allocation Logic**:
 
 | Guard | Condition | Service Receives | Customer Receives |
 |-------|-----------|-----------------|-------------------|
-| merchant_victory_guard | Progress is "Complete" | 100% | 0% |
-| no_ice_scooting_guard | Progress is "Cancel" or "Ice Scooting" | 80% | 20% |
-| no_spa_guard | Progress is "SPA" | 5% | 95% |
+| merchant_victory_guard | Progress is "Complete" | 100% (Entity → travel_service) | 0% |
+| no_ice_scooting_guard | Progress is "Cancel" or "Ice Scooting" | 80% (Entity → travel_service) | 20% (GuardIdentifier: 0 → Order) |
+| no_spa_guard | Progress is "SPA" | 5% (Entity → travel_service) | 95% (GuardIdentifier: 0 → Order) |
 
 ---
 
@@ -1175,6 +1185,161 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
 | `data.operate.operation.forward` | string | Forward name defined in Machine |
 | `submission` | object | Guard verification data (top-level, required when forward has Guard) |
 | `env.no_cache` | boolean | Set to `true` to avoid stale cache issues |
+
+---
+
+## Step 8: Execute Fund Allocation
+
+After the Progress reaches a terminal state (Complete or Cancel), execute the fund allocation. This operation verifies the allocation Guard and distributes funds according to the `order_allocators` configured in Step 5.
+
+**Anyone can call this operation** — the caller does not need to be the merchant or the customer. The Guard verification determines which allocator's sharing rules apply, and funds are distributed to the recipients defined in those rules.
+
+### 8.1 Query the Order ID
+
+The allocation Guard requires the Order ID as a submission (identifier: 0). Query the Progress object to find the `task` field, which contains the Order ID.
+
+**Prompt**: Query the Progress object to get the Order ID.
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "alice_travel_progress"
+  },
+  "env": {
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+> **Note**: The response includes a `task` field containing the Order object ID. Copy this value for the allocation submission.
+
+### 8.2 Execute Allocation (Merchant Victory Path)
+
+When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% of funds go to the Service object.
+
+**Prompt**: Execute fund allocation with the merchant_victory_guard, submitting the Order ID.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "alice_travel_allocation",
+    "alloc_by_guard": "merchant_victory_guard"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "merchant_victory_guard",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "merchant_victory_guard",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": "Address",
+            "value": "<ORDER_OBJECT_ID>",
+            "name": "Order ID"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "travel_provider",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+> **Note**: Replace `<ORDER_OBJECT_ID>` with the actual Order object ID from Step 8.1.
+>
+> **Two-phase submission**: If the first call returns a submission prompt (without executing), re-call with the `submission` field populated as shown above.
+
+### 8.3 Execute Allocation (Refund Paths)
+
+For refund scenarios (Cancel or SPA), use the corresponding Guard. The same submission structure applies — the Order ID is submitted to identifier 0.
+
+**Cancel/Ice Scooting path** (80% Service, 20% Order):
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "alice_travel_allocation",
+    "alloc_by_guard": "no_ice_scooting_guard"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [{"object": "no_ice_scooting_guard", "impack": true}],
+    "submission": [{
+      "guard": "no_ice_scooting_guard",
+      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
+    }]
+  },
+  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true}
+}
+```
+
+**SPA path** (5% Service, 95% Order):
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "alice_travel_allocation",
+    "alloc_by_guard": "no_spa_guard"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [{"object": "no_spa_guard", "impack": true}],
+    "submission": [{
+      "guard": "no_spa_guard",
+      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
+    }]
+  },
+  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true}
+}
+```
+
+### 8.4 Verify Allocation Result
+
+After allocation, query the Allocation and Payment objects to verify the fund distribution.
+
+**Prompt**: Query the Allocation object to verify the balance and payment records.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "alice_travel_allocation"
+  },
+  "env": {
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+> **Expected result**: The Allocation `balance` should be 0 (all funds distributed), and the `payment` array should contain the Payment object ID(s) created by the allocation.
+
+**Allocation Operation Structure**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `data.object` | string | Allocation object name/ID |
+| `data.alloc_by_guard` | string | Guard name/ID to verify (determines which allocator's rules apply) |
+| `submission` | object | Guard submission data (Order ID at identifier 0) |
+| `env.no_cache` | boolean | Set to `true` to avoid stale cache issues |
+
+> **Important**: `alloc_by_guard` accepts Guard names (e.g., `"merchant_victory_guard"`) or Guard object IDs. The Guard must exist in the Allocation's `allocators` list. Only the first Guard that passes (first-Guard-wins) triggers fund distribution.
 
 ---
 

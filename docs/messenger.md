@@ -187,9 +187,12 @@ messenger_operation (Messenger Operations)
 │   ├── "mark_messages_as_viewed"
 │   │   ├── account (optional, string)
 │   │   └── messageIds (required, string[]) - Array of message IDs to mark as viewed (1-1000 messages)
-│   └── "mark_conversation_as_viewed"
-│       ├── account (optional, string)
-│       └── peerAddress (required, string | Address/Name) - Peer address or account name
+│   ├── "mark_conversation_as_viewed"
+│   │   ├── account (optional, string)
+│   │   └── peerAddress (required, string | Address/Name) - Peer address or account name
+│   └── "pull_messages"
+│       ├── account (optional, string) - Account name or address
+│       └── limit (optional, number) - Maximum number of messages to pull from server
 └── (no other top-level fields)
 ```
 
@@ -2009,6 +2012,38 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
     "viewed": false,
     "skipAutoMarkViewed": true
   }
+}
+```
+
+---
+
+## Example 19: Pull Messages from Server
+
+### Feature Description
+
+Actively pull new messages from the messenger server for the specified account. Unlike `watch_messages` which reads from local storage, `pull_messages` triggers an active server fetch, ensuring the latest messages are retrieved and decrypted. This is useful when you want to force-sync messages immediately rather than waiting for the background polling timer.
+
+### Examples
+
+#### Example 19.1: Pull Messages for Default Account
+
+**Prompt**: Pull latest messages from server for the default account.
+
+```json
+{
+  "operation": "pull_messages"
+}
+```
+
+#### Example 19.2: Pull Messages with Limit
+
+**Prompt**: Pull up to 20 new messages from server for account "alice".
+
+```json
+{
+  "operation": "pull_messages",
+  "account": "alice",
+  "limit": 20
 }
 ```
 
