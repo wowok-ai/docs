@@ -109,8 +109,10 @@ Before starting, ensure you have:
 ```json
 {
   "transfer": {
-    "name_or_address": "myshop_merchant",
-    "amount": 1000000000
+    "name_or_address_to": "myshop_merchant",
+    "amount": 1000000000,
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -137,18 +139,21 @@ First, create a Permission object to manage access control for your store operat
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
 
 ---
 
-### Step 2: Create Machine (Order Workflow)
+### Step 2: Create Machine with Workflow Nodes
 
-Create a Machine to define the order processing workflow. This includes nodes for order confirmation, shipping, delivery, and completion.
+Create a Machine to define the order processing workflow. This includes nodes for order confirmation, shipping, delivery, and completion. The Machine must be created with all nodes and published in a single operation — the protocol requires at least one node when publishing a Machine.
 
-**Prompt**: Create a Machine named "myshop_machine_v2" with permission "myshop_permission_v2" for the toy store workflow.
+> **Reference**: The complete node configuration is available in [`myshop_machine_nodes.json`](./myshop_machine_nodes.json). The JSON below mirrors that file's content wrapped in an on-chain operation.
+
+**Prompt**: Create a Machine named "myshop_machine_v2" with permission "myshop_permission_v2", including all workflow nodes (Order Confirmation, Shipping, In Transit, Completed, Cancelled), and publish it immediately.
 
 ```json
 {
@@ -159,14 +164,114 @@ Create a Machine to define the order processing workflow. This includes nodes fo
       "permission": "myshop_permission_v2",
       "replaceExistName": true
     },
-    "description": "Order processing workflow for MyShop toy store"
+    "description": "Order processing workflow for MyShop toy store",
+    "node": {
+      "op": "add",
+      "nodes": [
+        {
+          "name": "Cancelled",
+          "pairs": [
+            {
+              "prev_node": "",
+              "threshold": 0,
+              "forwards": [
+                {
+                  "name": "Cancel Order",
+                  "weight": 1,
+                  "namedOperator": ""
+                }
+              ]
+            },
+            {
+              "prev_node": "Order Confirmation",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Cancel Order",
+                  "weight": 1,
+                  "namedOperator": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Completed",
+          "pairs": [
+            {
+              "prev_node": "In Transit",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Complete Order",
+                  "weight": 1,
+                  "namedOperator": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "In Transit",
+          "pairs": [
+            {
+              "prev_node": "Shipping",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Confirm Delivery",
+                  "weight": 1,
+                  "permissionIndex": 1002
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Order Confirmation",
+          "pairs": [
+            {
+              "prev_node": "",
+              "threshold": 0,
+              "forwards": [
+                {
+                  "name": "Confirm Order",
+                  "weight": 1,
+                  "permissionIndex": 1000
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Shipping",
+          "pairs": [
+            {
+              "prev_node": "Order Confirmation",
+              "threshold": 1,
+              "forwards": [
+                {
+                  "name": "Ship Goods",
+                  "weight": 1,
+                  "permissionIndex": 1001
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "publish": true
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
+
+> **Note**: The Machine must be created with nodes and published in a single operation. Creating an empty Machine and then adding nodes/publishing separately will be rejected by the protocol's constraint checker. The "Cancelled" node has two pairs: one with `prev_node: ""` (cancel from initial state) and one with `prev_node: "Order Confirmation"` (cancel after order confirmation).
 
 ---
 
@@ -279,152 +384,11 @@ Before adding nodes, let's understand the order processing workflow:
 
 ---
 
-### Step 4: Add Workflow Nodes
-
-Add the workflow nodes to the Machine for order processing. The initial pair (prev_node: "") defines transitions from the empty starting state.
-
-**Prompt**: Add workflow nodes to "myshop_machine_v2" including Order Confirmation, Shipping, In Transit, Completed, and Cancelled nodes.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_machine_v2",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Order Confirmation",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "Confirm Order",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            },
-            {
-              "prev_node": "Order Confirmation",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Ship Goods",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Shipping",
-          "pairs": [
-            {
-              "prev_node": "Order Confirmation",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Ship Goods",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "In Transit",
-          "pairs": [
-            {
-              "prev_node": "Shipping",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Delivery",
-                  "permissionIndex": 1002,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Completed",
-          "pairs": [
-            {
-              "prev_node": "In Transit",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Complete Order",
-                  "namedOperator": "",
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Cancelled",
-          "pairs": [
-            {
-              "prev_node": "Order Confirmation",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "Cancel Order",
-                  "namedOperator": "",
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet"
-  }
-}
-```
-
-> **Note**: The "Cancel Order" forward is defined on the "Cancelled" node with `prev_node: "Order Confirmation"`. This means cancellation can only happen AFTER the merchant confirms the order (transitions from "Order Confirmation" to "Cancelled"). The "Cancelled" node is a terminal state with no further forwards.
-
----
-
-### Step 5: Publish the Machine
-
-Publish the Machine to make it available for creating orders.
-
-**Prompt**: Publish the Machine "myshop_machine_v2" to enable order creation.
-
-```json
-{
-  "operation_type": "machine",
-  "data": {
-    "object": "myshop_machine_v2",
-    "publish": true
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet"
-  }
-}
-```
-
----
-
-### Step 6: Create Contact Object for Customer Service
+### Step 4: Create Contact Object for Customer Service
 
 Create a Contact object to enable encrypted communication between customers and the store for after-sales support.
 
-#### 6.1 Enable Merchant Messenger
+#### 4.1 Enable Merchant Messenger
 
 **Prompt**: Enable messenger for the merchant account.
 
@@ -437,7 +401,7 @@ Create a Contact object to enable encrypted communication between customers and 
 }
 ```
 
-#### 6.2 Create After-Sales Contact Object
+#### 4.2 Create After-Sales Contact Object
 
 **Prompt**: Create a Contact object named "myshop_aftersales_contact_v2" with permission "myshop_permission_v2" for after-sales support.
 
@@ -463,7 +427,8 @@ Create a Contact object to enable encrypted communication between customers and 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -472,11 +437,11 @@ Create a Contact object to enable encrypted communication between customers and 
 
 ---
 
-### Step 7: Create Guards for Fund Allocation
+### Step 5: Create Guards for Fund Allocation
 
 Before creating the Service, create Guards that validate fund allocation conditions. These Guards ensure funds are only released when specific conditions are met.
 
-#### 7.1 Create Withdraw Guard (Merchant Withdrawal)
+#### 5.1 Create Withdraw Guard (Merchant Withdrawal)
 
 Create a Guard that validates the order's Progress has reached the "Completed" node. This Guard uses `convert_witness: 100` (TypeOrderProgress) to query the Order's associated Progress object.
 
@@ -529,7 +494,8 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -543,7 +509,7 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
 
 > **Note**: The Guard `root` field directly specifies the GuardNode (e.g., `type: "logic_equal"`), not wrapped in a `type: "node"` object.
 
-#### 7.2 Create Refund Guard (Customer Refund)
+#### 5.2 Create Refund Guard (Customer Refund)
 
 Create a Guard for customer refunds when order is cancelled.
 
@@ -596,20 +562,21 @@ Create a Guard for customer refunds when order is cancelled.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
 
 ---
 
-### Step 8: Create Service (Store)
+### Step 6: Create Service (Store)
 
 Create the Service object that represents your online store with products. This step binds all previously created components together.
 
 > **Important**: For Service creation, provide a complete configuration including machine, order_allocators with Guards, and products. The Service will be created and published in a single transaction.
 
-#### 8.1 Understanding Order Allocators
+#### 6.1 Understanding Order Allocators
 
 The `order_allocators` configuration defines how order payments are distributed:
 
@@ -627,7 +594,7 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 > **Design Decision — Refund Recipient**: When using `{ "GuardIdentifier": 0 }` in the refund allocation, the refund is sent to the **Order object's on-chain address** (not the customer's wallet address). This is by design: the Order object acts as an escrow holding the refunded payment at its own address. The customer subsequently claims the refund from the Order object via a separate withdraw operation. This two-step design ensures the refund is traceable on-chain and tied to the specific order, providing better dispute resolution and audit trail.
 
-#### 8.2 Create and Publish Service
+#### 6.2 Create and Publish Service
 
 **Prompt**: Create and publish a Service named "myshop_service_v2" with machine "myshop_machine_v2", order allocation using Guards, after-sales contact, and toy products.
 
@@ -706,7 +673,8 @@ The `order_allocators` configuration defines how order payments are distributed:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -718,7 +686,7 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 ---
 
-### Step 9: Update Product Pricing (Optional)
+### Step 7: Update Product Pricing (Optional)
 
 To offer promotional pricing, update product prices using the `sales` operation with `op: "set"`:
 
@@ -745,7 +713,8 @@ To offer promotional pricing, update product prices using the `sales` operation 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -778,8 +747,10 @@ Create a customer account:
 ```json
 {
   "transfer": {
-    "name_or_address": "myshop_customer",
-    "amount": 1000000000
+    "name_or_address_to": "myshop_customer",
+    "amount": 1000000000,
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -802,7 +773,7 @@ Customers can query the Service to see available products.
 }
 ```
 
-> **AI Note**: Capture the `wip_hash` from the Service query result for each product. When the customer places an order, pass the captured `wip_hash` in `buy.items[].wip_hash`. This is a dispute-prevention mechanism — the on-chain contract compares `item.wip_hash` against the Service's current `sale.wip_hash` to ensure the product hasn't been swapped between browse and purchase time.
+> **AI Note**: Capture the `wip_hash` from the Service query result for each product. When the customer places an order, pass the captured `wip_hash` in `buy.items[].wip_hash`. **The `wip_hash` field cannot be an empty string** — it must match the hash stored in the Service. This is a dispute-prevention mechanism — the on-chain contract compares `item.wip_hash` against the Service's current `sale.wip_hash` to ensure the product hasn't been swapped between browse and purchase time.
 
 ---
 
@@ -823,7 +794,7 @@ Customer creates an order by purchasing products from the Service.
           {
             "name": "Play Purse Set 35PCS",
             "stock": 1,
-            "wip_hash": ""
+            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
           }
         ],
         "total_pay": {
@@ -846,7 +817,8 @@ Customer creates an order by purchasing products from the Service.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1010,7 +982,8 @@ Merchant advances the order from initial state to "Order Confirmation" node.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1039,7 +1012,8 @@ Merchant ships the order and advances from "Order Confirmation" to "Shipping".
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1068,7 +1042,8 @@ Merchant or delivery service confirms the order has been delivered.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1097,7 +1072,8 @@ Customer confirms receipt and completes the order.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1110,7 +1086,7 @@ After order completion, the merchant needs to:
 1. Activate the Allocation by verifying the Guard (order completion status)
 2. Withdraw funds from the Service
 
-#### 9.1 Activate Allocation (Guard Verification)
+#### 7.1 Activate Allocation (Guard Verification)
 
 First, activate the Allocation by submitting the Guard verification with the Order ID.
 
@@ -1151,6 +1127,7 @@ First, activate the Allocation by submitting the Guard verification with the Ord
   "env": {
     "account": "myshop_merchant",
     "network": "mainnet",
+    "confirmed": true,
     "no_cache": true
   }
 }
@@ -1158,7 +1135,7 @@ First, activate the Allocation by submitting the Guard verification with the Ord
 
 > **Note**: Replace the Guard address `0x5af9...1074` and Order address `0xa6db...3d5` with your actual object addresses. Use the full 64-character addresses in actual operations.
 
-#### 9.2 Withdraw Funds from Service
+#### 7.2 Withdraw Funds from Service
 
 After the Allocation is activated, withdraw the funds from the Service.
 
@@ -1173,7 +1150,8 @@ After the Allocation is activated, withdraw the funds from the Service.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1204,7 +1182,8 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1229,7 +1208,8 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1273,6 +1253,7 @@ After the order is cancelled, the customer can activate the refund allocation us
   "env": {
     "account": "myshop_customer",
     "network": "mainnet",
+    "confirmed": true,
     "no_cache": true
   }
 }
@@ -1308,7 +1289,8 @@ The Service must have a compensation fund balance ≥ the arbitration indemnity 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1336,7 +1318,8 @@ Create an Arbitration object for handling order disputes.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1358,7 +1341,8 @@ The merchant unpauses the Arbitration object to enable dispute submissions.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1379,7 +1363,8 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
         "items": [
           {
             "name": "Tree House Building Set",
-            "stock": 1
+            "stock": 1,
+            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
           }
         ],
         "total_pay": {"balance": 30000000}
@@ -1391,12 +1376,13 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
 
-> **Note**: The WIP hash is auto-computed by the SDK from the Service's WIP URL configuration.
+> **Note**: The `wip_hash` must be obtained from the Service query result (Step 1 of Part 2). It cannot be omitted or set to an empty string — the on-chain contract validates it against the Service's current `sale.wip_hash`.
 
 ### Step 5: Customer Submits Dispute
 
@@ -1419,7 +1405,8 @@ The customer submits a dispute against the order, creating an Arb object.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1444,7 +1431,8 @@ The merchant confirms the dispute materials are valid and sets the voting deadli
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1470,7 +1458,8 @@ The merchant provides the final arbitration result with feedback and indemnity a
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1494,7 +1483,8 @@ The customer claims the compensation from the Service's compensation fund.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```
@@ -1573,7 +1563,8 @@ When advancing order workflows, use `operation_type: "progress"` with the `opera
   },
   "env": {
     "account": "operator_account",
-    "network": "mainnet"
+    "network": "mainnet",
+    "confirmed": true
   }
 }
 ```

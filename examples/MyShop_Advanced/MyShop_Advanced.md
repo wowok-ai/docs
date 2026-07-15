@@ -350,7 +350,9 @@ Reuse existing accounts from basic MyShop:
 - Account: `myshop_merchant` (store owner)
 - Account: `myshop_customer` (customer)
 
-Ensure both accounts have sufficient testnet WOW tokens.
+> **Mandatory**: Ensure both accounts (`myshop_merchant` and `myshop_customer`) exist as local marks BEFORE proceeding. The Permission object (Step 2) grants indexes to `myshop_merchant` by name — if the account does not exist when the permission is created, the grant will silently fail or target the wrong account, causing "Permission denied" errors in later steps.
+
+Ensure both accounts have sufficient mainnet WOW tokens.
 
 ***
 
@@ -372,7 +374,7 @@ Create a new permission object for the advanced shop.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -406,7 +408,7 @@ Add custom permission indexes for advanced operations.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -434,7 +436,7 @@ Add custom permission indexes for advanced operations.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -462,7 +464,7 @@ Create the Service without publishing to obtain its address for Guard creation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -487,7 +489,7 @@ Create Guards using the Service address. Guards verify order state and service o
 >
 > Key instructions used in this example:
 > - Query ID 1563 (`order.service`): Returns the Service address of an Order — used to verify order belongs to this service
-> - Query ID for `progress.node_current`: Returns current node name — used to verify order at specific workflow node
+> - Query ID 1253 (`progress.current`): Returns current node name — used to verify order at specific workflow node
 
 **Guard 1: machine_merkle_root_v2** - Verify Merkle Root string length = 66 (0x prefix + 64 hex chars)
 
@@ -514,7 +516,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -551,7 +553,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -588,7 +590,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -655,7 +657,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -699,7 +701,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -758,7 +760,7 @@ Create Guards using the Service address. Guards verify order state and service o
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1034,7 +1036,7 @@ Create Machine with all nodes and guards in a single operation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1066,7 +1068,7 @@ Machine must be published before binding to Service.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1089,7 +1091,7 @@ Bind the Machine to the Service. **Important**: The Service must be unpublished 
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1128,7 +1130,8 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
   "data": {
     "object": {
       "name": "myshop_arbitration_v2",
-      "replaceExistName": true
+      "replaceExistName": true,
+      "permission": "myshop_perm_v2"
     },
     "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism",
     "voting_guard": {
@@ -1145,7 +1148,7 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1166,7 +1169,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
 > {
 >   "query_type": "service",
 >   "object": "three_body_signature_service_v2",
->   "network": "testnet",
+>   "network": "mainnet",
 >   "no_cache": true
 > }
 > ```
@@ -1187,11 +1190,11 @@ Configure order_allocators to define fund distribution rules, then publish the S
       "sales": [
         {
           "name": "The Three-Body Problem + Author Signature",
-          "price": 1000000000,
+          "price": 100000000,
           "stock": 100,
           "suspension": false,
           "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
+          "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
         }
       ]
     },
@@ -1233,7 +1236,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1272,7 +1275,7 @@ Create an empty reward object first. This object will be referenced by reward gu
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1283,6 +1286,8 @@ Create an empty reward object first. This object will be referenced by reward gu
 ### Step 12: Create Reward Guards (Optional)
 
 Create guards for reward verification with double-claim protection:
+
+> **Note on `query_reward_record_exists`**: The guard uses `query_reward_record_exists` with `where.storeFromId` to prevent double-claiming. The MCP tool automatically generates an internal identifier (identifier 4, type VecU8) for this query's parameters. You only need to define identifiers 0–3 in the table; the tool handles the rest.
 
 | # | Guard Name | Purpose | Reward Amount |
 |---|------------|---------|---------------|
@@ -1342,7 +1347,7 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1404,7 +1409,7 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1466,7 +1471,7 @@ Create guards for reward verification with double-claim protection:
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1508,7 +1513,7 @@ Add reward guards to the reward object with `store_from_id` set to the order ide
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1532,7 +1537,7 @@ Deposit WOW tokens to the reward pool for rewards and compensation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1563,7 +1568,7 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
           }
         ],
         "total_pay": {
-          "balance": 1000000000
+          "balance": 100000000
         },
         "payment_remark": "To my dear friend - keep exploring the universe"
       },
@@ -1583,7 +1588,7 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1612,7 +1617,7 @@ Merchant confirms the order. This step uses permission index 1000 (no Guard subm
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1663,7 +1668,7 @@ Merchant starts shipping after signature service is completed. The merchant subm
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1694,7 +1699,7 @@ Customer confirms receipt of goods.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1723,7 +1728,7 @@ Alternatively, customer can rate as Wonderful (very satisfied).
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1768,7 +1773,7 @@ Customer claims Wonderful reward from reward pool.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1820,7 +1825,7 @@ Order can auto-complete after time thresholds or be manually completed.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1866,7 +1871,7 @@ Order can auto-complete after time thresholds or be manually completed.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1896,7 +1901,7 @@ If package is lost, customer reports and merchant confirms.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1942,7 +1947,7 @@ If package is lost, customer reports and merchant confirms.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -1981,7 +1986,7 @@ If package is lost, customer reports and merchant confirms.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2011,7 +2016,7 @@ Customer requests return after delivery confirmation.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2057,7 +2062,7 @@ Customer requests return after delivery confirmation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2103,7 +2108,7 @@ Customer requests return after delivery confirmation.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2127,7 +2132,7 @@ Customer requests return after delivery confirmation.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2177,7 +2182,7 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2195,12 +2200,10 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
 
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "allocation",
   "data": {
-    "object": "myshop_order_v2",
-    "withdraw": {
-      "guard": "service_merchant_win_v2"
-    }
+    "object": "myshop_allocation_v2",
+    "alloc_by_guard": "service_merchant_win_v2"
   },
   "submission": {
     "type": "submission",
@@ -2226,7 +2229,7 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
   },
   "env": {
     "account": "myshop_merchant",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }
@@ -2240,12 +2243,10 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
 
 ```json
 {
-  "operation_type": "order",
+  "operation_type": "allocation",
   "data": {
-    "object": "myshop_order_v2",
-    "withdraw": {
-      "guard": "service_customer_win_v2"
-    }
+    "object": "myshop_allocation_v2",
+    "alloc_by_guard": "service_customer_win_v2"
   },
   "submission": {
     "type": "submission",
@@ -2271,7 +2272,7 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
   },
   "env": {
     "account": "myshop_customer",
-    "network": "testnet",
+    "network": "mainnet",
     "no_cache": true
   }
 }

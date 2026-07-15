@@ -9,8 +9,18 @@
           {
             "name": "Cancel Order",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": null
+            "namedOperator": ""
+          }
+        ]
+      },
+      {
+        "prev_node": "Order Confirmation",
+        "threshold": 1,
+        "forwards": [
+          {
+            "name": "Cancel Order",
+            "weight": 1,
+            "namedOperator": ""
           }
         ]
       }
@@ -26,8 +36,7 @@
           {
             "name": "Complete Order",
             "weight": 1,
-            "namedOperator": "",
-            "permissionIndex": null
+            "namedOperator": ""
           }
         ]
       }
@@ -43,7 +52,6 @@
           {
             "name": "Confirm Delivery",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1002
           }
         ]
@@ -60,7 +68,6 @@
           {
             "name": "Confirm Order",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1000
           }
         ]
@@ -77,7 +84,6 @@
           {
             "name": "Ship Goods",
             "weight": 1,
-            "namedOperator": null,
             "permissionIndex": 1001
           }
         ]

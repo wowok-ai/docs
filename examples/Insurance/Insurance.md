@@ -395,7 +395,7 @@ Create the insurance service with machine, order_allocators, sales, and publish 
     "machine": "insurance_machine_v1",
     "order_allocators": {
       "description": "Insurance order revenue allocation",
-      "threshold": 0,
+      "threshold": 1,
       "allocators": [
         {
           "guard": "insurance_withdraw_guard_v1",
@@ -417,7 +417,7 @@ Create the insurance service with machine, order_allocators, sales, and publish 
           "price": 100000000,
           "stock": 1000,
           "suspension": false,
-          "wip": "",
+          "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
           "wip_hash": ""
         }
       ]
@@ -434,10 +434,13 @@ Create the insurance service with machine, order_allocators, sales, and publish 
 > **Important**: 
 > - `mode: "Rate"` represents Rate allocation mode (valid values: `"Amount"`, `"Rate"`, `"Surplus"`)
 > - `who: {"Signer": "signer"}` represents the transaction signer
+> - `wip_hash: ""` (empty string) means the system will automatically extract and use the hash from within the WIP file (`meta.hash` field). The WIP file at the `wip` URL must be a valid JSON file in WIP format. Do NOT use the SHA-256 of the file bytes as `wip_hash` — it must be the `meta.hash` value inside the WIP JSON, or empty string for auto-extraction.
 
 ---
 
-## Step 6: Unpause Service
+## Step 6: Unpause Service (Optional)
+
+> **Note**: A newly created Service is **not paused by default**. This step is only needed if you explicitly paused the service earlier. You can safely skip this step and proceed to Step 7.
 
 Unpause the service to allow order creation.
 
@@ -504,6 +507,14 @@ Create an order on the insurance service using the `order_new` field of the `ser
       "namedNewOrder": {
         "name": "test_insurance_order_v1",
         "replaceExistName": true
+      },
+      "namedNewAllocation": {
+        "name": "insurance_test_alloc_v1",
+        "replaceExistName": true
+      },
+      "namedNewProgress": {
+        "name": "insurance_test_progress_v1",
+        "replaceExistName": true
       }
     }
   },
@@ -514,7 +525,9 @@ Create an order on the insurance service using the `order_new` field of the `ser
 }
 ```
 
-> **Get the Progress ID**: After creating the order, query it to obtain the Progress object ID needed for the next steps:
+> **Named Objects**: The `namedNewOrder`, `namedNewAllocation`, and `namedNewProgress` fields assign local names to the created objects. You can reference them by name (e.g., `"test_insurance_order_v1"`, `"insurance_test_alloc_v1"`, `"insurance_test_progress_v1"`) in subsequent operations instead of using raw on-chain IDs.
+>
+> **Optional — Query the Order**: To verify the order or obtain on-chain object IDs:
 > ```json
 > {
 >   "query_type": "onchain_objects",
@@ -523,7 +536,7 @@ Create an order on the insurance service using the `order_new` field of the `ser
 >   "no_cache": true
 > }
 > ```
-> The response includes a `progress` field containing the Progress object ID, and an `allocation` field containing the Allocation object ID.
+> The response includes `progress` and `allocation` fields with the on-chain object IDs.
 
 ### 8.2 Advance Progress: Initial -> Start
 
@@ -533,10 +546,10 @@ First, advance the progress from initial state to Start node.
 
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "order",
   "data": {
-    "object": "<insurance_progress_id>",
-    "operate": {
+    "object": "test_insurance_order_v1",
+    "progress": {
       "operation": {
         "next_node_name": "Start",
         "forward": "start_claim"
@@ -553,7 +566,7 @@ First, advance the progress from initial state to Start node.
 > **Note**: 
 > - Both `next_node_name` and `forward` fields are required in the operation object
 > - Use simple forward name (e.g., `"start_claim"`) without node prefix. The system automatically resolves the path from current node
-> - The Progress object ID can be obtained by querying the Order object (it has a `progress` field) — see Step 8.1
+> - The Progress is advanced via the Order object's `progress` field, using the Order name as reference
 
 ### 8.3 Advance Progress: Start -> Complete
 
@@ -569,10 +582,10 @@ Wait at least 10 seconds after entering Start node, then advance the progress to
 
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "order",
   "data": {
-    "object": "<insurance_progress_id>",
-    "operate": {
+    "object": "test_insurance_order_v1",
+    "progress": {
       "operation": {
         "next_node_name": "Complete",
         "forward": "complete_claim"
@@ -601,7 +614,7 @@ The server will return a `submission` prompt like:
         {
           "identifier": 0,
           "b_submission": true,
-          "value_type": "Address",
+          "value_type": 1,
           "name": "Order ID (submitted at runtime)",
           "object_type": "Order"
         }
@@ -617,10 +630,10 @@ The server will return a `submission` prompt like:
 
 ```json
 {
-  "operation_type": "progress",
+  "operation_type": "order",
   "data": {
-    "object": "<insurance_progress_id>",
-    "operate": {
+    "object": "test_insurance_order_v1",
+    "progress": {
       "operation": {
         "next_node_name": "Complete",
         "forward": "complete_claim"
@@ -642,10 +655,10 @@ The server will return a `submission` prompt like:
           {
             "identifier": 0,
             "b_submission": true,
-            "value_type": "Address",
+            "value_type": 1,
             "name": "Order ID (submitted at runtime)",
             "object_type": "Order",
-            "value": "<insurance_order_id>"
+            "value": "test_insurance_order_v1"
           }
         ]
       }
@@ -659,12 +672,117 @@ The server will return a `submission` prompt like:
 ```
 
 > **⚠️ Important**: 
-> - The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `operate.operation`.
-> - The `guard` objects in the submission use on-chain addresses (not names), as returned by the Phase 1 response.
-> - Fill in the `value` field with the actual Order ID (or Order name). Keep the other fields (`identifier`, `value_type`, `name`, `object_type`) as returned by Phase 1.
-> - Replace `<insurance_progress_id>` and `<insurance_order_id>` with actual values from step 8.1.
+> - The `submission` field must be at the **root level** of the request (sibling to `operation_type`, `data`, and `env`), NOT nested inside `data` or `progress.operation`.
+> - The `guard` objects in the submission use on-chain addresses (not names), as returned by the Phase 1 response. Replace `0x1508ded8...` with the actual guard address from your Phase 1 response.
+> - The `value` field accepts either an on-chain object ID or a named object reference (e.g., `"test_insurance_order_v1"`). Keep the other fields (`identifier`, `value_type`, `name`, `object_type`) as returned by Phase 1.
+> - The Order is referenced by its name (`"test_insurance_order_v1"`) in the `data.object` field.
 > - Both `next_node_name` and `forward` fields are required in the operation object.
 > - Use simple forward name `"complete_claim"` without node prefix.
+
+---
+
+## Step 9: Withdraw Funds via Allocation
+
+After the Progress reaches the Complete node, the insurance provider can withdraw the order funds using the `insurance_withdraw_guard_v1` Guard. This Guard verifies that `progress.current == "Complete"` (query 1253) via the submitted Order ID with `convert_witness: 100` (TypeOrderProgress).
+
+The Allocation object was created automatically when the Order was placed (Step 8.1). Query the Order to obtain the Allocation object ID — it is in the `allocation` field of the Order object.
+
+> **Two-Phase Submission**: The `alloc_by_guard` operation also uses two-phase submission when the Guard has `b_submission: true` fields, just like the Progress operation in Step 8.3.
+
+### 9.1 Phase 1: Request Submission Prompt
+
+Call the allocation operation WITHOUT the `submission` field to obtain the Guard submission structure.
+
+**Prompt**: Withdraw funds from allocation "insurance_test_alloc_v1" using withdraw guard.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "insurance_test_alloc_v1",
+    "alloc_by_guard": "insurance_withdraw_guard_v1"
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+The server will return a `submission` prompt like:
+
+```json
+{
+  "type": "submission",
+  "guard": [
+    { "object": "0xfb8bed2f...", "impack": true }
+  ],
+  "submission": [
+    {
+      "guard": "0xfb8bed2f...",
+      "submission": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": 1,
+          "name": "order_id",
+          "object_type": "Order"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 9.2 Phase 2: Submit with Order ID
+
+Fill in the `value` field with the Order ID (or Order name) and resubmit. The `submission` field must be placed at the **root level** of the request.
+
+**Prompt**: Withdraw funds from allocation with Order ID submission.
+
+```json
+{
+  "operation_type": "allocation",
+  "data": {
+    "object": "insurance_test_alloc_v1",
+    "alloc_by_guard": "insurance_withdraw_guard_v1"
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      {
+        "object": "0xfb8bed2f...",
+        "impack": true
+      }
+    ],
+    "submission": [
+      {
+        "guard": "0xfb8bed2f...",
+        "submission": [
+          {
+            "identifier": 0,
+            "b_submission": true,
+            "value_type": 1,
+            "name": "order_id",
+            "object_type": "Order",
+            "value": "test_insurance_order_v1"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+> **⚠️ Important**: 
+> - Replace `0xfb8bed2f...` with the actual `insurance_withdraw_guard_v1` address from your Phase 1 response.
+> - The `value` field accepts either an on-chain object ID or a named object reference (e.g., `"test_insurance_order_v1"`).
+> - The `sharing` configuration (100% Rate to Signer) determines how funds are distributed. In this example, 100% of the order amount goes to the transaction signer (`insurance_provider_v1`).
+> - After a successful withdrawal, the Allocation `balance` becomes `0` and a Payment object is created as an immutable record.
 
 ---
 
@@ -715,8 +833,9 @@ Published Machine nodes are immutable (`MoveAbort code: 3`). Create a new Machin
 - [ ] Step 3: Create `insurance_withdraw_guard_v1`
 - [ ] Step 4: Create `insurance_machine_v1` with nodes and publish
 - [ ] Step 5: Create and publish `insurance_service_v1` (with machine, order_allocators, sales)
-- [ ] Step 6: Unpause Service
+- [ ] Step 6: Unpause Service (Optional — skip if service was never paused)
 - [ ] Step 7: Verify Service configuration
 - [ ] Step 8.1: Create test insurance order
 - [ ] Step 8.2: Advance progress Initial -> Start
 - [ ] Step 8.3: Advance progress Start -> Complete with submission (wait 10s after Step 8.2)
+- [ ] Step 9: Withdraw funds via Allocation (alloc_by_guard with withdraw guard)

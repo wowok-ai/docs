@@ -23,10 +23,44 @@ This example demonstrates:
 
 Before running this example, ensure you have:
 
-1. **Account Setup**: The `three_body_author` account with sufficient WOW tokens
+1. **Account Setup**: The `three_body_author` and `three_body_customer` accounts with sufficient WOW tokens
 2. **Minimum Balance**: At least 1000 WOW for gas fees and service creation
 
-### Check Account Balance
+### Step 0a: Generate Accounts
+
+If the accounts do not exist locally, generate them first.
+
+**Request (generate author account)**:
+```json
+{
+  "gen": {
+    "name": "three_body_author",
+    "replaceExistName": true
+  }
+}
+```
+
+**Request (generate customer account)**:
+```json
+{
+  "gen": {
+    "name": "three_body_customer",
+    "replaceExistName": true
+  }
+}
+```
+
+**Expected Result**:
+```json
+{
+  "gen": {
+    "address": "0x...",
+    "name": "three_body_author"
+  }
+}
+```
+
+### Step 0b: Check Account Balance
 
 **Request**:
 ```json
@@ -41,15 +75,24 @@ Before running this example, ensure you have:
 **Expected Result** (if account has balance):
 ```json
 {
-  "address": "0x...",
-  "balance": {
-    "coinType": "0x2::wow::WOW",
-    "totalBalance": "1000000000"
+  "result": {
+    "query_type": "account_balance",
+    "result": {
+      "address": "0x...",
+      "name_or_address": "three_body_author",
+      "balance": {
+        "coinType": "0x2::wow::WOW",
+        "coinObjectCount": 3,
+        "totalBalance": "3000000000",
+        "lockedBalance": {},
+        "fundsInAddressBalance": "0"
+      }
+    }
   }
 }
 ```
 
-**If no balance, use Faucet**:
+### Step 0c: Fund Accounts via Faucet (If No Balance)
 
 **Request**:
 ```json
@@ -67,14 +110,30 @@ Before running this example, ensure you have:
   "faucet": {
     "name_or_address": "three_body_author",
     "result": [
-      {"amount": 1000000000, "id": "0x..."},
-      {"amount": 1000000000, "id": "0x..."},
-      {"amount": 1000000000, "id": "0x..."}
+      {
+        "amount": 1000000000,
+        "id": "0x...",
+        "transferTxDigest": "..."
+      },
+      {
+        "amount": 1000000000,
+        "id": "0x...",
+        "transferTxDigest": "..."
+      },
+      {
+        "amount": 1000000000,
+        "id": "0x...",
+        "transferTxDigest": "..."
+      }
     ],
     "network": "testnet"
   }
 }
 ```
+
+> **Note**: Each faucet result item includes a `transferTxDigest` field representing the on-chain transaction digest for the faucet transfer. This is useful for tracking and verifying the faucet transaction on a block explorer.
+
+> **Important**: Repeat the faucet request for `three_body_customer` as well, since Test 2 requires a funded non-author account to attempt the blocked purchase.
 
 ---
 
@@ -100,19 +159,40 @@ Create a Permission object to manage the service.
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "confirmed": true
   }
 }
 ```
 
+> **Permission Index Explanation**:
+> - **`1000`–`1009`**: User-defined permission indexes (starting from `USER_DEFINED_PERM_INDEX_START = 1000`). In this example, `1000` is used for the "Confirm Delivery" forward and `1001` for the "Complete Signature" forward in the Machine workflow (see Step 3). The remaining indexes (`1002`–`1009`) are reserved for future workflow extensions.
+> - **`306`**: The built-in `SERVICE_MACHINE` permission (Service module permission index `306`), which authorizes binding a Machine to a Service. This is required in Step 5 (Configure Machine) where the Machine is bound to the Service.
+>
+> See `BuiltinPermissionIndex` in `ts-sdk/packages/wowok/src/w/call/permission.ts` for the full list of built-in permission indexes.
+
+> **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt (it unbinds any existing name). Without `confirmed: true`, the operation will be blocked pending user confirmation. This applies to all subsequent steps using `replaceExistName: true` or `publish: true`.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Permission",
-  "object": "0x...",
-  "version": "...",
-  "change": "created"
-}]
+[
+  {
+    "type": "Permission",
+    "type_raw": "0x2::permission::Permission",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_PermissionPerm",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::parent_linked_table::Node<address, vector<u16>>>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x..."},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -157,21 +237,28 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "confirmed": true
   }
 }
 ```
 
 > **Note**: The Guard uses a `table` to define constant values with identifiers, then references them in the `root` logic using `identifier` node type. The `root` is a direct GuardNode (no wrapper).
 
+> **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Guard",
-  "object": "0x...",
-  "version": "...",
-  "change": "created"
-}]
+[
+  {
+    "type": "Guard",
+    "type_raw": "0x2::guard::Guard",
+    "object": "0x...",
+    "version": "...",
+    "owner": "Immutable",
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -234,19 +321,50 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "confirmed": true
   }
 }
 ```
 
+> **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt. Additionally, `publish: true` on the Machine is an irreversible operation.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Machine",
-  "object": "0x...",
-  "version": "...",
-  "change": "created"
-}]
+[
+  {
+    "type": "TableItem_MachineNode",
+    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x..."},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_MachineNode",
+    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x..."},
+    "change": "created"
+  },
+  {
+    "type": "Machine",
+    "type_raw": "0x2::machine::Machine",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "created"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -271,19 +389,34 @@ Create the Three-Body signature service without publishing. The Service must be 
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "confirmed": true
   }
 }
 ```
 
+> **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "created"
-}]
+[
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "mutated"
+  },
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -309,12 +442,24 @@ Bind the published Machine to the Service. **Important**: The Service must be un
 
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -340,12 +485,24 @@ Configure the Buy Guard to restrict purchases to the author only.
 
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -389,12 +546,16 @@ Set up fund allocation: 100% to the author upon order completion.
 
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  }
+]
 ```
 
 ---
@@ -426,19 +587,26 @@ Add sales items and publish the service to make it available for orders.
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "confirmed": true
   }
 }
 ```
 
+> **Important**: `env.confirmed: true` is **critical** here because `publish: true` is an irreversible operation that locks the `machine` and `order_allocators` fields. The server will block the transaction with a "Publish confirmation (irreversible lock)" prompt until `confirmed: true` is provided.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  }
+]
 ```
 
 ---
@@ -464,12 +632,16 @@ Unpause the service to allow order creation.
 
 **Expected Result**:
 ```json
-[{
-  "type": "Service",
-  "object": "0x...",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  }
+]
 ```
 
 ---
@@ -491,27 +663,75 @@ Query the service to verify all configurations.
 **Expected Result**:
 ```json
 {
-  "object": "three_body_signature_service",
-  "type": "Service",
-  "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
-  "sales": [
-    {
-      "name": "Three-Body Book Signature",
-      "stock": "100",
-      "suspension": false,
-      "price": "888",
-      "wip": "",
-      "wip_hash": ""
+  "result": {
+    "query_type": "onchain_objects",
+    "result": {
+      "objects": [
+        {
+          "object": "0x...",
+          "type": "Service",
+          "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+          "owner": {"Shared": {"initial_shared_version": "..."}},
+          "version": "...",
+          "previousTransaction": "...",
+          "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+          "location": "",
+          "sales": [
+            {
+              "name": "Three-Body Book Signature",
+              "stock": "100",
+              "suspension": false,
+              "price": "888",
+              "wip": "",
+              "wip_hash": ""
+            }
+          ],
+          "repositories": [],
+          "buy_guard": "0x...",
+          "machine": "0x...",
+          "bPublished": true,
+          "bPaused": false,
+          "customer_required": ["phone", "email", "shipping_address"],
+          "arbitrations": [],
+          "compensation_fund": "0",
+          "paused_time": null,
+          "setting_lock_duration": "2592000000",
+          "order_allocators": {
+            "description": "Three-Body signature service fund allocation - 100% to author",
+            "threshold": "0",
+            "allocators": [
+              {
+                "guard": "0x...",
+                "sharing": [
+                  {
+                    "who": {"Signer": null},
+                    "sharing": "10000",
+                    "mode": 1
+                  }
+                ],
+                "fix": "0",
+                "max": null
+              }
+            ]
+          },
+          "rewards": [],
+          "um": null,
+          "permission": "0x...",
+          "cache_expire": 1234567890,
+          "query_name": "three_body_signature_service"
+        }
+      ]
     }
-  ],
-  "buy_guard": "three_body_buy_guard",
-  "machine": "three_body_machine",
-  "bPublished": true,
-  "bPaused": false,
-  "customer_required": ["phone", "email", "shipping_address"],
-  "permission": "three_body_permission"
+  }
 }
 ```
+
+> **Field Reference**:
+> - **`buy_guard`**, **`machine`**, **`permission`**: Return **on-chain object IDs** (not names). The on-chain data stores raw object IDs; resolving them back to local mark names requires a separate reverse lookup that is not performed by `onchain_objects` queries.
+> - **`query_name`**: The original name string passed in the query request (here, `"three_body_signature_service"`). This is automatically populated by the SDK from the input `objects` array, so you can identify which queried name corresponds to which returned object.
+> - **`order_allocators.allocators[].sharing[].who`**: `{"Signer": null}` indicates the recipient is the order signer (the buyer). The `null` value is the on-chain representation; the input used `"signer"` as a placeholder.
+> - **`order_allocators.allocators[].sharing[].mode`**: `1` is the numeric enum for `Rate` mode (input accepts the string `"Rate"`, output returns the numeric `1`).
+> - **`order_allocators.allocators[].fix`** and **`max`**: Additional fields returned on-chain (default `"0"` and `null` respectively) that are not part of the input schema but are present in the on-chain data structure.
 
 ---
 
@@ -565,25 +785,77 @@ The author (`three_body_author`) should be able to purchase the service.
 ```json
 [
   {
-    "type": "Progress",
-    "object": "three_body_progress",
+    "type": "Service",
+    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+    "object": "0x...",
     "version": "...",
-    "change": "created"
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
   },
   {
-    "type": "Order",
-    "object": "three_body_order",
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
     "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_EntityLinker",
+    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
     "change": "created"
   },
   {
     "type": "Allocation",
-    "object": "three_body_allocation",
+    "type_raw": "0x2::allocation::Allocation<0x2::wow::WOW>",
+    "object": "0x...",
     "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "created"
+  },
+  {
+    "type": "Order",
+    "type_raw": "0x2::order::Order",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "created"
+  },
+  {
+    "type": "Progress",
+    "type_raw": "0x2::progress::Progress",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
     "change": "created"
   }
 ]
 ```
+
+> **Why So Many Objects? (Information Injection Design)**
+>
+> The `order_new` operation intentionally returns ALL objects affected by the transaction, not just the primary created objects. This is a deliberate "information injection" design so callers get a complete view of the state changes:
+>
+> 1. **`Service` (mutated)**: The service's inventory/stock is decremented as a side effect of the purchase.
+> 2. **`TableItem_EntityLinker` ×3 (mutated/created)**: The order process links the buyer, the service, and the buy_guard entities via the on-chain `EntityLinker` registrar (owner `0xaaa`). These are the entity-graph edges created/updated by the order.
+> 3. **`Allocation` (created)**: The fund allocation object that will distribute the payment according to `order_allocators`.
+> 4. **`Order` (created)**: The primary order object tracking the purchase.
+> 5. **`Progress` (created)**: The workflow progress object tracking the order through the Machine nodes.
+>
+> The returned objects use **on-chain object IDs** (not the names assigned via `namedNewOrder`/`namedNewProgress`/`namedNewAllocation`). To resolve an object ID back to its local mark name, use the `query_toolkit` with `query_type: "local_names"` and pass the addresses array.
+>
+> The return order reflects the transaction's execution order: Service (inventory update) → EntityLinker (entity graph edges) → Allocation → Order → Progress, following the dependency chain of object creation.
 
 ---
 
@@ -620,11 +892,23 @@ Any other account attempting to purchase should fail with Buy Guard verification
 ```
 
 **Expected Result** (Error):
-```json
-{
-  "error": "Transaction resolution failed: MoveAbort in 8th command, abort code: 7 (Verify failed), in '0x2::passport::result_for_guard'"
-}
 ```
+Error: Error Description: Verification failed
+Transaction resolution failed: MoveAbort in 8th command, abort code: 7 (Verify failed), in '0x0000000000000000000000000000000000000000000000000000000000000002::passport::result_for_guard' (instruction 17)
+```
+
+> **Error Format Explained (Information Injection Design)**
+>
+> The error response is intentionally enriched with detailed diagnostic information via the `enrichMoveError` function in the SDK. This is a deliberate "information injection" design so callers can precisely diagnose failures without needing to replay the transaction:
+>
+> - **`Error: ` prefix**: Added by the MCP handler (`handler.ts`) to mark the response as an error.
+> - **`Error Description: Verification failed`**: A human-readable classification of the error category, generated by the `classifyError` logic.
+> - **`Transaction resolution failed: MoveAbort in 8th command`**: The raw Sui SDK error indicating which transaction command (8th) aborted.
+> - **`abort code: 7 (Verify failed)`**: The Move abort code (7) translated to its semantic meaning (`Verify failed`).
+> - **`0x0000...0002::passport::result_for_guard`**: The fully-qualified module path using the 64-character hex address form (the Sui SDK returns the full canonical form, not the short `0x2` shorthand).
+> - **`(instruction 17)`**: The specific instruction index within the Move function where the abort occurred.
+>
+> The error is returned as a **plain text string** (not a JSON object), because it combines multiple layers of diagnostic information from different sources (Sui SDK, Move VM, MCP handler). Callers detecting errors should check for the `Error:` prefix or use the `isError` flag on the MCP response.
 
 ---
 
@@ -651,19 +935,34 @@ The author confirms the book has been delivered.
   },
   "env": {
     "account": "three_body_author",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
+> **Tip**: Although `no_cache: true` is most critical for the second Progress operation (Node 2), it is recommended to use it for **all** sequential Progress operations on the same object to ensure the SDK always reads the latest on-chain state.
+
 **Expected Result**:
 ```json
-[{
-  "type": "Progress",
-  "object": "three_body_progress",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Progress",
+    "type_raw": "0x2::progress::Progress",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_ProgressHistory",
+    "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x..."},
+    "change": "created"
+  }
+]
 ```
 
 ### Node 2: Signature Completed
@@ -695,12 +994,24 @@ The author completes the signature.
 
 **Expected Result**:
 ```json
-[{
-  "type": "Progress",
-  "object": "three_body_progress",
-  "version": "...",
-  "change": "mutated"
-}]
+[
+  {
+    "type": "Progress",
+    "type_raw": "0x2::progress::Progress",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"Shared": {"initial_shared_version": "..."}},
+    "change": "mutated"
+  },
+  {
+    "type": "TableItem_ProgressHistory",
+    "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+    "object": "0x...",
+    "version": "...",
+    "owner": {"ObjectOwner": "0x..."},
+    "change": "created"
+  }
+]
 ```
 
 ---
@@ -764,6 +1075,15 @@ Each node transition requires the author's confirmation, ensuring accountability
    - Configure Service (add machine, buy_guard, order_allocators)
    - Publish Service (LAST - once published, many changes are blocked)
 
-3. **Use `no_cache: true` for Sequential Operations**: When performing multiple operations on the same object in sequence (especially Progress workflow advancement), always set `no_cache: true` in the `env` to ensure the SDK reads the latest on-chain state.
+3. **Use `confirmed: true` for Irreversible/Destructive Operations**: The MCP server enforces a two-phase confirmation for safety. You MUST add `"confirmed": true` to the `env` for:
+   - Any operation using `replaceExistName: true` (unbinds existing names)
+   - Any `publish: true` operation (irreversible lock on Machine/Service)
+   Without `confirmed: true`, the server returns a `Confirmation required` warning and blocks the transaction.
 
-4. **Query Toolkit is Your Best Friend**: Use queries constantly to verify objects exist, check configurations, debug issues, and confirm state changes.
+4. **Use `no_cache: true` for Sequential Operations**: When performing multiple operations on the same object in sequence (especially Progress workflow advancement), always set `no_cache: true` in the `env` to ensure the SDK reads the latest on-chain state.
+
+5. **Query Toolkit is Your Best Friend**: Use queries constantly to verify objects exist, check configurations, debug issues, and confirm state changes.
+
+6. **Object IDs vs Names in Responses**: On-chain query responses return **object IDs** (e.g., `0x8202...`) for cross-object references like `buy_guard`, `machine`, `permission`. The `query_name` field in the response echoes back the original query input name. To resolve object IDs back to local mark names, use `query_toolkit` with `query_type: "local_names"`.
+
+7. **Information Injection in Transaction Responses**: Mutation/creation operations return ALL objects affected by the transaction (including side effects like `TableItem_EntityLinker` and `TableItem_ProgressHistory`), not just the primary target. This is a deliberate design for transparency. The return order reflects the transaction's execution order.

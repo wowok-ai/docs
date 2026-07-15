@@ -90,6 +90,21 @@ Before running this example, ensure you have:
 
 ---
 
+## Environment Parameters
+
+All on-chain operations in this example use the following `env` fields:
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| `network` | `"testnet"` | Target network |
+| `account` | Account name | Signer account for the transaction |
+| `no_cache` | `true` | Bypass local cache to avoid stale reads during sequential object creation. Without this, operations that depend on recently created objects may fail with "object not found". |
+| `confirmed` | `true` | Explicitly confirm the on-chain transaction (MCP ConfirmGate). Required for all write operations. |
+
+Additionally, `onChain: true` is required when an object's name needs to be resolved across different accounts (see Step 0.3).
+
+---
+
 ## Step 0: Setup Weather Data
 
 Before creating the travel service, set up the weather Repository with the next 5 days of weather data. The weather data is keyed by timestamp, and the `weather_check_guard` (Step 3.1) will query this repository at runtime when the customer enters the "Ice Scooting" node (Step 7.3). You must use timestamps that are valid at the time you run this example.
@@ -139,7 +154,9 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
   },
   "env": {
     "account": "weather_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -155,7 +172,8 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
     "object": {
       "name": "weather_repo",
       "permission": "weather_permission",
-      "replaceExistName": true
+      "replaceExistName": true,
+      "onChain": true
     },
     "description": "Weather data repository for Iceland travel activities",
     "policies": {
@@ -173,10 +191,14 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
   },
   "env": {
     "account": "weather_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
+
+> **Note**: `onChain: true` is required here because `weather_repo` is created by the `weather_provider` account, but its name will be referenced in the Guard table (Step 3.1) by the `travel_provider` account. Without `onChain: true`, the name is stored locally only on `weather_provider`'s device and cannot be resolved by `travel_provider`. When `onChain: true` is set, the name is published on-chain and becomes publicly visible, allowing cross-account name resolution.
 
 ### 0.4 Add Weather Data
 
@@ -206,7 +228,9 @@ Add 5 days of weather data. The `weather_check_guard` (Step 3.1) only verifies t
   },
   "env": {
     "account": "weather_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -239,7 +263,9 @@ Create a Permission object to manage access control for the travel service. Add 
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -267,7 +293,9 @@ Create an Arbitration object for dispute resolution.
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -337,7 +365,9 @@ repository.data has("Condition", convert_number_address(activity_date))
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -409,7 +439,9 @@ clock > progress.current_time + 1000
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -455,7 +487,9 @@ Creates a Guard that allows order cancellation. This Guard always passes (return
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -507,7 +541,9 @@ Checks if order progress current node is "Complete". If passed, merchant receive
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -583,7 +619,9 @@ Checks if progress current is "Cancel" or "Ice Scooting". If passed, merchant ge
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -635,7 +673,9 @@ Checks if progress current is "SPA". If passed, merchant gets 5%, user gets 95% 
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -762,7 +802,9 @@ Create a Machine to define the travel service workflow with all nodes and forwar
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -883,7 +925,9 @@ Create the travel service with all configurations and publish it in one operatio
   },
   "env": {
     "account": "travel_provider",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -960,7 +1004,9 @@ The customer (Alice) purchases the travel package. This creates an Order, a Prog
   },
   "env": {
     "account": "alice",
-    "network": "testnet"
+    "network": "testnet",
+    "no_cache": true,
+    "confirmed": true
   }
 }
 ```
@@ -1284,7 +1330,7 @@ For refund scenarios (Cancel or SPA), use the corresponding Guard. The same subm
       "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
     }]
   },
-  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true}
+  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
 }
 ```
 
@@ -1305,7 +1351,7 @@ For refund scenarios (Cancel or SPA), use the corresponding Guard. The same subm
       "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
     }]
   },
-  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true}
+  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
 }
 ```
 
@@ -1440,6 +1486,6 @@ Customers place orders using the `order_new` field in the Service operation. Thi
       "namedNewAllocation": {"name": "allocation_name", "replaceExistName": true}
     }
   },
-  "env": {"account": "customer", "network": "testnet"}
+  "env": {"account": "customer", "network": "testnet", "no_cache": true, "confirmed": true}
 }
 ```
