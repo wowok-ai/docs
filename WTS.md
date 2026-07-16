@@ -27,7 +27,7 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 
 ```
 {
-  "wts": "	"https://github.com/wowok-ai/docs/blob/main/WTS.md",
+  "wts": "https://github.com/wowok-ai/docs/blob/main/WTS.md",
   "payload": {
     "session": { ... },
     "messages": [ ... ]
@@ -84,7 +84,7 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 | `passportAddress` | `string` | No | Passport address if sender used verified credentials |
 | `lastReceivedLeafIndex` | `number` | No | Last message leaf index the sender had received (for sync confirmation) |
 | `arkConfirmed` | `object` | No | ARK (Asynchronous Ratchet Key) confirmation data |
-| `msgType` | `number` | No | Message type: `1` = text message, `3` = file message |
+| `msgType` | `number` | No | Message type: `1` = normal message, `3` = prekey message (for session establishment) |
 | `zipMetadata` | `object` | No | ZIP file metadata for file messages |
 
 ##### `arkConfirmed` — ARK Confirmation
@@ -100,10 +100,12 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `fileName` | `string` | No | Original filename |
-| `fileSize` | `number` | No | File size in bytes |
-| `contentType` | `string` | No | Content type (`"wts"`, `"wip"`, `"zip"`) |
-| `zipHash` | `string` | No | Hash of the ZIP content |
+| `fileName` | `string` | **Yes** | ZIP filename |
+| `fileSize` | `number` | **Yes** | File size in bytes |
+| `contentType` | `string` | **Yes** | Content type (`"wts"`, `"wip"`, `"zip"`) |
+| `fileHash` | `string` | **Yes** | SHA-256 hash of the file content |
+| `localCachePath` | `string` | No | Local cache path for the extracted file |
+| `downloadedAt` | `number` | No | Download timestamp in milliseconds |
 
 ---
 
@@ -450,7 +452,7 @@ Adds a digital signature to an existing WTS file. Supports multi-signature — i
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `wtsFilePath` | `string` | **Yes** | Path to the WTS file |
-| `account` | `string` | **Yes** | Account name or address for signing |
+| `account` | `string` | No | Account name or address for signing. If omitted, uses the default account |
 | `outputPath` | `string` | No | Output path (defaults to overwriting the input file) |
 
 **Returns:** `Promise<string>` — Path to the signed WTS file.
@@ -459,18 +461,18 @@ Adds a digital signature to an existing WTS file. Supports multi-signature — i
 
 ### `wts2html(wtsPath, options?)`
 
-Converts a WTS file to a human-readable HTML page with styled message bubbles, timestamps, and verification status.
+Converts a WTS file (or directory of WTS files) to a human-readable HTML page with styled message bubbles, timestamps, and verification status.
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `wtsPath` | `string` | **Yes** | Path to the `.wts` file |
+| `wtsPath` | `string` | **Yes** | Path to a `.wts` file or directory containing `.wts` files |
 | `options.title` | `string` | No | Custom HTML page title |
 | `options.theme` | `enum` | No | `"light"` or `"dark"` |
-| `options.outputPath` | `string` | No | Output file path |
+| `options.outputPath` | `string` | No | Output file path (for single file) or directory (for batch) |
 
-**Returns:** `Promise<string>` — Path to the generated HTML file.
+**Returns:** `Promise<string | string[]>` — Output file path(s).
 
 ---
 

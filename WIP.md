@@ -328,7 +328,7 @@ Adds a digital signature to an existing WIP file. Supports multi-signature — i
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `wipFilePath` | `string` | **Yes** | Path to the WIP file |
-| `account` | `string` | **Yes** | Account name or address for signing |
+| `account` | `string` | No | Account name or address for signing. If omitted, uses the default account |
 | `outputPath` | `string` | No | Output path (defaults to overwriting the input file) |
 
 **Returns:** `Promise<string>` — Path to the signed WIP file.
