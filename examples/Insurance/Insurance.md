@@ -12,13 +12,17 @@ A complete example demonstrating how to create an outdoor accident insurance ser
 | **Time-Lock Guard** | Prevent premature claim completion | Guard using Order + convert_witness(TypeOrderProgress) to verify clock > progress.current_time + lock_duration |
 | **Supply Chain Integration** | Support sub-order creation by travel service providers | Order can be created by authorized agents (travel_provider) |
 | **Permission Control** | Role-based access for insurance operations | Permission object with custom indexes for claim processing |
+| **Safe Fund Allocation** | Merchant revenue collection without theft risk | 2 alternative allocators with `sharing.who = {"Entity": ...}` (funds flow to fixed Treasury or personal address) |
 
 ### Key Design Decisions
 
-1. **Time-Lock via Witness Conversion**: The Complete node Guard uses `convert_witness: 100` (TypeOrderProgress) to convert the submitted Order ID into its associated Progress object, then queries `progress.current_time` to verify the time-lock condition.
+1. **Time-Lock via Witness Conversion**: The Complete node Guard uses `convert_witness: "OrderProgress"` (TypeOrderProgress) to convert the submitted Order ID into its associated Progress object, then queries `progress.current_time` to verify the time-lock condition.
 2. **Simple Two-Node Workflow**: Insurance claims follow a straightforward Start -> Complete path, keeping the workflow simple and predictable.
 3. **Order ID as Submission**: The Order ID is submitted at runtime (`b_submission: true`) and used for witness conversion.
 4. **Machine Creation Pattern**: Machine can be created with nodes and published in a single transaction (as shown in this example).
+5. **Entity Sharing for Fund Safety**: Order allocators use `sharing.who = {"Entity": "address"}` instead of `{"Signer": "signer"}`. Funds always flow to a fixed address (Treasury or personal) regardless of who triggers the allocation — even if the Guard is somehow bypassed, an attacker cannot redirect funds to themselves. This eliminates the fatal fund-theft risk of Signer sharing.
+6. **Project Binding as Defense-in-Depth**: Each withdraw Guard verifies `order.service == insurance_service_v1` (query 1563) to ensure the submitted Order belongs to this Service, preventing cross-service order theft.
+7. **Permission Consistency**: The Treasury object uses the same Permission (`insurance_permission_v1`) as the Service, ensuring a single consistent permission organization governs all insurance operations.
 
 ---
 
@@ -26,8 +30,9 @@ A complete example demonstrating how to create an outdoor accident insurance ser
 
 This example demonstrates:
 
-- **Insurance Service Setup**: Permission, Guard, Machine, and Service creation
+- **Insurance Service Setup**: Permission, Treasury, Guard, Machine, and Service creation
 - **Time-Lock Guard**: Using Order + convert_witness to access Progress data
+- **Safe Fund Allocation**: Two alternative merchant collection approaches via Entity sharing
 - **Workflow Automation**: Machine-driven claim processing
 
 ---
@@ -49,12 +54,20 @@ This example demonstrates:
 |           |                      |                              |
 |           v                      v                              |
 |  +-----------------+    +-----------------+                     |
-|  |    Machine      |    |    Service      |                     |
-|  | (insurance_     |<---| (insurance_     |                     |
-|  |  machine)       |    |  service)       |                     |
+|  |    Treasury     |    |    Machine      |                     |
+|  | (insurance_     |    | (insurance_     |                     |
+|  |  treasury)      |    |  machine)       |                     |
+|  +--------+--------+    +--------+--------+                     |
+|           |                      |                              |
+|           v                      v                              |
+|  +-----------------+    +-----------------+                     |
+|  | withdraw guards |    |    Service      |                     |
+|  | (treasury +     |<---| (insurance_     |                     |
+|  |  personal)      |    |  service)       |                     |
 |  +-----------------+    +-----------------+                     |
 |                                                                  |
 |  Workflow: Start -> Complete (Time-Lock Guard)                  |
+|  Allocators: 2 Entity-sharing approaches (first-match-wins)     |
 |                                                                  |
 ------------------------------------------------------------------
 ```
@@ -71,8 +84,31 @@ This example demonstrates:
 **Guard Logic**:
 ```
 clock > progress.current_time + 1000ms
-(progress accessed via Order + convert_witness=TypeOrderProgress)
+(progress accessed via Order + convert_witness="OrderProgress")
 ```
+
+### Fund Allocation Flow (2 Alternative Approaches)
+
+```
+Order reaches Complete
+        |
+        v
+   Allocation triggered
+        |
+   +----+----+
+   |         |
+   v         v
+Approach 1: Approach 2:
+Treasury   Personal
+guard      guard
+   |         |
+   v         v
+Entity:    Entity:
+insurance_ insurance_
+treasury   provider
+```
+
+> **first-match-wins**: Allocators execute the FIRST Allocator whose Guard passes. Listing both approaches in one Service illustrates the 2 design options; in production you would typically pick ONE approach (delete the other allocator).
 
 ---
 
@@ -150,9 +186,38 @@ Create a Permission object to manage access control for the insurance service. T
 
 ---
 
-## Step 2: Create Time-Lock Complete Guard
+## Step 2: Create Treasury Object
 
-Create a Guard that verifies the time-lock condition for claim completion. The Guard uses the submitted Order ID with `convert_witness: 100` (TypeOrderProgress) to access the associated Progress object and query `progress.current_time`.
+Create a Treasury object to aggregate insurance service revenue (public funds for operations and distribution). The Treasury uses the same Permission as the Service (`insurance_permission_v1`) — this ensures a single consistent permission organization governs both fund collection and service operations.
+
+**Prompt**: Create a Treasury object named "insurance_treasury" for aggregating insurance revenue.
+
+```json
+{
+  "operation_type": "treasury",
+  "data": {
+    "object": {
+      "name": "insurance_treasury_v1",
+      "type_parameter": "0x2::wow::WOW",
+      "permission": "insurance_permission_v1",
+      "replaceExistName": true
+    },
+    "description": "Treasury for aggregating insurance service revenue (public funds for operations and distribution). Uses the same Permission as the Service for consistency."
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+> **Important — Permission Consistency**: The Treasury's Permission should match the Service's Permission (`insurance_permission_v1`). Using different Permissions for Treasury and Service means different permission organizations govern fund collection vs service operations — this is a minor design risk. Keep them consistent unless you have a specific reason to separate them.
+
+---
+
+## Step 3: Create Time-Lock Complete Guard
+
+Create a Guard that verifies the time-lock condition for claim completion. The Guard uses the submitted Order ID with `convert_witness: "OrderProgress"` (TypeOrderProgress) to access the associated Progress object and query `progress.current_time`.
 
 **Guard Logic**:
 ```
@@ -170,7 +235,7 @@ clock > progress.current_time + 1000
       "tags": ["insurance", "time-lock", "complete"],
       "replaceExistName": true
     },
-    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 10000ms (10 seconds for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness=TypeOrderProgress(100).",
+    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 10000ms (10 seconds for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness="OrderProgress"(100).",
 
     "table": [
       {
@@ -198,10 +263,10 @@ clock > progress.current_time + 1000
           "nodes": [
             {
               "type": "query",
-              "query": 1272,
+              "query": "progress.current_time",
               "object": {
                 "identifier": 0,
-                "convert_witness": 100
+                "convert_witness": "OrderProgress"
               },
               "parameters": []
             },
@@ -232,52 +297,96 @@ clock > progress.current_time + 1000
 
 ---
 
-## Step 3: Create Withdraw Guard for Order Allocators
+## Step 4: Create Withdraw Guards for Order Allocators
 
-Create a Guard that allows the insurance provider to withdraw funds after the order reaches the Complete node.
+Create **two** withdraw Guards — one for each merchant collection approach. Both Guards share identical root/table logic (order at Complete node + project binding) but differ in `description` to indicate their distinct purposes. Allocators require unique Guard addresses, so two Guard objects are needed.
 
-**Prompt**: Create a Guard named "insurance_withdraw_guard" for order fund allocation.
+**Guard Logic** (identical for both):
+```
+logic_and[
+  query("progress.current") == "Complete",   // order is at Complete node
+  query("order.service") == insurance_service_v1        // order belongs to THIS service
+]
+```
+
+**Risk Elimination**:
+- **Project binding** (query 1563): prevents cross-service order theft — an attacker cannot submit another Service's completed Order to trigger allocation.
+- **Entity sharing** (configured in Step 6): funds flow to a fixed address regardless of caller — no Signer binding needed in the Guard.
+
+### 4.1 Treasury Collection Guard
+
+**Prompt**: Create a Guard named "insurance_withdraw_guard_treasury" for Treasury fund collection.
 
 ```json
 {
   "operation_type": "guard",
   "data": {
     "namedNew": {
-      "name": "insurance_withdraw_guard_v1",
-      "tags": ["insurance", "withdraw"],
+      "name": "insurance_withdraw_guard_treasury_v1",
+      "tags": ["insurance", "withdraw", "treasury"],
       "replaceExistName": true
     },
-    "description": "Allow insurance provider to withdraw funds after order is completed.",
+    "description": "Allow fund allocation to Treasury after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1 (prevents cross-service theft). Funds flow to fixed Treasury Entity (safe — no Signer binding needed).",
     "table": [
       {
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "name": "order_id"
+        "object_type": "Order",
+        "name": "order_id (Order object submitted at runtime)"
       },
       {
         "identifier": 1,
         "b_submission": false,
         "value_type": "String",
         "value": "Complete",
-        "name": "complete_node"
+        "name": "Expected Complete node name (case-sensitive)"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "Address",
+        "value": "insurance_service_v1",
+        "name": "Expected service address (prevents cross-service fund theft)"
       }
     ],
     "root": {
-      "type": "logic_equal",
+      "type": "logic_and",
       "nodes": [
         {
-          "type": "query",
-          "query": 1253,
-          "object": {
-            "identifier": 0,
-            "convert_witness": 100
-          },
-          "parameters": []
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current",
+              "object": {
+                "identifier": 0,
+                "convert_witness": "OrderProgress"
+              },
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
         },
         {
-          "type": "identifier",
-          "identifier": 1
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "order.service",
+              "object": {
+                "identifier": 0
+              },
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 2
+            }
+          ]
         }
       ]
     }
@@ -289,9 +398,104 @@ Create a Guard that allows the insurance provider to withdraw funds after the or
 }
 ```
 
+### 4.2 Personal Collection Guard
+
+**Prompt**: Create a Guard named "insurance_withdraw_guard_personal" for personal fund collection.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "insurance_withdraw_guard_personal_v1",
+      "tags": ["insurance", "withdraw", "personal"],
+      "replaceExistName": true
+    },
+    "description": "Allow fund allocation to personal collection address after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1. Funds flow to fixed personal Entity (safe — no Signer binding needed).",
+    "table": [
+      {
+        "identifier": 0,
+        "b_submission": true,
+        "value_type": "Address",
+        "object_type": "Order",
+        "name": "order_id (Order object submitted at runtime)"
+      },
+      {
+        "identifier": 1,
+        "b_submission": false,
+        "value_type": "String",
+        "value": "Complete",
+        "name": "Expected Complete node name (case-sensitive)"
+      },
+      {
+        "identifier": 2,
+        "b_submission": false,
+        "value_type": "Address",
+        "value": "insurance_service_v1",
+        "name": "Expected service address (prevents cross-service fund theft)"
+      }
+    ],
+    "root": {
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "progress.current",
+              "object": {
+                "identifier": 0,
+                "convert_witness": "OrderProgress"
+              },
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": "order.service",
+              "object": {
+                "identifier": 0
+              },
+              "parameters": []
+            },
+            {
+              "type": "identifier",
+              "identifier": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "insurance_provider_v1",
+    "network": "testnet"
+  }
+}
+```
+
+**Guard Table** (identical for both guards):
+
+| identifier | b_submission | value_type | value | Purpose |
+|------------|-------------|-----------|-------|---------|
+| 0 | **true** | Address | (submitted at runtime) | Order ID submitted at runtime, converted to Progress via convert_witness="OrderProgress" |
+| 1 | false | String | "Complete" | Expected node name (case-sensitive) |
+| 2 | false | Address | insurance_service_v1 | Expected Service address (project binding — prevents cross-service fund theft) |
+
+> **Why 2 Guards?** Allocators require unique Guard addresses. The 2 Guards have identical root/table logic but different `description` and `tags` to indicate their distinct purposes (Treasury collection vs personal collection). In production you would typically pick ONE approach and delete the other Guard + Allocator.
+
 ---
 
-## Step 4: Create, Configure and Publish Machine
+## Step 5: Create, Configure and Publish Machine
 
 Create a Machine with workflow nodes and publish it in a single transaction.
 
@@ -370,9 +574,9 @@ Create a Machine with workflow nodes and publish it in a single transaction.
 
 ---
 
-## Step 5: Create and Publish Service
+## Step 6: Create and Publish Service
 
-Create the insurance service with machine, order_allocators, sales, and publish in a single transaction.
+Create the insurance service with machine, order_allocators (2 alternative approaches), sales, and publish in a single transaction.
 
 > **Important**: 
 > - Service must include `order_allocators` when publishing
@@ -394,14 +598,24 @@ Create the insurance service with machine, order_allocators, sales, and publish 
     "description": "Outdoor accident insurance for Iceland travel. Provides coverage for ice scooting and other outdoor activities.",
     "machine": "insurance_machine_v1",
     "order_allocators": {
-      "description": "Insurance order revenue allocation",
-      "threshold": 1,
+      "description": "Insurance order revenue allocation — 2 alternative merchant collection approaches (first-match-wins means only the first passing allocator executes)",
+      "threshold": 0,
       "allocators": [
         {
-          "guard": "insurance_withdraw_guard_v1",
+          "guard": "insurance_withdraw_guard_treasury_v1",
           "sharing": [
             {
-              "who": {"Signer": "signer"},
+              "who": {"Entity": "insurance_treasury_v1"},
+              "sharing": 10000,
+              "mode": "Rate"
+            }
+          ]
+        },
+        {
+          "guard": "insurance_withdraw_guard_personal_v1",
+          "sharing": [
+            {
+              "who": {"Entity": "insurance_provider_v1"},
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -431,16 +645,19 @@ Create the insurance service with machine, order_allocators, sales, and publish 
 }
 ```
 
-> **Important**: 
+> **Important — Fund Allocation Safety**: 
 > - `mode: "Rate"` represents Rate allocation mode (valid values: `"Amount"`, `"Rate"`, `"Surplus"`)
-> - `who: {"Signer": "signer"}` represents the transaction signer
+> - `who: {"Entity": "name_or_address"}` — funds flow to a FIXED address (Treasury or personal). This is the SAFE pattern: even if the Guard is somehow bypassed or an attacker submits a forged Order, funds still go to the fixed Entity — the attacker cannot redirect funds to themselves.
+> - **NEVER use `who: {"Signer": "signer"}` for merchant collection** — this means funds flow to whoever calls the allocation. Combined with a Guard that only checks order status (no Signer binding), anyone can submit any completed Order and steal 100% of funds.
+> - **2 allocators = 2 alternative approaches**: first-match-wins means only the FIRST allocator whose Guard passes will execute. In production, pick ONE approach (Treasury OR personal) and delete the other. Listing both here illustrates the 2 design options.
+> - **Permission consistency**: the Treasury uses `insurance_permission_v1` (same as Service) — keep Permissions consistent unless you have a specific reason to separate them.
 > - `wip_hash: ""` (empty string) means the system will automatically extract and use the hash from within the WIP file (`meta.hash` field). The WIP file at the `wip` URL must be a valid JSON file in WIP format. Do NOT use the SHA-256 of the file bytes as `wip_hash` — it must be the `meta.hash` value inside the WIP JSON, or empty string for auto-extraction.
 
 ---
 
-## Step 6: Unpause Service (Optional)
+## Step 7: Unpause Service (Optional)
 
-> **Note**: A newly created Service is **not paused by default**. This step is only needed if you explicitly paused the service earlier. You can safely skip this step and proceed to Step 7.
+> **Note**: A newly created Service is **not paused by default**. This step is only needed if you explicitly paused the service earlier. You can safely skip this step and proceed to Step 8.
 
 Unpause the service to allow order creation.
 
@@ -462,7 +679,7 @@ Unpause the service to allow order creation.
 
 ---
 
-## Step 7: Verify Service Configuration
+## Step 8: Verify Service Configuration
 
 Query the service to verify all configurations are correct.
 
@@ -478,9 +695,9 @@ Query the service to verify all configurations are correct.
 
 ---
 
-## Step 8: Test Order Creation and Progress
+## Step 9: Test Order Creation and Progress
 
-### 8.1 Create Insurance Order
+### 9.1 Create Insurance Order
 
 Create an order on the insurance service using the `order_new` field of the `service` operation. In production, this would be done by the travel service provider as a supply chain sub-order.
 
@@ -538,7 +755,7 @@ Create an order on the insurance service using the `order_new` field of the `ser
 > ```
 > The response includes `progress` and `allocation` fields with the on-chain object IDs.
 
-### 8.2 Advance Progress: Initial -> Start
+### 9.2 Advance Progress: Initial -> Start
 
 First, advance the progress from initial state to Start node.
 
@@ -568,7 +785,7 @@ First, advance the progress from initial state to Start node.
 > - Use simple forward name (e.g., `"start_claim"`) without node prefix. The system automatically resolves the path from current node
 > - The Progress is advanced via the Order object's `progress` field, using the Order name as reference
 
-### 8.3 Advance Progress: Start -> Complete
+### 9.3 Advance Progress: Start -> Complete
 
 Wait at least 10 seconds after entering Start node, then advance the progress to Complete with the Order ID as submission.
 
@@ -614,7 +831,7 @@ The server will return a `submission` prompt like:
         {
           "identifier": 0,
           "b_submission": true,
-          "value_type": 1,
+          "value_type": "Address",
           "name": "Order ID (submitted at runtime)",
           "object_type": "Order"
         }
@@ -655,7 +872,7 @@ The server will return a `submission` prompt like:
           {
             "identifier": 0,
             "b_submission": true,
-            "value_type": 1,
+            "value_type": "Address",
             "name": "Order ID (submitted at runtime)",
             "object_type": "Order",
             "value": "test_insurance_order_v1"
@@ -681,26 +898,32 @@ The server will return a `submission` prompt like:
 
 ---
 
-## Step 9: Withdraw Funds via Allocation
+## Step 10: Withdraw Funds via Allocation
 
-After the Progress reaches the Complete node, the insurance provider can withdraw the order funds using the `insurance_withdraw_guard_v1` Guard. This Guard verifies that `progress.current == "Complete"` (query 1253) via the submitted Order ID with `convert_witness: 100` (TypeOrderProgress).
+After the Progress reaches the Complete node, funds can be withdrawn using one of the withdraw Guards. This example uses the Treasury collection Guard (`insurance_withdraw_guard_treasury_v1`). To use the personal collection approach instead, substitute `insurance_withdraw_guard_personal_v1`.
 
-The Allocation object was created automatically when the Order was placed (Step 8.1). Query the Order to obtain the Allocation object ID — it is in the `allocation` field of the Order object.
+The Guard verifies:
+1. `progress.current == "Complete"` (query 1253) via the submitted Order ID with `convert_witness: "OrderProgress"` (TypeOrderProgress)
+2. `order.service == insurance_service_v1` (query 1563) — project binding prevents cross-service order theft
 
-> **Two-Phase Submission**: The `alloc_by_guard` operation also uses two-phase submission when the Guard has `b_submission: true` fields, just like the Progress operation in Step 8.3.
+The Allocation object was created automatically when the Order was placed (Step 9.1). Query the Order to obtain the Allocation object ID — it is in the `allocation` field of the Order object.
 
-### 9.1 Phase 1: Request Submission Prompt
+> **Fund Flow**: With `sharing.who = {"Entity": "insurance_treasury_v1"}`, 100% of the order amount flows to the Treasury object regardless of who triggers the allocation. The caller cannot redirect funds — this is the safe Entity-sharing pattern.
+
+> **Two-Phase Submission**: The `alloc_by_guard` operation also uses two-phase submission when the Guard has `b_submission: true` fields, just like the Progress operation in Step 9.3.
+
+### 10.1 Phase 1: Request Submission Prompt
 
 Call the allocation operation WITHOUT the `submission` field to obtain the Guard submission structure.
 
-**Prompt**: Withdraw funds from allocation "insurance_test_alloc_v1" using withdraw guard.
+**Prompt**: Withdraw funds from allocation "insurance_test_alloc_v1" using Treasury withdraw guard.
 
 ```json
 {
   "operation_type": "allocation",
   "data": {
     "object": "insurance_test_alloc_v1",
-    "alloc_by_guard": "insurance_withdraw_guard_v1"
+    "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
   },
   "env": {
     "account": "insurance_provider_v1",
@@ -724,8 +947,8 @@ The server will return a `submission` prompt like:
         {
           "identifier": 0,
           "b_submission": true,
-          "value_type": 1,
-          "name": "order_id",
+          "value_type": "Address",
+          "name": "order_id (Order object submitted at runtime)",
           "object_type": "Order"
         }
       ]
@@ -734,7 +957,7 @@ The server will return a `submission` prompt like:
 }
 ```
 
-### 9.2 Phase 2: Submit with Order ID
+### 10.2 Phase 2: Submit with Order ID
 
 Fill in the `value` field with the Order ID (or Order name) and resubmit. The `submission` field must be placed at the **root level** of the request.
 
@@ -745,7 +968,7 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
   "operation_type": "allocation",
   "data": {
     "object": "insurance_test_alloc_v1",
-    "alloc_by_guard": "insurance_withdraw_guard_v1"
+    "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
   },
   "submission": {
     "type": "submission",
@@ -762,8 +985,8 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
           {
             "identifier": 0,
             "b_submission": true,
-            "value_type": 1,
-            "name": "order_id",
+            "value_type": "Address",
+            "name": "order_id (Order object submitted at runtime)",
             "object_type": "Order",
             "value": "test_insurance_order_v1"
           }
@@ -779,9 +1002,9 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
 ```
 
 > **⚠️ Important**: 
-> - Replace `0xfb8bed2f...` with the actual `insurance_withdraw_guard_v1` address from your Phase 1 response.
+> - Replace `0xfb8bed2f...` with the actual `insurance_withdraw_guard_treasury_v1` address from your Phase 1 response.
 > - The `value` field accepts either an on-chain object ID or a named object reference (e.g., `"test_insurance_order_v1"`).
-> - The `sharing` configuration (100% Rate to Signer) determines how funds are distributed. In this example, 100% of the order amount goes to the transaction signer (`insurance_provider_v1`).
+> - The `sharing` configuration (`{"Entity": "insurance_treasury_v1"}` at 100% Rate) determines where funds flow. Funds go to the fixed Treasury address regardless of who calls the allocation — this is the safe Entity-sharing pattern that prevents fund theft.
 > - After a successful withdrawal, the Allocation `balance` becomes `0` and a Payment object is created as an immutable record.
 
 ---
@@ -793,6 +1016,10 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
 When advancing Progress, if you get `abort code: 7 (Verify failed)`, the Guard condition was not satisfied. For the time-lock Guard:
 - Wait longer than the time-lock duration (10000ms = 10 seconds) before advancing to Complete
 - Verify the submitted Order ID is correct and corresponds to the Progress being advanced
+
+For the withdraw Guard:
+- Verify the Order's Progress is at the "Complete" node (case-sensitive — "Complete" ≠ "complete")
+- Verify the Order belongs to `insurance_service_v1` (project binding check via query 1563)
 
 ### Forward validation failed
 
@@ -829,13 +1056,14 @@ Published Machine nodes are immutable (`MoveAbort code: 3`). Create a new Machin
 - [ ] Create `insurance_provider_v1` account
 - [ ] Get test tokens for `insurance_provider_v1`
 - [ ] Step 1: Create `insurance_permission_v1` with all required indexes
-- [ ] Step 2: Create `insurance_complete_guard_v1`
-- [ ] Step 3: Create `insurance_withdraw_guard_v1`
-- [ ] Step 4: Create `insurance_machine_v1` with nodes and publish
-- [ ] Step 5: Create and publish `insurance_service_v1` (with machine, order_allocators, sales)
-- [ ] Step 6: Unpause Service (Optional — skip if service was never paused)
-- [ ] Step 7: Verify Service configuration
-- [ ] Step 8.1: Create test insurance order
-- [ ] Step 8.2: Advance progress Initial -> Start
-- [ ] Step 8.3: Advance progress Start -> Complete with submission (wait 10s after Step 8.2)
-- [ ] Step 9: Withdraw funds via Allocation (alloc_by_guard with withdraw guard)
+- [ ] Step 2: Create `insurance_treasury_v1` (same Permission as Service)
+- [ ] Step 3: Create `insurance_complete_guard_v1` (time-lock)
+- [ ] Step 4: Create `insurance_withdraw_guard_treasury_v1` + `insurance_withdraw_guard_personal_v1` (project binding)
+- [ ] Step 5: Create `insurance_machine_v1` with nodes and publish
+- [ ] Step 6: Create and publish `insurance_service_v1` (with machine, 2 Entity-sharing allocators, sales)
+- [ ] Step 7: Unpause Service (Optional — skip if service was never paused)
+- [ ] Step 8: Verify Service configuration
+- [ ] Step 9.1: Create test insurance order
+- [ ] Step 9.2: Advance progress Initial -> Start
+- [ ] Step 9.3: Advance progress Start -> Complete with submission (wait 10s after Step 9.2)
+- [ ] Step 10: Withdraw funds via Allocation (alloc_by_guard with Treasury or personal withdraw guard)

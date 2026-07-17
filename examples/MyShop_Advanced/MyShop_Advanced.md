@@ -167,6 +167,13 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  └────────┬────────┘                                                        │
 │           │                                                                 │
 │           ▼                                                                 │
+│  ┌─────────────────┐                                                       │
+│  │    Treasury     │◄─── Requires: Permission (same as Service)            │
+│  │(myshop_treasury │     Aggregates merchant revenue                       │
+│  │      _v2)       │     Referenced by order_allocators (Phase 6)          │
+│  └────────┬────────┘                                                        │
+│           │                                                                 │
+│           ▼                                                                 │
 │  Phase 2: Guard Creation                                                    │
 │  ═══════════════════════                                                    │
 │                                                                             │
@@ -251,6 +258,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 | 1     | **Permission**       | None                 | Permission is the foundation. Machine and Service both reference a permission object for access control.      |
 | 1b    | **Permission Indexes** | Permission         | Grant permission indexes 1000 and 1001 to merchant. Required for Machine node operations.                     |
 | 2     | **Service (Empty)**  | Permission           | Create Service without publishing first to obtain its name. This name is used in Guard verification.          |
+| 2b    | **Treasury**         | Permission           | Treasury aggregates merchant revenue. Uses same Permission as Service. Referenced by order\_allocators in Phase 7. |
 | 3     | **Guards**           | Service Name         | Guards must verify that orders belong to the correct Service. They query Service name and Progress state.     |
 | 4     | **Machine**          | Permission, Guards   | Machine requires guards for node verification. Guards need Service name which is now available.               |
 | 5     | **Machine Binding**  | Service, Machine     | Bind Machine to Service before publishing. Once published, Machine cannot be bound.                           |
@@ -266,6 +274,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 1. **Permission First**: Every major object (Machine, Service) requires a permission object. Create this first.
 2. **Permission Indexes**: Grant permission indexes 1000 and 1001 to merchant account. These are used in Machine node forwards.
 3. **Service Before Guards**: Create Service without publishing to get its name. Guards use Service name to verify orders belong to the correct service.
+3b. **Treasury for Fund Aggregation**: Create Treasury with the same Permission as the Service. Merchant revenue flows to the Treasury (not the Service address), making allocators inherently safe (R-C3-06) and aggregating public funds for operational distribution.
 4. **Guards Before Machine**: Machine nodes reference guards for verification. Create all guards first, then create Machine with guard references.
 5. **Machine Binding Before Publish**: Bind Machine to Service before publishing. Once published, Machine cannot be bound.
 6. **Arbitration Before Service Update**: Arbitration must be created before Service update so it can be bound to Service.
@@ -284,6 +293,12 @@ Phase 2: Service Creation
 └── 2. Create Service (three_body_signature_service_v2)
     ├── Publish: FALSE
     └── Record the Service address for Guard creation
+
+Phase 2b: Treasury Creation
+└── 2b. Create Treasury (myshop_treasury_v2)
+    ├── Permission: myshop_perm_v2 (same as Service)
+    ├── Type parameter: 0x2::wow::WOW
+    └── Aggregates merchant revenue; referenced by order_allocators (Phase 7)
 
 Phase 3: Guard Creation (Machine Guards)
 └── 3. Create Machine Guards (4 guards)
@@ -474,6 +489,39 @@ Create the Service without publishing to obtain its address for Guard creation.
 
 ***
 
+### Step 3b: Create Treasury (Merchant Revenue Aggregation)
+
+Create a Treasury object to aggregate merchant revenue. The Treasury uses the **same Permission** as the Service (`myshop_perm_v2`) for consistency — a single permission organization governs both fund collection and service operations.
+
+**Prompt**: Create Treasury "myshop\_treasury\_v2" with permission "myshop\_perm\_v2", type parameter "0x2::wow::WOW".
+
+```json
+{
+  "operation_type": "treasury",
+  "data": {
+    "object": {
+      "name": "myshop_treasury_v2",
+      "type_parameter": "0x2::wow::WOW",
+      "permission": "myshop_perm_v2",
+      "replaceExistName": true
+    },
+    "description": "Treasury for aggregating MyShop merchant revenue. Uses the same Permission as the Service (myshop_perm_v2) for consistency — a single permission organization governs both fund collection and service operations."
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "mainnet",
+    "no_cache": true
+  }
+}
+```
+
+> **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance example, merchant revenue flows to `myshop_treasury_v2` (not directly to the Service address). This:
+> 1. **Aggregates public funds** for operational distribution and accounting
+> 2. **Makes allocators inherently safe** (R-C3-06) — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the Guard
+> 3. **Uses permission consistency** — Treasury and Service share `myshop_perm_v2`, ensuring unified governance
+
+***
+
 ### Step 4: Create Guards (Machine Guards)
 
 Create Guards using the Service address. Guards verify order state and service ownership.
@@ -606,9 +654,10 @@ Create Guards using the Service address. Guards verify order state and service o
   "data": {
     "namedNew": {
       "name": "service_merchant_win_v2",
+      "tags": ["order", "merchant-win", "level3-scene-combined"],
       "replaceExistName": true
     },
-    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2",
+    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (myshop_treasury_v2) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at merchant win node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
       {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
@@ -625,21 +674,21 @@ Create Guards using the Service address. Guards verify order state and service o
             {
               "type": "logic_string_nocase_equal",
               "nodes": [
-                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
                 {"type": "identifier", "identifier": 1}
               ]
             },
             {
               "type": "logic_string_nocase_equal",
               "nodes": [
-                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
                 {"type": "identifier", "identifier": 2}
               ]
             },
             {
               "type": "logic_string_nocase_equal",
               "nodes": [
-                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
                 {"type": "identifier", "identifier": 3}
               ]
             }
@@ -648,7 +697,7 @@ Create Guards using the Service address. Guards verify order state and service o
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
             {"type": "identifier", "identifier": 4}
           ]
         }
@@ -663,9 +712,15 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard Logic:**
-1. 验证订单当前节点是 Order Complete、Wonderful 或 Return Fail（商家胜利节点）
-2. 验证订单的 Service 地址等于当前 Guard 所属的 Service 地址（使用 `order.service` 查询指令 ID 1563）
+**Guard Explanation (Two-fold Verification — Level 3 Scene-Combined):**
+- **Table Item 0**: Order address (submitted at runtime)
+- **Table Items 1-3**: Constant strings "Order Complete", "Wonderful", "Return Fail" (merchant win node names)
+- **Table Item 4**: Constant address `three_body_signature_service_v2` (this service's on-chain address)
+- **Condition 1 — Merchant Win Node**: `logic_or` of three `logic_string_nocase_equal` checks against `query("progress.current", witness="OrderProgress")` — verifies the order is at one of the merchant win nodes
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[4]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, **preventing cross-service theft** where someone submits another service's order (R-C3-05)
+- **root**: `logic_and` of both conditions — all must pass for allocation to proceed
+
+> **Risk Elimination (R-C3-06) — Level 3 Scene-Combined Design**: The allocator uses `"who": {"Entity": {"name_or_address": "myshop_treasury_v2"}}` (funds flow to the fixed Treasury address). This is inherently safe because funds go to a fixed recipient regardless of caller — **no Signer binding is needed**. The scene itself (Entity sharing to Treasury) ensures fund-flow safety, which is the Level 3 scene-combined pattern. Removing the Signer binding also eliminates R-C4-04 (Level 1 strict binding convenience warning) and avoids the lock-in risk of binding to a fixed merchant address.
 ```
 
 **Guard 5: machine_service_order_v2** - Verify order belongs to this Service
@@ -688,7 +743,7 @@ Create Guards using the Service address. Guards verify order state and service o
       "nodes": [
         {
           "type": "query",
-          "query": 1563,
+          "query": "order.service",
           "object": {"identifier": 0},
           "parameters": []
         },
@@ -717,9 +772,10 @@ Create Guards using the Service address. Guards verify order state and service o
   "data": {
     "namedNew": {
       "name": "service_customer_win_v2",
+      "tags": ["order", "customer-win", "level2-dynamic-binding"],
       "replaceExistName": true
     },
-    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2",
+    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query("order.owner") — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
       {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
@@ -735,14 +791,14 @@ Create Guards using the Service address. Guards verify order state and service o
             {
               "type": "logic_string_nocase_equal",
               "nodes": [
-                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
                 {"type": "identifier", "identifier": 1}
               ]
             },
             {
               "type": "logic_string_nocase_equal",
               "nodes": [
-                {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
                 {"type": "identifier", "identifier": 2}
               ]
             }
@@ -751,7 +807,14 @@ Create Guards using the Service address. Guards verify order state and service o
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+            {"type": "context", "context": "Signer"}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
             {"type": "identifier", "identifier": 3}
           ]
         }
@@ -766,9 +829,16 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard Logic:**
-1. 验证订单当前节点是 Lost 或 Return Complete（客户胜利节点）
-2. 验证订单的 Service 地址等于当前 Guard 所属的 Service 地址（使用 `order.service` 查询指令 ID 1563）
+**Guard Explanation (Three-fold Verification — Level 2 Dynamic Binding):**
+- **Table Item 0**: Order address (submitted at runtime)
+- **Table Items 1-2**: Constant strings "Lost", "Return Complete" (customer win node names)
+- **Table Item 3**: Constant address `three_body_signature_service_v2` (this service's on-chain address)
+- **Condition 1 — Customer Win Node**: `logic_or` of two `logic_string_nocase_equal` checks against `query("progress.current", witness="OrderProgress")` — verifies the order is at one of the customer win nodes
+- **Condition 2 — Signer is Order Owner (Level 2 Dynamic)**: `logic_equal[query("order.owner"), context(Signer)]` — verifies the transaction caller is the order's owner (dynamic query, not a fixed address). This is the **Level 2 dynamic identity binding** pattern: the Signer is bound to a query result (not a fixed address), so it survives personnel changes and avoids the R-C4-04 lock-in risk. **Prevents fund theft by unauthorized callers** (R-C3-01/R-C3-06). Only the customer who placed the order can trigger the refund.
+- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, **preventing cross-service theft** where someone submits another service's order (R-C3-05)
+- **root**: `logic_and` of all three conditions — all must pass for allocation to proceed
+
+> **Risk Elimination (R-C3-06) — CRITICAL — Level 2 Dynamic Binding**: The allocator uses `"who": {"Signer": "signer"}` (funds go to the caller). This is safe ONLY because Condition 2 binds the Signer to `query("order.owner")` (dynamic query — Level 2). Without this binding, anyone could submit any Lost/Return Complete order and steal 100% of funds. The dynamic query pattern ensures funds always flow to the order's rightful owner, regardless of who calls the transaction. Unlike Level 1 (fixed address), Level 2 dynamic binding does NOT trigger R-C4-04 because the bound identity is a query result, not an immutable address constant.
 ```
 
 ***
@@ -1199,14 +1269,14 @@ Configure order_allocators to define fund distribution rules, then publish the S
       ]
     },
     "order_allocators": {
-      "description": "Order fund allocation - 100% to Service when order complete/wonderful/return fail, 100% to Order when lost/return complete",
+      "description": "Order fund allocation - 100% to Treasury when order complete/wonderful/return fail, 100% to Order owner when lost/return complete",
       "threshold": 1,
       "allocators": [
         {
           "guard": "service_merchant_win_v2",
           "sharing": [
             {
-              "who": {"Entity": {"name_or_address": "three_body_signature_service_v2"}},
+              "who": {"Entity": {"name_or_address": "myshop_treasury_v2"}},
               "sharing": 10000,
               "mode": "Rate"
             }
@@ -1244,15 +1314,50 @@ Configure order_allocators to define fund distribution rules, then publish the S
 
 **Fund Allocation Rules:**
 
-| Guard | Condition | Recipient | Amount |
-|-------|-----------|-----------|--------|
-| service_merchant_win_v2 | Node is Order Complete / Wonderful / Return Fail | Service (merchant) | 100% |
-| service_customer_win_v2 | Node is Lost / Return Complete | Order (customer) | 100% |
+| Guard | Condition | Recipient | Amount | Verifier Level |
+|-------|-----------|-----------|--------|----------------|
+| service_merchant_win_v2 | Node is Order Complete / Wonderful / Return Fail | Treasury (merchant revenue aggregation) | 100% | Level 3 (no Signer binding) |
+| service_customer_win_v2 | Node is Lost / Return Complete | Order owner (customer, via Signer) | 100% | Level 2 dynamic (Signer == order.owner) |
 
 **Recipient Types:**
-- **Service**: 资金分配给 Service 对象（商家收款）
-- **Order**: 资金分配给 Order 对象（客户收款，订单所有者可以提取）
+- `{ "Entity": { "name_or_address": "myshop_treasury_v2" } }` - Funds flow to the fixed Treasury address (merchant revenue aggregation). Safest — funds go to a fixed recipient regardless of caller. Uses the same Permission as the Service for governance consistency. **No Signer binding needed in the Guard** (R-C3-06 safe, Level 3 scene-combined).
+- `{ "Signer": "signer" }` - Transaction sender (caller). **⚠️ R-C3-06 Risk**: If the Guard does NOT bind the Signer to an authorized address, anyone who passes the Guard can steal 100% of funds. Safe ONLY when the Guard includes a `logic_equal[context(Signer), <authorized_address_or_query>]` check. This example uses Level 2 dynamic binding (`query("order.owner")`) — funds flow to the order's rightful owner.
+
+> **R-C3-06 Risk Elimination — Guard + Sharing Coupling**: The `order_allocators` scene couples Guard verification (WHO can trigger) with sharing recipient (WHERE funds go). This example uses two verifier constraint levels:
+> - **Merchant win allocator** (`sharing.who = Entity → myshop_treasury_v2`, **Level 3 scene-combined**): Funds flow to the fixed Treasury address. Inherently safe — funds go to a fixed recipient regardless of caller. The `service_merchant_win_v2` Guard does NOT bind `context(Signer)` — the scene itself (Entity sharing to Treasury) ensures fund-flow safety. This is the recommended Level 3 pattern: no Signer binding, no R-C4-04 lock-in risk, no inconvenience.
+> - **Customer win allocator** (`sharing.who = Signer`, **Level 2 dynamic binding**): Funds flow to the caller. Safe ONLY because `service_customer_win_v2` Guard binds `context(Signer)` to `query("order.owner")` (dynamic query — Level 2). This ensures funds always flow to the order's rightful owner — only the customer who placed the order can receive the refund.
+>
+> **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance example, merchant revenue flows to `myshop_treasury_v2` (not the Service address). This aggregates public funds for operational distribution and makes the allocator inherently safe (R-C3-06). The Treasury uses the same Permission as the Service (`myshop_perm_v2`) for governance consistency.
 ```
+
+### Verifier Constraint Design Notes
+
+This example demonstrates all three verifier constraint levels across its Guards. The verifier constraint level classifies how strictly the Signer identity is constrained, trading off security against convenience.
+
+| Guard | Level | Pattern | Why |
+|-------|-------|---------|-----|
+| Guard 1-3 (machine_merkle_root_v2, machine_service_order_v2, machine_time_*) | Level 3 | No Signer binding | Machine forward's `permissionIndex` already verifies operator identity — Signer binding is redundant |
+| Guard 4 (service_merchant_win_v2) | Level 3 | No Signer binding | Allocator uses `sharing.who=Entity` (myshop_treasury_v2) — funds flow to fixed Treasury regardless of caller (R-C3-06 safe). Two-fold verification: node + order.service binding |
+| Guard 5 (machine_service_order_v2) | Level 3 | No Signer binding | Project-binding only (order.service check); machine forward verifies operator |
+| Guard 6 (service_customer_win_v2) | Level 2 dynamic | Signer == query("order.owner") | Allocator uses `sharing.who=Signer` — funds flow to caller, must bind to order owner to prevent theft |
+| Reward guards (reward_wonderful_v2, reward_lost_v2, reward_shipping_timeout_v2) | Level 3 | No Signer binding | One-time claim via record count; funds flow to fixed reward pool recipient |
+
+**Key design decisions**:
+
+1. **Merchant funds → Treasury (not Service)**: Following the Treasury-first rule, merchant revenue flows to `myshop_treasury_v2` (created with the same Permission as the Service). This aggregates public funds for operations and distribution, and makes the allocator inherently safe (R-C3-06) — no Signer binding needed (Level 3).
+
+2. **Customer refunds → order.owner (dynamic)**: Customer refunds must go to the actual customer who placed the order. The Level 2 dynamic binding (`query("order.owner")`) ensures only the rightful owner receives the refund, regardless of who calls the transaction. Unlike Level 1 (fixed address), this survives customer account changes.
+
+3. **No Level 1 strict binding anywhere**: No Guard uses `logic_equal[context(Signer), fixed_address]` because:
+   - The merchant role may change (personnel rotation) — Level 1 would lock the Guard to one address permanently
+   - The Treasury pattern makes Signer binding unnecessary for the merchant allocator (Level 3)
+   - The dynamic `order.owner` query is more appropriate for customer refunds (Level 2 dynamic)
+   - Level 1 would trigger R-C4-04 (convenience warning) and create operational risk
+
+**Alternative designs considered**:
+- **Guard 4 could use Level 2 identity-set** (merchant OR admin via permission.owner OR has admin) — **rejected** because Treasury (Entity sharing) already makes Signer binding redundant. Adding Level 2 would add complexity without safety benefit.
+- **Guard 6 could use Level 2 identity-set** (order.owner OR order.agent via 1562 OR 1567) — **viable** if agents should be able to trigger refunds on behalf of customers. The current single-customer design (Level 2 dynamic, `order.owner` only) is simpler and sufficient for this example. See `tpl_allocator_identity_set_order_holder` template for the identity-set construction pattern.
+- **Guard 4 could use Level 2 dynamic permission** (permission.owner OR has admin, with dynamic permission via 1488) — **viable** for scenarios where the Service may rotate its permission. See `tpl_allocator_identity_set_service_provider_dynamic` template for this pattern. Rejected here because the Treasury pattern already provides fund-flow safety without Signer binding.
 
 ***
 
@@ -1314,21 +1419,21 @@ Create guards for reward verification with double-claim protection:
         {
           "type": "logic_string_nocase_equal",
           "nodes": [
-            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
             {"type": "identifier", "identifier": 1}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
             {"type": "context", "context": "Signer"}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
             {"type": "identifier", "identifier": 3}
           ]
         },
@@ -1376,21 +1481,21 @@ Create guards for reward verification with double-claim protection:
         {
           "type": "logic_string_nocase_equal",
           "nodes": [
-            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
             {"type": "identifier", "identifier": 1}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
             {"type": "context", "context": "Signer"}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
             {"type": "identifier", "identifier": 3}
           ]
         },
@@ -1438,21 +1543,21 @@ Create guards for reward verification with double-claim protection:
         {
           "type": "logic_string_nocase_equal",
           "nodes": [
-            {"type": "query", "query": 1253, "object": {"identifier": 0, "convert_witness": 100}, "parameters": []},
+            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
             {"type": "identifier", "identifier": 1}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1562, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
             {"type": "context", "context": "Signer"}
           ]
         },
         {
           "type": "logic_equal",
           "nodes": [
-            {"type": "query", "query": 1563, "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
             {"type": "identifier", "identifier": 3}
           ]
         },
