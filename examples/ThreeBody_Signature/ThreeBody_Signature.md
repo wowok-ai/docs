@@ -590,7 +590,6 @@ order.service == three_body_signature_service
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {

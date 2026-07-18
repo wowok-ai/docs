@@ -23,7 +23,7 @@ An advanced e-commerce example demonstrating escrow with multiple order fund all
 2. **Privacy-Preserving Logistics**: Merchant handles logistics independently using any logistics provider. Tracking numbers are shared privately via Messenger (not on-chain), with only Merkle Root submitted on-chain as proof of communication
 3. **Reward Incentive Model**: Additional reward pool for excellent service (Wonderful reward) and compensation for lost packages
 4. **Multi-Path Workflow**: Order can complete through normal delivery, wonderful rating, or various return paths
-5. **Dual-Signature Returns**: Return processes require both customer and merchant confirmation (threshold=2)
+5. **Dual-Signature Returns**: Receipt return processes require both customer and merchant confirmation (threshold=2). Non-receipt returns (customer never received goods) require only merchant confirmation of goods recovery (threshold=1), since the customer has nothing to return and their non-receipt was already confirmed when entering the Non-receipt Return node.
 
 ### Important Design Principle: "Who Completes the Key Action, Who Submits the Proof"
 
@@ -43,7 +43,7 @@ This advanced example demonstrates an enterprise-grade e-commerce system with:
 
 - **Single WIP-Verified Product**: One product listing ("The Three-Body Problem + Author Signature") with WIP file verification
 - **Multi-Path Workflow**: Order progress with delivery confirmation, wonderful rating, lost handling, and multiple return paths
-- **Dual-Signature Returns**: Return processes require confirmation from both customer and merchant
+- **Dual-Signature Returns**: Receipt returns require both customer and merchant confirmation; non-receipt returns require only merchant confirmation of goods recovery
 - **Reward Incentive System**: Reward pool for excellent service and compensation for lost packages
 - **Time-Based Auto-Completion**: Orders auto-complete after time thresholds
 
@@ -101,7 +101,7 @@ graph TD
 
     RR["Receipt Return (Dual-Sig)<br/>Threshold = 2"]:::dualsig
     RF["Return Fail (Merchant)<br/>Time >= 10 days"]:::merchant
-    RC["Return Complete (Dual-Sig)<br/>Threshold = 2"]:::dualsig
+    RC["Return Complete<br/>From Receipt: Dual-Sig (threshold=2)<br/>From Non-receipt: Merchant only (threshold=1)"]:::dualsig
 
     START --> OC
     START --> OR
@@ -569,6 +569,85 @@ Create Guards using the Service address. Guards verify order state and service o
   }
 }
 ```
+
+**Guard 1b: machine_messenger_proof_v2** - Strict-mode privacy delivery (alternative to Guard 1)
+
+> **Two standard modes for "privacy info delivered via Messenger but not suitable for on-chain publication":**
+>
+> | Mode | Guard | Submission | Verification | Trust model |
+> |------|-------|-----------|-------------|-------------|
+> | **Broad** | `machine_merkle_root_v2` (Guard 1) | String (Merkle Root) | Length == 66 | Trusts submitter honesty; counterparty disputes via own Messenger log. Arbitration basis. |
+> | **Strict** | `machine_messenger_proof_v2` (Guard 1b) | Proof addr + Order addr | Signer==proof.signer ∧ proof.time>order.time ∧ order.service==service | Submitter accountability (谁得利谁举证); no content verification. |
+>
+> Machine forwards may reference **either** Guard 1 or Guard 1b — choose before publishing (Forward.guard is immutable). The same strict Guard can be reused across all forwards that need Merkle-Root verification (shipping, lost, returns, etc.).
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "machine_messenger_proof_v2",
+      "replaceExistName": true
+    },
+    "description": "Strict-mode privacy delivery: verify Signer==proof.signer AND proof.time>order.time AND order.service==service (verifier submits Proof+Order object addresses)",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "Proof object from submitChainProof"},
+      {"identifier": 1, "b_submission": true, "value_type": "Address", "name": "Order object submitted by verifier"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+    ],
+    "root": {
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "context", "context": "Signer"},
+            {"type": "query", "query": "proof.signer", "object": {"identifier": 0}, "parameters": []}
+          ]
+        },
+        {
+          "type": "logic_as_u256_greater",
+          "nodes": [
+            {"type": "query", "query": "proof.time", "object": {"identifier": 0}, "parameters": []},
+            {"type": "query", "query": "order.time", "object": {"identifier": 1}, "parameters": []}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": "order.service", "object": {"identifier": 1}, "parameters": []},
+            {"type": "identifier", "identifier": 2}
+          ]
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "mainnet",
+    "no_cache": true
+  }
+}
+```
+
+**Three conditions (logic_and):**
+1. **Submitter accountability** — `logic_equal[context(Signer), query("proof.signer", obj=proof)]`: the transaction signer must be the Proof's signer (the party who generated the Proof via `submitChainProof`). Suppresses R-C3-01.
+2. **Freshness** — `logic_as_u256_greater[query("proof.time", obj=proof), query("order.time", obj=order)]`: the Proof was created after the order, preventing stale-proof replay. (`proof.time` has invariant `clock_derived`, always > 0.)
+3. **Project binding** — `logic_equal[query("order.service", obj=order), identifier[2]]`: the submitted Order belongs to `three_body_signature_service_v2`. Suppresses R-C3-05 (cross-project bypass).
+
+**Generating the Proof (provider side, before submitting to the forward):**
+```json
+// SDK call: messenger.submitChainProof(env, peerAddress, description?)
+// - about_address is set to peerAddress (the customer's address)
+// - pass the order_id in description to associate the Proof with the order
+// Returns: { proofAddress, txHash }
+```
+
+**Runtime submission (verifier side, advancing the Machine forward):**
+- Broad mode (Guard 1): submit one String identifier — the Merkle Root.
+- Strict mode (Guard 1b): submit two Address identifiers — the Proof object address (identifier 0) and the Order object address (identifier 1).
+
+> No content verification is performed in either mode — only submission responsibility. The counterparty can dispute a fraudulent claim by checking their own Messenger conversation for the alleged dialogue. This follows the 谁得利谁举证 (whoever benefits bears the burden of proof) principle.
 
 **Guard 2: machine_time_10d_v2** - Verify 10-day timeout (864000000 ms)
 
@@ -1217,25 +1296,19 @@ Create Machine with all nodes and guards in a single operation.
                 },
                 {
                   "name": "Confirm Return Received",
-                  "weight": 1,
-                  "namedOperator": ""
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             },
             {
               "prev_node": "Non-receipt Return",
-              "threshold": 2,
+              "threshold": 1,
               "forwards": [
                 {
-                  "name": "Submit Return Merkle Root",
-                  "weight": 1,
-                  "namedOperator": "",
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                },
-                {
-                  "name": "Confirm Return Received",
-                  "weight": 1,
-                  "namedOperator": ""
+                  "name": "Confirm Goods Recovered",
+                  "permissionIndex": 1001,
+                  "weight": 1
                 }
               ]
             }
@@ -2383,6 +2456,36 @@ Customer requests return after delivery confirmation.
 }
 ```
 
+> **Receipt Return path**: Steps 9.3 + 9.4 complete the Receipt Return → Return Complete transition (threshold=2, dual-signature). The customer submits return tracking (Merkle Root), and the merchant confirms receipt of the returned goods.
+
+**Step 9.5: Merchant Confirms Goods Recovered (Non-receipt Return path)**
+
+For the Non-receipt Return path, the customer never received the goods and has nothing to return. The customer's non-receipt was already confirmed when entering the Non-receipt Return node (dual-signature at entry). The transition to Return Complete requires only the merchant to confirm goods recovery (threshold=1).
+
+```json
+{
+  "operation_type": "progress",
+  "data": {
+    "object": "myshop_progress_v2",
+    "operate": {
+      "operation": {
+        "next_node_name": "Return Complete",
+        "forward": "Confirm Goods Recovered"
+      },
+      "hold": false,
+      "message": "Goods recovered by merchant - non-receipt return complete"
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "mainnet",
+    "no_cache": true
+  }
+}
+```
+
+> **Non-receipt Return path**: Only Step 9.5 is needed (threshold=1, merchant-only). No customer action required — the customer never received the goods and has nothing to return or submit. The merchant confirms the goods have been recovered (e.g., returned by logistics to the merchant).
+
 ***
 
 ### Step 10: Return Fail (Timeout)
@@ -2530,7 +2633,7 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
 This advanced e-commerce example demonstrates:
 
 1. **Multi-Path Workflow**: Orders can complete through normal delivery, wonderful rating, or various return paths
-2. **Dual-Signature Returns**: Return processes require confirmation from both parties (threshold=2)
+2. **Dual-Signature Returns**: Receipt returns require confirmation from both parties (threshold=2); non-receipt returns require only merchant confirmation of goods recovery (threshold=1)
 3. **Time-Based Auto-Completion**: Orders auto-complete after time thresholds (10 days from shipping, 2 days from delivery)
 4. **Guard-Based Verification**: All state transitions and fund allocations are protected by guards
 5. **Reward Incentive System**: Wonderful ratings receive rewards, lost packages and shipping delays receive compensation

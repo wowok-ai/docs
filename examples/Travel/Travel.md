@@ -413,7 +413,6 @@ repository.data has("Condition", convert_number_address(activity_date))
         "identifier": 2,
         "b_submission": true,
         "value_type": "U64",
-        "value": 0,
         "name": "Activity date timestamp (submitted at runtime)"
       }
     ],
@@ -474,7 +473,6 @@ clock > progress.current_time + 1000
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {
@@ -582,7 +580,6 @@ Checks if order progress current node is "Complete" AND order belongs to this se
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {
@@ -667,7 +664,6 @@ Checks if progress current is "Cancel" or "Ice Scooting" AND order belongs to th
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {
@@ -776,7 +772,6 @@ Checks if progress current is "SPA" AND order belongs to this service. If passed
         "identifier": 0,
         "b_submission": true,
         "value_type": "Address",
-        "value": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "name": "Order ID (submitted at runtime)"
       },
       {
