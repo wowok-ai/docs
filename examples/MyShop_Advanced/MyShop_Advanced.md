@@ -6,6 +6,15 @@ An advanced e-commerce example demonstrating escrow with multiple order fund all
 
 ***
 
+## ⚠️ Running Principle
+
+> **Run the example in full every time (repeatable).** This example uses `replaceExistName: true` on all object creations — each run generates new objects with new addresses. If you skip build steps, operations may silently act on orphaned objects from previous runs, producing incorrect results. Old objects' configurations do not reflect the current document version.
+
+- **Execution order**: Part 1 (read) → Part 2 Steps 1–14 (build all) → Part 3 (customer flow) → Part 4 (fund allocation). Do not skip steps — each depends on objects created by prior steps.
+- **Prerequisites**: `myshop_merchant` ≥ 0.05 WOW (gas), `myshop_customer` ≥ 0.15 WOW (gas + order payment). All on-chain operations require `env.confirmed: true`.
+
+***
+
 ## Core Requirements & Features
 
 | Requirement                    | Description                                                               | Implementation                                                                        |

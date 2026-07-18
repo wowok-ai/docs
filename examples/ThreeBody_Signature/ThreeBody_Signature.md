@@ -4,6 +4,15 @@ A complete example demonstrating how to create a service for book signing by the
 
 ---
 
+## ⚠️ Running Principle
+
+> **Run the example in full every time (repeatable).** This example uses `replaceExistName: true` on all object creations — each run generates new objects with new addresses. If you skip build steps, operations may silently act on orphaned objects from previous runs, producing incorrect results. Old objects' configurations do not reflect the current document version.
+
+- **Execution order**: Run all build/setup steps (including account generation) in sequence before testing any customer order flow. Do not skip steps — each depends on objects created by prior steps.
+- **Prerequisites**: `three_body_author` and `three_body_customer` with sufficient WOW for gas (≥ 1000 WOW recommended). All on-chain operations require `env.confirmed: true`.
+
+---
+
 ## Overview
 
 This example demonstrates:

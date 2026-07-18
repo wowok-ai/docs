@@ -4,6 +4,15 @@ A complete example demonstrating how to create an Iceland travel service using W
 
 ---
 
+## ⚠️ Running Principle
+
+> **Run the example in full every time (repeatable).** This example uses `replaceExistName: true` on all object creations — each run generates new objects with new addresses. If you skip build steps, operations may silently act on orphaned objects from previous runs, producing incorrect results. Old objects' configurations do not reflect the current document version.
+
+- **Execution order**: Run all build/setup steps in sequence before testing any customer or order flow. Do not skip steps — each depends on objects created by prior steps.
+- **Prerequisites**: `travel_provider`, `weather_provider`, and `alice` (test customer) with sufficient WOW for gas. All on-chain operations require `env.confirmed: true`.
+
+---
+
 ## Core Requirements & Features
 
 | Requirement | Description | Implementation |

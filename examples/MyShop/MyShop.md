@@ -4,6 +4,15 @@ A complete e-commerce example demonstrating how to build an online store using W
 
 ---
 
+## ⚠️ Running Principle
+
+> **Run the example in full every time (repeatable).** This example uses `replaceExistName: true` on all object creations — each run generates new objects with new addresses. If you skip build steps, operations may silently act on orphaned objects from previous runs, producing incorrect results. Old objects' configurations do not reflect the current document version.
+
+- **Execution order**: Part 1 (Merchant Setup, Steps 1–7) → Part 2 (Customer Flow, Steps 1–9). Run all build steps in sequence before testing any customer flow. Do not skip steps — each depends on objects created by prior steps.
+- **Prerequisites**: `myshop_merchant` with sufficient WOW for gas and order operations. All on-chain operations require `env.confirmed: true`.
+
+---
+
 ## Core Requirements & Features
 
 | Requirement | Description | Implementation |
