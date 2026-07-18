@@ -723,6 +723,74 @@ Create Guards using the Service address. Guards verify order state and service o
 > **Risk Elimination (R-C3-06) — Level 3 Scene-Combined Design**: The allocator uses `"who": {"Entity": {"name_or_address": "myshop_treasury_v2"}}` (funds flow to the fixed Treasury address). This is inherently safe because funds go to a fixed recipient regardless of caller — **no Signer binding is needed**. The scene itself (Entity sharing to Treasury) ensures fund-flow safety, which is the Level 3 scene-combined pattern. Removing the Signer binding also eliminates R-C4-04 (Level 1 strict binding convenience warning) and avoids the lock-in risk of binding to a fixed merchant address.
 ```
 
+**Guard 4 — Alternative Shorthand Form (VecString + vec_contains_string_nocase)**
+
+The `logic_or` of three `logic_string_nocase_equal` checks above can be collapsed into a single `vec_contains_string_nocase` over a `VecString` constant. Both forms are **semantically equivalent** (verified by `guard-examples-lint.spec.ts` → "Semantic Equivalence" tests: identical risk diagnostics, identical `root_type`, identical `errors`/`ready` state). The shorthand is preferred when the candidate set has ≥ 2 entries — it scales linearly with the vector length instead of duplicating the query node N times.
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "service_merchant_win_v2",
+      "tags": ["order", "merchant-win", "level3-scene-combined"],
+      "replaceExistName": true
+    },
+    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses three String constants + logic_or[logic_string_nocase_equal x 3] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence' tests).",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Order Complete", "Wonderful", "Return Fail"], "name": "merchant_win_nodes"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+    ],
+    "root": {
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "vec_contains_string_nocase",
+          "nodes": [
+            {"type": "identifier", "identifier": 1},
+            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 2}
+          ]
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "mainnet",
+    "no_cache": true
+  }
+}
+```
+
+**Shorthand Equivalence Explanation:**
+
+| Aspect | Original Form | Shorthand Form |
+|---|---|---|
+| `table` count | 5 entries (1 Address + 3 String + 1 Address) | 3 entries (1 Address + 1 VecString + 1 Address) |
+| Condition 1 node | `logic_or` of 3 × `logic_string_nocase_equal` | `vec_contains_string_nocase` (single node) |
+| Condition 2 node | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
+| `root` type | `logic_and` | `logic_and` (identical) |
+| Risk diagnostics (R-C3-*) | identical | identical (security-equivalent) |
+| Lint diagnostics (LE-04, SG-01, SG-03) | identical | identical |
+| SH-03 warnings (missing `name`) | 3 (the 3 unnamed String constants) | 0 (the VecString is named `merchant_win_nodes`) |
+| Total warnings | 5 | 2 (3 fewer — the eliminated SH-03s) |
+
+**Why the shorthand is preferred:**
+- **Fewer table entries**: 3 vs 5 (40% reduction). Adding a new merchant-win node is a one-line edit to the `value` array instead of a new identifier + new `logic_string_nocase_equal` branch.
+- **No SH-03 nits**: The single `VecString` entry is naturally named (`merchant_win_nodes`), eliminating the 3 missing-name warnings.
+- **Linear scaling**: For N candidate nodes, the original grows as O(N) identifiers + O(N) `logic_string_nocase_equal` branches under one `logic_or` (capped at 8 children). The shorthand stays at 1 identifier + 1 `vec_contains_string_nocase` node regardless of N.
+- **Same security posture**: Risk-layer diagnostics are byte-identical (R-C3-05, R-C3-06, etc. all evaluate the same), so the Level 3 scene-combined design and R-C3-06 suppression are preserved.
+
+**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Shorthand vs Original (VecString + vec_contains_string_nocase)"`. The 8-test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk diagnostic codes, identical lint diagnostic codes (excluding SH-03), fewer SH-03 warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
+
 **Guard 5: machine_service_order_v2** - Verify order belongs to this Service
 
 ```json
@@ -775,7 +843,7 @@ Create Guards using the Service address. Guards verify order state and service o
       "tags": ["order", "customer-win", "level2-dynamic-binding"],
       "replaceExistName": true
     },
-    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query("order.owner") — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
+    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query('order.owner') — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
     "table": [
       {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
       {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
@@ -840,6 +908,78 @@ Create Guards using the Service address. Guards verify order state and service o
 
 > **Risk Elimination (R-C3-06) — CRITICAL — Level 2 Dynamic Binding**: The allocator uses `"who": {"Signer": "signer"}` (funds go to the caller). This is safe ONLY because Condition 2 binds the Signer to `query("order.owner")` (dynamic query — Level 2). Without this binding, anyone could submit any Lost/Return Complete order and steal 100% of funds. The dynamic query pattern ensures funds always flow to the order's rightful owner, regardless of who calls the transaction. Unlike Level 1 (fixed address), Level 2 dynamic binding does NOT trigger R-C4-04 because the bound identity is a query result, not an immutable address constant.
 ```
+
+**Guard 6 — Alternative Shorthand Form (VecString + vec_contains_string_nocase)**
+
+The `logic_or` of two `logic_string_nocase_equal` checks above can be collapsed into a single `vec_contains_string_nocase` over a `VecString` constant. Both forms are **semantically equivalent** (verified by `guard-examples-lint.spec.ts` → "Semantic Equivalence — Guard 6 Shorthand" tests: identical risk diagnostics, identical `root_type`, identical `errors`/`ready` state).
+
+```json
+{
+  "operation_type": "guard",
+  "data": {
+    "namedNew": {
+      "name": "service_customer_win_v2",
+      "tags": ["order", "customer-win", "level2-dynamic-binding"],
+      "replaceExistName": true
+    },
+    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses two String constants + logic_or[logic_string_nocase_equal x 2] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence — Guard 6 Shorthand' tests).",
+    "table": [
+      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+      {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Lost", "Return Complete"], "name": "customer_win_nodes"},
+      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+    ],
+    "root": {
+      "type": "logic_and",
+      "nodes": [
+        {
+          "type": "vec_contains_string_nocase",
+          "nodes": [
+            {"type": "identifier", "identifier": 1},
+            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+            {"type": "context", "context": "Signer"}
+          ]
+        },
+        {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+            {"type": "identifier", "identifier": 2}
+          ]
+        }
+      ]
+    }
+  },
+  "env": {
+    "account": "myshop_merchant",
+    "network": "mainnet",
+    "no_cache": true
+  }
+}
+```
+
+**Shorthand Equivalence Explanation:**
+
+| Aspect | Original Form | Shorthand Form |
+|---|---|---|
+| `table` count | 4 entries (1 Address + 2 String + 1 Address) | 3 entries (1 Address + 1 VecString + 1 Address) |
+| Condition 1 node | `logic_or` of 2 × `logic_string_nocase_equal` | `vec_contains_string_nocase` (single node) |
+| Condition 2 node (Signer binding) | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
+| Condition 3 node (Service ownership) | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
+| `root` type | `logic_and` | `logic_and` (identical) |
+| Risk diagnostics (R-C3-*) | identical | identical (security-equivalent) |
+| Lint diagnostics (LE-04, SG-01, SG-03) | identical | identical |
+| SH-03 warnings (missing `name`) | 2 (the 2 unnamed String constants) | 0 (the VecString is named `customer_win_nodes`) |
+| Total warnings | 4 | 2 (2 fewer — the eliminated SH-03s) |
+
+**Case-sensitivity note (critical)**: The source uses `logic_string_nocase_equal` (case-insensitive), so the target is `vec_contains_string_nocase` (case-insensitive). If the source had used `logic_equal` on String (case-sensitive — "Lost" ≠ "lost"), the target would have to be `vec_contains_string` (case-sensitive) to preserve semantics. **Mixing case-sensitive and case-insensitive operators in the same `logic_or` is NOT convertible** — the original `logic_or` must be kept because there is no single `vec_contains_*` variant that captures both behaviors. This is a fundamental limitation of the contains shorthand: it is syntactic sugar, not a universal replacement.
+
+**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Guard 6 Shorthand (service_customer_win_v2: VecString + vec_contains_string_nocase)"`. The 8-test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk diagnostic codes, identical lint diagnostic codes (excluding SH-03), fewer SH-03 warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
 
 ***
 
