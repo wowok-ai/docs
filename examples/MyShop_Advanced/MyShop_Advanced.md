@@ -13,6 +13,15 @@ An advanced e-commerce example demonstrating escrow with multiple order fund all
 - **Execution order**: Part 1 (read) → Part 2 Steps 1–14 (build all) → Part 3 (customer flow) → Part 4 (fund allocation). Do not skip steps — each depends on objects created by prior steps.
 - **Prerequisites**: `myshop_merchant` ≥ 0.05 WOW (gas), `myshop_customer` ≥ 0.15 WOW (gas + order payment). All on-chain operations require `env.confirmed: true`.
 
+### 🔐 Two-Step Confirmation Flow (Production Safety)
+
+This example sets `env.confirmed: true` on irreversible operations (e.g., `publish: true` on Machine) for brevity. In real deployments, follow the two-step flow enforced by the ConfirmGate safety layer:
+
+1. **Phase 1 — Preview**: Call the tool **without** `env.confirmed`. The server returns `{ status: "pending_confirmation", confirmation_text: "..." }` containing the full operation summary, risk assessment, and irreversible-action warnings.
+2. **Phase 2 — Confirm**: Review `confirmation_text` with the user. Only after explicit user approval, call the tool again **with** `env.confirmed: true` to actually execute the on-chain transaction.
+
+> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm.
+
 ***
 
 ## Core Requirements & Features

@@ -11,6 +11,15 @@ A complete example demonstrating how to create a service for book signing by the
 - **Execution order**: Run all build/setup steps (including account generation) in sequence before testing any customer order flow. Do not skip steps — each depends on objects created by prior steps.
 - **Prerequisites**: `three_body_author` and `three_body_customer` with sufficient WOW for gas (≥ 1000 WOW recommended). All on-chain operations require `env.confirmed: true`.
 
+### 🔐 Two-Step Confirmation Flow (Production Safety)
+
+This example sets `env.confirmed: true` on irreversible operations (e.g., `publish: true` on Machine) for brevity. In real deployments, follow the two-step flow enforced by the ConfirmGate safety layer:
+
+1. **Phase 1 — Preview**: Call the tool **without** `env.confirmed`. The server returns `{ status: "pending_confirmation", confirmation_text: "..." }` containing the full operation summary, risk assessment, and irreversible-action warnings.
+2. **Phase 2 — Confirm**: Review `confirmation_text` with the user. Only after explicit user approval, call the tool again **with** `env.confirmed: true` to actually execute the on-chain transaction.
+
+> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the `publish: true` step on the ThreeBody Machine (Step 4 in Part 2), which is an irreversible lock of the `machine` and `order_allocators` fields.
+
 ---
 
 ## Overview
