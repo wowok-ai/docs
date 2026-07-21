@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "service", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Service component is WoWok protocol's service/product publishing and sales management module, used to create and manage service or product listings in the marketplace. Service publishers can bind Machine (workflow templates), Repository (data warehouses), Arbitration (dispute resolution), and other components, configure Order Allocators, set up Discounts, manage Compensation Funds, and handle order creation and payment workflows.
@@ -47,10 +49,13 @@ Service operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "service",
-  "data": { ... },    // Service data definition
-  "env": { ... },      // Execution environment (optional)
-  "submission": { ... } // Guard verification submission (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "service",
+    "data": { ... },    // Service data definition
+    "env": { ... },      // Execution environment (optional)
+    "submission": { ... } // Guard verification submission (optional)
+  }
 }
 ```
 
@@ -225,12 +230,15 @@ Create a basic Service object with name, description, and optional configuration
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "my_service"
-    },
-    "description": "My service description"
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "my_service"
+      },
+      "description": "My service description"
+    }
   }
 }
 ```
@@ -245,10 +253,13 @@ Bind a published Machine to define how orders are processed. The Machine represe
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_service",
-    "machine": "my_published_machine"
+    "operation_type": "service",
+    "data": {
+      "object": "my_service",
+      "machine": "my_published_machine"
+    }
   }
 }
 ```
@@ -278,32 +289,35 @@ For testing or simple services where funds should always be allocated:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "always_true_guard",
-      "tags": ["allocation", "simple"]
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "always_true_guard",
+        "tags": ["allocation", "simple"]
+      },
+      "description": "Always returns true for unconditional fund allocation",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Bool",
+          "value": true
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "identifier",
+          "identifier": 0
+        }
+      }
     },
-    "description": "Always returns true for unconditional fund allocation",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": "Bool",
-        "value": true
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "identifier",
-        "identifier": 0
-      }
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -314,53 +328,56 @@ For production services, create Guards that verify order status before allowing 
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "order_completed_guard",
-      "tags": ["allocation", "withdraw"]
-    },
-    "description": "Verify order is in Completed status before allowing fund withdrawal. Submit order object ID.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_id"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "order_completed_guard",
+        "tags": ["allocation", "withdraw"]
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Completed",
-        "name": "completed_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
+      "description": "Verify order is in Completed status before allowing fund withdrawal. Submit order object ID.",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "order_id"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Completed",
+          "name": "completed_node"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": 1253,
+              "object": {
+                "identifier": 0,
+                "convert_witness": 100
+              },
+              "parameters": []
             },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -378,24 +395,27 @@ Now configure the order_allocators with your Guards:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_service",
-    "order_allocators": {
-      "description": "Order fund allocation - 100% to merchant after completion",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "order_completed_guard",
-          "sharing": [
-            {
-              "who": { "Signer": "signer" },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "my_service",
+      "order_allocators": {
+        "description": "Order fund allocation - 100% to merchant after completion",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "order_completed_guard",
+            "sharing": [
+              {
+                "who": { "Signer": "signer" },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -407,34 +427,37 @@ For e-commerce with both merchant withdrawal and customer refund scenarios:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_service",
-    "order_allocators": {
-      "description": "E-commerce fund allocation with withdraw and refund",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "merchant_withdraw_guard",
-          "sharing": [
-            {
-              "who": { "Signer": "signer" },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "customer_refund_guard",
-          "sharing": [
-            {
-              "who": { "Entity": { "name_or_address": "" } },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "my_service",
+      "order_allocators": {
+        "description": "E-commerce fund allocation with withdraw and refund",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "merchant_withdraw_guard",
+            "sharing": [
+              {
+                "who": { "Signer": "signer" },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "customer_refund_guard",
+            "sharing": [
+              {
+                "who": { "Entity": { "name_or_address": "" } },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -469,22 +492,22 @@ WIP (Witness Immutable Promise) files provide immutable, verifiable product/serv
 - Customers don't need to provide `wip_hash` when purchasing
 
 #### Approach B: With WIP (Recommended)
-1. **Generate WIP File** using the `wip_file` tool:
+1. **Generate WIP File** using the `wip_file` sub-tool:
    ```json
    {
-     "type": "generate",
-     "options": {
-       "markdown_text": "# Product Name\n\n## Description\nDetailed product description here...",
-       "images": [
-         {
-           "source": "https://example.com/product-image.jpg"
-         }
-       ],
-       "account": ""
-     },
-     "outputPath": "./product.wip"
+   "type": "generate",
+   "options": {
+     "markdown_text": "# Product Name\n\n## Description\nDetailed product description here...",
+     "images": [
+       {
+         "source": "https://example.com/product-image.jpg"
+       }
+     ],
+     "account": ""
+   },
+   "outputPath": "./product.wip"
    }
-   ```
+```
 
 2. **Upload WIP File** to your website or a publicly accessible HTTPS location
    - The WIP file must be accessible via an HTTPS URL
@@ -495,26 +518,29 @@ WIP (Witness Immutable Promise) files provide immutable, verifiable product/serv
 
 4. **Add Product to Service**:
    ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "my_service",
-       "sales": {
-         "op": "add",
-         "sales": [
-           {
-             "name": "Product Name",
-             "price": 50000000,
-             "stock": 50,
-             "suspension": false,
-             "wip": "https://your-domain.com/product.wip",
-             "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
-           }
-         ]
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "service",
+       "data": {
+         "object": "my_service",
+         "sales": {
+           "op": "add",
+           "sales": [
+             {
+               "name": "Product Name",
+               "price": 50000000,
+               "stock": 50,
+               "suspension": false,
+               "wip": "https://your-domain.com/product.wip",
+               "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+             }
+           ]
+         }
        }
      }
-   }
-   ```
+}
+```
 
 **Important:** The `wip_hash` must match the hash extracted from your WIP file. Customers must provide the same hash when purchasing:
 ```json
@@ -531,12 +557,15 @@ If you plan to use compensation funds for dispute resolution, you must configure
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_service",
-    "arbitrations": {
-      "op": "add",
-      "objects": ["arbitration_object_id"]
+    "operation_type": "service",
+    "data": {
+      "object": "my_service",
+      "arbitrations": {
+        "op": "add",
+        "objects": ["arbitration_object_id"]
+      }
     }
   }
 }
@@ -561,25 +590,31 @@ If your service requires customers to provide personal information (shipping add
 
 2. **Bind Contact to Service**:
    ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "my_service",
-       "um": "my_contact_object"
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "service",
+       "data": {
+         "object": "my_service",
+         "um": "my_contact_object"
+       }
      }
-   }
-   ```
+}
+```
 
 3. **Set Required Information Fields** - Define what customer information is required when placing orders:
    ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "my_service",
-       "customer_required": ["shipping_address", "phone_number", "email"]
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "service",
+       "data": {
+         "object": "my_service",
+         "customer_required": ["shipping_address", "phone_number", "email"]
+       }
      }
-   }
-   ```
+}
+```
 
 **Common Required Information Fields:**
 - `shipping_address` - Physical delivery address
@@ -601,10 +636,13 @@ Once all configurations are complete, publish the Service to make it available f
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_service",
-    "publish": true
+    "operation_type": "service",
+    "data": {
+      "object": "my_service",
+      "publish": true
+    }
   }
 }
 ```
@@ -615,50 +653,53 @@ You can also create a complete service in a single call:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "complete_service"
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "complete_service"
+      },
+      "description": "A complete sellable service",
+      "machine": "my_published_machine",
+      "order_allocators": {
+        "description": "Default allocation",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "always_true_guard",
+            "sharing": [
+              {
+                "who": { "Signer": "signer" },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "arbitrations": {
+        "op": "add",
+        "objects": ["arbitration_id"]
+      },
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Product with WIP",
+            "price": 50000000,
+            "stock": 50,
+            "suspension": false,
+            "wip": "https://your-domain.com/product.wip",
+            "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+          }
+        ]
+      },
+      "publish": true
     },
-    "description": "A complete sellable service",
-    "machine": "my_published_machine",
-    "order_allocators": {
-      "description": "Default allocation",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "always_true_guard",
-          "sharing": [
-            {
-              "who": { "Signer": "signer" },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "arbitrations": {
-      "op": "add",
-      "objects": ["arbitration_id"]
-    },
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Product with WIP",
-          "price": 50000000,
-          "stock": 50,
-          "suspension": false,
-          "wip": "https://your-domain.com/product.wip",
-          "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "network": "testnet"
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -681,19 +722,22 @@ You can also create a complete service in a single call:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "web3_consulting_service",
-      "tags": ["web3", "consulting", "blockchain"],
-      "type_parameter": "0x2::wow::WOW",
-      "permission": {
-        "name": "service_permission",
-        "description": "Permission for managing this service"
-      }
-    },
-    "description": "Professional Web3 consulting services",
-    "location": "Online"
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "web3_consulting_service",
+        "tags": ["web3", "consulting", "blockchain"],
+        "type_parameter": "0x2::wow::WOW",
+        "permission": {
+          "name": "service_permission",
+          "description": "Permission for managing this service"
+        }
+      },
+      "description": "Professional Web3 consulting services",
+      "location": "Online"
+    }
   }
 }
 ```
@@ -706,9 +750,12 @@ You can also create a complete service in a single call:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {}
+    "operation_type": "service",
+    "data": {
+      "object": {}
+    }
   }
 }
 ```
@@ -747,10 +794,13 @@ Bind a Machine (workflow template) to the Service. The Machine must be in publis
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "machine": "consulting_workflow"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "machine": "consulting_workflow"
+    }
   }
 }
 ```
@@ -763,10 +813,13 @@ Bind a Machine (workflow template) to the Service. The Machine must be in publis
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "machine": null
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "machine": null
+    }
   }
 }
 ```
@@ -811,45 +864,48 @@ Configure automatic fund allocation rules for orders. The allocators define how 
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "order_allocators": {
-      "description": "Order fund allocation",
-      "threshold": 1000000000,
-      "allocators": [
-        {
-          "guard": "order_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "developer"
-                }
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "order_allocators": {
+        "description": "Order fund allocation",
+        "threshold": 1000000000,
+        "allocators": [
+          {
+            "guard": "order_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "developer"
+                  }
+                },
+                "sharing": 7000,
+                "mode": "Rate"
               },
-              "sharing": 7000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "platform"
-                }
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "platform"
+                  }
+                },
+                "sharing": 2000,
+                "mode": "Rate"
               },
-              "sharing": 2000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Signer": "signer"
-              },
-              "sharing": 1000,
-              "mode": "Rate"
-            }
-          ],
-          "max": null
-        }
-      ]
+              {
+                "who": {
+                  "Signer": "signer"
+                },
+                "sharing": 1000,
+                "mode": "Rate"
+              }
+            ],
+            "max": null
+          }
+        ]
+      }
     }
   }
 }
@@ -882,12 +938,15 @@ Add, set, remove, or clear Repository objects from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "repositories": {
-      "op": "add",
-      "objects": ["service_data_repo"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "repositories": {
+        "op": "add",
+        "objects": ["service_data_repo"]
+      }
     }
   }
 }
@@ -901,12 +960,15 @@ Add, set, remove, or clear Repository objects from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "repositories": {
-      "op": "set",
-      "objects": ["repo_a", "repo_b"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "repositories": {
+        "op": "set",
+        "objects": ["repo_a", "repo_b"]
+      }
     }
   }
 }
@@ -920,12 +982,15 @@ Add, set, remove, or clear Repository objects from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "repositories": {
-      "op": "remove",
-      "objects": ["old_repo"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "repositories": {
+        "op": "remove",
+        "objects": ["old_repo"]
+      }
     }
   }
 }
@@ -939,11 +1004,14 @@ Add, set, remove, or clear Repository objects from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "repositories": {
-      "op": "clear"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "repositories": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -971,12 +1039,15 @@ Same structure as Sub-feature 4 (Manage Repository List), but with `data.rewards
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "rewards": {
-      "op": "add",
-      "objects": ["loyalty_reward"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "rewards": {
+        "op": "add",
+        "objects": ["loyalty_reward"]
+      }
     }
   }
 }
@@ -1004,12 +1075,15 @@ Same structure as Sub-feature 4 (Manage Repository List), but with `data.arbitra
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "arbitrations": {
-      "op": "add",
-      "objects": ["dispute_resolution"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "arbitrations": {
+        "op": "add",
+        "objects": ["dispute_resolution"]
+      }
     }
   }
 }
@@ -1041,10 +1115,13 @@ Bind a Contact (instant messaging) object to the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "um": "service_support"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "um": "service_support"
+    }
   }
 }
 ```
@@ -1057,10 +1134,13 @@ Bind a Contact (instant messaging) object to the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "um": null
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "um": null
+    }
   }
 }
 ```
@@ -1119,21 +1199,24 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "simple_product",
-          "price": 30000000,
-          "stock": 100,
-          "suspension": false,
-          "wip": "",
-          "wip_hash": ""
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "simple_product",
+            "price": 30000000,
+            "stock": 100,
+            "suspension": false,
+            "wip": "",
+            "wip_hash": ""
+          }
+        ]
+      }
     }
   }
 }
@@ -1148,38 +1231,44 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 **Step 1: Generate WIP File**
 ```json
 {
-  "type": "generate",
-  "options": {
-    "markdown_text": "# Three-Body Problem (三体)\n\n## Book Information\n- **Author**: Liu Cixin\n- **Genre**: Science Fiction\n- **Pages**: 302\n\n## Description\nThe Three-Body Problem is a science fiction novel that explores humanity's first contact with an alien civilization...",
-    "images": [
-      {
-        "source": "https://example.com/three-body-cover.jpg"
-      }
-    ],
-    "account": ""
-  },
-  "outputPath": "./three_body.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "generate",
+    "options": {
+      "markdown_text": "# Three-Body Problem (三体)\n\n## Book Information\n- **Author**: Liu Cixin\n- **Genre**: Science Fiction\n- **Pages**: 302\n\n## Description\nThe Three-Body Problem is a science fiction novel that explores humanity's first contact with an alien civilization...",
+      "images": [
+        {
+          "source": "https://example.com/three-body-cover.jpg"
+        }
+      ],
+      "account": ""
+    },
+    "outputPath": "./three_body.wip"
+  }
 }
 ```
 
 **Step 2: Add Product with WIP**
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "book_store_service",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "三体（带WIP）",
-          "price": 50000000,
-          "stock": 50,
-          "suspension": false,
-          "wip": "https://your-domain.com/three_body.wip",
-          "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "book_store_service",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "三体（带WIP）",
+            "price": 50000000,
+            "stock": 50,
+            "suspension": false,
+            "wip": "https://your-domain.com/three_body.wip",
+            "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+          }
+        ]
+      }
     }
   }
 }
@@ -1188,23 +1277,26 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 **Step 3: Customer Purchase (Must Provide WIP Hash)**
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "book_store_service",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "三体（带WIP）",
-            "stock": 1,
-            "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+    "operation_type": "service",
+    "data": {
+      "object": "book_store_service",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "三体（带WIP）",
+              "stock": 1,
+              "wip_hash": "46e1445b7f57210dd757bd40358f6a78308ef7494115eaad27510fb29de799e0"
+            }
+          ],
+          "total_pay": {
+            "balance": 50000000
           }
-        ],
-        "total_pay": {
-          "balance": 50000000
-        }
-      },
-      "order_required_info": ""
+        },
+        "order_required_info": ""
+      }
     }
   }
 }
@@ -1218,29 +1310,32 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "basic_consulting",
-          "price": 100000000,
-          "stock": 100,
-          "suspension": false,
-          "wip": "",
-          "wip_hash": ""
-        },
-        {
-          "name": "premium_consulting",
-          "price": 500000000,
-          "stock": 20,
-          "suspension": false,
-          "wip": "https://your-domain.com/premium_service.wip",
-          "wip_hash": "abc123def456..."
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "basic_consulting",
+            "price": 100000000,
+            "stock": 100,
+            "suspension": false,
+            "wip": "",
+            "wip_hash": ""
+          },
+          {
+            "name": "premium_consulting",
+            "price": 500000000,
+            "stock": 20,
+            "suspension": false,
+            "wip": "https://your-domain.com/premium_service.wip",
+            "wip_hash": "abc123def456..."
+          }
+        ]
+      }
     }
   }
 }
@@ -1254,12 +1349,15 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "sales": {
-      "op": "remove",
-      "sales_name": ["old_product"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "sales": {
+        "op": "remove",
+        "sales_name": ["old_product"]
+      }
     }
   }
 }
@@ -1273,11 +1371,14 @@ WIP (Witness Immutable Promise) is a cryptographically signed JSON file that con
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "sales": {
-      "op": "clear"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "sales": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -1317,24 +1418,27 @@ Create and issue a new discount coupon for the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "discount": {
-      "name": "new_user_20off",
-      "discount_type": 0,
-      "discount_value": 2000,
-      "benchmark": 100000000000,
-      "time_ms_start": 1735689600000,
-      "time_ms_end": 1738368000000,
-      "count": 1000,
-      "recipient": {
-        "entities": [
-          { "name_or_address": "alice" },
-          { "name_or_address": "bob" }
-        ]
-      },
-      "transferable": false
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "discount": {
+        "name": "new_user_20off",
+        "discount_type": 0,
+        "discount_value": 2000,
+        "benchmark": 100000000000,
+        "time_ms_start": 1735689600000,
+        "time_ms_end": 1738368000000,
+        "count": 1000,
+        "recipient": {
+          "entities": [
+            { "name_or_address": "alice" },
+            { "name_or_address": "bob" }
+          ]
+        },
+        "transferable": false
+      }
     }
   }
 }
@@ -1348,19 +1452,22 @@ Create and issue a new discount coupon for the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "discount": {
-      "name": "holiday_50off",
-      "discount_type": 1,
-      "discount_value": 50000000000,
-      "time_ms_end": 1738368000000,
-      "count": 500,
-      "recipient": {
-        "entities": []
-      },
-      "transferable": true
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "discount": {
+        "name": "holiday_50off",
+        "discount_type": 1,
+        "discount_value": 50000000000,
+        "time_ms_end": 1738368000000,
+        "count": 500,
+        "recipient": {
+          "entities": []
+        },
+        "transferable": true
+      }
     }
   }
 }
@@ -1392,10 +1499,13 @@ Destroy existing discount objects.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "discount_destroy": ["expired_coupon"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "discount_destroy": ["expired_coupon"]
+    }
   }
 }
 ```
@@ -1436,13 +1546,16 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "compensation_fund_add": {
-      "balance": 1000000000000
-    },
-    "setting_locked_time_add": 86400000
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "compensation_fund_add": {
+        "balance": 1000000000000
+      },
+      "setting_locked_time_add": 86400000
+    }
   }
 }
 ```
@@ -1455,11 +1568,14 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "compensation_fund_add": {
-      "coin": "0x7890...coin_object"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "compensation_fund_add": {
+        "coin": "0x7890...coin_object"
+      }
     }
   }
 }
@@ -1491,10 +1607,13 @@ Set the information customers must provide when placing orders.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "customer_required": ["phone", "email", "delivery_address"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "customer_required": ["phone", "email", "delivery_address"]
+    }
   }
 }
 ```
@@ -1525,10 +1644,13 @@ Pause or resume the Service from accepting new orders without unpublishing.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "pause": true
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "pause": true
+    }
   }
 }
 ```
@@ -1541,10 +1663,13 @@ Pause or resume the Service from accepting new orders without unpublishing.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "pause": false
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "pause": false
+    }
   }
 }
 ```
@@ -1581,10 +1706,13 @@ Publish the Service. After publishing, customers can place orders, but certain f
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "publish": true
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "publish": true
+    }
   }
 }
 ```
@@ -1628,38 +1756,41 @@ Create a new order as a customer and make payment.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "basic_consulting",
-            "stock": 1,
-            "wip_hash": "sha256:abc123def456..."
-          }
-        ],
-        "total_pay": {
-          "balance": 100000000000
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "basic_consulting",
+              "stock": 1,
+              "wip_hash": "sha256:abc123def456..."
+            }
+          ],
+          "total_pay": {
+            "balance": 100000000000
+          },
+          "discount": "new_user_20off",
+          "payment_remark": "First purchase"
         },
-        "discount": "new_user_20off",
-        "payment_remark": "First purchase"
-      },
-      "agents": {
-        "entities": [
-          { "name_or_address": "agent_account" }
-        ]
-      },
-      "order_required_info": "customer_contact",
-      "namedNewOrder": {
-        "name": "my_first_order"
-      },
-      "namedNewAllocation": {
-        "name": "order_allocation"
-      },
-      "namedNewProgress": {
-        "name": "order_progress"
+        "agents": {
+          "entities": [
+            { "name_or_address": "agent_account" }
+          ]
+        },
+        "order_required_info": "customer_contact",
+        "namedNewOrder": {
+          "name": "my_first_order"
+        },
+        "namedNewAllocation": {
+          "name": "order_allocation"
+        },
+        "namedNewProgress": {
+          "name": "order_progress"
+        }
       }
     }
   }
@@ -1692,10 +1823,13 @@ Receive compensation funds from orders.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "compensation_fund_receive": "recently"
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "compensation_fund_receive": "recently"
+    }
   }
 }
 ```
@@ -1708,19 +1842,22 @@ Receive compensation funds from orders.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "compensation_fund_receive": {
-      "balance": 100000000000,
-      "token_type": "0x2::wow::WOW",
-      "received": [
-        {
-          "id": "0x...",
-          "balance": 100000000000,
-          "payment": "0x..."
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "compensation_fund_receive": {
+        "balance": 100000000000,
+        "token_type": "0x2::wow::WOW",
+        "received": [
+          {
+            "id": "0x...",
+            "balance": 100000000000,
+            "payment": "0x..."
+          }
+        ]
+      }
     }
   }
 }
@@ -1754,12 +1891,15 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "owner_receive": {
-      "type": "recently",
-      "time_ms_ago": 86400000
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "owner_receive": {
+        "type": "recently",
+        "time_ms_ago": 86400000
+      }
     }
   }
 }
@@ -1773,12 +1913,15 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "web3_consulting_service",
-    "owner_receive": {
-      "type": "objects",
-      "objects": ["coin_wrapper_1", "coin_wrapper_2"]
+    "operation_type": "service",
+    "data": {
+      "object": "web3_consulting_service",
+      "owner_receive": {
+        "type": "objects",
+        "objects": ["coin_wrapper_1", "coin_wrapper_2"]
+      }
     }
   }
 }
@@ -1817,6 +1960,7 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 | **[Allocation](allocation.md)** | Automatic fund distribution |
 | **[Order](order.md)** | Order management |
 | **[Payment](payment.md)** | Direct coin transfers |
+| **[Trust Score](trust-score.md)** | Service trust & risk assessment — use before purchasing |
 
 ---
 
@@ -1840,36 +1984,45 @@ To enable arbitration for your service:
 
 1. **Create Arbitration Object**: Set up dispute resolution rules
    ```json
-   {
-     "operation_type": "arbitration",
-     "data": {
-       "object": {"name": "my_arbitration"},
-       "description": "Dispute resolution for my service"
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "arbitration",
+       "data": {
+         "object": {"name": "my_arbitration"},
+         "description": "Dispute resolution for my service"
+       }
      }
-   }
-   ```
+}
+```
 
 2. **Bind to Service**: Link arbitration to service
    ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "my_service",
-       "arbitrations": {"op": "add", "objects": ["my_arbitration"]}
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "service",
+       "data": {
+         "object": "my_service",
+         "arbitrations": {"op": "add", "objects": ["my_arbitration"]}
+       }
      }
-   }
-   ```
+}
+```
 
 3. **Add Compensation Fund**: Ensure funds available for disputes
    ```json
-   {
-     "operation_type": "service",
-     "data": {
-       "object": "my_service",
-       "compensation_fund_add": {"balance": 100000000000}
+{
+  "tool": "onchain_operations",
+  "data": {
+       "operation_type": "service",
+       "data": {
+         "object": "my_service",
+         "compensation_fund_add": {"balance": 100000000000}
+       }
      }
-   }
-   ```
+}
+```
 
 👉 **See [Arbitration - State Machine](arbitration.md#complete-arbitration-state-machine) for complete dispute resolution flow and state transitions**
 
@@ -1908,12 +2061,15 @@ The Witness Immutable Promise (WIP) file format is a cryptographically verifiabl
 
 ## Complete Tool Call Structure
 
-WIP operations use the `wip_file` MCP tool. The input is a discriminated union by `type` field:
+WIP operations use the `wip_file` sub-tool (called through the unified `wowok` tool). The input is a discriminated union by `type` field:
 
 ```json
 {
-  "type": "generate" | "verify" | "sign" | "wip2html",
-  // operation-specific fields (see Schema Tree below)
+  "tool": "wip_file",
+  "data": {
+    "type": "generate" | "verify" | "sign" | "wip2html"
+    // operation-specific fields (see Schema Tree below)
+  }
 }
 ```
 
@@ -1963,11 +2119,14 @@ Create a new WIP file from markdown text and optional images. The generated file
 
 ```json
 {
-  "type": "generate",
-  "options": {
-    "markdown_text": "Basic Web3 Consulting Service - 1 hour session"
-  },
-  "outputPath": "service_desc.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "generate",
+    "options": {
+      "markdown_text": "Basic Web3 Consulting Service - 1 hour session"
+    },
+    "outputPath": "service_desc.wip"
+  }
 }
 ```
 
@@ -1979,23 +2138,26 @@ Create a new WIP file from markdown text and optional images. The generated file
 
 ```json
 {
-  "type": "generate",
-  "options": {
-    "markdown_text": "Premium Consulting Package includes 4 hours of dedicated service and priority support.",
-    "images": [
-      {
-        "source": "logo.png",
-        "id": "company_logo",
-        "filename": "company_logo.png"
-      },
-      {
-        "source": "demo.jpg",
-        "id": "service_demo"
-      }
-    ],
-    "account": "alice"
-  },
-  "outputPath": "premium_service.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "generate",
+    "options": {
+      "markdown_text": "Premium Consulting Package includes 4 hours of dedicated service and priority support.",
+      "images": [
+        {
+          "source": "logo.png",
+          "id": "company_logo",
+          "filename": "company_logo.png"
+        },
+        {
+          "source": "demo.jpg",
+          "id": "service_demo"
+        }
+      ],
+      "account": "alice"
+    },
+    "outputPath": "premium_service.wip"
+  }
 }
 ```
 
@@ -2015,8 +2177,11 @@ Verify a WIP file's integrity by checking its hash and signatures. Optionally ve
 
 ```json
 {
-  "type": "verify",
-  "wipFilePath": "service_desc.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "verify",
+    "wipFilePath": "service_desc.wip"
+  }
 }
 ```
 
@@ -2028,9 +2193,12 @@ Verify a WIP file's integrity by checking its hash and signatures. Optionally ve
 
 ```json
 {
-  "type": "verify",
-  "wipFilePath": "premium_service.wip",
-  "hash_equal": "sha256:abc123def456..."
+  "tool": "wip_file",
+  "data": {
+    "type": "verify",
+    "wipFilePath": "premium_service.wip",
+    "hash_equal": "sha256:abc123def456..."
+  }
 }
 ```
 
@@ -2050,9 +2218,12 @@ Sign an existing WIP file with an account's private key. Adds a digital signatur
 
 ```json
 {
-  "type": "sign",
-  "wipFilePath": "service_desc.wip",
-  "outputPath": "signed_service_desc.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "sign",
+    "wipFilePath": "service_desc.wip",
+    "outputPath": "signed_service_desc.wip"
+  }
 }
 ```
 
@@ -2064,9 +2235,12 @@ Sign an existing WIP file with an account's private key. Adds a digital signatur
 
 ```json
 {
-  "type": "sign",
-  "wipFilePath": "premium_service.wip",
-  "account": "bob"
+  "tool": "wip_file",
+  "data": {
+    "type": "sign",
+    "wipFilePath": "premium_service.wip",
+    "account": "bob"
+  }
 }
 ```
 
@@ -2086,11 +2260,14 @@ Convert one or more WIP files to HTML format for display. Supports single files,
 
 ```json
 {
-  "type": "wip2html",
-  "wipPath": "service_desc.wip",
-  "options": {
-    "title": "Service Description",
-    "theme": "light"
+  "tool": "wip_file",
+  "data": {
+    "type": "wip2html",
+    "wipPath": "service_desc.wip",
+    "options": {
+      "title": "Service Description",
+      "theme": "light"
+    }
   }
 }
 ```
@@ -2103,10 +2280,13 @@ Convert one or more WIP files to HTML format for display. Supports single files,
 
 ```json
 {
-  "type": "wip2html",
-  "wipPath": "./wips",
-  "options": {
-    "outputPath": "./html_output"
+  "tool": "wip_file",
+  "data": {
+    "type": "wip2html",
+    "wipPath": "./wips",
+    "options": {
+      "outputPath": "./html_output"
+    }
   }
 }
 ```

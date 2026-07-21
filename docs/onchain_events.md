@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_events", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The On-chain Events component is used to watch and query on-chain WOWOK events by type. Supports arbitration events, new order events, progress events, demand presentation events, demand feedback events, and new entity registration events. Use pagination cursor for fetching large result sets.
@@ -27,8 +29,11 @@ On-chain events query uses the following top-level structure:
 
 ```json
 {
-  "type": "EventType",
-  // optional fields
+  "tool": "onchain_events",
+  "data": {
+    "type": "EventType"
+    // optional fields
+  }
 }
 ```
 
@@ -71,8 +76,11 @@ Monitor arbitration events to track dispute resolution status changes.
 
 ```json
 {
-  "type": "ArbEvent",
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "ArbEvent",
+    "order": "descending"
+  }
 }
 ```
 
@@ -84,12 +92,15 @@ Monitor arbitration events to track dispute resolution status changes.
 
 ```json
 {
-  "type": "ArbEvent",
-  "cursor": {
-    "eventSeq": "12345",
-    "txDigest": "0xabc123...def456"
-  },
-  "limit": 20
+  "tool": "onchain_events",
+  "data": {
+    "type": "ArbEvent",
+    "cursor": {
+      "eventSeq": "12345",
+      "txDigest": "0xabc123...def456"
+    },
+    "limit": 20
+  }
 }
 ```
 
@@ -109,8 +120,11 @@ Monitor new order creation events to stay informed about new customer purchases.
 
 ```json
 {
-  "type": "NewOrderEvent",
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewOrderEvent",
+    "order": "descending"
+  }
 }
 ```
 
@@ -122,8 +136,11 @@ Monitor new order creation events to stay informed about new customer purchases.
 
 ```json
 {
-  "type": "NewOrderEvent",
-  "no_cache": true
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewOrderEvent",
+    "no_cache": true
+  }
 }
 ```
 
@@ -143,8 +160,11 @@ Monitor progress events to track order and workflow processing stages.
 
 ```json
 {
-  "type": "ProgressEvent",
-  "order": "ascending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "ProgressEvent",
+    "order": "ascending"
+  }
 }
 ```
 
@@ -156,8 +176,11 @@ Monitor progress events to track order and workflow processing stages.
 
 ```json
 {
-  "type": "ProgressEvent",
-  "network": "testnet"
+  "tool": "onchain_events",
+  "data": {
+    "type": "ProgressEvent",
+    "network": "testnet"
+  }
 }
 ```
 
@@ -177,9 +200,12 @@ Monitor demand presentation events to track when presenters submit their solutio
 
 ```json
 {
-  "type": "DemandPresentEvent",
-  "limit": 50,
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "DemandPresentEvent",
+    "limit": 50,
+    "order": "descending"
+  }
 }
 ```
 
@@ -199,8 +225,11 @@ Monitor demand feedback events to track responses to presented demands.
 
 ```json
 {
-  "type": "DemandFeedbackEvent",
-  "order": "ascending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "DemandFeedbackEvent",
+    "order": "ascending"
+  }
 }
 ```
 
@@ -220,9 +249,12 @@ Monitor new entity registration events to track platform growth and new sign-ups
 
 ```json
 {
-  "type": "NewEntityEvent",
-  "order": "descending",
-  "limit": 100
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewEntityEvent",
+    "order": "descending",
+    "limit": 100
+  }
 }
 ```
 
@@ -234,12 +266,15 @@ Monitor new entity registration events to track platform growth and new sign-ups
 
 ```json
 {
-  "type": "NewEntityEvent",
-  "cursor": {
-    "eventSeq": "98765",
-    "txDigest": "0x123abc...456def"
-  },
-  "limit": 100
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewEntityEvent",
+    "cursor": {
+      "eventSeq": "98765",
+      "txDigest": "0x123abc...456def"
+    },
+    "limit": 100
+  }
 }
 ```
 

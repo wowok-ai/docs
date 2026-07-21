@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "demand", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Demand component is used to post service requests with reward pools on-chain.
@@ -122,7 +124,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -151,13 +153,16 @@ Create a new Demand object for posting service requests.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "logo_design_demand"
-    },
-    "description": "Need a professional corporate LOGO design",
-    "location": "Online service"
+    "operation_type": "demand",
+    "data": {
+      "object": {
+        "name": "logo_design_demand"
+      },
+      "description": "Need a professional corporate LOGO design",
+      "location": "Online service"
+    }
   }
 }
 ```
@@ -165,23 +170,31 @@ Create a new Demand object for posting service requests.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "33729",
-  "change": "created",
-  "objects": [
-    {
-      "type": "Demand",
-      "object": "0x2d49...f414",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0xfe50...c914",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0xfe50...c914",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -191,14 +204,17 @@ Create a new Demand object for posting service requests.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "website_design_demand",
-      "permission": "existing_permission"
-    },
-    "description": "Need a modern corporate website design",
-    "location": "Online service"
+    "operation_type": "demand",
+    "data": {
+      "object": {
+        "name": "website_design_demand",
+        "permission": "existing_permission"
+      },
+      "description": "Need a modern corporate website design",
+      "location": "Online service"
+    }
   }
 }
 ```
@@ -206,23 +222,31 @@ Create a new Demand object for posting service requests.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xfe82...45d9",
-  "type": "Demand",
-  "version": "33940",
-  "change": "created",
-  "objects": [
-    {
-      "type": "Demand",
-      "object": "0xfe82...45d9",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0x32f1...52e6",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0xfe82...45d9",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0x32f1...52e6",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -232,16 +256,19 @@ Create a new Demand object for posting service requests.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "app_development_demand",
-      "permission": {
-        "name": "demand_permission"
-      }
-    },
-    "description": "Need a mobile app development service",
-    "location": "Online service"
+    "operation_type": "demand",
+    "data": {
+      "object": {
+        "name": "app_development_demand",
+        "permission": {
+          "name": "demand_permission"
+        }
+      },
+      "description": "Need a mobile app development service",
+      "location": "Online service"
+    }
   }
 }
 ```
@@ -249,23 +276,31 @@ Create a new Demand object for posting service requests.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xa8b4...107e",
-  "type": "Demand",
-  "version": "34144",
-  "change": "created",
-  "objects": [
-    {
-      "type": "Demand",
-      "object": "0xa8b4...107e",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0xece8...601b",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0xa8b4...107e",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0xece8...601b",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -275,10 +310,13 @@ Create a new Demand object for posting service requests.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "description": "Updated description for the demand"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "description": "Updated description for the demand"
+    }
   }
 }
 ```
@@ -286,11 +324,25 @@ Create a new Demand object for posting service requests.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "34145",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "34145",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -316,12 +368,15 @@ Recommend a Service to the Demand object.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "present": {
-      "recommend": "This design service is very suitable for your needs",
-      "service": "design_service"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "present": {
+        "recommend": "This design service is very suitable for your needs",
+        "service": "design_service"
+      }
     }
   }
 }
@@ -330,8 +385,20 @@ Recommend a Service to the Demand object.
 **Execution Result**:
 ```json
 {
-  "status": "error",
-  "error": "Dry run failed: MoveAbort in command 0"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction failed: Dry run failed: MoveAbort in command 0",
+      "result": {
+        "type": "error",
+        "error": "Dry run failed: MoveAbort in command 0",
+        "error_code": "move_abort",
+        "retryable": false,
+        "recovery_hint": "Check input parameters and on-chain state"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -345,25 +412,31 @@ Recommend a Service to the Demand object.
 ```json
 // Step 1: Add Guard to Demand
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "guards": {
-      "op": "add",
-      "guard": [{"guard": "always_true_guard_v4"}]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "guards": {
+        "op": "add",
+        "guard": [{"guard": "always_true_guard_v4"}]
+      }
     }
   }
 }
 
 // Step 2: Present service with the same Guard
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "present": {
-      "recommend": "This design service is very suitable for your needs",
-      "by_guard": "always_true_guard_v4",
-      "service": "design_service"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "present": {
+        "recommend": "This design service is very suitable for your needs",
+        "by_guard": "always_true_guard_v4",
+        "service": "design_service"
+      }
     }
   }
 }
@@ -372,23 +445,31 @@ Recommend a Service to the Demand object.
 **Execution Result (Complete workflow)**:
 ```json
 {
-  "status": "success",
-  "object": "0xbf55...02b9",
-  "type": "Demand",
-  "version": "63619",
-  "change": "mutated",
-  "objects": [
-    {
-      "type": "Demand",
-      "object": "0xbf55...02b9",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_DemandPresenter",
-      "object": "0x9eda...2665",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0xbf55...02b9",
+            "version": "...",
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_DemandPresenter",
+            "object": "0x9eda...2665",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -424,19 +505,22 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "guards": {
-      "op": "add",
-      "guard": [
-        {
-          "guard": "service_qualification_check"
-        },
-        {
-          "guard": "price_check"
-        }
-      ]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "guards": {
+        "op": "add",
+        "guard": [
+          {
+            "guard": "service_qualification_check"
+          },
+          {
+            "guard": "price_check"
+          }
+        ]
+      }
     }
   }
 }
@@ -445,11 +529,25 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "34485",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "34485",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -459,16 +557,19 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "guards": {
-      "op": "set",
-      "guard": [
-        {
-          "guard": "service_qualification_check"
-        }
-      ]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "guards": {
+        "op": "set",
+        "guard": [
+          {
+            "guard": "service_qualification_check"
+          }
+        ]
+      }
     }
   }
 }
@@ -480,12 +581,15 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "guards": {
-      "op": "remove",
-      "guard": ["old_guard"]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "guards": {
+        "op": "remove",
+        "guard": ["old_guard"]
+      }
     }
   }
 }
@@ -494,11 +598,25 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "...",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "...",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -508,11 +626,14 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "guards": {
-      "op": "clear"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "guards": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -521,11 +642,25 @@ Manage the Demand object's validation Guard list, used to verify whether the ser
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "...",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "...",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -554,14 +689,17 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "rewards": {
-      "op": "add",
-      "objects": ["demand_reward"]
-    },
-    "um": "demand_contact"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "rewards": {
+        "op": "add",
+        "objects": ["demand_reward"]
+      },
+      "um": "demand_contact"
+    }
   }
 }
 ```
@@ -569,11 +707,25 @@ Bind Reward, Contact and other components to Demand.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "34762",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "34762",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -583,12 +735,15 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "rewards": {
-      "op": "set",
-      "objects": ["reward_1", "reward_2"]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "rewards": {
+        "op": "set",
+        "objects": ["reward_1", "reward_2"]
+      }
     }
   }
 }
@@ -600,12 +755,15 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "rewards": {
-      "op": "remove",
-      "objects": ["old_reward"]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "rewards": {
+        "op": "remove",
+        "objects": ["old_reward"]
+      }
     }
   }
 }
@@ -614,11 +772,25 @@ Bind Reward, Contact and other components to Demand.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "...",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "...",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -628,11 +800,14 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "rewards": {
-      "op": "clear"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "rewards": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -644,10 +819,13 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "um": "demand_contact"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "um": "demand_contact"
+    }
   }
 }
 ```
@@ -655,11 +833,25 @@ Bind Reward, Contact and other components to Demand.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "34762",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "34762",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -669,10 +861,13 @@ Bind Reward, Contact and other components to Demand.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "um": null
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "um": null
+    }
   }
 }
 ```
@@ -680,11 +875,25 @@ Bind Reward, Contact and other components to Demand.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "...",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "...",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -713,18 +922,21 @@ Provide user feedback information for the Demand object.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "feedback": [
-      {
-        "who": {
-          "name_or_address": "service_provider"
-        },
-        "acceptance_score": 200,
-        "feedback": "The recommended service meets the requirements very well"
-      }
-    ]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "feedback": [
+        {
+          "who": {
+            "name_or_address": "service_provider"
+          },
+          "acceptance_score": 200,
+          "feedback": "The recommended service meets the requirements very well"
+        }
+      ]
+    }
   }
 }
 ```
@@ -732,11 +944,25 @@ Provide user feedback information for the Demand object.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x2d49...f414",
-  "type": "Demand",
-  "version": "35008",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Demand",
+            "object": "0x2d49...f414",
+            "version": "35008",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -792,10 +1018,13 @@ When `owner_receive` is a balance object:
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "owner_receive": "recently"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "owner_receive": "recently"
+    }
   }
 }
 ```
@@ -803,7 +1032,18 @@ When `owner_receive` is a balance object:
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -813,19 +1053,22 @@ When `owner_receive` is a balance object:
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "owner_receive": [
-      {
-        "id": "0xabc123...def456",
-        "type": "0x2::object::Object"
-      },
-      {
-        "id": "0x5678...9abc",
-        "type": "0x2::object::Object"
-      }
-    ]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "owner_receive": [
+        {
+          "id": "0xabc123...def456",
+          "type": "0x2::object::Object"
+        },
+        {
+          "id": "0x5678...9abc",
+          "type": "0x2::object::Object"
+        }
+      ]
+    }
   }
 }
 ```
@@ -836,19 +1079,22 @@ When `owner_receive` is a balance object:
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "owner_receive": {
-      "balance": "1000000000",
-      "token_type": "0x2::wow::WOW",
-      "received": [
-        {
-          "id": "0xabc123...def456",
-          "balance": "1000000000",
-          "payment": "0xabcd...efgh"
-        }
-      ]
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "owner_receive": {
+        "balance": "1000000000",
+        "token_type": "0x2::wow::WOW",
+        "received": [
+          {
+            "id": "0xabc123...def456",
+            "balance": "1000000000",
+            "payment": "0xabcd...efgh"
+          }
+        ]
+      }
     }
   }
 }
@@ -870,27 +1116,30 @@ Execute multiple operations in a single call.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "complete_demand",
-      "permission": "demand_permission"
-    },
-    "description": "Complete demand example",
-    "location": "Online service",
-    "rewards": {
-      "op": "add",
-      "objects": ["demand_reward"]
-    },
-    "guards": {
-      "op": "add",
-      "guard": [
-        {
-          "guard": "service_check"
-        }
-      ]
-    },
-    "um": "demand_contact"
+    "operation_type": "demand",
+    "data": {
+      "object": {
+        "name": "complete_demand",
+        "permission": "demand_permission"
+      },
+      "description": "Complete demand example",
+      "location": "Online service",
+      "rewards": {
+        "op": "add",
+        "objects": ["demand_reward"]
+      },
+      "guards": {
+        "op": "add",
+        "guard": [
+          {
+            "guard": "service_check"
+          }
+        ]
+      },
+      "um": "demand_contact"
+    }
   }
 }
 ```
@@ -901,24 +1150,27 @@ Execute multiple operations in a single call.
 
 ```json
 {
-  "operation_type": "demand",
+  "tool": "onchain_operations",
   "data": {
-    "object": "logo_design_demand",
-    "description": "Updated demand description",
-    "present": {
-      "recommend": "Highly recommended design service",
-      "service": "premium_design_service"
-    },
-    "feedback": [
-      {
-        "who": {
-          "name_or_address": "designer_1"
-        },
-        "acceptance_score": 220,
-        "feedback": "Excellent service quality"
-      }
-    ],
-    "owner_receive": "recently"
+    "operation_type": "demand",
+    "data": {
+      "object": "logo_design_demand",
+      "description": "Updated demand description",
+      "present": {
+        "recommend": "Highly recommended design service",
+        "service": "premium_design_service"
+      },
+      "feedback": [
+        {
+          "who": {
+            "name_or_address": "designer_1"
+          },
+          "acceptance_score": 220,
+          "feedback": "Excellent service quality"
+        }
+      ],
+      "owner_receive": "recently"
+    }
   }
 }
 ```

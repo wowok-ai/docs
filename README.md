@@ -175,7 +175,7 @@ wowok-skills init
 
 ## 📚 Learning Path
 
-We have designed 8 learning stages and a large number of Prompt examples for you, with each stage building on the previous one:
+We have designed 10 learning stages and a large number of Prompt examples for you, with each stage building on the previous one:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -231,6 +231,18 @@ We have designed 8 learning stages and a large number of Prompt examples for you
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### 🛠️ Advanced Tools
+
+Beyond the 9 learning stages, WoWok provides three advanced tools for deployment workflow, runtime control, and trust assessment:
+
+| Tool | Sub-tool | Description |
+|------|----------|-------------|
+| [Project](docs/project.md) | `project_operation` | 5-stage deployment workflow: analyze intent → aggregate risks → generate deployment doc → trace substeps. Maintains a local object dependency graph (DAG) for topologically correct deployment. |
+| [Config](docs/config.md) | `config_operation` | Runtime service toggles: enable/disable features like Safety Confirmation Gate, Harness Verify Loop, Semantic Enrichment, and more — without restarting the MCP server. |
+| [Trust Score](docs/trust-score.md) | `trust_score` | Proactive service trust & risk assessment: computes a 0-100 trust score across 5 dimensions (arbitration, reviews, fulfillment, fund_safety, transparency) and a 4-dimension risk score at deeper evaluation levels. |
+
+> **Note**: These tools are optional and complement the core learning path. Use `trust_score` before purchasing from a service, `project_operation` for structured multi-object deployment, and `config_operation` for runtime feature control.
+
 ---
 
 ## 🚀 Start Your Journey
@@ -273,7 +285,7 @@ Choose a stage to begin your WoWok journey:
 | [Travel](examples/Travel/) | Multi-Node Workflow | Iceland travel service with weather-dependent activities and sub-orders |
 
 ### [🪙 Stage 9: Cross-Chain Bridge →](docs/stage-09-bridge.md)
-**Cross-Chain Asset Transfers** - Bridge assets between WOW mainnet and EVM (Ethereum mainnet) via a single `bridge_operation` tool with 10 operation types.
+**Cross-Chain Asset Transfers** - Bridge assets between WOW mainnet and EVM (Ethereum mainnet) via the `bridge_operation` sub-tool (10 operation types), called through the unified `wowok` tool.
 
 ---
 
@@ -303,12 +315,17 @@ Choose a stage to begin your WoWok journey:
 | [On-chain Events](docs/onchain_events.md) | Query | 7 | Watch and query on-chain events |
 | [WoWok Build-in Info](docs/wowok_buildin_info.md) | Query | 7 | Query protocol constants and info |
 | [Response Format](docs/response-format.md) | Reference | - | MCP output structure, semantic layer, error classification |
+| [Schema Query](docs/schema-query.md) | Reference | - | Sub-tool schema lookup and self-correction |
+| [Proof](docs/proof.md) | On-Chain | 3 | Immutable on-chain proof objects (WTS, Merkle roots) |
 | [MyShop Example](examples/MyShop/) | Example | 8 | Basic e-commerce store with product listings |
 | [ThreeBody_Signature Example](examples/ThreeBody_Signature/) | Example | 8 | Signed book service with WIP verification |
 | [MyShop_Advanced Example](examples/MyShop_Advanced/) | Example | 8 | Advanced merchant system with arbitration |
 | [Insurance Example](examples/Insurance/) | Example | 8 | Time-lock insurance claims with convert_witness |
 | [Travel Example](examples/Travel/) | Example | 8 | Multi-node workflow with weather checks and sub-orders |
 | [Bridge](docs/bridge.md) | Cross-Chain | 9 | WOW ↔ EVM (Ethereum mainnet) cross-chain asset transfers |
+| [Config](docs/config.md) | System | - | Runtime service toggles (confirm_gate, harness, etc.) |
+| [Project](docs/project.md) | Workflow | - | 5-stage deployment workflow & object dependency graph |
+| [Trust Score](docs/trust-score.md) | Query | - | Service risk & trust assessment (0-100 score, 5 dimensions) |
 
 ---
 

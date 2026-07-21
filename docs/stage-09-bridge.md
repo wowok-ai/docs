@@ -19,6 +19,8 @@ In this stage, you will learn about the **cross-chain bridge** between WOW mainn
 - The **gas requirements** for each operation (WOW gas vs. EVM gas)
 - Common **pitfalls** and troubleshooting steps
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -31,7 +33,7 @@ WoWok's trust layer lives on the WOW mainnet, but real-world assets and users fr
 - **Push settlement proceeds** from WOW back to Ethereum for treasury management.
 - **Top up its own `activeEvmAccount`** so it can pay for gas and withdrawals on EVM.
 
-Without the bridge, every AI agent would need to manually operate two separate wallets and coordinate cross-chain transfers out-of-band. The bridge **collapses all of that into a single MCP tool** (`bridge_operation`) with 10 operation types.
+Without the bridge, every AI agent would need to manually operate two separate wallets and coordinate cross-chain transfers out-of-band. The bridge **collapses all of that into a single sub-tool** (`bridge_operation`) with 10 operation types.
 
 ---
 
@@ -146,9 +148,9 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 
 ```json
 [
-  { "operation_type": "query_supported_evm_chains" },
-  { "operation_type": "query_supported_tokens", "data": { "network": "mainnet" } },
-  { "operation_type": "query_active_evm_account" }
+  { "tool": "bridge_operation", "data": { "operation_type": "query_supported_evm_chains" } },
+  { "tool": "bridge_operation", "data": { "operation_type": "query_supported_tokens", "data": { "network": "mainnet" } } },
+  { "tool": "bridge_operation", "data": { "operation_type": "query_active_evm_account" } }
 ]
 ```
 
@@ -164,9 +166,12 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 
 ```json
 {
-  "operation_type": "cross_chain_evm_to_wow",
-  "data": { "token": "ETH", "amount": "1000000000000000" },
-  "env": { "network": "mainnet" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "cross_chain_evm_to_wow",
+    "data": { "token": "ETH", "amount": "1000000000000000" },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -174,8 +179,11 @@ Then poll status every 1–2 minutes:
 
 ```json
 {
-  "operation_type": "query_transfer_status",
-  "data": { "transferId": "<transferId from previous step>", "refresh": true }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_status",
+    "data": { "transferId": "<transferId from previous step>", "refresh": true }
+  }
 }
 ```
 
@@ -191,9 +199,12 @@ Then poll status every 1–2 minutes:
 
 ```json
 {
-  "operation_type": "cross_chain_wow_to_evm",
-  "data": { "token": "ETH", "amount": "100000" },
-  "env": { "network": "mainnet" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "cross_chain_wow_to_evm",
+    "data": { "token": "ETH", "amount": "100000" },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -201,8 +212,11 @@ Then poll status every 1–2 minutes:
 
 ```json
 {
-  "operation_type": "query_transfer_status",
-  "data": { "transferId": "<transferId>", "refresh": true }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_status",
+    "data": { "transferId": "<transferId>", "refresh": true }
+  }
 }
 ```
 
@@ -212,9 +226,12 @@ Wait until `latestState.step === "signatures_ready"`.
 
 ```json
 {
-  "operation_type": "claim_wow_to_evm",
-  "data": { "transferId": "<transferId>" },
-  "env": { "network": "mainnet" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "claim_wow_to_evm",
+    "data": { "transferId": "<transferId>" },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -230,10 +247,10 @@ Wait until `latestState.step === "signatures_ready"`.
 
 ```json
 [
-  { "operation_type": "manage_evm_rpc", "data": { "op": "ping" } },
-  { "operation_type": "manage_evm_rpc", "data": { "op": "remove", "rpcUrls": ["<unhealthy_url>"] } },
-  { "operation_type": "manage_evm_rpc", "data": { "op": "add", "rpcUrls": ["https://1rpc.io/eth"] } },
-  { "operation_type": "manage_evm_rpc", "data": { "op": "list" } }
+  { "tool": "bridge_operation", "data": { "operation_type": "manage_evm_rpc", "data": { "op": "ping" } } },
+  { "tool": "bridge_operation", "data": { "operation_type": "manage_evm_rpc", "data": { "op": "remove", "rpcUrls": ["<unhealthy_url>"] } } },
+  { "tool": "bridge_operation", "data": { "operation_type": "manage_evm_rpc", "data": { "op": "add", "rpcUrls": ["https://1rpc.io/eth"] } } },
+  { "tool": "bridge_operation", "data": { "operation_type": "manage_evm_rpc", "data": { "op": "list" } } }
 ]
 ```
 
@@ -256,7 +273,7 @@ Before moving on, confirm you have:
 ## 🔗 Next Steps
 
 - **Topic deep dive**: [bridge.md](bridge.md) — Concepts, prerequisites, and worked examples with real MCP server responses.
-- **Schema reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"` — Full parameter/type definitions for all 10 operation types.
+- **Schema reference**: Use MCP `schema_query` sub-tool with `action: "get"` and `name: "bridge_operation"` — Full parameter/type definitions for all 10 operation types.
 - **Live test script**: [`agent/mcp/scripts/test-bridge.mjs`](../../agent/mcp/scripts/test-bridge.mjs) — Reproducible live tests of all bridge operations.
 - **Live test output**: [`agent/mcp/scripts/test-bridge-output.log`](../../agent/mcp/scripts/test-bridge-output.log) — Real MCP server responses captured during testing.
 

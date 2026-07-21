@@ -6,7 +6,9 @@
 
 The LocalInfo component manages local private data, such as delivery addresses, phone numbers, contacts, etc., stored exclusively on the local device.
 
-> **Note**: Use the `query_toolkit` tool to query all or filtered information.
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "local_info_operation", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
+> **Note**: Use the `query_toolkit` sub-tool to query all or filtered information.
 
 ---
 
@@ -84,14 +86,17 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "shipping_address",
-        "default": "123 Main St, New York, NY 10001"
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "shipping_address",
+          "default": "123 Main St, New York, NY 10001"
+        }
+      ]
+    }
   }
 }
 ```
@@ -99,7 +104,18 @@ Add one or more local info entries. Each info entry includes name, default value
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -109,22 +125,37 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "shipping_address",
-        "default": "123 Main St, New York, NY 10001",
-        "contents": ["10001", "Contact: Alice Smith", "Phone: +1-234-567-8900"]
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "shipping_address",
+          "default": "123 Main St, New York, NY 10001",
+          "contents": ["10001", "Contact: Alice Smith", "Phone: +1-234-567-8900"]
+        }
+      ]
+    }
   }
 }
+```
 
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -134,15 +165,18 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "phone_number",
-        "default": "+1-234-567-8900",
-        "contents": ["AT&T", "New York Region"]
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "phone_number",
+          "default": "+1-234-567-8900",
+          "contents": ["AT&T", "New York Region"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -150,7 +184,18 @@ Add one or more local info entries. Each info entry includes name, default value
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -160,31 +205,46 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "home_address",
-        "default": "456 Park Ave, Boston, MA 02101",
-        "contents": ["02101", "Residence"]
-      },
-      {
-        "name": "work_address",
-        "default": "789 Business Tower, 15th Floor, Chicago, IL",
-        "contents": ["60601", "Office", "Hours: 9:00-18:00"]
-      },
-      {
-        "name": "emergency_contact",
-        "default": "Bob Johnson +1-987-654-3210"
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "home_address",
+          "default": "456 Park Ave, Boston, MA 02101",
+          "contents": ["02101", "Residence"]
+        },
+        {
+          "name": "work_address",
+          "default": "789 Business Tower, 15th Floor, Chicago, IL",
+          "contents": ["60601", "Office", "Hours: 9:00-18:00"]
+        },
+        {
+          "name": "emergency_contact",
+          "default": "Bob Johnson +1-987-654-3210"
+        }
+      ]
+    }
   }
 }
+```
 
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -194,27 +254,42 @@ Add one or more local info entries. Each info entry includes name, default value
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "contact_alice",
-        "default": "Alice Smith",
-        "contents": [
-          "Email: alice.smith@example.com",
-          "Phone: +1-234-567-8900",
-          "Address: 123 Main St, New York, NY 10001",
-          "Note: VIP Customer"
-        ]
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "contact_alice",
+          "default": "Alice Smith",
+          "contents": [
+            "Email: alice.smith@example.com",
+            "Phone: +1-234-567-8900",
+            "Address: 123 Main St, New York, NY 10001",
+            "Note: VIP Customer"
+          ]
+        }
+      ]
+    }
   }
 }
+```
 
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -241,9 +316,12 @@ Remove one or more local info entries by name.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "data": ["shipping_address"]
+  "tool": "local_info_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "data": ["shipping_address"]
+    }
   }
 }
 ```
@@ -251,7 +329,18 @@ Remove one or more local info entries by name.
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -261,9 +350,12 @@ Remove one or more local info entries by name.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "data": ["home_address", "phone_number"]
+  "tool": "local_info_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "data": ["home_address", "phone_number"]
+    }
   }
 }
 ```
@@ -271,7 +363,18 @@ Remove one or more local info entries by name.
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -299,10 +402,13 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 ```json
 {
-  "reset": {
-    "op": "reset",
-    "name": "work_address",
-    "contents": ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"]
+  "tool": "local_info_operation",
+  "data": {
+    "reset": {
+      "op": "reset",
+      "name": "work_address",
+      "contents": ["789 Broadway, Los Angeles, CA 90012", "90012", "Contact: Charlie Brown"]
+    }
   }
 }
 ```
@@ -310,7 +416,18 @@ Reset the content list of a specified info entry. This completely replaces the e
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -320,10 +437,13 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 ```json
 {
-  "reset": {
-    "op": "reset",
-    "name": "emergency_contact",
-    "contents": []
+  "tool": "local_info_operation",
+  "data": {
+    "reset": {
+      "op": "reset",
+      "name": "emergency_contact",
+      "contents": []
+    }
   }
 }
 ```
@@ -331,7 +451,18 @@ Reset the content list of a specified info entry. This completely replaces the e
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -341,14 +472,17 @@ Reset the content list of a specified info entry. This completely replaces the e
 
 ```json
 {
-  "reset": {
-    "op": "reset",
-    "name": "contact_alice",
-    "contents": [
-      "Email: alice.new@example.com",
-      "Phone: +1-234-567-9999",
-      "Address: 456 New St, Boston, MA 02101"
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "reset": {
+      "op": "reset",
+      "name": "contact_alice",
+      "contents": [
+        "Email: alice.new@example.com",
+        "Phone: +1-234-567-9999",
+        "Address: 456 New St, Boston, MA 02101"
+      ]
+    }
   }
 }
 ```
@@ -356,7 +490,18 @@ Reset the content list of a specified info entry. This completely replaces the e
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -382,8 +527,11 @@ Remove all local info entries. This operation is irreversible, use with caution.
 
 ```json
 {
-  "clear": {
-    "op": "clear"
+  "tool": "local_info_operation",
+  "data": {
+    "clear": {
+      "op": "clear"
+    }
   }
 }
 ```
@@ -391,7 +539,18 @@ Remove all local info entries. This operation is irreversible, use with caution.
 **Execution Result:**
 ```json
 {
-  "success": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "success": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -401,7 +560,10 @@ Remove all local info entries. This operation is irreversible, use with caution.
 
 ```json
 {
-  "query_type": "local_info_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_info_list"
+  }
 }
 ```
 

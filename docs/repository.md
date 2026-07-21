@@ -2,6 +2,8 @@
 
 ***
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "repository", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 Repository is WoWok's on-chain data repository component, used to store structured data. Repository can be bound to Machine, Service, and other components to provide data storage and query capabilities.
@@ -27,10 +29,13 @@ Repository operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "repository",
-  "data": { ... },    // Repository data definition
-  "env": { ... },       // Execution environment (optional)
-  "submission": { ... }  // Submission data (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "repository",
+    "data": { ... },    // Repository data definition
+    "env": { ... },       // Execution environment (optional)
+    "submission": { ... }  // Submission data (optional)
+  }
 }
 ```
 
@@ -162,7 +167,7 @@ The following table lists all supported `value_type` values for policy definitio
 | 17 | "VecU256" / "vecu256" | Vector of unsigned 256-bit integers |
 | 18 | "VecVecU8" / "vecvecu8" | Vector of vectors of unsigned 8-bit integers |
 
-**Query via Tool**: You can also query all value types dynamically using the `wowok_buildin_info` tool with `info: "value types"`.
+**Query via Tool**: You can also query all value types dynamically using the `wowok_buildin_info` sub-tool with `info: "value types"`.
 
 ***
 
@@ -176,7 +181,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ***
 
@@ -210,14 +215,17 @@ Create a new Repository object for storing structured data.
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "repo_test_1"
+    "operation_type": "repository",
+    "data": {
+      "object": {
+        "name": "repo_test_1"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -226,21 +234,31 @@ Create a new Repository object for storing structured data.
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0x875e...0192",
-      "version": "190089",
-      "change": "created"
-    },
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "190089",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x875e...0192",
+            "version": "190089",
+            "change": "created"
+          },
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "190089",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -252,16 +270,19 @@ Create a new Repository object for storing structured data.
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "repo_test_2",
-      "tags": ["users", "storage"]
+    "operation_type": "repository",
+    "data": {
+      "object": {
+        "name": "repo_test_2",
+        "tags": ["users", "storage"]
+      },
+      "description": "User data storage repository"
     },
-    "description": "User data storage repository"
-  },
-  "env": {
-    "network": "testnet"
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -270,21 +291,31 @@ Create a new Repository object for storing structured data.
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0xe391...d3ca",
-      "version": "190619",
-      "change": "created"
-    },
-    {
-      "type": "Repository",
-      "object": "0x2e14...d800",
-      "version": "190619",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0xe391...d3ca",
+            "version": "190619",
+            "change": "created"
+          },
+          {
+            "type": "Repository",
+            "object": "0x2e14...d800",
+            "version": "190619",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -298,47 +329,53 @@ Create a new Repository object for storing structured data.
 >
 > ```json
 > {
->   "operation_type": "guard",
+>   "tool": "onchain_operations",
 >   "data": {
->     "namedNew": {"name": "repo_guard_1"},
->     "description": "Always true guard for repository testing",
->     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
->     "root": {
->       "type": "node",
->       "node": {
->         "type": "logic_equal",
->         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>     "operation_type": "guard",
+>     "data": {
+>       "namedNew": {"name": "repo_guard_1"},
+>       "description": "Always true guard for repository testing",
+>       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>       "root": {
+>         "type": "node",
+>         "node": {
+>           "type": "logic_equal",
+>           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>         }
 >       }
->     }
->   },
->   "env": {"network": "testnet"}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "complete_repo",
-      "tags": ["service", "database"]
+    "operation_type": "repository",
+    "data": {
+      "object": {
+        "name": "complete_repo",
+        "tags": ["service", "database"]
+      },
+      "description": "Complete repository example",
+      "policies": {
+        "op": "add",
+        "policy": [
+          {
+            "name": "user_notes",
+            "description": "User notes storage",
+            "write_guard": [{"guard": "repo_guard_1"}],
+            "id_from": "Clock",
+            "value_type": "string"
+          }
+        ]
+      }
     },
-    "description": "Complete repository example",
-    "policies": {
-      "op": "add",
-      "policy": [
-        {
-          "name": "user_notes",
-          "description": "User notes storage",
-          "write_guard": [{"guard": "repo_guard_1"}],
-          "id_from": "Clock",
-          "value_type": "string"
-        }
-      ]
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -347,21 +384,31 @@ Create a new Repository object for storing structured data.
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0x2de2...8571",
-      "version": "191543",
-      "change": "created"
-    },
-    {
-      "type": "Repository",
-      "object": "0x5e97...4970",
-      "version": "191543",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x2de2...8571",
+            "version": "191543",
+            "change": "created"
+          },
+          {
+            "type": "Repository",
+            "object": "0x5e97...4970",
+            "version": "191543",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -411,43 +458,49 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 >
 > ```json
 > {
->   "operation_type": "guard",
+>   "tool": "onchain_operations",
 >   "data": {
->     "namedNew": {"name": "profile_guard"},
->     "description": "Guard for profile policy",
->     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
->     "root": {
->       "type": "node",
->       "node": {
->         "type": "logic_equal",
->         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>     "operation_type": "guard",
+>     "data": {
+>       "namedNew": {"name": "profile_guard"},
+>       "description": "Guard for profile policy",
+>       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>       "root": {
+>         "type": "node",
+>         "node": {
+>           "type": "logic_equal",
+>           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>         }
 >       }
->     }
->   },
->   "env": {"network": "testnet"}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_2",
-    "policies": {
-      "op": "add",
-      "policy": [
-        {
-          "name": "user_profile",
-          "description": "User profile data",
-          "write_guard": [{"guard": "profile_guard"}],
-          "id_from": "Signer",
-          "value_type": "Address"
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_2",
+      "policies": {
+        "op": "add",
+        "policy": [
+          {
+            "name": "user_profile",
+            "description": "User profile data",
+            "write_guard": [{"guard": "profile_guard"}],
+            "id_from": "Signer",
+            "value_type": "Address"
+          }
+        ]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -456,15 +509,25 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0x2e14...d800",
-      "version": "192431",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0x2e14...d800",
+            "version": "192431",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -478,69 +541,78 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 >
 > ```json
 > {
->   "operation_type": "guard",
+>   "tool": "onchain_operations",
 >   "data": {
->     "namedNew": {"name": "order_guard"},
->     "description": "Guard for order policy",
->     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
->     "root": {
->       "type": "node",
->       "node": {
->         "type": "logic_equal",
->         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>     "operation_type": "guard",
+>     "data": {
+>       "namedNew": {"name": "order_guard"},
+>       "description": "Guard for order policy",
+>       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>       "root": {
+>         "type": "node",
+>         "node": {
+>           "type": "logic_equal",
+>           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>         }
 >       }
->     }
->   },
->   "env": {"network": "testnet"}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 >
 > ```json
 > {
->   "operation_type": "guard",
+>   "tool": "onchain_operations",
 >   "data": {
->     "namedNew": {"name": "feedback_guard"},
->     "description": "Guard for feedback policy",
->     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
->     "root": {
->       "type": "node",
->       "node": {
->         "type": "logic_equal",
->         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>     "operation_type": "guard",
+>     "data": {
+>       "namedNew": {"name": "feedback_guard"},
+>       "description": "Guard for feedback policy",
+>       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>       "root": {
+>         "type": "node",
+>         "node": {
+>           "type": "logic_equal",
+>           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>         }
 >       }
->     }
->   },
->   "env": {"network": "testnet"}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_1",
-    "policies": {
-      "op": "add",
-      "policy": [
-        {
-          "name": "order_info",
-          "description": "Order information records",
-          "write_guard": [{"guard": "order_guard"}],
-          "id_from": "Clock",
-          "value_type": "U64"
-        },
-        {
-          "name": "feedback",
-          "description": "User feedback records",
-          "write_guard": [{"guard": "feedback_guard"}],
-          "id_from": "Signer",
-          "value_type": "String"
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_1",
+      "policies": {
+        "op": "add",
+        "policy": [
+          {
+            "name": "order_info",
+            "description": "Order information records",
+            "write_guard": [{"guard": "order_guard"}],
+            "id_from": "Clock",
+            "value_type": "U64"
+          },
+          {
+            "name": "feedback",
+            "description": "User feedback records",
+            "write_guard": [{"guard": "feedback_guard"}],
+            "id_from": "Signer",
+            "value_type": "String"
+          }
+        ]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -549,15 +621,25 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "193331",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "193331",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -569,16 +651,19 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_1",
-    "policies": {
-      "op": "remove",
-      "policy": ["order_info"]
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_1",
+      "policies": {
+        "op": "remove",
+        "policy": ["order_info"]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -587,15 +672,25 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "193332",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "193332",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -607,15 +702,18 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_1",
-    "policies": {
-      "op": "clear"
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_1",
+      "policies": {
+        "op": "clear"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -624,15 +722,25 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "196947",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "196947",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -669,38 +777,44 @@ Add data items to the repository, following policy rules for ID source and value
 >
 > ```json
 > {
->   "operation_type": "repository",
+>   "tool": "onchain_operations",
 >   "data": {
->     "object": {"name": "simple_repo"},
->     "policies": {
->       "op": "add",
->       "policy": [
->         {
->           "name": "simple_data",
->           "description": "Simple data storage",
->           "write_guard": [],
->           "id_from": "Clock",
->           "value_type": "String"
->         }
->       ]
->     }
->   },
->   "env": {"network": "testnet"}
+>     "operation_type": "repository",
+>     "data": {
+>       "object": {"name": "simple_repo"},
+>       "policies": {
+>         "op": "add",
+>         "policy": [
+>           {
+>             "name": "simple_data",
+>             "description": "Simple data storage",
+>             "write_guard": [],
+>             "id_from": "Clock",
+>             "value_type": "String"
+>           }
+>         ]
+>       }
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_repo",
-    "data_add": {
-      "name": "simple_data",
-      "data": "Test data without guard"
+    "operation_type": "repository",
+    "data": {
+      "object": "simple_repo",
+      "data_add": {
+        "name": "simple_data",
+        "data": "Test data without guard"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -709,7 +823,18 @@ Add data items to the repository, following policy rules for ID source and value
 
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -721,29 +846,32 @@ Add data items to the repository, following policy rules for ID source and value
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_repo",
-    "data_add": {
-      "name": "simple_data",
-      "items": [
-        {
-          "data": [
-            {
-              "id": 100,
-              "data": "First data item"
-            },
-            {
-              "id": 200,
-              "data": "Second data item"
-            }
-          ]
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "simple_repo",
+      "data_add": {
+        "name": "simple_data",
+        "items": [
+          {
+            "data": [
+              {
+                "id": 100,
+                "data": "First data item"
+              },
+              {
+                "id": 200,
+                "data": "Second data item"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -752,7 +880,18 @@ Add data items to the repository, following policy rules for ID source and value
 
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -787,15 +926,18 @@ Remove data items from the repository.
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_repo",
-    "data_remove": {
-      "name": "simple_data"
+    "operation_type": "repository",
+    "data": {
+      "object": "simple_repo",
+      "data_remove": {
+        "name": "simple_data"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -804,7 +946,18 @@ Remove data items from the repository.
 
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -816,20 +969,23 @@ Remove data items from the repository.
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_repo",
-    "data_remove": {
-      "name": "simple_data",
-      "items": [
-        {
-          "id": [100, 200]
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "simple_repo",
+      "data_remove": {
+        "name": "simple_data",
+        "items": [
+          {
+            "id": [100, 200]
+          }
+        ]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -838,7 +994,18 @@ Remove data items from the repository.
 
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -871,28 +1038,34 @@ Bind reward objects for data contribution incentives, and process received asset
 >
 > ```json
 > {
->   "operation_type": "reward",
+>   "tool": "onchain_operations",
 >   "data": {
->     "object": {"name": "test_reward"},
->     "description": "Test reward for repository",
->     "time": {"op": "add", "time": [3600]}
->   },
->   "env": {"network": "testnet"}
+>     "operation_type": "reward",
+>     "data": {
+>       "object": {"name": "test_reward"},
+>       "description": "Test reward for repository",
+>       "time": {"op": "add", "time": [3600]}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_1",
-    "rewards": {
-      "op": "add",
-      "objects": ["test_reward"]
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_1",
+      "rewards": {
+        "op": "add",
+        "objects": ["test_reward"]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -901,15 +1074,25 @@ Bind reward objects for data contribution incentives, and process received asset
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "198001",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "198001",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -923,24 +1106,30 @@ Bind reward objects for data contribution incentives, and process received asset
 >
 > ```json
 > {
->   "operation_type": "payment",
+>   "tool": "onchain_operations",
 >   "data": {
->     "for_object": "repo_test_1",
->     "remark": "Test payment to repository"
->   },
->   "env": {"network": "testnet"}
+>     "operation_type": "payment",
+>     "data": {
+>       "for_object": "repo_test_1",
+>       "remark": "Test payment to repository"
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_1",
-    "owner_receive": "recently"
-  },
-  "env": {
-    "network": "testnet"
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_1",
+      "owner_receive": "recently"
+    },
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -949,15 +1138,25 @@ Bind reward objects for data contribution incentives, and process received asset
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0xa588...78f7",
-      "version": "198002",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0xa588...78f7",
+            "version": "198002",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -979,29 +1178,32 @@ Perform multiple operations on existing Repository in a single transaction.
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "repo_test_2",
-    "description": "Updated repository description",
-    "policies": {
-      "op": "add",
-      "policy": [
-        {
-          "name": "logs",
-          "description": "Log records",
-          "write_guard": [],
-          "id_from": "Clock",
-          "value_type": "String"
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "repo_test_2",
+      "description": "Updated repository description",
+      "policies": {
+        "op": "add",
+        "policy": [
+          {
+            "name": "logs",
+            "description": "Log records",
+            "write_guard": [],
+            "id_from": "Clock",
+            "value_type": "String"
+          }
+        ]
+      },
+      "data_add": {
+        "name": "logs",
+        "data": "System started"
+      }
     },
-    "data_add": {
-      "name": "logs",
-      "data": "System started"
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -1010,15 +1212,25 @@ Perform multiple operations on existing Repository in a single transaction.
 
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Repository",
-      "object": "0x2e14...d800",
-      "version": "198500",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0x2e14...d800",
+            "version": "198500",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1047,4 +1259,3 @@ Perform multiple operations on existing Repository in a single transaction.
 | **[Guard](guard.md)**           | Trust verification engine - required for data write permissions |
 | **[Permission](permission.md)** | Permission management                                           |
 | **[Reward](reward.md)**         | Marketing incentives - can bind for data incentives             |
-

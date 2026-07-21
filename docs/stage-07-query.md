@@ -14,30 +14,34 @@ In this stage, you will learn about data queries in WoWok, including:
 - How to use **onchain_table_data** to query dynamic table data
 - How to use **onchain_events** to query on-chain events
 - How to use **wowok_buildin_info** to query protocol information
-- How to use **schema_query** to get tool schemas and operation definitions
+- How to use **schema_query** to get sub-tool schemas and operation definitions
 - How to use **guard2file** to export Guard definitions to files
 - How to use **machineNode2file** to export Machine node definitions to files
 - How to query Messenger messages via **messenger_operation**
+
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. The query sub-tools below are dispatched via this single entry point. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
 
 ---
 
 ## 📚 Learning Content
 
-### 7.1 Query Tools Overview
+### 7.1 Query Sub-Tools Overview
 
-WoWok provides seven specialized query tools:
+WoWok provides seven specialized query sub-tools (all dispatched via the unified `wowok` tool):
 
-| Tool Name | Purpose | Main Functions |
-|---------|------|---------|
+| Sub-tool | Purpose | Main Functions |
+|----------|---------|-----------------|
 | **query_toolkit** | General data query | Local data, on-chain objects, balances, profiles, received assets |
 | **onchain_table_data** | Dynamic table data query | Object dynamic fields tables, table items (permission, repository, reward, etc.) |
 | **onchain_events** | On-chain event query | Arbitration events, order events, progress events, etc. |
 | **wowok_buildin_info** | Protocol information query | Constants, permissions, Guard instructions, network info, etc. |
-| **schema_query** | Tool schema query | Get JSON schemas for all WoWok MCP tools and operations |
+| **schema_query** | Sub-tool schema query | Get JSON schemas for all WoWok MCP sub-tools and operations |
 | **guard2file** | Export Guard definitions | Export Guard object definitions to JSON or Markdown files |
 | **machineNode2file** | Export Machine nodes | Export Machine node definitions to JSON or Markdown files |
 
-**⚠️ Important Note**: Messenger message queries do not go through the above tools; you need to use the **messenger_operation** tool with the appropriate parameters.
+**⚠️ Important Note**: Messenger message queries do not go through the above sub-tools; you need to use the **messenger_operation** sub-tool with the appropriate parameters.
+
+> **💡 Related Tool**: The [`trust_score`](trust-score.md) sub-tool provides proactive service trust & risk assessment. While not a generic query tool, it queries on-chain Service data to compute a 0-100 trust score (5 dimensions) and an optional 4-dimension risk score. Use it before purchasing from a service for due diligence.
 
 ---
 
@@ -45,7 +49,7 @@ WoWok provides seven specialized query tools:
 
 **Why do we need query_toolkit?**
 
-query_toolkit is WoWok's core query tool, capable of querying data on local devices and various data on the blockchain.
+query_toolkit is WoWok's core query sub-tool, capable of querying data on local devices and various data on the blockchain.
 
 **Supported Query Types:**
 
@@ -62,7 +66,7 @@ query_toolkit is WoWok's core query tool, capable of querying data on local devi
 - 📦 `onchain_objects` — Batch query on-chain WOWOK objects by ID
 - 📥 `onchain_received` — Query objects (payments, tokens, NFTs) received by an on-chain object
 
-> **Note**: Dynamic table data queries (`onchain_table`, `onchain_table_item_*`) have been moved to the dedicated **`onchain_table_data`** tool. See [7.2b onchain_table_data](#72b-onchain_table_data-dynamic-table-data-query) below.
+> **Note**: Dynamic table data queries (`onchain_table`, `onchain_table_item_*`) have been moved to the dedicated **`onchain_table_data`** sub-tool. See [7.2b onchain_table_data](#72b-onchain_table_data-dynamic-table-data-query) below.
 
 **→ [View query_toolkit Detailed Documentation →](query.md)**
 
@@ -78,7 +82,10 @@ Query all local accounts:
 
 ```json
 {
-  "query_type": "account_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_list"
+  }
 }
 ```
 
@@ -90,10 +97,13 @@ Query the WOW token balance of a specified account:
 
 ```json
 {
-  "query_type": "account_balance",
-  "name_or_address": "my_account",
-  "balance": true,
-  "token_type": "0x2::wow::WOW"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "name_or_address": "my_account",
+    "balance": true,
+    "token_type": "0x2::wow::WOW"
+  }
 }
 ```
 
@@ -105,8 +115,11 @@ Query detailed information of multiple objects:
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["0x1234...abcd", "0x5678...efgh"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["0x1234...abcd", "0x5678...efgh"]
+  }
 }
 ```
 
@@ -118,8 +131,11 @@ Query local names (account name and local mark name) for a list of addresses:
 
 ```json
 {
-  "query_type": "local_names",
-  "addresses": ["0x1234...abcd", "0x5678...efgh"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_names",
+    "addresses": ["0x1234...abcd", "0x5678...efgh"]
+  }
 }
 ```
 
@@ -129,7 +145,7 @@ Query local names (account name and local mark name) for a list of addresses:
 
 **Why do we need onchain_table_data?**
 
-This tool was split from `query_toolkit` to handle the unique characteristics of dynamic table queries. On-chain objects have fixed size, but their table data (dynamic fields) can grow dynamically. The `onchain_table_data` tool is specialized for querying these dynamic tables and their items.
+This sub-tool was split from `query_toolkit` to handle the unique characteristics of dynamic table queries. On-chain objects have fixed size, but their table data (dynamic fields) can grow dynamically. The `onchain_table_data` sub-tool is specialized for querying these dynamic tables and their items.
 
 **Supported Query Types (12 total):**
 
@@ -158,10 +174,13 @@ Query the table data of a Service object with pagination:
 
 ```json
 {
-  "query_type": "onchain_table",
-  "parent": "service_object_id",
-  "cursor": null,
-  "limit": 20
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table",
+    "parent": "service_object_id",
+    "cursor": null,
+    "limit": 20
+  }
 }
 ```
 
@@ -171,9 +190,12 @@ Query the permission record for a specific user:
 
 ```json
 {
-  "query_type": "onchain_table_item_permission_perm",
-  "parent": "perm_admin",
-  "address": "alice"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_permission_perm",
+    "parent": "perm_admin",
+    "address": "alice"
+  }
 }
 ```
 
@@ -183,8 +205,11 @@ Query an entity's registration record:
 
 ```json
 {
-  "query_type": "onchain_table_item_entity_registrar",
-  "address": "service_provider"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_entity_registrar",
+    "address": "service_provider"
+  }
 }
 ```
 
@@ -222,9 +247,12 @@ Query the latest new order events:
 
 ```json
 {
-  "type": "NewOrderEvent",
-  "limit": 10,
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewOrderEvent",
+    "limit": 10,
+    "order": "descending"
+  }
 }
 ```
 
@@ -236,11 +264,14 @@ Use pagination cursor to query arbitration events:
 
 ```json
 {
-  "type": "ArbEvent",
-  "cursor": null,
-  "limit": 20,
-  "order": "descending",
-  "network": "testnet"
+  "tool": "onchain_events",
+  "data": {
+    "type": "ArbEvent",
+    "cursor": null,
+    "limit": 20,
+    "order": "descending",
+    "network": "testnet"
+  }
 }
 ```
 
@@ -250,26 +281,40 @@ Response structure:
 ```json
 {
   "result": {
-    "data": [...],
-    "hasNextPage": true,
-    "nextCursor": {
-      "txDigest": "0xabc...",
-      "eventSeq": "123"
+    "status": "success",
+    "data": {
+      "result": {
+        "data": ["..."],
+        "hasNextPage": true,
+        "nextCursor": {
+          "txDigest": "0xabc...",
+          "eventSeq": "123"
+        }
+      },
+      "semantic": {
+        "intent": "onchain_events",
+        "status": "success",
+        "summary": "Queried on-chain events"
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
 Use `nextCursor` for the next query:
 ```json
 {
-  "type": "ArbEvent",
-  "cursor": {
-    "txDigest": "0xabc...",
-    "eventSeq": "123"
-  },
-  "limit": 20,
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "ArbEvent",
+    "cursor": {
+      "txDigest": "0xabc...",
+      "eventSeq": "123"
+    },
+    "limit": 20,
+    "order": "descending"
+  }
 }
 ```
 
@@ -298,7 +343,10 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "constants"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "constants"
+  }
 }
 ```
 
@@ -308,7 +356,10 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "built-in permissions"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "built-in permissions"
+  }
 }
 ```
 
@@ -316,10 +367,13 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "built-in permissions",
-  "filter": {
-    "name": "order",
-    "index": 300
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "built-in permissions",
+    "filter": {
+      "name": "order",
+      "index": 300
+    }
   }
 }
 ```
@@ -330,7 +384,10 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "guard instructions"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "guard instructions"
+  }
 }
 ```
 
@@ -340,7 +397,10 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "current network"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "current network"
+  }
 }
 ```
 
@@ -350,7 +410,10 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 ```json
 {
-  "info": "value types"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "value types"
+  }
 }
 ```
 
@@ -360,15 +423,15 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 **Why do we need schema_query?**
 
-`schema_query` is a **meta-tool** — it does not query business data; it queries **the tools themselves**. It is the authoritative source for "how do I call this tool?" and "what does this tool return?".
+`schema_query` is a **meta sub-tool** — it does not query business data; it queries **the sub-tools themselves**. It is the authoritative source for "how do I call this sub-tool?" and "what does this sub-tool return?".
 
-**Core principle: before calling any unfamiliar WoWok tool, query its schema first.** This "query-then-call" pattern guarantees parameter accuracy and avoids schema drift between documentation and code.
+**Core principle:** the `wowok` handler already returns the correct schema on any parameter mismatch (see [Response Format](response-format.md#status-schema_mismatch)), so you usually do **not** need to call `schema_query` proactively. Use it when you want to browse all available schemas, discover capabilities, or pre-fetch a schema for planning.
 
 **Features:**
 
-- List all available tool schemas (14 tools + 16 on-chain operations)
-- Get the **input** schema of a tool or operation by name
-- Get the **output** schema of a tool by name
+- List all available sub-tool schemas (17 sub-tools + 16 on-chain operations)
+- Get the **input** schema of a sub-tool or operation by name
+- Get the **output** schema of a sub-tool by name
 - Search schemas by keyword
 - List only on-chain operations
 
@@ -376,7 +439,7 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 - `list` — List all available schemas
 - `get` — Get a specific schema by name
-- `get_output` — Get the output schema of a tool by name
+- `get_output` — Get the output schema of a sub-tool by name
 - `search` — Search schemas by keyword
 - `list_operations` — List all on-chain operations
 
@@ -384,24 +447,30 @@ Query WoWok protocol's built-in information, including system constants, permiss
 
 #### Example 12: List All Available Schemas
 
-Get a list of all available tool schemas:
+Get a list of all available sub-tool schemas:
 
 ```json
 {
-  "action": "list"
+  "tool": "schema_query",
+  "data": {
+    "action": "list"
+  }
 }
 ```
 
 ---
 
-#### Example 13: Get Schema for Specific Tool
+#### Example 13: Get Schema for Specific Sub-Tool
 
 Get the JSON schema for `onchain_operations`:
 
 ```json
 {
-  "action": "get",
-  "name": "onchain_operations"
+  "tool": "schema_query",
+  "data": {
+    "action": "get",
+    "name": "onchain_operations"
+  }
 }
 ```
 
@@ -409,8 +478,11 @@ Get the schema for a specific operation type:
 
 ```json
 {
-  "action": "get",
-  "name": "onchain_operations_permission"
+  "tool": "schema_query",
+  "data": {
+    "action": "get",
+    "name": "onchain_operations_permission"
+  }
 }
 ```
 
@@ -422,8 +494,11 @@ Search for schemas related to "guard":
 
 ```json
 {
-  "action": "search",
-  "query": "guard"
+  "tool": "schema_query",
+  "data": {
+    "action": "search",
+    "query": "guard"
+  }
 }
 ```
 
@@ -462,9 +537,12 @@ Export a Guard definition to a JSON file:
 
 ```json
 {
-  "guard": "my_guard",
-  "file_path": "./exported_guard.json",
-  "format": "json"
+  "tool": "guard2file",
+  "data": {
+    "guard": "my_guard",
+    "file_path": "./exported_guard.json",
+    "format": "json"
+  }
 }
 ```
 
@@ -476,9 +554,12 @@ Export a Guard definition to a Markdown file for easy reading:
 
 ```json
 {
-  "guard": "0x1234...abcd",
-  "file_path": "./guard_definition.md",
-  "format": "markdown"
+  "tool": "guard2file",
+  "data": {
+    "guard": "0x1234...abcd",
+    "file_path": "./guard_definition.md",
+    "format": "markdown"
+  }
 }
 ```
 
@@ -517,9 +598,12 @@ Export a Machine's node definitions to a JSON file:
 
 ```json
 {
-  "machine": "my_workflow",
-  "file_path": "./exported_nodes.json",
-  "format": "json"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "my_workflow",
+    "file_path": "./exported_nodes.json",
+    "format": "json"
+  }
 }
 ```
 
@@ -531,9 +615,12 @@ Export a Machine's node definitions to a Markdown file:
 
 ```json
 {
-  "machine": "0x5678...efgh",
-  "file_path": "./workflow_nodes.md",
-  "format": "markdown"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "0x5678...efgh",
+    "file_path": "./workflow_nodes.md",
+    "format": "markdown"
+  }
 }
 ```
 
@@ -543,11 +630,11 @@ Export a Machine's node definitions to a Markdown file:
 
 ### 7.8 Messenger Message Query 💬
 
-**⚠️ Important Note**: Messenger message queries **do not** go through `query_toolkit`; you need to use the dedicated **messenger_operation** tool.
+**⚠️ Important Note**: Messenger message queries **do not** go through `query_toolkit`; you need to use the dedicated **messenger_operation** sub-tool.
 
 **How to Query Messenger Messages:**
 
-Use the `messenger_operation` tool, specifying `operation` as `"watch_messages"` or `"watch_conversations"`.
+Use the `messenger_operation` sub-tool, specifying `operation` as `"watch_messages"` or `"watch_conversations"`.
 
 ---
 
@@ -555,9 +642,12 @@ Use the `messenger_operation` tool, specifying `operation` as `"watch_messages"`
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "account": "my_account"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "account": "my_account"
+    }
   }
 }
 ```
@@ -570,7 +660,10 @@ View all messages:
 
 ```json
 {
-  "operation": "watch_messages"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages"
+  }
 }
 ```
 
@@ -578,9 +671,12 @@ View messages with a specific user:
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "friend_address"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "friend_address"
+    }
   }
 }
 ```
@@ -589,9 +685,12 @@ View received messages:
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "received"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "received"
+    }
   }
 }
 ```
@@ -600,10 +699,13 @@ Search by keyword:
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "keyword": "hello",
-    "limit": 50
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "keyword": "hello",
+      "limit": 50
+    }
   }
 }
 ```
@@ -618,7 +720,10 @@ See what local accounts you have:
 
 ```json
 {
-  "query_type": "account_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_list"
+  }
 }
 ```
 
@@ -630,8 +735,11 @@ Query the WOW balance of the default account:
 
 ```json
 {
-  "query_type": "account_balance",
-  "token_type": "0x2::wow::WOW"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "token_type": "0x2::wow::WOW"
+  }
 }
 ```
 
@@ -643,9 +751,12 @@ Query the latest 10 new order events:
 
 ```json
 {
-  "type": "NewOrderEvent",
-  "limit": 10,
-  "order": "descending"
+  "tool": "onchain_events",
+  "data": {
+    "type": "NewOrderEvent",
+    "limit": 10,
+    "order": "descending"
+  }
 }
 ```
 
@@ -657,7 +768,10 @@ Query WoWok protocol constants:
 
 ```json
 {
-  "info": "constants"
+  "tool": "wowok_buildin_info",
+  "data": {
+    "info": "constants"
+  }
 }
 ```
 
@@ -669,7 +783,10 @@ View your Messenger conversation list:
 
 ```json
 {
-  "operation": "watch_conversations"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations"
+  }
 }
 ```
 
@@ -677,10 +794,13 @@ Specify account and filter options:
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "account": "my_account",
-    "unreadOnly": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "account": "my_account",
+      "unreadOnly": true
+    }
   }
 }
 ```
@@ -693,21 +813,27 @@ Query detailed information of a Service object:
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["service_object_id"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["service_object_id"]
+  }
 }
 ```
 
 ---
 
-### Exercise 7: Query Tool Schema
+### Exercise 7: Query Sub-Tool Schema
 
 Get the JSON schema for onchain_operations:
 
 ```json
 {
-  "action": "get",
-  "name": "onchain_operations"
+  "tool": "schema_query",
+  "data": {
+    "action": "get",
+    "name": "onchain_operations"
+  }
 }
 ```
 
@@ -715,8 +841,11 @@ Search for schemas related to "guard":
 
 ```json
 {
-  "action": "search",
-  "query": "guard"
+  "tool": "schema_query",
+  "data": {
+    "action": "search",
+    "query": "guard"
+  }
 }
 ```
 
@@ -728,9 +857,12 @@ Export a Guard definition to a JSON file:
 
 ```json
 {
-  "guard": "my_guard",
-  "file_path": "./my_guard.json",
-  "format": "json"
+  "tool": "guard2file",
+  "data": {
+    "guard": "my_guard",
+    "file_path": "./my_guard.json",
+    "format": "json"
+  }
 }
 ```
 
@@ -742,9 +874,12 @@ Export a Machine's node definitions to a Markdown file:
 
 ```json
 {
-  "machine": "my_workflow",
-  "file_path": "./my_workflow.md",
-  "format": "markdown"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "my_workflow",
+    "file_path": "./my_workflow.md",
+    "format": "markdown"
+  }
 }
 ```
 
@@ -756,10 +891,10 @@ Understanding the response format is essential for processing MCP tool outputs:
 
 | Document | Description |
 |----------|-------------|
-| [Response Format Reference](response-format.md) | MCP output structure, semantic layer, error classification, and harness report |
+| [Response Format Reference](response-format.md) | Unified `wowok` envelope, status variants, schema_mismatch flow, semantic layer, error classification, and harness report |
 | [Query Component](query.md) | Detailed query_toolkit and onchain_table_data API documentation |
 | [On-chain Events](onchain_events.md) | Real-time event watching and querying |
-| [Schema Query](schema-query.md) | JSON schema retrieval for MCP tools |
+| [Schema Query](schema-query.md) | JSON schema retrieval for MCP sub-tools |
 
 ---
 
@@ -767,13 +902,14 @@ Understanding the response format is essential for processing MCP tool outputs:
 
 Congratulations on reaching the final stage! Please confirm that you have:
 
-- [ ] Understood the differences and uses of the seven query tools
+- [ ] Understood the single unified `wowok` tool call format `{ tool, data }`
+- [ ] Understood the differences and uses of the seven query sub-tools
 - [ ] Used query_toolkit to query account list
 - [ ] Used query_toolkit to query account balance
 - [ ] Used onchain_table_data to query dynamic table data
 - [ ] Used onchain_events to query on-chain events
 - [ ] Used wowok_buildin_info to query protocol information
-- [ ] Used schema_query to get tool schemas
+- [ ] Used schema_query to get sub-tool schemas
 - [ ] Used guard2file to export Guard definitions
 - [ ] Used machineNode2file to export Machine node definitions
 - [ ] Used messenger_operation to query Messenger messages

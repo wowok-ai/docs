@@ -16,6 +16,8 @@ In this stage, you will gain a deep understanding of WoWok Messenger, including:
 - WTS (Witness Timestamped Sequence) evidence generation and verification
 - Practical usage patterns for secure business communication
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -248,9 +250,12 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "send_message",
-  "to": "bob",
-  "content": "Hello, I'd like to discuss a project"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "to": "bob",
+    "content": "Hello, I'd like to discuss a project"
+  }
 }
 ```
 
@@ -266,9 +271,12 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "unreadOnly": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "unreadOnly": true
+    }
   }
 }
 ```
@@ -285,10 +293,13 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "blacklist",
-  "blacklist": {
-    "op": "add",
-    "users": ["spammer_address"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "blacklist": {
+      "op": "add",
+      "users": ["spammer_address"]
+    }
   }
 }
 ```
@@ -305,10 +316,13 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "friendslist",
-  "friendslist": {
-    "op": "add",
-    "users": ["alice"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "friendslist",
+    "friendslist": {
+      "op": "add",
+      "users": ["alice"]
+    }
   }
 }
 ```
@@ -325,15 +339,18 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "guardlist",
-  "guardlist": {
-    "op": "add",
-    "guards": [
-      {
-        "guard": "identity_verifier",
-        "passportValiditySeconds": 3600
-      }
-    ]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "guardlist",
+    "guardlist": {
+      "op": "add",
+      "guards": [
+        {
+          "guard": "identity_verifier",
+          "passportValiditySeconds": 3600
+        }
+      ]
+    }
   }
 }
 ```
@@ -350,16 +367,19 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "generate_wts",
-  "params": {
-    "myAccount": "my_account",
-    "peerAccount": "bob",
-    "range": {
-      "type": "time",
-      "start": 1704067200000,
-      "end": 1704672000000
-    },
-    "outputDir": "./evidence"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "generate_wts",
+    "params": {
+      "myAccount": "my_account",
+      "peerAccount": "bob",
+      "range": {
+        "type": "time",
+        "start": 1704067200000,
+        "end": 1704672000000
+      },
+      "outputDir": "./evidence"
+    }
   }
 }
 ```
@@ -376,8 +396,11 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "verify_wts",
-  "wtsFilePath": "./evidence/conversation_bob_20240101.wts"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "verify_wts",
+    "wtsFilePath": "./evidence/conversation_bob_20240101.wts"
+  }
 }
 ```
 
@@ -393,13 +416,16 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "send_file",
-  "to": "stranger_address",
-  "filePath": "./contract.pdf",
-  "options": {
-    "guardAddress": "business_guard",
-    "passportAddress": "my_passport",
-    "network": "testnet"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_file",
+    "to": "stranger_address",
+    "filePath": "./contract.pdf",
+    "options": {
+      "guardAddress": "business_guard",
+      "passportAddress": "my_passport",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -416,11 +442,14 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 
 ```json
 {
-  "operation": "settings",
-  "settings": {
-    "op": "set",
-    "allowStrangerMessages": false,
-    "maxInboxSize": 500
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "settings",
+    "settings": {
+      "op": "set",
+      "allowStrangerMessages": false,
+      "maxInboxSize": 500
+    }
   }
 }
 ```

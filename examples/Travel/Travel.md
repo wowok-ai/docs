@@ -22,6 +22,8 @@ This example sets `env.confirmed: true` on irreversible operations (e.g., `publi
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+
 ## Core Requirements & Features
 
 | Requirement | Description | Implementation |
@@ -50,27 +52,36 @@ Before running this example, ensure you have:
 
 ```json
 {
-  "gen": {
-    "name": "travel_provider",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "travel_provider",
+      "replaceExistName": true
+    }
   }
 }
 ```
 
 ```json
 {
-  "gen": {
-    "name": "weather_provider",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "weather_provider",
+      "replaceExistName": true
+    }
   }
 }
 ```
 
 ```json
 {
-  "gen": {
-    "name": "alice",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "alice",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -81,27 +92,36 @@ Before running this example, ensure you have:
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "travel_provider"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "network": "testnet",
+      "name_or_address": "travel_provider"
+    }
   }
 }
 ```
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "weather_provider"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "network": "testnet",
+      "name_or_address": "weather_provider"
+    }
   }
 }
 ```
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "alice"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "network": "testnet",
+      "name_or_address": "alice"
+    }
   }
 }
 ```
@@ -162,19 +182,22 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "weather_permission",
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "weather_permission",
+        "replaceExistName": true
+      },
+      "description": "Weather repository permission"
     },
-    "description": "Weather repository permission"
-  },
-  "env": {
-    "account": "weather_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "weather_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -185,33 +208,36 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "weather_repo",
-      "permission": "weather_permission",
-      "replaceExistName": true,
-      "onChain": true
+    "operation_type": "repository",
+    "data": {
+      "object": {
+        "name": "weather_repo",
+        "permission": "weather_permission",
+        "replaceExistName": true,
+        "onChain": true
+      },
+      "description": "Weather data repository for Iceland travel activities",
+      "policies": {
+        "op": "add",
+        "policy": [
+          {
+            "name": "Condition",
+            "description": "Weather condition policy for activity dates",
+            "write_guard": [],
+            "id_from": "None",
+            "value_type": "String"
+          }
+        ]
+      }
     },
-    "description": "Weather data repository for Iceland travel activities",
-    "policies": {
-      "op": "add",
-      "policy": [
-        {
-          "name": "Condition",
-          "description": "Weather condition policy for activity dates",
-          "write_guard": [],
-          "id_from": "None",
-          "value_type": "String"
-        }
-      ]
+    "env": {
+      "account": "weather_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "weather_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -226,29 +252,32 @@ Add 5 days of weather data. The `weather_check_guard` (Step 3.1) only verifies t
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": "weather_repo",
-    "data_add": {
-      "name": "Condition",
-      "items": [
-        {
-          "data": [
-            {"id": <DAY1_TIMESTAMP>, "data": "sunny"},
-            {"id": <DAY2_TIMESTAMP>, "data": "sunny"},
-            {"id": <DAY3_TIMESTAMP>, "data": "sunny"},
-            {"id": <DAY4_TIMESTAMP>, "data": "sunny"},
-            {"id": <DAY5_TIMESTAMP>, "data": "rainy"}
-          ]
-        }
-      ]
+    "operation_type": "repository",
+    "data": {
+      "object": "weather_repo",
+      "data_add": {
+        "name": "Condition",
+        "items": [
+          {
+            "data": [
+              {"id": <DAY1_TIMESTAMP>, "data": "sunny"},
+              {"id": <DAY2_TIMESTAMP>, "data": "sunny"},
+              {"id": <DAY3_TIMESTAMP>, "data": "sunny"},
+              {"id": <DAY4_TIMESTAMP>, "data": "sunny"},
+              {"id": <DAY5_TIMESTAMP>, "data": "rainy"}
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "weather_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "weather_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -265,25 +294,28 @@ Create a Permission object to manage access control for the travel service. Add 
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_permission",
-      "tags": ["travel", "iceland", "tourism"],
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "travel_permission",
+        "tags": ["travel", "iceland", "tourism"],
+        "replaceExistName": true
+      },
+      "description": "Permission for Iceland travel service",
+      "table": {
+        "op": "add perm by entity",
+        "entity": {"name_or_address": "travel_provider"},
+        "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
+      }
     },
-    "description": "Permission for Iceland travel service",
-    "table": {
-      "op": "add perm by entity",
-      "entity": {"name_or_address": "travel_provider"},
-      "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -300,20 +332,23 @@ Create an Arbitration object for dispute resolution.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_arbitration",
-      "permission": "travel_permission",
-      "replaceExistName": true
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "travel_arbitration",
+        "permission": "travel_permission",
+        "replaceExistName": true
+      },
+      "description": "Arbitration for Iceland travel service disputes"
     },
-    "description": "Arbitration for Iceland travel service disputes"
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -328,21 +363,24 @@ Create the Service without publishing to obtain its address for Guard creation. 
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_service",
-      "permission": "travel_permission",
-      "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "travel_service",
+        "permission": "travel_permission",
+        "replaceExistName": true
+      },
+      "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
+      "pause": false
     },
-    "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
-    "pause": false
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -359,21 +397,24 @@ Create a Treasury object to aggregate merchant revenue. The Treasury uses the **
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_treasury",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "travel_permission",
-      "replaceExistName": true
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "travel_treasury",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "travel_permission",
+        "replaceExistName": true
+      },
+      "description": "Treasury for aggregating travel service merchant revenue. Uses the same Permission as the Service (travel_permission) for consistency — a single permission organization governs both fund collection and service operations."
     },
-    "description": "Treasury for aggregating travel service merchant revenue. Uses the same Permission as the Service (travel_permission) for consistency — a single permission organization governs both fund collection and service operations."
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -404,54 +445,57 @@ repository.data has("Condition", convert_number_address(activity_date))
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "weather_check_guard",
-      "tags": ["weather", "check", "travel"],
-      "replaceExistName": true
-    },
-    "description": "Weather check guard for ice scooting activity. Checks if weather data exists for the activity date.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "weather_repo",
-        "name": "Weather Repository address"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "weather_check_guard",
+        "tags": ["weather", "check", "travel"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Condition",
-        "name": "Repository policy name"
-      },
-      {
-        "identifier": 2,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "Activity date timestamp (submitted at runtime)"
-      }
-    ],
-    "root": {
-      "type": "query",
-      "query": "repository.data has",
-      "object": {"identifier": 0},
-      "parameters": [
-        {"type": "identifier", "identifier": 1},
+      "description": "Weather check guard for ice scooting activity. Checks if weather data exists for the activity date.",
+      "table": [
         {
-          "type": "convert_number_address",
-          "node": {"type": "identifier", "identifier": 2}
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "weather_repo",
+          "name": "Weather Repository address"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Condition",
+          "name": "Repository policy name"
+        },
+        {
+          "identifier": 2,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "Activity date timestamp (submitted at runtime)"
         }
-      ]
+      ],
+      "root": {
+        "type": "query",
+        "query": "repository.data has",
+        "object": {"identifier": 0},
+        "parameters": [
+          {"type": "identifier", "identifier": 1},
+          {
+            "type": "convert_number_address",
+            "node": {"type": "identifier", "identifier": 2}
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -478,53 +522,56 @@ clock > progress.current_time + 1000
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "travel_complete_guard",
-      "tags": ["travel", "time-lock", "complete"],
-      "replaceExistName": true
-    },
-    "description": "Time-lock guard for travel order completion. Requires current clock > progress.current_time + 1000ms.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "travel_complete_guard",
+        "tags": ["travel", "time-lock", "complete"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 1000,
-        "name": "Time-lock duration in ms"
-      }
-    ],
-    "root": {
-      "type": "logic_as_u256_greater",
-      "nodes": [
-        {"type": "context", "context": "Clock"},
+      "description": "Time-lock guard for travel order completion. Requires current clock > progress.current_time + 1000ms.",
+      "table": [
         {
-          "type": "calc_number_add",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current_time",
-              "object": {"identifier": 0, "convert_witness": "OrderProgress"},
-              "parameters": []
-            },
-            {"type": "identifier", "identifier": 1}
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": 1000,
+          "name": "Time-lock duration in ms"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_as_u256_greater",
+        "nodes": [
+          {"type": "context", "context": "Clock"},
+          {
+            "type": "calc_number_add",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current_time",
+                "object": {"identifier": 0, "convert_witness": "OrderProgress"},
+                "parameters": []
+              },
+              {"type": "identifier", "identifier": 1}
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -546,33 +593,36 @@ Creates a Guard that allows order cancellation. This Guard always passes (return
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "travel_cancel_guard",
-      "tags": ["travel", "cancel"],
-      "replaceExistName": true
-    },
-    "description": "Cancel guard for travel orders. Always passes - cancellation is controlled by permission-based access.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": "Bool",
-        "value": true,
-        "name": "Always true"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "travel_cancel_guard",
+        "tags": ["travel", "cancel"],
+        "replaceExistName": true
+      },
+      "description": "Cancel guard for travel orders. Always passes - cancellation is controlled by permission-based access.",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Bool",
+          "value": true,
+          "name": "Always true"
+        }
+      ],
+      "root": {
+        "type": "identifier",
+        "identifier": 0
       }
-    ],
-    "root": {
-      "type": "identifier",
-      "identifier": 0
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -585,66 +635,69 @@ Checks if order progress current node is "Complete" AND order belongs to this se
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "merchant_victory_guard",
-      "tags": ["merchant", "victory", "complete", "level3-scene-combined"],
-      "replaceExistName": true
-    },
-    "description": "Guard for merchant victory: checks if order progress current node is Complete AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at Complete node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "merchant_victory_guard",
+        "tags": ["merchant", "victory", "complete", "level3-scene-combined"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Complete",
-        "name": "Complete node name"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "travel_service",
-        "name": "Service address (this service)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Guard for merchant victory: checks if order progress current node is Complete AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at Complete node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {"identifier": 0, "convert_witness": "OrderProgress"},
-              "parameters": []
-            },
-            {"type": "identifier", "identifier": 1}
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 2}
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Complete",
+          "name": "Complete node name"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "travel_service",
+          "name": "Service address (this service)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {"identifier": 0, "convert_witness": "OrderProgress"},
+                "parameters": []
+              },
+              {"type": "identifier", "identifier": 1}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 2}
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -669,90 +722,93 @@ Checks if progress current is "Cancel" or "Ice Scooting" AND order belongs to th
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "no_ice_scooting_guard",
-      "tags": ["user", "cancel", "ice_scooting", "level3-scene-combined"],
-      "replaceExistName": true
-    },
-    "description": "Guard for user not participating in ice scooting: checks if progress current is Cancel or Ice Scooting AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at Cancel/Ice Scooting node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "no_ice_scooting_guard",
+        "tags": ["user", "cancel", "ice_scooting", "level3-scene-combined"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Cancel",
-        "name": "Cancel node name"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Ice Scooting",
-        "name": "Ice Scooting node name"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "travel_service",
-        "name": "Service address (this service)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Guard for user not participating in ice scooting: checks if progress current is Cancel or Ice Scooting AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at Cancel/Ice Scooting node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "table": [
         {
-          "type": "logic_or",
-          "nodes": [
-            {
-              "type": "logic_equal",
-              "nodes": [
-                {
-                  "type": "query",
-                  "query": "progress.current",
-                  "object": {"identifier": 0, "convert_witness": "OrderProgress"},
-                  "parameters": []
-                },
-                {"type": "identifier", "identifier": 1}
-              ]
-            },
-            {
-              "type": "logic_equal",
-              "nodes": [
-                {
-                  "type": "query",
-                  "query": "progress.current",
-                  "object": {"identifier": 0, "convert_witness": "OrderProgress"},
-                  "parameters": []
-                },
-                {"type": "identifier", "identifier": 2}
-              ]
-            }
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 3}
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Cancel",
+          "name": "Cancel node name"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Ice Scooting",
+          "name": "Ice Scooting node name"
+        },
+        {
+          "identifier": 3,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "travel_service",
+          "name": "Service address (this service)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_or",
+            "nodes": [
+              {
+                "type": "logic_equal",
+                "nodes": [
+                  {
+                    "type": "query",
+                    "query": "progress.current",
+                    "object": {"identifier": 0, "convert_witness": "OrderProgress"},
+                    "parameters": []
+                  },
+                  {"type": "identifier", "identifier": 1}
+                ]
+              },
+              {
+                "type": "logic_equal",
+                "nodes": [
+                  {
+                    "type": "query",
+                    "query": "progress.current",
+                    "object": {"identifier": 0, "convert_witness": "OrderProgress"},
+                    "parameters": []
+                  },
+                  {"type": "identifier", "identifier": 2}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 3}
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -777,66 +833,69 @@ Checks if progress current is "SPA" AND order belongs to this service. If passed
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "no_spa_guard",
-      "tags": ["user", "cancel", "spa", "level3-scene-combined"],
-      "replaceExistName": true
-    },
-    "description": "Guard for user not participating in SPA: checks if progress current is SPA AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at SPA node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "no_spa_guard",
+        "tags": ["user", "cancel", "spa", "level3-scene-combined"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "SPA",
-        "name": "SPA node name"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "travel_service",
-        "name": "Service address (this service)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Guard for user not participating in SPA: checks if progress current is SPA AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at SPA node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {"identifier": 0, "convert_witness": "OrderProgress"},
-              "parameters": []
-            },
-            {"type": "identifier", "identifier": 1}
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 2}
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "SPA",
+          "name": "SPA node name"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "travel_service",
+          "name": "Service address (this service)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {"identifier": 0, "convert_witness": "OrderProgress"},
+                "parameters": []
+              },
+              {"type": "identifier", "identifier": 1}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 2}
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -865,119 +924,122 @@ Create a Machine to define the travel service workflow with all nodes and forwar
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_machine",
-      "permission": "travel_permission",
-      "replaceExistName": true
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "travel_machine",
+        "permission": "travel_permission",
+        "replaceExistName": true
+      },
+      "description": "Iceland travel service workflow: (init) -> Buy Insurance -> SPA -> Ice Scooting -> Complete/Cancel",
+      "node": {
+        "op": "add",
+        "bReplace": true,
+        "nodes": [
+          {
+            "name": "Buy Insurance",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "buy_insurance",
+                    "weight": 1,
+                    "permissionIndex": 1000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "SPA",
+            "pairs": [
+              {
+                "prev_node": "Buy Insurance",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "go_spa",
+                    "weight": 1,
+                    "permissionIndex": 1001
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Ice Scooting",
+            "pairs": [
+              {
+                "prev_node": "SPA",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "go_ice_scooting",
+                    "weight": 1,
+                    "permissionIndex": 1004,
+                    "guard": {
+                      "guard": "weather_check_guard",
+                      "retained_submission": []
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Complete",
+            "pairs": [
+              {
+                "prev_node": "Ice Scooting",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "complete_trip",
+                    "weight": 1,
+                    "permissionIndex": 1002,
+                    "guard": {
+                      "guard": "travel_complete_guard",
+                      "retained_submission": []
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Cancel",
+            "pairs": [
+              {
+                "prev_node": "Ice Scooting",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "cancel_trip",
+                    "weight": 1,
+                    "permissionIndex": 1003,
+                    "guard": {
+                      "guard": "travel_cancel_guard",
+                      "retained_submission": []
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "publish": true
     },
-    "description": "Iceland travel service workflow: (init) -> Buy Insurance -> SPA -> Ice Scooting -> Complete/Cancel",
-    "node": {
-      "op": "add",
-      "bReplace": true,
-      "nodes": [
-        {
-          "name": "Buy Insurance",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "buy_insurance",
-                  "weight": 1,
-                  "permissionIndex": 1000
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "SPA",
-          "pairs": [
-            {
-              "prev_node": "Buy Insurance",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "go_spa",
-                  "weight": 1,
-                  "permissionIndex": 1001
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Ice Scooting",
-          "pairs": [
-            {
-              "prev_node": "SPA",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "go_ice_scooting",
-                  "weight": 1,
-                  "permissionIndex": 1004,
-                  "guard": {
-                    "guard": "weather_check_guard",
-                    "retained_submission": []
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Complete",
-          "pairs": [
-            {
-              "prev_node": "Ice Scooting",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "complete_trip",
-                  "weight": 1,
-                  "permissionIndex": 1002,
-                  "guard": {
-                    "guard": "travel_complete_guard",
-                    "retained_submission": []
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Cancel",
-          "pairs": [
-            {
-              "prev_node": "Ice Scooting",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "cancel_trip",
-                  "weight": 1,
-                  "permissionIndex": 1003,
-                  "guard": {
-                    "guard": "travel_cancel_guard",
-                    "retained_submission": []
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1018,89 +1080,92 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "travel_service",
-      "permission": "travel_permission",
-      "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "travel_service",
+        "permission": "travel_permission",
+        "replaceExistName": true
+      },
+      "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
+      "machine": "travel_machine",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Iceland Travel Package",
+            "price": "500000000",
+            "stock": "99",
+            "suspension": false,
+            "wip": "",
+            "wip_hash": ""
+          }
+        ]
+      },
+      "arbitrations": {
+        "op": "add",
+        "objects": ["travel_arbitration"]
+      },
+      "order_allocators": {
+        "description": "Travel order revenue allocation based on progress state",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "merchant_victory_guard",
+            "fix": "0",
+            "sharing": [
+              {
+                "who": {"Entity": {"name_or_address": "travel_treasury"}},
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "no_ice_scooting_guard",
+            "fix": "0",
+            "sharing": [
+              {
+                "who": {"Entity": {"name_or_address": "travel_treasury"}},
+                "sharing": 8000,
+                "mode": "Rate"
+              },
+              {
+                "who": {"GuardIdentifier": 0},
+                "sharing": 2000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "no_spa_guard",
+            "fix": "0",
+            "sharing": [
+              {
+                "who": {"Entity": {"name_or_address": "travel_treasury"}},
+                "sharing": 500,
+                "mode": "Rate"
+              },
+              {
+                "who": {"GuardIdentifier": 0},
+                "sharing": 9500,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "pause": false,
+      "publish": true
     },
-    "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
-    "machine": "travel_machine",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Iceland Travel Package",
-          "price": "500000000",
-          "stock": "99",
-          "suspension": false,
-          "wip": "",
-          "wip_hash": ""
-        }
-      ]
-    },
-    "arbitrations": {
-      "op": "add",
-      "objects": ["travel_arbitration"]
-    },
-    "order_allocators": {
-      "description": "Travel order revenue allocation based on progress state",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "merchant_victory_guard",
-          "fix": "0",
-          "sharing": [
-            {
-              "who": {"Entity": {"name_or_address": "travel_treasury"}},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "no_ice_scooting_guard",
-          "fix": "0",
-          "sharing": [
-            {
-              "who": {"Entity": {"name_or_address": "travel_treasury"}},
-              "sharing": 8000,
-              "mode": "Rate"
-            },
-            {
-              "who": {"GuardIdentifier": 0},
-              "sharing": 2000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "no_spa_guard",
-          "fix": "0",
-          "sharing": [
-            {
-              "who": {"Entity": {"name_or_address": "travel_treasury"}},
-              "sharing": 500,
-              "mode": "Rate"
-            },
-            {
-              "who": {"GuardIdentifier": 0},
-              "sharing": 9500,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "pause": false,
-    "publish": true
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1149,39 +1214,42 @@ The customer (Alice) purchases the travel package. This creates an Order, a Prog
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "travel_service",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Iceland Travel Package",
-            "stock": "1",
-            "wip_hash": ""
-          }
-        ],
-        "total_pay": {"balance": "500000000"}
-      },
-      "namedNewOrder": {
-        "name": "alice_travel_order",
-        "replaceExistName": true
-      },
-      "namedNewProgress": {
-        "name": "alice_travel_progress",
-        "replaceExistName": true
-      },
-      "namedNewAllocation": {
-        "name": "alice_travel_allocation",
-        "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": "travel_service",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Iceland Travel Package",
+              "stock": "1",
+              "wip_hash": ""
+            }
+          ],
+          "total_pay": {"balance": "500000000"}
+        },
+        "namedNewOrder": {
+          "name": "alice_travel_order",
+          "replaceExistName": true
+        },
+        "namedNewProgress": {
+          "name": "alice_travel_progress",
+          "replaceExistName": true
+        },
+        "namedNewAllocation": {
+          "name": "alice_travel_allocation",
+          "replaceExistName": true
+        }
       }
+    },
+    "env": {
+      "account": "alice",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "alice",
-    "network": "testnet",
-    "no_cache": true,
-    "confirmed": true
   }
 }
 ```
@@ -1204,20 +1272,23 @@ Move from initial node ("") to "Buy Insurance" node.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Buy Insurance",
-        "forward": "buy_insurance"
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Buy Insurance",
+          "forward": "buy_insurance"
+        }
       }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1230,20 +1301,23 @@ Move from "Buy Insurance" to "SPA" node.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "SPA",
-        "forward": "go_spa"
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "SPA",
+          "forward": "go_spa"
+        }
       }
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1256,43 +1330,46 @@ Move from "SPA" to "Ice Scooting" node. This forward has a Guard (`weather_check
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Ice Scooting",
-        "forward": "go_ice_scooting"
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Ice Scooting",
+          "forward": "go_ice_scooting"
+        }
       }
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "weather_check_guard",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "weather_check_guard",
+          "submission": [
+            {
+              "identifier": 2,
+              "b_submission": true,
+              "value_type": "U64",
+              "value": <ACTIVITY_DATE_TIMESTAMP>,
+              "name": "Activity date timestamp"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "weather_check_guard",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "weather_check_guard",
-        "submission": [
-          {
-            "identifier": 2,
-            "b_submission": true,
-            "value_type": "U64",
-            "value": <ACTIVITY_DATE_TIMESTAMP>,
-            "name": "Activity date timestamp"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1309,43 +1386,46 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Complete",
-        "forward": "complete_trip"
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Complete",
+          "forward": "complete_trip"
+        }
       }
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "travel_complete_guard",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "travel_complete_guard",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "<ORDER_OBJECT_ID>",
+              "name": "Order ID"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "travel_complete_guard",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "travel_complete_guard",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "<ORDER_OBJECT_ID>",
-            "name": "Order ID"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1362,35 +1442,38 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Cancel",
-        "forward": "cancel_trip"
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Cancel",
+          "forward": "cancel_trip"
+        }
       }
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "travel_cancel_guard",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "travel_cancel_guard",
+          "submission": []
+        }
+      ]
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "travel_cancel_guard",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "travel_cancel_guard",
-        "submission": []
-      }
-    ]
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1423,13 +1506,16 @@ The allocation Guard requires the Order ID as a submission (identifier: 0). Quer
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_progress"
-  },
-  "env": {
-    "network": "testnet",
-    "no_cache": true
+    "operation_type": "progress",
+    "data": {
+      "object": "alice_travel_progress"
+    },
+    "env": {
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1444,38 +1530,41 @@ When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% o
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_allocation",
-    "alloc_by_guard": "merchant_victory_guard"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "merchant_victory_guard",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "merchant_victory_guard",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "<ORDER_OBJECT_ID>",
-            "name": "Order ID"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "travel_provider",
-    "network": "testnet",
-    "no_cache": true
+    "operation_type": "allocation",
+    "data": {
+      "object": "alice_travel_allocation",
+      "alloc_by_guard": "merchant_victory_guard"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "merchant_victory_guard",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "merchant_victory_guard",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "<ORDER_OBJECT_ID>",
+              "name": "Order ID"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1492,20 +1581,23 @@ For refund scenarios (Cancel or SPA), use the corresponding Guard. The same subm
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_allocation",
-    "alloc_by_guard": "no_ice_scooting_guard"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [{"object": "no_ice_scooting_guard", "impack": true}],
-    "submission": [{
-      "guard": "no_ice_scooting_guard",
-      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
-    }]
-  },
-  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
+    "operation_type": "allocation",
+    "data": {
+      "object": "alice_travel_allocation",
+      "alloc_by_guard": "no_ice_scooting_guard"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [{"object": "no_ice_scooting_guard", "impack": true}],
+      "submission": [{
+        "guard": "no_ice_scooting_guard",
+        "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
+      }]
+    },
+    "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
+  }
 }
 ```
 
@@ -1513,20 +1605,23 @@ For refund scenarios (Cancel or SPA), use the corresponding Guard. The same subm
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_allocation",
-    "alloc_by_guard": "no_spa_guard"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [{"object": "no_spa_guard", "impack": true}],
-    "submission": [{
-      "guard": "no_spa_guard",
-      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
-    }]
-  },
-  "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
+    "operation_type": "allocation",
+    "data": {
+      "object": "alice_travel_allocation",
+      "alloc_by_guard": "no_spa_guard"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [{"object": "no_spa_guard", "impack": true}],
+      "submission": [{
+        "guard": "no_spa_guard",
+        "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "<ORDER_OBJECT_ID>", "name": "Order ID"}]
+      }]
+    },
+    "env": {"account": "travel_provider", "network": "testnet", "no_cache": true, "confirmed": true}
+  }
 }
 ```
 
@@ -1538,13 +1633,16 @@ After allocation, query the Allocation and Payment objects to verify the fund di
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "alice_travel_allocation"
-  },
-  "env": {
-    "network": "testnet",
-    "no_cache": true
+    "operation_type": "allocation",
+    "data": {
+      "object": "alice_travel_allocation"
+    },
+    "env": {
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1617,17 +1715,20 @@ Create the Service with all configurations — including `pause: false` and `pub
 When a forward has a Guard, the Progress operation requires a `submission` field at the **top level** (not inside `data`):
 ```json
 {
-  "operation_type": "progress",
-  "data": {...},
-  "submission": {
-    "type": "submission",
-    "guard": [{"object": "guard_name", "impack": true}],
-    "submission": [{
-      "guard": "guard_name",
-      "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "0x...", "name": "Order ID"}]
-    }]
-  },
-  "env": {"no_cache": true, ...}
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "progress",
+    "data": {...},
+    "submission": {
+      "type": "submission",
+      "guard": [{"object": "guard_name", "impack": true}],
+      "submission": [{
+        "guard": "guard_name",
+        "submission": [{"identifier": 0, "b_submission": true, "value_type": "Address", "value": "0x...", "name": "Order ID"}]
+      }]
+    },
+    "env": {"no_cache": true, ...}
+  }
 }
 ```
 
@@ -1648,19 +1749,22 @@ Weather data in the Repository is keyed by timestamp (`id`). The `weather_check_
 Customers place orders using the `order_new` field in the Service operation. This automatically creates Order, Progress, and Allocation objects:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_name",
-    "order_new": {
-      "buy": {
-        "items": [{"name": "Product", "stock": "1", "wip_hash": ""}],
-        "total_pay": {"balance": "price_amount"}
-      },
-      "namedNewOrder": {"name": "order_name", "replaceExistName": true},
-      "namedNewProgress": {"name": "progress_name", "replaceExistName": true},
-      "namedNewAllocation": {"name": "allocation_name", "replaceExistName": true}
-    }
-  },
-  "env": {"account": "customer", "network": "testnet", "no_cache": true, "confirmed": true}
+    "operation_type": "service",
+    "data": {
+      "object": "service_name",
+      "order_new": {
+        "buy": {
+          "items": [{"name": "Product", "stock": "1", "wip_hash": ""}],
+          "total_pay": {"balance": "price_amount"}
+        },
+        "namedNewOrder": {"name": "order_name", "replaceExistName": true},
+        "namedNewProgress": {"name": "progress_name", "replaceExistName": true},
+        "namedNewAllocation": {"name": "allocation_name", "replaceExistName": true}
+      }
+    },
+    "env": {"account": "customer", "network": "testnet", "no_cache": true, "confirmed": true}
+  }
 }
 ```

@@ -13,6 +13,8 @@ A complete example demonstrating how to create an outdoor accident insurance ser
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+
 ## Core Requirements & Features
 
 | Requirement | Description | Implementation |
@@ -134,9 +136,12 @@ Before running this example, ensure you have:
 
 ```json
 {
-  "gen": {
-    "name": "insurance_provider_v1",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "insurance_provider_v1",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -147,9 +152,12 @@ Before running this example, ensure you have:
 
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "insurance_provider_v1"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "network": "testnet",
+      "name_or_address": "insurance_provider_v1"
+    }
   }
 }
 ```
@@ -166,22 +174,25 @@ Create a Permission object to manage access control for the insurance service. T
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "insurance_permission_v1",
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "insurance_permission_v1",
+        "replaceExistName": true
+      },
+      "description": "Permission for outdoor accident insurance service",
+      "table": {
+        "op": "add perm by entity",
+        "entity": {"name_or_address": "insurance_provider_v1"},
+        "index": [1000, 1001, 1002, 1003, 1004, 1005]
+      }
     },
-    "description": "Permission for outdoor accident insurance service",
-    "table": {
-      "op": "add perm by entity",
-      "entity": {"name_or_address": "insurance_provider_v1"},
-      "index": [1000, 1001, 1002, 1003, 1004, 1005]
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -203,19 +214,22 @@ Create a Treasury object to aggregate insurance service revenue (public funds fo
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "insurance_treasury_v1",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "insurance_permission_v1",
-      "replaceExistName": true
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "insurance_treasury_v1",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "insurance_permission_v1",
+        "replaceExistName": true
+      },
+      "description": "Treasury for aggregating insurance service revenue (public funds for operations and distribution). Uses the same Permission as the Service for consistency."
     },
-    "description": "Treasury for aggregating insurance service revenue (public funds for operations and distribution). Uses the same Permission as the Service for consistency."
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -237,60 +251,63 @@ clock > progress.current_time + 1000
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "insurance_complete_guard_v1",
-      "tags": ["insurance", "time-lock", "complete"],
-      "replaceExistName": true
-    },
-    "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 10000ms (10 seconds for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness="OrderProgress"(100).",
-
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "insurance_complete_guard_v1",
+        "tags": ["insurance", "time-lock", "complete"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": 10000
-      }
-    ],
-    "root": {
-      "type": "logic_as_u256_greater",
-      "nodes": [
+      "description": "Time-lock guard for insurance claim completion. Requires current clock > progress.current_time + 10000ms (10 seconds for TESTING; in production set to reasonable duration like 8 hours). Progress is accessed via Order with convert_witness=\"OrderProgress\"(100).",
+
+      "table": [
         {
-          "type": "context",
-          "context": "Clock"
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
         },
         {
-          "type": "calc_number_add",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current_time",
-              "object": {
-                "identifier": 0,
-                "convert_witness": "OrderProgress"
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": 10000
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_as_u256_greater",
+        "nodes": [
+          {
+            "type": "context",
+            "context": "Clock"
+          },
+          {
+            "type": "calc_number_add",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current_time",
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": "OrderProgress"
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -328,81 +345,84 @@ logic_and[
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "insurance_withdraw_guard_treasury_v1",
-      "tags": ["insurance", "withdraw", "treasury"],
-      "replaceExistName": true
-    },
-    "description": "Allow fund allocation to Treasury after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1 (prevents cross-service theft). Funds flow to fixed Treasury Entity (safe — no Signer binding needed).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "object_type": "Order",
-        "name": "order_id (Order object submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "insurance_withdraw_guard_treasury_v1",
+        "tags": ["insurance", "withdraw", "treasury"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Complete",
-        "name": "Expected Complete node name (case-sensitive)"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "insurance_service_v1",
-        "name": "Expected service address (prevents cross-service fund theft)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Allow fund allocation to Treasury after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1 (prevents cross-service theft). Funds flow to fixed Treasury Entity (safe — no Signer binding needed).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {
-                "identifier": 0,
-                "convert_witness": "OrderProgress"
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "object_type": "Order",
+          "name": "order_id (Order object submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "order.service",
-              "object": {
-                "identifier": 0
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 2
-            }
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Complete",
+          "name": "Expected Complete node name (case-sensitive)"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "insurance_service_v1",
+          "name": "Expected service address (prevents cross-service fund theft)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": "OrderProgress"
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "order.service",
+                "object": {
+                  "identifier": 0
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -413,81 +433,84 @@ logic_and[
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "insurance_withdraw_guard_personal_v1",
-      "tags": ["insurance", "withdraw", "personal"],
-      "replaceExistName": true
-    },
-    "description": "Allow fund allocation to personal collection address after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1. Funds flow to fixed personal Entity (safe — no Signer binding needed).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "object_type": "Order",
-        "name": "order_id (Order object submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "insurance_withdraw_guard_personal_v1",
+        "tags": ["insurance", "withdraw", "personal"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Complete",
-        "name": "Expected Complete node name (case-sensitive)"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "insurance_service_v1",
-        "name": "Expected service address (prevents cross-service fund theft)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Allow fund allocation to personal collection address after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1. Funds flow to fixed personal Entity (safe — no Signer binding needed).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {
-                "identifier": 0,
-                "convert_witness": "OrderProgress"
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "object_type": "Order",
+          "name": "order_id (Order object submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "order.service",
-              "object": {
-                "identifier": 0
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 2
-            }
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Complete",
+          "name": "Expected Complete node name (case-sensitive)"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "insurance_service_v1",
+          "name": "Expected service address (prevents cross-service fund theft)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": "OrderProgress"
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "order.service",
+                "object": {
+                  "identifier": 0
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -517,59 +540,62 @@ Create a Machine with workflow nodes and publish it in a single transaction.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "insurance_machine_v1",
-      "permission": "insurance_permission_v1",
-      "replaceExistName": true
-    },
-    "description": "Insurance claim processing workflow: Start -> Complete (with time-lock guard)",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Start",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "start_claim",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Complete",
-          "pairs": [
-            {
-              "prev_node": "Start",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "complete_claim",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "insurance_complete_guard_v1"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "insurance_machine_v1",
+        "permission": "insurance_permission_v1",
+        "replaceExistName": true
+      },
+      "description": "Insurance claim processing workflow: Start -> Complete (with time-lock guard)",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "Start",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 0,
+                "forwards": [
+                  {
+                    "name": "start_claim",
+                    "permissionIndex": 1000,
+                    "weight": 1
                   }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Complete",
+            "pairs": [
+              {
+                "prev_node": "Start",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "complete_claim",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "insurance_complete_guard_v1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "publish": true
     },
-    "publish": true
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -596,60 +622,63 @@ Create the insurance service with machine, order_allocators (2 alternative appro
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "insurance_service_v1",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "insurance_permission_v1",
-      "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "insurance_service_v1",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "insurance_permission_v1",
+        "replaceExistName": true
+      },
+      "description": "Outdoor accident insurance for Iceland travel. Provides coverage for ice scooting and other outdoor activities.",
+      "machine": "insurance_machine_v1",
+      "order_allocators": {
+        "description": "Insurance order revenue allocation — 2 alternative merchant collection approaches (first-match-wins means only the first passing allocator executes)",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "insurance_withdraw_guard_treasury_v1",
+            "sharing": [
+              {
+                "who": {"Entity": "insurance_treasury_v1"},
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "insurance_withdraw_guard_personal_v1",
+            "sharing": [
+              {
+                "who": {"Entity": "insurance_provider_v1"},
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Outdoor Accident Insurance",
+            "price": 100000000,
+            "stock": 1000,
+            "suspension": false,
+            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
+            "wip_hash": ""
+          }
+        ]
+      },
+      "publish": true
     },
-    "description": "Outdoor accident insurance for Iceland travel. Provides coverage for ice scooting and other outdoor activities.",
-    "machine": "insurance_machine_v1",
-    "order_allocators": {
-      "description": "Insurance order revenue allocation — 2 alternative merchant collection approaches (first-match-wins means only the first passing allocator executes)",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "insurance_withdraw_guard_treasury_v1",
-          "sharing": [
-            {
-              "who": {"Entity": "insurance_treasury_v1"},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "insurance_withdraw_guard_personal_v1",
-          "sharing": [
-            {
-              "who": {"Entity": "insurance_provider_v1"},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Outdoor Accident Insurance",
-          "price": 100000000,
-          "stock": 1000,
-          "suspension": false,
-          "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
-          "wip_hash": ""
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -674,14 +703,17 @@ Unpause the service to allow order creation.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "insurance_service_v1",
-    "pause": false
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "operation_type": "service",
+    "data": {
+      "object": "insurance_service_v1",
+      "pause": false
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -696,9 +728,12 @@ Query the service to verify all configurations are correct.
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["insurance_service_v1"],
-  "network": "testnet"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["insurance_service_v1"],
+    "network": "testnet"
+  }
 }
 ```
 
@@ -714,39 +749,42 @@ Create an order on the insurance service using the `order_new` field of the `ser
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "insurance_service_v1",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Outdoor Accident Insurance",
-            "stock": 1,
-            "wip_hash": ""
+    "operation_type": "service",
+    "data": {
+      "object": "insurance_service_v1",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Outdoor Accident Insurance",
+              "stock": 1,
+              "wip_hash": ""
+            }
+          ],
+          "total_pay": {
+            "balance": 100000000
           }
-        ],
-        "total_pay": {
-          "balance": 100000000
+        },
+        "namedNewOrder": {
+          "name": "test_insurance_order_v1",
+          "replaceExistName": true
+        },
+        "namedNewAllocation": {
+          "name": "insurance_test_alloc_v1",
+          "replaceExistName": true
+        },
+        "namedNewProgress": {
+          "name": "insurance_test_progress_v1",
+          "replaceExistName": true
         }
-      },
-      "namedNewOrder": {
-        "name": "test_insurance_order_v1",
-        "replaceExistName": true
-      },
-      "namedNewAllocation": {
-        "name": "insurance_test_alloc_v1",
-        "replaceExistName": true
-      },
-      "namedNewProgress": {
-        "name": "insurance_test_progress_v1",
-        "replaceExistName": true
       }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -756,10 +794,13 @@ Create an order on the insurance service using the `order_new` field of the `ser
 > **Optional — Query the Order**: To verify the order or obtain on-chain object IDs:
 > ```json
 > {
->   "query_type": "onchain_objects",
->   "objects": ["test_insurance_order_v1"],
->   "network": "testnet",
->   "no_cache": true
+>   "tool": "query_toolkit",
+>   "data": {
+>     "query_type": "onchain_objects",
+>     "objects": ["test_insurance_order_v1"],
+>     "network": "testnet",
+>     "no_cache": true
+>   }
 > }
 > ```
 > The response includes `progress` and `allocation` fields with the on-chain object IDs.
@@ -772,19 +813,22 @@ First, advance the progress from initial state to Start node.
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "test_insurance_order_v1",
-    "progress": {
-      "operation": {
-        "next_node_name": "Start",
-        "forward": "start_claim"
+    "operation_type": "order",
+    "data": {
+      "object": "test_insurance_order_v1",
+      "progress": {
+        "operation": {
+          "next_node_name": "Start",
+          "forward": "start_claim"
+        }
       }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -808,19 +852,22 @@ Wait at least 10 seconds after entering Start node, then advance the progress to
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "test_insurance_order_v1",
-    "progress": {
-      "operation": {
-        "next_node_name": "Complete",
-        "forward": "complete_claim"
+    "operation_type": "order",
+    "data": {
+      "object": "test_insurance_order_v1",
+      "progress": {
+        "operation": {
+          "next_node_name": "Complete",
+          "forward": "complete_claim"
+        }
       }
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -829,24 +876,30 @@ The server will return a `submission` prompt like:
 
 ```json
 {
-  "type": "submission",
-  "guard": [
-    { "object": "0x1508ded8...", "impack": true }
-  ],
-  "submission": [
-    {
-      "guard": "0x1508ded8...",
+  "result": {
+    "status": "success",
+    "data": {
+      "type": "submission",
+      "guard": [
+        { "object": "0x1508ded8...", "impack": true }
+      ],
       "submission": [
         {
-          "identifier": 0,
-          "b_submission": true,
-          "value_type": "Address",
-          "name": "Order ID (submitted at runtime)",
-          "object_type": "Order"
+          "guard": "0x1508ded8...",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "name": "Order ID (submitted at runtime)",
+              "object_type": "Order"
+            }
+          ]
         }
       ]
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -856,43 +909,46 @@ The server will return a `submission` prompt like:
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "test_insurance_order_v1",
-    "progress": {
-      "operation": {
-        "next_node_name": "Complete",
-        "forward": "complete_claim"
+    "operation_type": "order",
+    "data": {
+      "object": "test_insurance_order_v1",
+      "progress": {
+        "operation": {
+          "next_node_name": "Complete",
+          "forward": "complete_claim"
+        }
       }
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "0x1508ded8...",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "0x1508ded8...",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "name": "Order ID (submitted at runtime)",
+              "object_type": "Order",
+              "value": "test_insurance_order_v1"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
     }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "0x1508ded8...",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "0x1508ded8...",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "name": "Order ID (submitted at runtime)",
-            "object_type": "Order",
-            "value": "test_insurance_order_v1"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
   }
 }
 ```
@@ -929,14 +985,17 @@ Call the allocation operation WITHOUT the `submission` field to obtain the Guard
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "insurance_test_alloc_v1",
-    "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "operation_type": "allocation",
+    "data": {
+      "object": "insurance_test_alloc_v1",
+      "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -945,24 +1004,30 @@ The server will return a `submission` prompt like:
 
 ```json
 {
-  "type": "submission",
-  "guard": [
-    { "object": "0xfb8bed2f...", "impack": true }
-  ],
-  "submission": [
-    {
-      "guard": "0xfb8bed2f...",
+  "result": {
+    "status": "success",
+    "data": {
+      "type": "submission",
+      "guard": [
+        { "object": "0xfb8bed2f...", "impack": true }
+      ],
       "submission": [
         {
-          "identifier": 0,
-          "b_submission": true,
-          "value_type": "Address",
-          "name": "order_id (Order object submitted at runtime)",
-          "object_type": "Order"
+          "guard": "0xfb8bed2f...",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "name": "order_id (Order object submitted at runtime)",
+              "object_type": "Order"
+            }
+          ]
         }
       ]
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -974,38 +1039,41 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "insurance_test_alloc_v1",
-    "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "0xfb8bed2f...",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "0xfb8bed2f...",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "name": "order_id (Order object submitted at runtime)",
-            "object_type": "Order",
-            "value": "test_insurance_order_v1"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "insurance_provider_v1",
-    "network": "testnet"
+    "operation_type": "allocation",
+    "data": {
+      "object": "insurance_test_alloc_v1",
+      "alloc_by_guard": "insurance_withdraw_guard_treasury_v1"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "0xfb8bed2f...",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "0xfb8bed2f...",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "name": "order_id (Order object submitted at runtime)",
+              "object_type": "Order",
+              "value": "test_insurance_order_v1"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
   }
 }
 ```

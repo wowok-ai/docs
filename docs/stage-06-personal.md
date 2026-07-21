@@ -14,6 +14,8 @@ In this stage, you will learn about personal services in WoWok, including:
 - How to use Demand to post bounty requests
 - How to use Personal to manage your personal on-chain portal
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -90,7 +92,7 @@ You need a public personal homepage. Personal allows you to manage your public p
 - ⚠️ All information is public on the chain!
 - ⚠️ Please be cautious when posting personal information!
 - ⚠️ NEVER post phone numbers, addresses, or private keys on Personal!
-- ⚠️ For private marks, use the `local` tool instead of on-chain Mark
+- ⚠️ For private marks, use the `local` sub-tool instead of on-chain Mark
 
 **→ [View Personal Detailed Documentation →](personal.md)**
 
@@ -119,15 +121,18 @@ Add a shipping address
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": "shipping_address",
-        "default": "123 Main St, New York, NY 10001",
-        "contents": ["10001"]
-      }
-    ]
+  "tool": "local_info_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": "shipping_address",
+          "default": "123 Main St, New York, NY 10001",
+          "contents": ["10001"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -140,9 +145,12 @@ Set your public description
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "This is my personal bio. I am a blockchain developer."
+    "operation_type": "personal",
+    "data": {
+      "description": "This is my personal bio. I am a blockchain developer."
+    }
   }
 }
 ```
@@ -151,14 +159,17 @@ Add public information records (safe: social handles, URLs)
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "information": {
-      "op": "add",
-      "data": [
-        { "name": "github", "value_type": "String", "value": "https://github.com/alice" },
-        { "name": "twitter", "value_type": "String", "value": "@alice_dev" }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "information": {
+        "op": "add",
+        "data": [
+          { "name": "github", "value_type": "String", "value": "https://github.com/alice" },
+          { "name": "twitter", "value_type": "String", "value": "@alice_dev" }
+        ]
+      }
     }
   }
 }
@@ -168,13 +179,16 @@ Add an on-chain identity mark for another address
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "add",
-      "data": [
-        { "address": "friend_address", "name": "Alice Smith", "tags": ["colleague", "dev"] }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "add",
+        "data": [
+          { "address": "friend_address", "name": "Alice Smith", "tags": ["colleague", "dev"] }
+        ]
+      }
     }
   }
 }

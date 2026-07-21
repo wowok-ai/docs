@@ -6,6 +6,8 @@
 
 The Messenger component is used for WoWok encrypted message management, including conversation list viewing, sending messages/files, viewing message history, WTS (Witness Timestamped Sequence) generation, verification, and signing, on-chain proof, blacklist/friendslist/guardlist management, etc.
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "messenger_operation", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## Function List
@@ -37,8 +39,11 @@ Messenger operations use the following top-level structure:
 
 ```json
 {
-  "operation": "operation_type",
-  // operation-specific fields
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "operation_type",
+    // operation-specific fields
+  }
 }
 ```
 
@@ -212,59 +217,73 @@ View all conversation list, including peer address, last message time, total mes
 
 ```json
 {
-  "operation": "watch_conversations"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations"
+  }
 }
 ```
 
 **Response**: Returns list of conversations with preview messages (empty if no conversations exist).
 
 ```json
-[
-  {
-    "peerAddress": "0x58f9...297f",
-    "lastMessageAt": 1776863079642,
-    "messageCount": 7,
-    "unreadCount": 3,
-    "lastMessagePreview": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
-    "previewMessages": [
-      {
-        "messageId": "012d6212_58f9dbc0_3_3abc",
-        "fromAddress": "0x012d...bfaf",
-        "toAddress": "0x58f9...297f",
-        "plaintextHash": "0x8825...7169",
-        "plaintext": "Message #3 from Alice: I'm doing great! Testing this encrypted messaging system...",
-        "direction": "sent",
-        "status": "read",
-        "msgType": 1,
-        "createdAt": 1776863055566
-      },
-      {
-        "messageId": "58f9dbc0_012d6212_4_caf1",
-        "fromAddress": "0x58f9...297f",
-        "toAddress": "0x012d...bfaf",
-        "plaintextHash": "0x1fcd...0299",
-        "plaintext": "Message #4 from Bob: Yes, the encryption is working perfectly!...",
-        "direction": "received",
-        "status": "decrypted",
-        "msgType": 1,
-        "createdAt": 1776863063227,
-        "receivedAt": 1776863065328,
-        "viewedAt": 1776863094986
-      },
-      {
-        "messageId": "012d6212_58f9dbc0_5_5a2c",
-        "fromAddress": "0x012d...bfaf",
-        "toAddress": "0x58f9...297f",
-        "plaintextHash": "0x8d67...4b26",
-        "plaintext": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
-        "direction": "sent",
-        "status": "confirmed",
-        "msgType": 1,
-        "createdAt": 1776863079642
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "watch_conversations",
+        "result": [
+          {
+            "peerAddress": "0x58f9...297f",
+            "lastMessageAt": 1776863079642,
+            "messageCount": 7,
+            "unreadCount": 3,
+            "lastMessagePreview": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
+            "previewMessages": [
+              {
+                "messageId": "012d6212_58f9dbc0_3_3abc",
+                "fromAddress": "0x012d...bfaf",
+                "toAddress": "0x58f9...297f",
+                "plaintextHash": "0x8825...7169",
+                "plaintext": "Message #3 from Alice: I'm doing great! Testing this encrypted messaging system...",
+                "direction": "sent",
+                "status": "read",
+                "msgType": 1,
+                "createdAt": 1776863055566
+              },
+              {
+                "messageId": "58f9dbc0_012d6212_4_caf1",
+                "fromAddress": "0x58f9...297f",
+                "toAddress": "0x012d...bfaf",
+                "plaintextHash": "0x1fcd...0299",
+                "plaintext": "Message #4 from Bob: Yes, the encryption is working perfectly!...",
+                "direction": "received",
+                "status": "decrypted",
+                "msgType": 1,
+                "createdAt": 1776863063227,
+                "receivedAt": 1776863065328,
+                "viewedAt": 1776863094986
+              },
+              {
+                "messageId": "012d6212_58f9dbc0_5_5a2c",
+                "fromAddress": "0x012d...bfaf",
+                "toAddress": "0x58f9...297f",
+                "plaintextHash": "0x8d67...4b26",
+                "plaintext": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
+                "direction": "sent",
+                "status": "confirmed",
+                "msgType": 1,
+                "createdAt": 1776863079642
+              }
+            ]
+          }
+        ]
       }
-    ]
-  }
-]
+    }
+  },
+  "schema": null
+}
 ```
 
 **Execution Result** (Tested with accounts: mcp_test_alice_7x9, mcp_test_bob_3k5):
@@ -280,9 +299,12 @@ View all conversation list, including peer address, last message time, total mes
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "unreadOnly": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "unreadOnly": true
+    }
   }
 }
 ```
@@ -297,11 +319,14 @@ View all conversation list, including peer address, last message time, total mes
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "previewMessageCount": 5,
-    "sortBy": "unreadCount",
-    "sortOrder": "desc"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "previewMessageCount": 5,
+      "sortBy": "unreadCount",
+      "sortOrder": "desc"
+    }
   }
 }
 ```
@@ -314,11 +339,14 @@ View all conversation list, including peer address, last message time, total mes
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "startTime": 1776572239063,
-    "endTime": 1776658639063,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "startTime": 1776572239063,
+      "endTime": 1776658639063,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 ```
@@ -331,11 +359,14 @@ View all conversation list, including peer address, last message time, total mes
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "account": "my_account",
-    "unreadOnly": true,
-    "previewMessageCount": 3
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "account": "my_account",
+      "unreadOnly": true,
+      "previewMessageCount": 3
+    }
   }
 }
 ```
@@ -358,9 +389,12 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "operation": "send_message",
-  "to": "bob",
-  "content": "Hello! How are you?"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "to": "bob",
+    "content": "Hello! How are you?"
+  }
 }
 ```
 
@@ -368,17 +402,28 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "messageId": "012d6212_58f9dbc0_1_e7a6",
-  "status": "confirmed",
-  "merkleData": {
-    "leafIndex": 1,
-    "prevRoot": "0xbf23...6e5b",
-    "newRoot": "0x2cdf...13f4",
-    "serverSignature": "0x248a...4b06",
-    "serverTimestamp": 1776863002578,
-    "serverPublicKey": "0xa723...3790"
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "send_message",
+        "result": {
+          "messageId": "012d6212_58f9dbc0_1_e7a6",
+          "status": "confirmed",
+          "merkleData": {
+            "leafIndex": 1,
+            "prevRoot": "0xbf23...6e5b",
+            "newRoot": "0x2cdf...13f4",
+            "serverSignature": "0x248a...4b06",
+            "serverTimestamp": 1776863002578,
+            "serverPublicKey": "0xa723...3790"
+          },
+          "lastReceivedLeafIndex": 0
+        }
+      }
+    }
   },
-  "lastReceivedLeafIndex": 0
+  "schema": null
 }
 ```
 
@@ -396,12 +441,15 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "operation": "send_message",
-  "to": {
-    "name_or_address": "friend_account",
-    "local_mark_first": true
-  },
-  "content": "Hello! How are you?"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "to": {
+      "name_or_address": "friend_account",
+      "local_mark_first": true
+    },
+    "content": "Hello! How are you?"
+  }
 }
 ```
 
@@ -413,18 +461,21 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "operation": "send_message",
-  "from": "my_account",
-  "to": {
-    "name_or_address": "bob",
-    "local_mark_first": true
-  },
-  "content": "This is a protected message with Guard verification",
-  "options": {
-    "guardAddress": "message_guard",
-    "passportAddress": "my_passport",
-    "network": "testnet",
-    "new_messenger_name": "my_messenger"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "my_account",
+    "to": {
+      "name_or_address": "bob",
+      "local_mark_first": true
+    },
+    "content": "This is a protected message with Guard verification",
+    "options": {
+      "guardAddress": "message_guard",
+      "passportAddress": "my_passport",
+      "network": "testnet",
+      "new_messenger_name": "my_messenger"
+    }
   }
 }
 ```
@@ -439,13 +490,16 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "operation": "send_message",
-  "to": {
-    "name_or_address": "recipient_address"
-  },
-  "content": "This message is force-sent",
-  "options": {
-    "force": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "to": {
+      "name_or_address": "recipient_address"
+    },
+    "content": "This message is force-sent",
+    "options": {
+      "force": true
+    }
   }
 }
 ```
@@ -454,17 +508,28 @@ Send encrypted text message to specified recipient.
 
 ```json
 {
-  "messageId": "msg_abc123",
-  "status": "confirmed",
-  "merkleData": {
-    "leafIndex": 5,
-    "prevRoot": "0xabc...",
-    "newRoot": "0xdef...",
-    "serverSignature": "0x123...",
-    "serverTimestamp": 1704067200000,
-    "serverPublicKey": "0x456..."
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "send_message",
+        "result": {
+          "messageId": "msg_abc123",
+          "status": "confirmed",
+          "merkleData": {
+            "leafIndex": 5,
+            "prevRoot": "0xabc...",
+            "newRoot": "0xdef...",
+            "serverSignature": "0x123...",
+            "serverTimestamp": 1704067200000,
+            "serverPublicKey": "0x456..."
+          },
+          "lastReceivedLeafIndex": 4
+        }
+      }
+    }
   },
-  "lastReceivedLeafIndex": 4
+  "schema": null
 }
 ```
 
@@ -484,10 +549,13 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 
 ```json
 {
-  "operation": "send_file",
-  "from": "mcp_test_alice_7x9",
-  "to": "mcp_test_bob_3k5",
-  "filePath": "./test_message_file.txt"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_file",
+    "from": "mcp_test_alice_7x9",
+    "to": "mcp_test_bob_3k5",
+    "filePath": "./test_message_file.txt"
+  }
 }
 ```
 
@@ -495,20 +563,28 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 
 ```json
 {
-  "operation": "send_file",
   "result": {
-    "messageId": "012d6212_58f9dbc0_6_c72e",
-    "status": "confirmed",
-    "merkleData": {
-      "leafIndex": 6,
-      "prevRoot": "0xc816...3321",
-      "newRoot": "0x426a...8568",
-      "serverSignature": "0xce31...dc02",
-      "serverTimestamp": 1776863159748,
-      "serverPublicKey": "0xa723...3790"
-    },
-    "lastReceivedLeafIndex": 4
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "send_file",
+        "result": {
+          "messageId": "012d6212_58f9dbc0_6_c72e",
+          "status": "confirmed",
+          "merkleData": {
+            "leafIndex": 6,
+            "prevRoot": "0xc816...3321",
+            "newRoot": "0x426a...8568",
+            "serverSignature": "0xce31...dc02",
+            "serverTimestamp": 1776863159748,
+            "serverPublicKey": "0xa723...3790"
+          },
+          "lastReceivedLeafIndex": 4
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -527,12 +603,15 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 
 ```json
 {
-  "operation": "send_file",
-  "to": "alice",
-  "filePath": "./service.wip",
-  "options": {
-    "fileName": "service_description.wip",
-    "contentType": "wip"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_file",
+    "to": "alice",
+    "filePath": "./service.wip",
+    "options": {
+      "fileName": "service_description.wip",
+      "contentType": "wip"
+    }
   }
 }
 ```
@@ -545,13 +624,16 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 
 ```json
 {
-  "operation": "send_file",
-  "to": "bob",
-  "filePath": "./contract.docx",
-  "options": {
-    "guardAddress": "file_guard",
-    "passportAddress": "my_passport",
-    "network": "testnet"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_file",
+    "to": "bob",
+    "filePath": "./contract.docx",
+    "options": {
+      "guardAddress": "file_guard",
+      "passportAddress": "my_passport",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -574,53 +656,67 @@ View message history, supporting various filter conditions.
 
 ```json
 {
-  "operation": "watch_messages"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages"
+  }
 }
 ```
 
 **Response**: Returns array of messages with full details.
 
 ```json
-[
-  {
-    "messageId": "012d6212_58f9dbc0_5_5a2c",
-    "fromAddress": "0x012d...bfaf",
-    "toAddress": "0x58f9...297f",
-    "plaintextHash": "0x8d67...4b26",
-    "plaintext": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
-    "lastReceivedLeafIndex": 4,
-    "direction": "sent",
-    "status": "confirmed",
-    "msgType": 1,
-    "leafIndex": 5,
-    "prevRoot": "0x6b17...93b9",
-    "newRoot": "0xc816...3321",
-    "serverSignature": "0xeaba...4c01",
-    "serverPublicKey": "0xa723...3790",
-    "serverTimestamp": 1776863079764,
-    "createdAt": 1776863079642
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "watch_messages",
+        "result": [
+          {
+            "messageId": "012d6212_58f9dbc0_5_5a2c",
+            "fromAddress": "0x012d...bfaf",
+            "toAddress": "0x58f9...297f",
+            "plaintextHash": "0x8d67...4b26",
+            "plaintext": "Message #5 from Alice: Perfect! All 5 rounds of testing completed successfully...",
+            "lastReceivedLeafIndex": 4,
+            "direction": "sent",
+            "status": "confirmed",
+            "msgType": 1,
+            "leafIndex": 5,
+            "prevRoot": "0x6b17...93b9",
+            "newRoot": "0xc816...3321",
+            "serverSignature": "0xeaba...4c01",
+            "serverPublicKey": "0xa723...3790",
+            "serverTimestamp": 1776863079764,
+            "createdAt": 1776863079642
+          },
+          {
+            "messageId": "58f9dbc0_012d6212_4_caf1",
+            "fromAddress": "0x58f9...297f",
+            "toAddress": "0x012d...bfaf",
+            "plaintextHash": "0x1fcd...0299",
+            "plaintext": "Message #4 from Bob: Yes, the encryption is working perfectly!...",
+            "lastReceivedLeafIndex": 3,
+            "direction": "received",
+            "status": "decrypted",
+            "msgType": 1,
+            "leafIndex": 4,
+            "prevRoot": "0xbff3...2f54",
+            "newRoot": "0x6b17...93b9",
+            "serverSignature": "0xe4b1...2c06",
+            "serverPublicKey": "0xa723...3790",
+            "serverTimestamp": 1776863063341,
+            "createdAt": 1776863063227,
+            "receivedAt": 1776863065328,
+            "viewedAt": 1776863094986
+          }
+        ]
+      }
+    }
   },
-  {
-    "messageId": "58f9dbc0_012d6212_4_caf1",
-    "fromAddress": "0x58f9...297f",
-    "toAddress": "0x012d...bfaf",
-    "plaintextHash": "0x1fcd...0299",
-    "plaintext": "Message #4 from Bob: Yes, the encryption is working perfectly!...",
-    "lastReceivedLeafIndex": 3,
-    "direction": "received",
-    "status": "decrypted",
-    "msgType": 1,
-    "leafIndex": 4,
-    "prevRoot": "0xbff3...2f54",
-    "newRoot": "0x6b17...93b9",
-    "serverSignature": "0xe4b1...2c06",
-    "serverPublicKey": "0xa723...3790",
-    "serverTimestamp": 1776863063341,
-    "createdAt": 1776863063227,
-    "receivedAt": 1776863065328,
-    "viewedAt": 1776863094986
-  }
-]
+  "schema": null
+}
 ```
 
 **Execution Result** (Tested 2026-04-22):
@@ -637,12 +733,15 @@ View message history, supporting various filter conditions.
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "alice",
-    "direction": "received",
-    "sortOrder": "desc",
-    "limit": 50
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "alice",
+      "direction": "received",
+      "sortOrder": "desc",
+      "limit": 50
+    }
   }
 }
 ```
@@ -655,10 +754,13 @@ View message history, supporting various filter conditions.
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "keyword": "meeting",
-    "confirmedOnly": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "keyword": "meeting",
+      "confirmedOnly": true
+    }
   }
 }
 ```
@@ -671,13 +773,16 @@ View message history, supporting various filter conditions.
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "contentType": "wts",
-    "listFilterMode": "friends",
-    "timeField": "createdAt",
-    "startTime": 1704067200000,
-    "endTime": 1706745600000
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "contentType": "wts",
+      "listFilterMode": "friends",
+      "timeField": "createdAt",
+      "startTime": 1704067200000,
+      "endTime": 1706745600000
+    }
   }
 }
 ```
@@ -698,14 +803,17 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "received",
-    "viewed": false,
-    "listFilterMode": "friends",
-    "sortOrder": "desc",
-    "limit": 20,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "received",
+      "viewed": false,
+      "listFilterMode": "friends",
+      "sortOrder": "desc",
+      "limit": 20,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 ```
@@ -725,14 +833,17 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "listFilterMode": "guard",
-    "status": "pending",
-    "timeField": "createdAt",
-    "startTime": 1704067200000,
-    "endTime": 1706745600000,
-    "sortOrder": "asc"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "listFilterMode": "guard",
+      "status": "pending",
+      "timeField": "createdAt",
+      "startTime": 1704067200000,
+      "endTime": 1706745600000,
+      "sortOrder": "asc"
+    }
   }
 }
 ```
@@ -751,14 +862,17 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "alice",
-    "decryptedOnly": true,
-    "keyword": "contract",
-    "confirmedOnly": true,
-    "sortOrder": "desc",
-    "limit": 50
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "alice",
+      "decryptedOnly": true,
+      "keyword": "contract",
+      "confirmedOnly": true,
+      "sortOrder": "desc",
+      "limit": 50
+    }
   }
 }
 ```
@@ -778,13 +892,16 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "received",
-    "contentType": "wts",
-    "listFilterMode": "stranger",
-    "viewed": false,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "received",
+      "contentType": "wts",
+      "listFilterMode": "stranger",
+      "viewed": false,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 ```
@@ -804,13 +921,16 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "unreadOnly": true,
-    "startTime": 1706054400000,
-    "sortBy": "lastMessageAt",
-    "sortOrder": "desc",
-    "previewMessageCount": 3
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "unreadOnly": true,
+      "startTime": 1706054400000,
+      "sortBy": "lastMessageAt",
+      "sortOrder": "desc",
+      "previewMessageCount": 3
+    }
   }
 }
 ```
@@ -829,11 +949,14 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "sortBy": "messageCount",
-    "sortOrder": "desc",
-    "previewMessageCount": 1
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "sortBy": "messageCount",
+      "sortOrder": "desc",
+      "previewMessageCount": 1
+    }
   }
 }
 ```
@@ -850,13 +973,16 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "sent",
-    "arkConfirmedOnly": true,
-    "arkTimestampStart": 1704067200000,
-    "arkTimestampEnd": 1706745600000,
-    "peerAddress": "bob"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "sent",
+      "arkConfirmedOnly": true,
+      "arkTimestampStart": 1704067200000,
+      "arkTimestampEnd": 1706745600000,
+      "peerAddress": "bob"
+    }
   }
 }
 ```
@@ -875,13 +1001,16 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "viewed": true,
-    "viewedAtStart": 1706572800000,
-    "viewedAtEnd": 1706659200000,
-    "sortOrder": "desc",
-    "limit": 100
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "viewed": true,
+      "viewedAtStart": 1706572800000,
+      "viewedAtEnd": 1706659200000,
+      "sortOrder": "desc",
+      "limit": 100
+    }
   }
 }
 ```
@@ -899,11 +1028,14 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "proofedOnly": true,
-    "sortOrder": "desc",
-    "limit": 50
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "proofedOnly": true,
+      "sortOrder": "desc",
+      "limit": 50
+    }
   }
 }
 ```
@@ -920,15 +1052,18 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "received",
-    "customListFilter": {
-      "excludeAddresses": ["0xbad1...", "0xbad2..."],
-      "relation": "union"
-    },
-    "sortOrder": "desc",
-    "limit": 30
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "received",
+      "customListFilter": {
+        "excludeAddresses": ["0xbad1...", "0xbad2..."],
+        "relation": "union"
+      },
+      "sortOrder": "desc",
+      "limit": 30
+    }
   }
 }
 ```
@@ -954,10 +1089,13 @@ Extract and decompress ZIP format message files.
 
 ```json
 {
-  "operation": "extract_zip_messages",
-  "account": "mcp_test_bob_3k5",
-  "messages": ["012d6212_58f9dbc0_6_c72e"],
-  "outputDir": "./extracted/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "extract_zip_messages",
+    "account": "mcp_test_bob_3k5",
+    "messages": ["012d6212_58f9dbc0_6_c72e"],
+    "outputDir": "./extracted/"
+  }
 }
 ```
 
@@ -965,8 +1103,18 @@ Extract and decompress ZIP format message files.
 
 ```json
 {
-  "operation": "extract_zip_messages",
-  "result": ["./extracted_files/test_message_file.txt"]
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "extract_zip_messages",
+        "result": [
+          "./extracted_files/test_message_file.txt"
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -983,10 +1131,13 @@ Extract and decompress ZIP format message files.
 
 ```json
 {
-  "operation": "extract_zip_messages",
-  "account": "my_account",
-  "messages": ["msg_002", "msg_003", "msg_004"],
-  "outputDir": "./extracted/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "extract_zip_messages",
+    "account": "my_account",
+    "messages": ["msg_002", "msg_003", "msg_004"],
+    "outputDir": "./extracted/"
+  }
 }
 ```
 
@@ -1006,11 +1157,14 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ```json
 {
-  "operation": "generate_wts",
-  "params": {
-    "myAccount": "mcp_test_alice_7x9",
-    "peerAccount": "mcp_test_bob_3k5",
-    "outputDir": "./wts_output"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "generate_wts",
+    "params": {
+      "myAccount": "mcp_test_alice_7x9",
+      "peerAccount": "mcp_test_bob_3k5",
+      "outputDir": "./wts_output"
+    }
   }
 }
 ```
@@ -1019,15 +1173,25 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ```json
 {
-  "operation": "generate_wts",
   "result": {
-    "files": ["./wts_output/0x012d_0x58f9_0-6.wts"],
-    "totalMessageCount": 7,
-    "timeRange": {
-      "start": 1776862992437,
-      "end": 1776863159809
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "generate_wts",
+        "result": {
+          "files": [
+            "./wts_output/0x012d_0x58f9_0-6.wts"
+          ],
+          "totalMessageCount": 7,
+          "timeRange": {
+            "start": 1776862992437,
+            "end": 1776863159809
+          }
+        }
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -1045,17 +1209,20 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ```json
 {
-  "operation": "generate_wts",
-  "params": {
-    "myAccount": "my_account",
-    "peerAccount": "peer_account",
-    "range": {
-      "type": "time",
-      "start": 1704067200000,
-      "end": 1706745600000
-    },
-    "excludePlaintext": true,
-    "outputDir": "./wts/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "generate_wts",
+    "params": {
+      "myAccount": "my_account",
+      "peerAccount": "peer_account",
+      "range": {
+        "type": "time",
+        "start": 1704067200000,
+        "end": 1706745600000
+      },
+      "excludePlaintext": true,
+      "outputDir": "./wts/"
+    }
   }
 }
 ```
@@ -1068,16 +1235,19 @@ Generate WTS (Witness Timestamped Sequence) file for chat history. WTS files con
 
 ```json
 {
-  "operation": "generate_wts",
-  "params": {
-    "myAccount": "my_account",
-    "peerAccount": "peer_account",
-    "range": {
-      "type": "messageId",
-      "start": "msg_100",
-      "end": "msg_200"
-    },
-    "outputDir": "./wts/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "generate_wts",
+    "params": {
+      "myAccount": "my_account",
+      "peerAccount": "peer_account",
+      "range": {
+        "type": "messageId",
+        "start": "msg_100",
+        "end": "msg_200"
+      },
+      "outputDir": "./wts/"
+    }
   }
 }
 ```
@@ -1098,8 +1268,11 @@ Verify WTS file integrity and signatures.
 
 ```json
 {
-  "operation": "verify_wts",
-  "wtsFilePath": "./wts_output/0x012d_0x58f9_0-6.wts"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "verify_wts",
+    "wtsFilePath": "./wts_output/0x012d_0x58f9_0-6.wts"
+  }
 }
 ```
 
@@ -1107,12 +1280,20 @@ Verify WTS file integrity and signatures.
 
 ```json
 {
-  "operation": "verify_wts",
   "result": {
-    "valid": true,
-    "hashValid": true,
-    "hasSignature": false
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "verify_wts",
+        "result": {
+          "valid": true,
+          "hashValid": true,
+          "hasSignature": false
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1138,8 +1319,11 @@ Sign WTS file using an account.
 
 ```json
 {
-  "operation": "sign_wts",
-  "wtsFilePath": "./wts/chat_history.wts"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "sign_wts",
+    "wtsFilePath": "./wts/chat_history.wts"
+  }
 }
 ```
 
@@ -1151,10 +1335,13 @@ Sign WTS file using an account.
 
 ```json
 {
-  "operation": "sign_wts",
-  "wtsFilePath": "./wts_output/0x012d_0x58f9_0-6.wts",
-  "account": "mcp_test_alice_7x9",
-  "outputPath": "./wts_output/0x012d_0x58f9_0-6_signed.wts"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "sign_wts",
+    "wtsFilePath": "./wts_output/0x012d_0x58f9_0-6.wts",
+    "account": "mcp_test_alice_7x9",
+    "outputPath": "./wts_output/0x012d_0x58f9_0-6_signed.wts"
+  }
 }
 ```
 
@@ -1162,8 +1349,16 @@ Sign WTS file using an account.
 
 ```json
 {
-  "operation": "sign_wts",
-  "result": "./wts_output/0x012d_0x58f9_0-6_signed.wts"
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "sign_wts",
+        "result": "./wts_output/0x012d_0x58f9_0-6_signed.wts"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1188,11 +1383,14 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ```json
 {
-  "operation": "wts2html",
-  "wtsPath": "./wts/chat_history.wts",
-  "options": {
-    "title": "Chat History with Alice",
-    "theme": "light"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "wts2html",
+    "wtsPath": "./wts/chat_history.wts",
+    "options": {
+      "title": "Chat History with Alice",
+      "theme": "light"
+    }
   }
 }
 ```
@@ -1205,12 +1403,15 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ```json
 {
-  "operation": "wts2html",
-  "wtsPath": "./wts_output/0x012d_0x58f9_0-6.wts",
-  "options": {
-    "title": "Alice-Bob Conversation",
-    "theme": "light",
-    "outputPath": "./wts_output/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "wts2html",
+    "wtsPath": "./wts_output/0x012d_0x58f9_0-6.wts",
+    "options": {
+      "title": "Alice-Bob Conversation",
+      "theme": "light",
+      "outputPath": "./wts_output/"
+    }
   }
 }
 ```
@@ -1219,8 +1420,16 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ```json
 {
-  "operation": "wts2html",
-  "result": "./wts_output/conversation.html/0x012d_0x58f9_0-6.html"
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "wts2html",
+        "result": "./wts_output/conversation.html/0x012d_0x58f9_0-6.html"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1238,11 +1447,14 @@ Convert WTS file to HTML format for easy viewing and sharing.
 
 ```json
 {
-  "operation": "wts2html",
-  "wtsPath": "./wts/",
-  "options": {
-    "theme": "dark",
-    "outputPath": "./html/"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "wts2html",
+    "wtsPath": "./wts/",
+    "options": {
+      "theme": "dark",
+      "outputPath": "./html/"
+    }
   }
 }
 ```
@@ -1265,9 +1477,12 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 ```json
 {
-  "operation": "proof_message",
-  "messageId": "msg_12345",
-  "network": "testnet"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "proof_message",
+    "messageId": "msg_12345",
+    "network": "testnet"
+  }
 }
 ```
 
@@ -1281,10 +1496,13 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 ```json
 {
-  "operation": "proof_message",
-  "account": "mcp_test_alice_7x9",
-  "messageId": "012d6212_58f9dbc0_1_e7a6",
-  "network": "testnet"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "proof_message",
+    "account": "mcp_test_alice_7x9",
+    "messageId": "012d6212_58f9dbc0_1_e7a6",
+    "network": "testnet"
+  }
 }
 ```
 
@@ -1292,14 +1510,22 @@ Generate on-chain timestamp proof for messages, giving them legal evidence valid
 
 ```json
 {
-  "operation": "proof_message",
   "result": {
-    "success": true,
-    "transactionDigest": "0xabc123...",
-    "messageId": "012d6212_58f9dbc0_1_e7a6",
-    "timestamp": 1776865807040,
-    "blockHeight": 1234567
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "proof_message",
+        "result": {
+          "success": true,
+          "transactionDigest": "0xabc123...",
+          "messageId": "012d6212_58f9dbc0_1_e7a6",
+          "timestamp": 1776865807040,
+          "blockHeight": 1234567
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1325,11 +1551,14 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "account": "mcp_test_alice_7x9",
-  "blacklist": {
-    "op": "add",
-    "users": ["mcp_test_bob_3k5"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "account": "mcp_test_alice_7x9",
+    "blacklist": {
+      "op": "add",
+      "users": ["mcp_test_bob_3k5"]
+    }
   }
 }
 ```
@@ -1338,18 +1567,26 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "op": "add",
   "result": {
-    "success": true,
-    "operation": "add",
-    "modifiedCount": 1,
-    "currentCount": 1,
-    "maxCount": 500,
-    "invalidAddresses": null,
-    "existResults": null,
-    "message": "Successfully added 1 addresses"
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "blacklist",
+        "op": "add",
+        "result": {
+          "success": true,
+          "operation": "add",
+          "modifiedCount": 1,
+          "currentCount": 1,
+          "maxCount": 500,
+          "invalidAddresses": null,
+          "existResults": null,
+          "message": "Successfully added 1 addresses"
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1367,11 +1604,14 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "account": "my_account",
-  "blacklist": {
-    "op": "remove",
-    "users": ["old_user"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "account": "my_account",
+    "blacklist": {
+      "op": "remove",
+      "users": ["old_user"]
+    }
   }
 }
 ```
@@ -1384,9 +1624,12 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "blacklist": {
-    "op": "get"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "blacklist": {
+      "op": "get"
+    }
   }
 }
 ```
@@ -1394,7 +1637,21 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 **Response**: Returns array of blacklisted addresses.
 
 ```json
-["0xe639...2e82"]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "blacklist",
+        "op": "get",
+        "result": [
+          "0xe639...2e82"
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -1405,9 +1662,12 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "blacklist": {
-    "op": "clear"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "blacklist": {
+      "op": "clear"
+    }
   }
 }
 ```
@@ -1420,15 +1680,18 @@ Manage blacklist, including adding, removing, clearing, viewing, and checking us
 
 ```json
 {
-  "operation": "blacklist",
-  "blacklist": {
-    "op": "add",
-    "users": {
-      "entities": [
-        { "name_or_address": "user1", "local_mark_first": true },
-        { "name_or_address": "user2", "local_mark_first": false }
-      ],
-      "check_all_founded": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "blacklist": {
+      "op": "add",
+      "users": {
+        "entities": [
+          { "name_or_address": "user1", "local_mark_first": true },
+          { "name_or_address": "user2", "local_mark_first": false }
+        ],
+        "check_all_founded": true
+      }
     }
   }
 }
@@ -1450,11 +1713,14 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ```json
 {
-  "operation": "friendslist",
-  "account": "mcp_test_alice_7x9",
-  "friendslist": {
-    "op": "add",
-    "users": ["mcp_test_bob_3k5"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "friendslist",
+    "account": "mcp_test_alice_7x9",
+    "friendslist": {
+      "op": "add",
+      "users": ["mcp_test_bob_3k5"]
+    }
   }
 }
 ```
@@ -1463,18 +1729,26 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ```json
 {
-  "operation": "friendslist",
-  "op": "add",
   "result": {
-    "success": true,
-    "operation": "add",
-    "modifiedCount": 0,
-    "currentCount": 1,
-    "maxCount": 1000,
-    "invalidAddresses": null,
-    "existResults": null,
-    "message": "Successfully added 0 addresses"
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "friendslist",
+        "op": "add",
+        "result": {
+          "success": true,
+          "operation": "add",
+          "modifiedCount": 0,
+          "currentCount": 1,
+          "maxCount": 1000,
+          "invalidAddresses": null,
+          "existResults": null,
+          "message": "Successfully added 0 addresses"
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1492,10 +1766,13 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ```json
 {
-  "operation": "friendslist",
-  "friendslist": {
-    "op": "remove",
-    "users": ["old_friend"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "friendslist",
+    "friendslist": {
+      "op": "remove",
+      "users": ["old_friend"]
+    }
   }
 }
 ```
@@ -1508,9 +1785,12 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ```json
 {
-  "operation": "friendslist",
-  "friendslist": {
-    "op": "get"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "friendslist",
+    "friendslist": {
+      "op": "get"
+    }
   }
 }
 ```
@@ -1518,7 +1798,21 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 **Response**: Returns array of friend addresses.
 
 ```json
-["0xd836...681"]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "friendslist",
+        "op": "get",
+        "result": [
+          "0xd836...681"
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -1529,15 +1823,18 @@ Manage friends list, including adding, removing, clearing, viewing, and checking
 
 ```json
 {
-  "operation": "friendslist",
-  "friendslist": {
-    "op": "add",
-    "users": {
-      "entities": [
-        { "name_or_address": "alice", "local_mark_first": true },
-        { "name_or_address": "bob", "local_mark_first": true }
-      ],
-      "check_all_founded": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "friendslist",
+    "friendslist": {
+      "op": "add",
+      "users": {
+        "entities": [
+          { "name_or_address": "alice", "local_mark_first": true },
+          { "name_or_address": "bob", "local_mark_first": true }
+        ],
+        "check_all_founded": true
+      }
     }
   }
 }
@@ -1559,15 +1856,18 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ```json
 {
-  "operation": "guardlist",
-  "guardlist": {
-    "op": "add",
-    "guards": [
-      {
-        "guard": "message_guard",
-        "passportValiditySeconds": 3600
-      }
-    ]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "guardlist",
+    "guardlist": {
+      "op": "add",
+      "guards": [
+        {
+          "guard": "message_guard",
+          "passportValiditySeconds": 3600
+        }
+      ]
+    }
   }
 }
 ```
@@ -1580,19 +1880,22 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ```json
 {
-  "operation": "guardlist",
-  "guardlist": {
-    "op": "add",
-    "guards": [
-      {
-        "guard": "guard1",
-        "passportValiditySeconds": 3600
-      },
-      {
-        "guard": "guard2",
-        "passportValiditySeconds": 86400
-      }
-    ]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "guardlist",
+    "guardlist": {
+      "op": "add",
+      "guards": [
+        {
+          "guard": "guard1",
+          "passportValiditySeconds": 3600
+        },
+        {
+          "guard": "guard2",
+          "passportValiditySeconds": 86400
+        }
+      ]
+    }
   }
 }
 ```
@@ -1605,10 +1908,13 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ```json
 {
-  "operation": "guardlist",
-  "account": "mcp_test_alice_7x9",
-  "guardlist": {
-    "op": "get"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "guardlist",
+    "account": "mcp_test_alice_7x9",
+    "guardlist": {
+      "op": "get"
+    }
   }
 }
 ```
@@ -1617,19 +1923,27 @@ Manage Guard list, including adding, removing, and viewing Guards. Guard list is
 
 ```json
 {
-  "operation": "guardlist",
-  "op": "get",
   "result": {
-    "success": true,
-    "operation": "get",
-    "modifiedCount": 0,
-    "currentCount": 0,
-    "maxCount": 30,
-    "invalidAddresses": null,
-    "existResults": null,
-    "message": "Retrieved 0 guards",
-    "currentGuardList": []
-  }
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "guardlist",
+        "op": "get",
+        "result": {
+          "success": true,
+          "operation": "get",
+          "modifiedCount": 0,
+          "currentCount": 0,
+          "maxCount": 30,
+          "invalidAddresses": null,
+          "existResults": null,
+          "message": "Retrieved 0 guards",
+          "currentGuardList": []
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1655,10 +1969,13 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "operation": "settings",
-  "account": "mcp_test_alice_7x9",
-  "settings": {
-    "op": "get"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "settings",
+    "account": "mcp_test_alice_7x9",
+    "settings": {
+      "op": "get"
+    }
   }
 }
 ```
@@ -1667,11 +1984,23 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "allowStrangerMessages": true,
-  "maxInboxSize": 20,
-  "minUserInboxSize": 20,
-  "maxUserInboxSize": 200,
-  "defaultAllowStrangerMessages": false
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "settings",
+        "op": "get",
+        "result": {
+          "allowStrangerMessages": true,
+          "maxInboxSize": 20,
+          "minUserInboxSize": 20,
+          "maxUserInboxSize": 200,
+          "defaultAllowStrangerMessages": false
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1688,11 +2017,14 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "operation": "settings",
-  "settings": {
-    "op": "set",
-    "maxInboxSize": 500,
-    "allowStrangerMessages": false
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "settings",
+    "settings": {
+      "op": "set",
+      "maxInboxSize": 500,
+      "allowStrangerMessages": false
+    }
   }
 }
 ```
@@ -1701,9 +2033,17 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "operation": "settings",
-  "op": "set",
-  "result": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "settings",
+        "op": "set",
+        "result": true
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1715,11 +2055,14 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "operation": "settings",
-  "account": "my_account",
-  "settings": {
-    "op": "set",
-    "maxInboxSize": 2000
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "settings",
+    "account": "my_account",
+    "settings": {
+      "op": "set",
+      "maxInboxSize": 2000
+    }
   }
 }
 ```
@@ -1732,10 +2075,13 @@ Manage messenger settings, including viewing and updating inbox size limits and 
 
 ```json
 {
-  "operation": "settings",
-  "settings": {
-    "op": "set",
-    "allowStrangerMessages": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "settings",
+    "settings": {
+      "op": "set",
+      "allowStrangerMessages": true
+    }
   }
 }
 ```
@@ -1780,8 +2126,11 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ```json
 {
-  "operation": "mark_messages_as_viewed",
-  "messageIds": ["msg_12345"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_messages_as_viewed",
+    "messageIds": ["msg_12345"]
+  }
 }
 ```
 
@@ -1789,8 +2138,16 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ```json
 {
-  "operation": "mark_messages_as_viewed",
-  "result": 1
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "mark_messages_as_viewed",
+        "result": 1
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1807,13 +2164,16 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ```json
 {
-  "operation": "mark_messages_as_viewed",
-  "account": "mcp_test_alice_7x9",
-  "messageIds": [
-    "58f9dbc0_012d6212_0_0004",
-    "58f9dbc0_012d6212_2_f31d",
-    "58f9dbc0_012d6212_4_caf1"
-  ]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_messages_as_viewed",
+    "account": "mcp_test_alice_7x9",
+    "messageIds": [
+      "58f9dbc0_012d6212_0_0004",
+      "58f9dbc0_012d6212_2_f31d",
+      "58f9dbc0_012d6212_4_caf1"
+    ]
+  }
 }
 ```
 
@@ -1821,8 +2181,16 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 
 ```json
 {
-  "operation": "mark_messages_as_viewed",
-  "result": 2
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "mark_messages_as_viewed",
+        "result": 2
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1840,18 +2208,24 @@ Mark specific messages as viewed by the current user. This updates the `viewedAt
 ```json
 // Step 1: Get unviewed messages without auto-marking
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "alice",
-    "viewed": false,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "alice",
+      "viewed": false,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 
 // Step 2: Mark the retrieved messages as viewed
 {
-  "operation": "mark_messages_as_viewed",
-  "messageIds": ["msg_001", "msg_002", "msg_003"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_messages_as_viewed",
+    "messageIds": ["msg_001", "msg_002", "msg_003"]
+  }
 }
 ```
 
@@ -1871,8 +2245,11 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ```json
 {
-  "operation": "mark_conversation_as_viewed",
-  "peerAddress": "bob"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_conversation_as_viewed",
+    "peerAddress": "bob"
+  }
 }
 ```
 
@@ -1880,8 +2257,16 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ```json
 {
-  "operation": "mark_conversation_as_viewed",
-  "result": 3
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "operation": "mark_conversation_as_viewed",
+        "result": 3
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1898,9 +2283,12 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ```json
 {
-  "operation": "mark_conversation_as_viewed",
-  "account": "my_account",
-  "peerAddress": "0x1234...abcd"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_conversation_as_viewed",
+    "account": "my_account",
+    "peerAddress": "0x1234...abcd"
+  }
 }
 ```
 
@@ -1912,10 +2300,13 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 ```json
 {
-  "operation": "mark_conversation_as_viewed",
-  "peerAddress": {
-    "name_or_address": "alice",
-    "local_mark_first": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_conversation_as_viewed",
+    "peerAddress": {
+      "name_or_address": "alice",
+      "local_mark_first": true
+    }
   }
 }
 ```
@@ -1929,10 +2320,13 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 ```json
 // Step 1: Get all conversations with unread messages
 {
-  "operation": "watch_conversations",
-  "filter": {
-    "unreadOnly": true,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations",
+    "filter": {
+      "unreadOnly": true,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 
@@ -1947,8 +2341,11 @@ Mark all unviewed received messages in a conversation as viewed. This is a conve
 
 // Step 2: Mark the conversation as viewed
 {
-  "operation": "mark_conversation_as_viewed",
-  "peerAddress": "0x1234...abcd"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "mark_conversation_as_viewed",
+    "peerAddress": "0x1234...abcd"
+  }
 }
 
 // Response: { "operation": "mark_conversation_as_viewed", "result": 3 }
@@ -1970,10 +2367,13 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "direction": "received",
-    "viewed": false
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "direction": "received",
+      "viewed": false
+    }
   }
 }
 ```
@@ -1988,11 +2388,14 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "viewed": true,
-    "viewedAtStart": 1776655039063,
-    "viewedAtEnd": 1776658639063
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "viewed": true,
+      "viewedAtStart": 1776655039063,
+      "viewedAtEnd": 1776658639063
+    }
   }
 }
 ```
@@ -2005,12 +2408,15 @@ Use the viewed status filtering in watch_messages to find viewed or unviewed mes
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "alice",
-    "direction": "received",
-    "viewed": false,
-    "skipAutoMarkViewed": true
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "alice",
+      "direction": "received",
+      "viewed": false,
+      "skipAutoMarkViewed": true
+    }
   }
 }
 ```
@@ -2031,7 +2437,10 @@ Actively pull new messages from the messenger server for the specified account. 
 
 ```json
 {
-  "operation": "pull_messages"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "pull_messages"
+  }
 }
 ```
 
@@ -2041,9 +2450,12 @@ Actively pull new messages from the messenger server for the specified account. 
 
 ```json
 {
-  "operation": "pull_messages",
-  "account": "alice",
-  "limit": 20
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "pull_messages",
+    "account": "alice",
+    "limit": 20
+  }
 }
 ```
 

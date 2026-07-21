@@ -14,6 +14,8 @@ In this stage, you will learn about trust management mechanisms in WoWok, includ
 - How to create programmable trust rules through Guard
 - Understanding WoWok's permission index system
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -90,33 +92,36 @@ Permission is like permission management for specific groups and internal organi
 
 ```json
 {
+  "tool": "onchain_operations",
   "data": {
-    "description": "Test Permission",
-    "object": {
-      "name": "P1"
-    },
-    "table": {
-      "op": "add perm by entity",
-      "entity": {
-        "name_or_address": "alice"
+    "operation_type": "permission",
+    "data": {
+      "description": "Test Permission",
+      "object": {
+        "name": "P1"
       },
-      "index": [
-        300,
-        200,
-        201,
-        203,
-        204,
-        205,
-        206,
-        207,
-        208
-      ]
+      "table": {
+        "op": "add perm by entity",
+        "entity": {
+          "name_or_address": "alice"
+        },
+        "index": [
+          300,
+          200,
+          201,
+          203,
+          204,
+          205,
+          206,
+          207,
+          208
+        ]
+      }
+    },
+    "env": {
+      "account": "my_first_account",
+      "network": "testnet"
     }
-  },
-  "operation_type": "permission",
-  "env": {
-    "account": "my_first_account",
-    "network": "testnet"
   }
 }
 ```
@@ -131,24 +136,30 @@ Transaction completed successfully...
 
 ```json
 {
-  "message": "Operation completed",
   "result": {
-    "type": "data",
-    "data": [
-      {
-        "type": "Permission",
-        "type_raw": "0x2::permission::Permission",
-        "object": "...",
-        "version": "149",
-        "owner": {
-          "Shared": {
-            "initial_shared_version": 149
+    "status": "success",
+    "data": {
+      "message": "Operation completed",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "type": "Permission",
+            "type_raw": "0x2::permission::Permission",
+            "object": "...",
+            "version": "149",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 149
+              }
+            },
+            "change": "created"
           }
-        },
-        "change": "created"
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -162,25 +173,28 @@ Transaction completed successfully...
 
 ```json
 {
+  "tool": "onchain_operations",
   "data": {
-    "description": "Anyone can pass the verification",
-    "namedNew": {
-      "name": "simple_guard"
-    },
-    "table": [
-      {
-        "b_submission": false,
-        "identifier": 0,
-        "value": true,
-        "value_type": 0
+    "operation_type": "guard",
+    "data": {
+      "description": "Anyone can pass the verification",
+      "namedNew": {
+        "name": "simple_guard"
+      },
+      "table": [
+        {
+          "b_submission": false,
+          "identifier": 0,
+          "value": true,
+          "value_type": 0
+        }
+      ],
+      "root": {
+        "type": "identifier",
+        "identifier": 0
       }
-    ],
-    "root": {
-      "type": "identifier",
-      "identifier": 0
     }
-  },
-  "operation_type": "guard"
+  }
 }
 ```
 
@@ -195,20 +209,26 @@ Transaction completed successfully
 
 ```json
 {
-  "message": "Operation completed",
   "result": {
-    "type": "data",
-    "data": [
-      {
-        "type": "Guard",
-        "type_raw": "0x2::guard::Guard",
-        "object": "...",
-        "version": "12687712",
-        "owner": "Immutable",
-        "change": "created"
+    "status": "success",
+    "data": {
+      "message": "Operation completed",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "type": "Guard",
+            "type_raw": "0x2::guard::Guard",
+            "object": "...",
+            "version": "12687712",
+            "owner": "Immutable",
+            "change": "created"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -226,45 +246,48 @@ The signer has permission to create service objects in P1 object.
 
 ```json
 {
+  "tool": "onchain_operations",
   "data": {
-    "description": "Verify that the signer has permission to create service in P1 object",
-    "namedNew": {
-      "name": "G1",
-      "replaceExistName": true
-    },
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": 1,
-        "value": "P1"
+    "operation_type": "guard",
+    "data": {
+      "description": "Verify that the signer has permission to create service in P1 object",
+      "namedNew": {
+        "name": "G1",
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": 4,
-        "value": 300
-      }
-    ],
-    "root": {
-      "type": "query",
-      "query": "permission.entity.perm has",
-      "object": {
-        "identifier": 0
-      },
-      "parameters": [
+      "table": [
         {
-          "type": "context",
-          "context": "Signer"
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": 1,
+          "value": "P1"
         },
         {
-          "type": "identifier",
-          "identifier": 1
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": 4,
+          "value": 300
         }
-      ]
+      ],
+      "root": {
+        "type": "query",
+        "query": "permission.entity.perm has",
+        "object": {
+          "identifier": 0
+        },
+        "parameters": [
+          {
+            "type": "context",
+            "context": "Signer"
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
     }
-  },
-  "operation_type": "guard"
+  }
 }
 ```
 
@@ -279,20 +302,26 @@ Transaction completed successfully
 
 ```json
 {
-  "message": "Operation completed",
   "result": {
-    "type": "data",
-    "data": [
-      {
-        "type": "Guard",
-        "type_raw": "0x2::guard::Guard",
-        "object": "...",
-        "version": "12685347",
-        "owner": "Immutable",
-        "change": "created"
+    "status": "success",
+    "data": {
+      "message": "Operation completed",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "type": "Guard",
+            "type_raw": "0x2::guard::Guard",
+            "object": "...",
+            "version": "12685347",
+            "owner": "Immutable",
+            "change": "created"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 

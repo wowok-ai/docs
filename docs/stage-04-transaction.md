@@ -15,6 +15,8 @@ In this stage, you will learn the transaction mechanisms in WoWok, including:
 - How to use Service and Order for service sales and order management
 - How to use Arbitration for dispute resolution
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -150,12 +152,15 @@ Create a WIP file describing a product and sign it with your account
 
 ```json
 {
-  "type": "generate",
-  "options": {
-    "markdown_text": "# Premium Software License\n\n## Product Details\n\n- License Type: Annual Subscription\n- Features: Full access to all modules\n- Support: 24/7 technical support\n- Duration: 12 months\n\n## Terms of Service\n\n1. Non-transferable license\n2. Single user account\n3. Auto-renewal unless cancelled",
-    "account": "my_seller_account"
-  },
-  "outputPath": "./software_license.wip"
+  "tool": "wip_file",
+  "data": {
+    "type": "generate",
+    "options": {
+      "markdown_text": "# Premium Software License\n\n## Product Details\n\n- License Type: Annual Subscription\n- Features: Full access to all modules\n- Support: 24/7 technical support\n- Duration: 12 months\n\n## Terms of Service\n\n1. Non-transferable license\n2. Single user account\n3. Auto-renewal unless cancelled",
+      "account": "my_seller_account"
+    },
+    "outputPath": "./software_license.wip"
+  }
 }
 ```
 
@@ -169,23 +174,26 @@ Create a Service with sales products that include WIP URL and hash as product de
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "software_license_service"
-    },
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Premium Software License",
-          "price": "1000000000",
-          "stock": "100",
-          "suspension": false,
-          "wip": "https://example.com/products/software_license.wip",
-          "wip_hash": "sha256:abcdef1234567890..."
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "software_license_service"
+      },
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Premium Software License",
+            "price": "1000000000",
+            "stock": "100",
+            "suspension": false,
+            "wip": "https://example.com/products/software_license.wip",
+            "wip_hash": "sha256:abcdef1234567890..."
+          }
+        ]
+      }
     }
   }
 }
@@ -201,46 +209,49 @@ Create a distribution rule that splits profits between two recipients
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "profit_sharing"
-    },
-    "allocators": {
-      "description": "Profit sharing between two partners",
-      "threshold": "0",
-      "allocators": [
-        {
-          "guard": "simple_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "partner1_address"
-                }
+    "operation_type": "allocation",
+    "data": {
+      "object": {
+        "name": "profit_sharing"
+      },
+      "allocators": {
+        "description": "Profit sharing between two partners",
+        "threshold": "0",
+        "allocators": [
+          {
+            "guard": "simple_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "partner1_address"
+                  }
+                },
+                "sharing": "5000",
+                "mode": "Rate"
               },
-              "sharing": "5000",
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "partner2_address"
-                }
-              },
-              "sharing": "5000",
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "coin": {
-      "balance": "0"
-    },
-    "payment_info": {
-      "remark": "Profit sharing payment",
-      "index": "0"
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "partner2_address"
+                  }
+                },
+                "sharing": "5000",
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "coin": {
+        "balance": "0"
+      },
+      "payment_info": {
+        "remark": "Profit sharing payment",
+        "index": "0"
+      }
     }
   }
 }

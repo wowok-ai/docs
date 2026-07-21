@@ -2,11 +2,13 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "guard", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Guard component creates immutable programmable validation rules that return boolean results (pass/fail). Guards can define complex validation logic for use cases like service marketplaces, permission management, workflow templates, and more.
 
-**Note**: Use the `guard2file` tool (see [Sub-feature 3](#sub-feature-3-export-guard-to-file-guard2file)) to export existing Guard definitions from the blockchain, then use [Sub-feature 2](#sub-feature-2-create-guard-from-file-type-file) to quickly build new trust verification Guard objects. Use `gen_passport` (see [Sub-feature 4](#sub-feature-4-generate-verified-passport-gen_passport)) to generate verifiable credentials for Messenger stranger verification. Use the `wowok_buildin_info` tool with 'guard instructions' to query all available operations.
+**Note**: Use the `guard2file` sub-tool (see [Sub-feature 3](#sub-feature-3-export-guard-to-file-guard2file)) to export existing Guard definitions from the blockchain, then use [Sub-feature 2](#sub-feature-2-create-guard-from-file-type-file) to quickly build new trust verification Guard objects. Use `gen_passport` (see [Sub-feature 4](#sub-feature-4-generate-verified-passport-gen_passport)) to generate verifiable credentials for Messenger stranger verification. Use the `wowok_buildin_info` sub-tool with 'guard instructions' to query all available operations.
 
 ---
 ## Function List
@@ -42,7 +44,7 @@ There are **400+ guard instructions** available, including:
 - Context operations (3)
 - Object query operations (400+ query instructions)
 
-Use the `wowok_buildin_info` tool with `'guard instructions' to query the complete list of available operations.
+Use the `wowok_buildin_info` sub-tool with `'guard instructions' to query the complete list of available operations.
 
 ### Queryable Object Types
 
@@ -233,9 +235,12 @@ Guard operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "guard",
-  "data": { ... },
-  "env": { ... }
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "guard",
+    "data": { ... },
+    "env": { ... }
+  }
 }
 ```
 
@@ -280,11 +285,14 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
-  "data": { ... },
-  "env": {
-    "account": "",              // Empty string for default account, or use account name/address
-    "network": "testnet"        // Options: "testnet" | "localnet" | "mainnet"
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "guard",
+    "data": { ... },
+    "env": {
+      "account": "",              // Empty string for default account, or use account name/address
+      "network": "testnet"        // Options: "testnet" | "localnet" | "mainnet"
+    }
   }
 }
 ```
@@ -306,32 +314,35 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "always_true_guard",
-      "onChain": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "always_true_guard",
+        "onChain": true
+      },
+      "description": "A simple guard that always returns true for testing purposes",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Bool",
+          "value": true
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "identifier",
+          "identifier": 0
+        }
+      }
     },
-    "description": "A simple guard that always returns true for testing purposes",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": "Bool",
-        "value": true
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "identifier",
-        "identifier": 0
-      }
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -339,11 +350,25 @@ All examples in this document use the **testnet** network and **default account*
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x3d0e02...6a5ad",
-  "type": "Guard",
-  "version": "10316067",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Guard",
+            "object": "0x3d0e02...6a5ad",
+            "version": "10316067",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -355,37 +380,40 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "age"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "18",
-        "name": "min_age"
+    "operation_type": "guard",
+    "data": {
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "age"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "18",
+          "name": "min_age"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_as_u256_greater_or_equal",
+          "nodes": [
+            { "type": "identifier", "identifier": 0 },
+            { "type": "identifier", "identifier": 1 }
+          ]
+        }
       }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          { "type": "identifier", "identifier": 0 },
-          { "type": "identifier", "identifier": 1 }
-        ]
-      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -398,42 +426,45 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "public_age_check",
-      "tags": ["age", "verification", "public"]
-    },
-    "description": "Public age verification Guard - validates age is at least 18",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "age"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "public_age_check",
+        "tags": ["age", "verification", "public"]
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "18",
-        "name": "min_age"
+      "description": "Public age verification Guard - validates age is at least 18",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "age"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "18",
+          "name": "min_age"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_as_u256_greater_or_equal",
+          "nodes": [
+            { "type": "identifier", "identifier": 0 },
+            { "type": "identifier", "identifier": 1 }
+          ]
+        }
       }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          { "type": "identifier", "identifier": 0 },
-          { "type": "identifier", "identifier": 1 }
-        ]
-      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -446,60 +477,63 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "order_validation",
-      "tags": ["order", "validation", "ecommerce"]
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "order_validation",
+        "tags": ["order", "validation", "ecommerce"]
+      },
+      "description": "Order validation Guard - validates quantity is between 0 and available stock",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "quantity"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "0",
+          "name": "min_quantity"
+        },
+        {
+          "identifier": 2,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "stock"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_and",
+          "nodes": [
+            {
+              "type": "logic_as_u256_greater",
+              "nodes": [
+                { "type": "identifier", "identifier": 0 },
+                { "type": "identifier", "identifier": 1 }
+              ]
+            },
+            {
+              "type": "logic_as_u256_lesser_or_equal",
+              "nodes": [
+                { "type": "identifier", "identifier": 0 },
+                { "type": "identifier", "identifier": 2 }
+              ]
+            }
+          ]
+        }
+      }
     },
-    "description": "Order validation Guard - validates quantity is between 0 and available stock",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "quantity"
-      },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "0",
-        "name": "min_quantity"
-      },
-      {
-        "identifier": 2,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "stock"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_as_u256_greater",
-            "nodes": [
-              { "type": "identifier", "identifier": 0 },
-              { "type": "identifier", "identifier": 1 }
-            ]
-          },
-          {
-            "type": "logic_as_u256_lesser_or_equal",
-            "nodes": [
-              { "type": "identifier", "identifier": 0 },
-              { "type": "identifier", "identifier": 2 }
-            ]
-          }
-        ]
-      }
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -512,44 +546,47 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "composite_guard"
-    },
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "age"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "composite_guard"
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "18",
-        "name": "min_age"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_greater_or_equal",
-        "nodes": [
-          { "type": "identifier", "identifier": 0 },
-          { "type": "identifier", "identifier": 1 }
-        ]
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "age"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "18",
+          "name": "min_age"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_as_u256_greater_or_equal",
+          "nodes": [
+            { "type": "identifier", "identifier": 0 },
+            { "type": "identifier", "identifier": 1 }
+          ]
+        }
+      },
+      "rely": {
+        "guards": ["order_validation", "public_age_check"],
+        "logic_or": false
       }
     },
-    "rely": {
-      "guards": ["order_validation", "public_age_check"],
-      "logic_or": false
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -562,44 +599,47 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "flexible_guard"
-    },
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "dummy_value"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "flexible_guard"
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "0",
-        "name": "zero"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_as_u256_equal",
-        "nodes": [
-          { "type": "identifier", "identifier": 0 },
-          { "type": "identifier", "identifier": 1 }
-        ]
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "dummy_value"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "0",
+          "name": "zero"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_as_u256_equal",
+          "nodes": [
+            { "type": "identifier", "identifier": 0 },
+            { "type": "identifier", "identifier": 1 }
+          ]
+        }
+      },
+      "rely": {
+        "guards": ["order_validation", "public_age_check"],
+        "logic_or": true
       }
     },
-    "rely": {
-      "guards": ["order_validation", "public_age_check"],
-      "logic_or": true
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -612,73 +652,76 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "full_guard",
-      "tags": ["complete", "example"],
-      "onChain": false,
-      "replaceExistName": false
-    },
-    "description": "Complete parameter example Guard",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "String",
-        "name": "email"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "full_guard",
+        "tags": ["complete", "example"],
+        "onChain": false,
+        "replaceExistName": false
       },
-      {
-        "identifier": 1,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "age"
+      "description": "Complete parameter example Guard",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "String",
+          "name": "email"
+        },
+        {
+          "identifier": 1,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "age"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "@",
+          "name": "at_symbol"
+        },
+        {
+          "identifier": 3,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "18",
+          "name": "min_age"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_and",
+          "nodes": [
+            {
+              "type": "logic_string_contains",
+              "nodes": [
+                { "type": "identifier", "identifier": 0 },
+                { "type": "identifier", "identifier": 2 }
+              ]
+            },
+            {
+              "type": "logic_as_u256_greater_or_equal",
+              "nodes": [
+                { "type": "identifier", "identifier": 1 },
+                { "type": "identifier", "identifier": 3 }
+              ]
+            }
+          ]
+        }
       },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "@",
-        "name": "at_symbol"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "18",
-        "name": "min_age"
+      "rely": {
+        "guards": ["public_age_check"],
+        "logic_or": false
       }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_string_contains",
-            "nodes": [
-              { "type": "identifier", "identifier": 0 },
-              { "type": "identifier", "identifier": 2 }
-            ]
-          },
-          {
-            "type": "logic_as_u256_greater_or_equal",
-            "nodes": [
-              { "type": "identifier", "identifier": 1 },
-              { "type": "identifier", "identifier": 3 }
-            ]
-          }
-        ]
-      }
     },
-    "rely": {
-      "guards": ["public_age_check"],
-      "logic_or": false
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -751,12 +794,15 @@ First, let's create a sample JSON file that we'll use in the examples.
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "root": {
-      "type": "file",
-      "file_path": "...",
-      "format": "json"
+    "operation_type": "guard",
+    "data": {
+      "root": {
+        "type": "file",
+        "file_path": "...",
+        "format": "json"
+      }
     }
   }
 }
@@ -770,15 +816,18 @@ First, let's create a sample JSON file that we'll use in the examples.
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "file_based_guard",
-      "tags": ["file", "json"]
-    },
-    "root": {
-      "type": "file",
-      "file_path": "..."
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "file_based_guard",
+        "tags": ["file", "json"]
+      },
+      "root": {
+        "type": "file",
+        "file_path": "..."
+      }
     }
   }
 }
@@ -792,34 +841,37 @@ First, let's create a sample JSON file that we'll use in the examples.
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "custom_guard"
-    },
-    "description": "Overridden description",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "U64",
-        "name": "custom_amount"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "custom_guard"
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "50",
-        "name": "custom_min"
+      "description": "Overridden description",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "U64",
+          "name": "custom_amount"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "50",
+          "name": "custom_min"
+        }
+      ],
+      "root": {
+        "type": "file",
+        "file_path": "..."
+      },
+      "rely": {
+        "guards": ["order_validation"],
+        "logic_or": false
       }
-    ],
-    "root": {
-      "type": "file",
-      "file_path": "..."
-    },
-    "rely": {
-      "guards": ["order_validation"],
-      "logic_or": false
     }
   }
 }
@@ -831,7 +883,7 @@ First, let's create a sample JSON file that we'll use in the examples.
 
 ### Feature Description
 
-Use the `guard2file` tool to export a Guard object's definition from the blockchain to a local JSON or Markdown file. The exported file can be edited and used to create new Guard objects, enabling rapid reuse and reconstruction of validation rules.
+Use the `guard2file` sub-tool to export a Guard object's definition from the blockchain to a local JSON or Markdown file. The exported file can be edited and used to create new Guard objects, enabling rapid reuse and reconstruction of validation rules.
 
 **Core Benefits:**
 - Quickly extract Guard definitions from ANY on-chain Guard
@@ -890,7 +942,8 @@ Returns the exported file path, format, and Guard object:
       "format": "json",
       "guard_object": "public_age_check"
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -904,8 +957,11 @@ Returns the exported file path, format, and Guard object:
 
 ```json
 {
-  "guard": "order_validation",
-  "file_path": "./order_validation_export.json"
+  "tool": "guard2file",
+  "data": {
+    "guard": "order_validation",
+    "file_path": "./order_validation_export.json"
+  }
 }
 ```
 
@@ -915,9 +971,12 @@ Returns the exported file path, format, and Guard object:
 
 ```json
 {
-  "guard": "public_age_check",
-  "file_path": "public_age_check.md",
-  "format": "markdown"
+  "tool": "guard2file",
+  "data": {
+    "guard": "public_age_check",
+    "file_path": "public_age_check.md",
+    "format": "markdown"
+  }
 }
 ```
 
@@ -927,11 +986,14 @@ Returns the exported file path, format, and Guard object:
 
 ```json
 {
-  "guard": "public_template",
-  "file_path": "template_backup.json",
-  "format": "json",
-  "env": {
-    "network": "testnet"
+  "tool": "guard2file",
+  "data": {
+    "guard": "public_template",
+    "file_path": "template_backup.json",
+    "format": "json",
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -943,8 +1005,11 @@ Returns the exported file path, format, and Guard object:
 Step 1: Export
 ```json
 {
-  "guard": "proven_guard",
-  "file_path": "guard_template.json"
+  "tool": "guard2file",
+  "data": {
+    "guard": "proven_guard",
+    "file_path": "guard_template.json"
+  }
 }
 ```
 
@@ -953,14 +1018,17 @@ Step 2: Edit `guard_template.json` (modify validation logic as needed)
 Step 3: Import into new Guard (see Sub-feature 2)
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "new_guard_variant"
-    },
-    "root": {
-      "type": "file",
-      "file_path": "guard_template.json"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "new_guard_variant"
+      },
+      "root": {
+        "type": "file",
+        "file_path": "guard_template.json"
+      }
     }
   }
 }
@@ -1037,26 +1105,29 @@ Returns the created Passport object.
 
 ```json
 {
-  "operation_type": "gen_passport",
-  "guard": "public_age_check",
-  "info": {
-    "type": "submission",
-    "guard": [
-      { "object": "public_age_check", "impack": true }
-    ],
-    "submission": [
-      {
-        "guard": "public_age_check",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "U64",
-            "value": "25"
-          }
-        ]
-      }
-    ]
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_passport",
+    "guard": "public_age_check",
+    "info": {
+      "type": "submission",
+      "guard": [
+        { "object": "public_age_check", "impack": true }
+      ],
+      "submission": [
+        {
+          "guard": "public_age_check",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "U64",
+              "value": "25"
+            }
+          ]
+        }
+      ]
+    }
   }
 }
 ```
@@ -1067,8 +1138,11 @@ Returns the created Passport object.
 
 ```json
 {
-  "operation_type": "gen_passport",
-  "guard": "order_validation"
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_passport",
+    "guard": "order_validation"
+  }
 }
 ```
 
@@ -1078,29 +1152,32 @@ Returns the created Passport object.
 
 ```json
 {
-  "operation_type": "gen_passport",
-  "guard": "identity_verify",
-  "info": {
-    "type": "submission",
-    "guard": [
-      { "object": "identity_verify", "impack": true }
-    ],
-    "submission": [
-      {
-        "guard": "identity_verify",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "verified_user"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "network": "testnet"
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_passport",
+    "guard": "identity_verify",
+    "info": {
+      "type": "submission",
+      "guard": [
+        { "object": "identity_verify", "impack": true }
+      ],
+      "submission": [
+        {
+          "guard": "identity_verify",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "verified_user"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1112,26 +1189,29 @@ Returns the created Passport object.
 Step 1: Generate Passport
 ```json
 {
-  "operation_type": "gen_passport",
-  "guard": "friend_verification",
-  "info": {
-    "type": "submission",
-    "guard": [
-      { "object": "friend_verification", "impack": true }
-    ],
-    "submission": [
-      {
-        "guard": "friend_verification",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "mutual_friend_verified"
-          }
-        ]
-      }
-    ]
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_passport",
+    "guard": "friend_verification",
+    "info": {
+      "type": "submission",
+      "guard": [
+        { "object": "friend_verification", "impack": true }
+      ],
+      "submission": [
+        {
+          "guard": "friend_verification",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "mutual_friend_verified"
+            }
+          ]
+        }
+      ]
+    }
   }
 }
 ```
@@ -1242,7 +1322,7 @@ Guards can access data from ANY on-chain object using `query` nodes! This is a p
 ```
 
 **Parameters:**
-- `query`: Query instruction ID (number) or name (string). Use the `wowok_buildin_info` tool with `'guard instructions'` to query all available IDs.
+- `query`: Query instruction ID (number) or name (string). Use the `wowok_buildin_info` sub-tool with `'guard instructions'` to query all available IDs.
 - `object.identifier`: References the object ID from the Guard table (identifier 0-255).
 - `object.convert_witness` (optional): **Critical for cross-object queries!** When specified, the query retrieves data from an associated object instead of the object itself.
 
@@ -1307,52 +1387,55 @@ These instructions use BCS serialization for efficient querying:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "order_completed_guard"
-    },
-    "description": "Verify order is in Completed node. Submit order object ID.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_id"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "order_completed_guard"
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Completed",
-        "name": "completed_node"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {
-            "type": "query",
-            "query": 1253,
-            "object": {
-              "identifier": 0,
-              "convert_witness": 100
+      "description": "Verify order is in Completed node. Submit order object ID.",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "order_id"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Completed",
+          "name": "completed_node"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_equal",
+          "nodes": [
+            {
+              "type": "query",
+              "query": 1253,
+              "object": {
+                "identifier": 0,
+                "convert_witness": 100
+              },
+              "parameters": []
             },
-            "parameters": []
-          },
-          {
-            "type": "identifier",
-            "identifier": 1
-          }
-        ]
+            {
+              "type": "identifier",
+              "identifier": 1
+            }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1369,107 +1452,110 @@ These instructions use BCS serialization for efficient querying:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "withdraw_guard"
-    },
-    "description": "Verify order completed > 15 days ago. Submit order object ID.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "order_id"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "withdraw_guard"
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Completed",
-        "name": "completed_node"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Complete Order",
-        "name": "forward_name"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "U64",
-        "value": "1296000000",
-        "name": "15_days_ms"
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_and",
-        "nodes": [
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
-                "type": "query",
-                "query": 1253,
-                "object": {
-                  "identifier": 0,
-                  "convert_witness": 100
-                },
-                "parameters": []
-              },
-              {
-                "type": "identifier",
-                "identifier": 1
-              }
-            ]
-          },
-          {
-            "type": "logic_as_u256_greater_or_equal",
-            "nodes": [
-              {
-                "type": "context",
-                "context": "Clock"
-              },
-              {
-                "type": "calc_number_add",
-                "nodes": [
-                  {
-                    "type": "query",
-                    "query": 1271,
-                    "object": {
-                      "identifier": 0,
-                      "convert_witness": 100
-                    },
-                    "parameters": [
-                      {
-                        "type": "identifier",
-                        "identifier": 1
-                      },
-                      {
-                        "type": "identifier",
-                        "identifier": 2
-                      }
-                    ]
+      "description": "Verify order completed > 15 days ago. Submit order object ID.",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "order_id"
+        },
+        {
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Completed",
+          "name": "completed_node"
+        },
+        {
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Complete Order",
+          "name": "forward_name"
+        },
+        {
+          "identifier": 3,
+          "b_submission": false,
+          "value_type": "U64",
+          "value": "1296000000",
+          "name": "15_days_ms"
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_and",
+          "nodes": [
+            {
+              "type": "logic_equal",
+              "nodes": [
+                {
+                  "type": "query",
+                  "query": 1253,
+                  "object": {
+                    "identifier": 0,
+                    "convert_witness": 100
                   },
-                  {
-                    "type": "identifier",
-                    "identifier": 3
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                  "parameters": []
+                },
+                {
+                  "type": "identifier",
+                  "identifier": 1
+                }
+              ]
+            },
+            {
+              "type": "logic_as_u256_greater_or_equal",
+              "nodes": [
+                {
+                  "type": "context",
+                  "context": "Clock"
+                },
+                {
+                  "type": "calc_number_add",
+                  "nodes": [
+                    {
+                      "type": "query",
+                      "query": 1271,
+                      "object": {
+                        "identifier": 0,
+                        "convert_witness": 100
+                      },
+                      "parameters": [
+                        {
+                          "type": "identifier",
+                          "identifier": 1
+                        },
+                        {
+                          "type": "identifier",
+                          "identifier": 2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "identifier",
+                      "identifier": 3
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1480,7 +1566,7 @@ These instructions use BCS serialization for efficient querying:
 
 ## Query Instructions and On-chain Object Access
 
-Guards can access data from ANY on-chain object using `query` nodes! Use the `wowok_buildin_info` tool with `'guard instructions'` to query the complete list of available operations.
+Guards can access data from ANY on-chain object using `query` nodes! Use the `wowok_buildin_info` sub-tool with `'guard instructions'` to query the complete list of available operations.
 
 ---
 

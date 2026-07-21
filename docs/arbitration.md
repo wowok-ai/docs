@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "arbitration", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Arbitration component is WoWok protocol's on-chain dispute resolution module, providing a transparent arbitration system for resolving order conflicts. Arbitration objects can be created with configurable voting rules, receive dispute submissions, confirm materials, vote on propositions, and provide final arbitration results.
@@ -52,10 +54,13 @@ Arbitration operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "arbitration",
-  "data": { ... },    // Arbitration data definition
-  "env": { ... },      // Execution environment (optional)
-  "submission": { ... } // Guard verification submission (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "arbitration",
+    "data": { ... },    // Arbitration data definition
+    "env": { ... },      // Execution environment (optional)
+    "submission": { ... } // Guard verification submission (optional)
+  }
 }
 ```
 
@@ -193,7 +198,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -229,23 +234,26 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "doc_test_arbitration",
-      "permission": "arb_test_permission",
-      "type_parameter": "0x2::wow::WOW",
-      "tags": ["arbitration", "test", "doc"],
-      "onChain": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "doc_test_arbitration",
+        "permission": "arb_test_permission",
+        "type_parameter": "0x2::wow::WOW",
+        "tags": ["arbitration", "test", "doc"],
+        "onChain": false
+      },
+      "description": "Arbitration for documentation testing",
+      "location": "Online arbitration system",
+      "fee": 1000000000
     },
-    "description": "Arbitration for documentation testing",
-    "location": "Online arbitration system",
-    "fee": 1000000000
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -253,11 +261,25 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-  "type": "Arbitration",
-  "version": "1413284",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arbitration",
+            "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+            "version": "1413284",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -267,32 +289,35 @@ Create a new Arbitration object for resolving order disputes. Newly created arbi
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "product_arbitration",
-      "permission": {
-        "name": "arb_permission"
-      }
-    },
-    "description": "Product quality arbitration",
-    "usage_guard": "eligibility_guard",
-    "voting_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "senior_judge",
-          "vote_weight": {
-            "FixedValue": 100
-          }
-        },
-        {
-          "guard": "junior_judge",
-          "vote_weight": {
-            "GuardIdentifier": 5
-          }
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "product_arbitration",
+        "permission": {
+          "name": "arb_permission"
         }
-      ]
+      },
+      "description": "Product quality arbitration",
+      "usage_guard": "eligibility_guard",
+      "voting_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "senior_judge",
+            "vote_weight": {
+              "FixedValue": 100
+            }
+          },
+          {
+            "guard": "junior_judge",
+            "vote_weight": {
+              "GuardIdentifier": 5
+            }
+          }
+        ]
+      }
     }
   }
 }
@@ -328,26 +353,29 @@ Create a new Arb object for an order to initiate dispute arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "dispute": {
-      "order": "arb_test_order",
-      "description": "Product quality does not match description",
-      "proposition": ["Full refund", "Partial refund 50%", "No refund"],
-      "fee": {
-        "balance": 1000000000
-      },
-      "namedArb": {
-        "name": "test_dispute_2026",
-        "onChain": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "dispute": {
+        "order": "arb_test_order",
+        "description": "Product quality does not match description",
+        "proposition": ["Full refund", "Partial refund 50%", "No refund"],
+        "fee": {
+          "balance": 1000000000
+        },
+        "namedArb": {
+          "name": "test_dispute_2026",
+          "onChain": false
+        }
       }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -355,27 +383,32 @@ Create a new Arb object for an order to initiate dispute arbitration.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "results": [
-    {
-      "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
-      "type": "Order",
-      "version": "1415870",
-      "change": "mutated"
-    },
-    {
-      "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-      "type": "Arbitration",
-      "version": "1415870",
-      "change": "mutated"
-    },
-    {
-      "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
-      "type": "Arb",
-      "version": "1415870",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "results": [
+        {
+          "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
+          "type": "Order",
+          "version": "1415870",
+          "change": "mutated"
+        },
+        {
+          "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+          "type": "Arbitration",
+          "version": "1415870",
+          "change": "mutated"
+        },
+        {
+          "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+          "type": "Arb",
+          "version": "1415870",
+          "change": "created"
+        }
+      ]
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -406,18 +439,21 @@ Confirm the arbitration materials submitted by the user.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "confirm": {
-      "arb": "test_dispute_2026",
-      "voting_deadline": 1777830400000
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "confirm": {
+        "arb": "test_dispute_2026",
+        "voting_deadline": 1777830400000
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -425,11 +461,25 @@ Confirm the arbitration materials submitted by the user.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
-  "type": "Arb",
-  "version": "1415871",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arb",
+            "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+            "version": "1415871",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -460,12 +510,15 @@ Change the voting deadline for arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "voting_deadline_change": {
-      "arb": "order_123_dispute",
-      "voting_deadline": null
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "voting_deadline_change": {
+        "arb": "order_123_dispute",
+        "voting_deadline": null
+      }
     }
   }
 }
@@ -499,13 +552,16 @@ Vote on user propositions.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "vote": {
-      "arb": "order_123_dispute",
-      "votes": [200, 100, 50],
-      "voting_guard": "senior_judge"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "vote": {
+        "arb": "order_123_dispute",
+        "votes": [200, 100, 50],
+        "voting_guard": "senior_judge"
+      }
     }
   }
 }
@@ -538,18 +594,21 @@ Provide arbitration feedback for an Arb object.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "feedback": {
-      "arb": "test_dispute_2026",
-      "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "feedback": {
+        "arb": "test_dispute_2026",
+        "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -557,11 +616,25 @@ Provide arbitration feedback for an Arb object.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
-  "type": "Arb",
-  "version": "1415872",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arb",
+            "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+            "version": "1415872",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -593,13 +666,16 @@ Provide the final arbitration result.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "arbitration": {
-      "arb": "order_123_dispute",
-      "feedback": "Based on all evidence, buyer wins the case",
-      "indemnity": 5000000000
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "arbitration": {
+        "arb": "order_123_dispute",
+        "feedback": "Based on all evidence, buyer wins the case",
+        "indemnity": 5000000000
+      }
     }
   }
 }
@@ -632,12 +708,15 @@ User applies to resubmit materials and restart arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "reset": {
-      "arb": "order_123_dispute",
-      "feedback": "New evidence discovered, request to resubmit materials"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "reset": {
+        "arb": "order_123_dispute",
+        "feedback": "New evidence discovered, request to resubmit materials"
+      }
     }
   }
 }
@@ -669,11 +748,14 @@ Withdraw arbitration fees from the Arb object.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "arb_withdraw": {
-      "arb": "order_123_dispute"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "arb_withdraw": {
+        "arb": "order_123_dispute"
+      }
     }
   }
 }
@@ -710,17 +792,20 @@ Distribute withdrawn arbitration fees.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "fees_transfer": {
-      "to": {
-        "allocation": "fee_allocation"
-      },
-      "payment_remark": "Arbitration fee distribution",
-      "payment_index": 0,
-      "newPayment": {
-        "name": "fee_payment"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "fees_transfer": {
+        "to": {
+          "allocation": "fee_allocation"
+        },
+        "payment_remark": "Arbitration fee distribution",
+        "payment_index": 0,
+        "newPayment": {
+          "name": "fee_payment"
+        }
       }
     }
   }
@@ -733,15 +818,18 @@ Distribute withdrawn arbitration fees.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "fees_transfer": {
-      "to": {
-        "treasury": "platform_treasury"
-      },
-      "payment_remark": "Arbitration fees to platform",
-      "payment_index": 0
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "fees_transfer": {
+        "to": {
+          "treasury": "platform_treasury"
+        },
+        "payment_remark": "Arbitration fees to platform",
+        "payment_index": 0
+      }
     }
   }
 }
@@ -773,10 +861,13 @@ Set the verification Guard for users applying for arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "usage_guard": "eligibility_check"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "usage_guard": "eligibility_check"
+    }
   }
 }
 ```
@@ -787,10 +878,13 @@ Set the verification Guard for users applying for arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "usage_guard": null
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "usage_guard": null
+    }
   }
 }
 ```
@@ -831,19 +925,22 @@ Manage the verification Guards for arbitration voting.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "voting_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "expert_judge",
-          "vote_weight": {
-            "FixedValue": 50
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "voting_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "expert_judge",
+            "vote_weight": {
+              "FixedValue": 50
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   }
 }
@@ -855,19 +952,22 @@ Manage the verification Guards for arbitration voting.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "voting_guard": {
-      "op": "set",
-      "guards": [
-        {
-          "guard": "chief_judge",
-          "vote_weight": {
-            "GuardIdentifier": 10
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "voting_guard": {
+        "op": "set",
+        "guards": [
+          {
+            "guard": "chief_judge",
+            "vote_weight": {
+              "GuardIdentifier": 10
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   }
 }
@@ -879,12 +979,15 @@ Manage the verification Guards for arbitration voting.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "voting_guard": {
-      "op": "remove",
-      "guards": ["old_judge"]
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "voting_guard": {
+        "op": "remove",
+        "guards": ["old_judge"]
+      }
     }
   }
 }
@@ -896,11 +999,14 @@ Manage the verification Guards for arbitration voting.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "voting_guard": {
-      "op": "clear"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "voting_guard": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -932,10 +1038,13 @@ Pause or resume arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "pause": true
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "pause": true
+    }
   }
 }
 ```
@@ -946,10 +1055,13 @@ Pause or resume arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "pause": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "pause": false
+    }
   }
 }
 ```
@@ -980,10 +1092,13 @@ Bind a Contact object to Arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "um": "arb_support"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "um": "arb_support"
+    }
   }
 }
 ```
@@ -994,10 +1109,13 @@ Bind a Contact object to Arbitration.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "um": null
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "um": null
+    }
   }
 }
 ```
@@ -1028,10 +1146,13 @@ Receive objects sent to this Arbitration object and unpack them to send to the p
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_arbitration",
-    "owner_receive": "recently"
+    "operation_type": "arbitration",
+    "data": {
+      "object": "service_arbitration",
+      "owner_receive": "recently"
+    }
   }
 }
 ```
@@ -1054,29 +1175,32 @@ Execute multiple operations in a single call.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "complete_arbitration",
-      "permission": "arbitration_permission",
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "description": "Full-featured arbitration",
-    "location": "Online",
-    "fee": 1000000000,
-    "usage_guard": "eligibility_guard",
-    "voting_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "head_judge",
-          "vote_weight": {
-            "FixedValue": 100
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "complete_arbitration",
+        "permission": "arbitration_permission",
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "description": "Full-featured arbitration",
+      "location": "Online",
+      "fee": 1000000000,
+      "usage_guard": "eligibility_guard",
+      "voting_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "head_judge",
+            "vote_weight": {
+              "FixedValue": 100
+            }
           }
-        }
-      ]
-    },
-    "um": "arb_support"
+        ]
+      },
+      "um": "arb_support"
+    }
   }
 }
 ```
@@ -1101,23 +1225,26 @@ Create an Arbitration object that will handle disputes:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "doc_test_arbitration",
-      "permission": "arb_test_permission",
-      "type_parameter": "0x2::wow::WOW",
-      "tags": ["arbitration", "test", "doc"],
-      "onChain": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "doc_test_arbitration",
+        "permission": "arb_test_permission",
+        "type_parameter": "0x2::wow::WOW",
+        "tags": ["arbitration", "test", "doc"],
+        "onChain": false
+      },
+      "description": "Arbitration for documentation testing",
+      "location": "Online arbitration system",
+      "fee": 1000000000
     },
-    "description": "Arbitration for documentation testing",
-    "location": "Online arbitration system",
-    "fee": 1000000000
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1125,11 +1252,25 @@ Create an Arbitration object that will handle disputes:
 **Returns**:
 ```json
 {
-  "status": "success",
-  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-  "type": "Arbitration",
-  "version": "1413284",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arbitration",
+            "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+            "version": "1413284",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1139,49 +1280,52 @@ Create a Service that includes the Arbitration object:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "arb_test_service",
-      "permission": "arb_test_permission",
-      "type_parameter": "0x2::wow::WOW",
-      "tags": ["service", "arbitration", "test"],
-      "onChain": false
-    },
-    "description": "Service for arbitration testing",
-    "sales": {
-      "op": "add",
-      "sales": [{
-        "name": "test_product",
-        "price": 1000000000,
-        "stock": 100,
-        "suspension": false,
-        "wip": "https://example.com/wip",
-        "wip_hash": ""
-      }]
-    },
-    "arbitrations": {
-      "op": "add",
-      "objects": ["doc_test_arbitration"]
-    },
-    "order_allocators": {
-      "description": "Order fund allocators",
-      "threshold": 100000000,
-      "allocators": [{
-        "guard": "test_guard_arb",
-        "sharing": [{
-          "who": {"Signer": "signer"},
-          "sharing": 10000,
-          "mode": "Rate"
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "arb_test_service",
+        "permission": "arb_test_permission",
+        "type_parameter": "0x2::wow::WOW",
+        "tags": ["service", "arbitration", "test"],
+        "onChain": false
+      },
+      "description": "Service for arbitration testing",
+      "sales": {
+        "op": "add",
+        "sales": [{
+          "name": "test_product",
+          "price": 1000000000,
+          "stock": 100,
+          "suspension": false,
+          "wip": "https://example.com/wip",
+          "wip_hash": ""
         }]
-      }]
+      },
+      "arbitrations": {
+        "op": "add",
+        "objects": ["doc_test_arbitration"]
+      },
+      "order_allocators": {
+        "description": "Order fund allocators",
+        "threshold": 100000000,
+        "allocators": [{
+          "guard": "test_guard_arb",
+          "sharing": [{
+            "who": {"Signer": "signer"},
+            "sharing": 10000,
+            "mode": "Rate"
+          }]
+        }]
+      },
+      "publish": true
     },
-    "publish": true
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1189,11 +1333,25 @@ Create a Service that includes the Arbitration object:
 **Returns**:
 ```json
 {
-  "status": "success",
-  "object": "0x50ca67dfb163b8bbab3d3ed59052d28a8859de167ea101b19e012bc4a258f708",
-  "type": "Service",
-  "version": "1415003",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "object": "0x50ca67dfb163b8bbab3d3ed59052d28a8859de167ea101b19e012bc4a258f708",
+            "version": "1415003",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1203,29 +1361,32 @@ Create an Order from the Service:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "arb_test_service",
-    "order_new": {
-      "buy": {
-        "items": [{
-          "name": "test_product",
-          "stock": 1,
-          "wip_hash": ""
-        }],
-        "total_pay": {"balance": 1000000000}
-      },
-      "order_required_info": "test_contact_2026",
-      "namedNewOrder": {
-        "name": "arb_test_order",
-        "onChain": false
+    "operation_type": "service",
+    "data": {
+      "object": "arb_test_service",
+      "order_new": {
+        "buy": {
+          "items": [{
+            "name": "test_product",
+            "stock": 1,
+            "wip_hash": ""
+          }],
+          "total_pay": {"balance": 1000000000}
+        },
+        "order_required_info": "test_contact_2026",
+        "namedNewOrder": {
+          "name": "arb_test_order",
+          "onChain": false
+        }
       }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1233,21 +1394,26 @@ Create an Order from the Service:
 **Returns**:
 ```json
 {
-  "status": "success",
-  "results": [
-    {
-      "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
-      "type": "Order",
-      "version": "1415346",
-      "change": "created"
-    },
-    {
-      "object": "0x4488b2f85a3869b5c480d194c35270b1a449518f2bdd8a3641872cbc47d45dc2",
-      "type": "Allocation",
-      "version": "1415346",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "results": [
+        {
+          "object": "0x2b1439093329363d108a9eef44414c3ae916762c030b63457ebfb351af7b5cc0",
+          "type": "Order",
+          "version": "1415346",
+          "change": "created"
+        },
+        {
+          "object": "0x4488b2f85a3869b5c480d194c35270b1a449518f2bdd8a3641872cbc47d45dc2",
+          "type": "Allocation",
+          "version": "1415346",
+          "change": "created"
+        }
+      ]
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1257,15 +1423,18 @@ Ensure the Arbitration is active:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "pause": false
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "pause": false
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1273,11 +1442,25 @@ Ensure the Arbitration is active:
 **Returns**:
 ```json
 {
-  "status": "success",
-  "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-  "type": "Arbitration",
-  "version": "1415347",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arbitration",
+            "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+            "version": "1415347",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1287,24 +1470,27 @@ Create a dispute for the Order:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "dispute": {
-      "order": "arb_test_order",
-      "description": "Product quality does not match description",
-      "proposition": ["Full refund", "Partial refund 50%", "No refund"],
-      "fee": {"balance": 1000000000},
-      "namedArb": {
-        "name": "test_dispute_2026",
-        "onChain": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "dispute": {
+        "order": "arb_test_order",
+        "description": "Product quality does not match description",
+        "proposition": ["Full refund", "Partial refund 50%", "No refund"],
+        "fee": {"balance": 1000000000},
+        "namedArb": {
+          "name": "test_dispute_2026",
+          "onChain": false
+        }
       }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1312,15 +1498,20 @@ Create a dispute for the Order:
 **Returns**:
 ```json
 {
-  "status": "success",
-  "results": [
-    {
-      "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
-      "type": "Arb",
-      "version": "1415870",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "results": [
+        {
+          "object": "0xe8e2b96b03472a731a070cd244c3bd7fe25135ee99c05d61ac265cc62e50f9b2",
+          "type": "Arb",
+          "version": "1415870",
+          "change": "created"
+        }
+      ]
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1330,18 +1521,21 @@ Confirm the dispute materials and set voting deadline:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "confirm": {
-      "arb": "test_dispute_2026",
-      "voting_deadline": 1777830400000
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "confirm": {
+        "arb": "test_dispute_2026",
+        "voting_deadline": 1777830400000
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1352,18 +1546,21 @@ Add arbitration feedback:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "feedback": {
-      "arb": "test_dispute_2026",
-      "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "feedback": {
+        "arb": "test_dispute_2026",
+        "feedback": "All evidence has been reviewed. The buyer provided sufficient proof of product quality issues."
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1374,19 +1571,22 @@ Provide the final arbitration result with compensation:
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "doc_test_arbitration",
-    "arbitration": {
-      "arb": "test_dispute_2026",
-      "feedback": "Based on all evidence provided, the buyer's claim is valid. The product quality does not match the description.",
-      "indemnity": 500000000
+    "operation_type": "arbitration",
+    "data": {
+      "object": "doc_test_arbitration",
+      "arbitration": {
+        "arb": "test_dispute_2026",
+        "feedback": "Based on all evidence provided, the buyer's claim is valid. The product quality does not match the description.",
+        "indemnity": 500000000
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1399,17 +1599,20 @@ After arbitration is finalized, the order owner can claim compensation:
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "arb_test_order",
-    "arb_claim_compensation": {
-      "arb": "test_dispute_2026"
+    "operation_type": "order",
+    "data": {
+      "object": "arb_test_order",
+      "arb_claim_compensation": {
+        "arb": "test_dispute_2026"
+      }
+    },
+    "env": {
+      "account": "arbitration_test_account",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arbitration_test_account",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1450,9 +1653,9 @@ This example demonstrates the **complete arbitration process** from dispute crea
   "order": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
   "arbitration": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
   "proposition": [
-    {"name": "Full refund", "votes": "0"},
-    {"name": "Partial refund 50%", "votes": "0"},
-    {"name": "No refund - keep product", "votes": "0"}
+  {"name": "Full refund", "votes": "0"},
+  {"name": "Partial refund 50%", "votes": "0"},
+  {"name": "No refund - keep product", "votes": "0"}
   ],
   "fee": "1000000000",
   "feedback": "After review, support buyer claim, full refund granted",
@@ -1485,45 +1688,45 @@ This example demonstrates the **complete arbitration process** from dispute crea
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PrincipalConfirming : create dispute
-    PrincipalConfirming --> ArbitratorConfirming : principal_confirm
-    ArbitratorConfirming --> Voting : arbitrator_confirm
-    Voting --> Arbitrated : arbitration
-    Arbitrated --> Finished : arb_claim_compensation
-    Arbitrated --> Objectionable : objection
-    Objectionable --> PrincipalConfirming : reset
+  [*] --> PrincipalConfirming : create dispute
+  PrincipalConfirming --> ArbitratorConfirming : principal_confirm
+  ArbitratorConfirming --> Voting : arbitrator_confirm
+  Voting --> Arbitrated : arbitration
+  Arbitrated --> Finished : arb_claim_compensation
+  Arbitrated --> Objectionable : objection
+  Objectionable --> PrincipalConfirming : reset
 
-    note right of PrincipalConfirming
-        Status: 0
-        Buyer confirms dispute
-    end note
+  note right of PrincipalConfirming
+      Status: 0
+      Buyer confirms dispute
+  end note
 
-    note right of ArbitratorConfirming
-        Status: 1
-        Arbitrator reviews case
-    end note
+  note right of ArbitratorConfirming
+      Status: 1
+      Arbitrator reviews case
+  end note
 
-    note right of Voting
-        Status: 2
-        Voting period active
-        voting_deadline must pass
-    end note
+  note right of Voting
+      Status: 2
+      Voting period active
+      voting_deadline must pass
+  end note
 
-    note right of Arbitrated
-        Status: 3
-        Ruling issued
-        indemnity set
-    end note
+  note right of Arbitrated
+      Status: 3
+      Ruling issued
+      indemnity set
+  end note
 
-    note right of Objectionable
-        Status: 4
-        Appeal window open
-    end note
+  note right of Objectionable
+      Status: 4
+      Appeal window open
+  end note
 
-    note right of Finished
-        Status: 5
-        Compensation transferred
-    end note
+  note right of Finished
+      Status: 5
+      Compensation transferred
+  end note
 ```
 
 ### State Transitions with Time/Amount Conditions
@@ -1541,32 +1744,32 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-    subgraph BuyerAction["Buyer Actions"]
-        B1[Pay Dispute Fee]
-        B2[Submit Evidence]
-        B3[Claim Compensation]
-    end
+  subgraph BuyerAction["Buyer Actions"]
+      B1[Pay Dispute Fee]
+      B2[Submit Evidence]
+      B3[Claim Compensation]
+  end
 
-    subgraph ArbProcess["Arbitration Process"]
-        A1[Arb Object<br/>Fee Locked]
-        A2[Voting Period]
-        A3[Ruling Issued<br/>Indemnity Set]
-    end
+  subgraph ArbProcess["Arbitration Process"]
+      A1[Arb Object<br/>Fee Locked]
+      A2[Voting Period]
+      A3[Ruling Issued<br/>Indemnity Set]
+  end
 
-    subgraph ServiceFund["Service Compensation"]
-        S1[Compensation Fund]
-        S2[Deduct Indemnity]
-    end
+  subgraph ServiceFund["Service Compensation"]
+      S1[Compensation Fund]
+      S2[Deduct Indemnity]
+  end
 
-    B1 --> A1
-    A1 --> A2
-    A2 --> A3
-    A3 --> S2
-    S2 --> B3
+  B1 --> A1
+  A1 --> A2
+  A2 --> A3
+  A3 --> S2
+  S2 --> B3
 
-    style B1 fill:#ffcccc
-    style B3 fill:#ccffcc
-    style S2 fill:#ffffcc
+  style B1 fill:#ffcccc
+  style B3 fill:#ccffcc
+  style S2 fill:#ffffcc
 ```
 
 **Fee Distribution**:
@@ -1615,30 +1818,53 @@ The buyer creates a dispute for the order, paying the 1 WOW arbitration fee:
 **Request**:
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-    "dispute": {
-      "order": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
-      "description": "Product quality does not match description, requesting refund",
-      "proposition": ["Full refund", "Partial refund 50%", "No refund - keep product"],
-      "fee": {"balance": 1000000000},
-      "namedArb": {"name": "real_dispute_2026", "onChain": false}
-    }
-  },
-  "env": {"account": "buyer_account", "network": "testnet", "no_cache": true}
+    "operation_type": "arbitration",
+    "data": {
+      "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+      "dispute": {
+        "order": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
+        "description": "Product quality does not match description, requesting refund",
+        "proposition": ["Full refund", "Partial refund 50%", "No refund - keep product"],
+        "fee": {"balance": 1000000000},
+        "namedArb": {"name": "real_dispute_2026", "onChain": false}
+      }
+    },
+    "env": {"account": "buyer_account", "network": "testnet", "no_cache": true}
+  }
 }
 ```
 
 **Real Response**:
 ```json
 {
-  "status": "success",
-  "results": [
-    {"object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6", "type": "Order", "version": "1652451", "change": "mutated"},
-    {"object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec", "type": "Arbitration", "version": "1652451", "change": "mutated"},
-    {"object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0", "type": "Arb", "version": "1652451", "change": "created"}
-  ]
+  "result": {
+    "status": "success",
+    "data": {
+      "results": [
+        {
+          "object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
+          "type": "Order",
+          "version": "1652451",
+          "change": "mutated"
+        },
+        {
+          "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+          "type": "Arbitration",
+          "version": "1652451",
+          "change": "mutated"
+        },
+        {
+          "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+          "type": "Arb",
+          "version": "1652451",
+          "change": "created"
+        }
+      ]
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1656,26 +1882,43 @@ The arbitrator reviews the dispute and confirms materials, setting a short votin
 **Request**:
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-    "confirm": {
-      "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
-      "voting_deadline": 1776834427793
-    }
-  },
-  "env": {"account": "arbitration_admin", "network": "testnet", "no_cache": true}
+    "operation_type": "arbitration",
+    "data": {
+      "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+      "confirm": {
+        "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+        "voting_deadline": 1776834427793
+      }
+    },
+    "env": {"account": "arbitration_admin", "network": "testnet", "no_cache": true}
+  }
 }
 ```
 
 **Real Response**:
 ```json
 {
-  "status": "success",
-  "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
-  "type": "Arb",
-  "version": "1654581",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arb",
+            "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+            "version": "1654581",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1707,27 +1950,44 @@ The arbitrator provides the final decision with compensation amount:
 **Request**:
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
-    "arbitration": {
-      "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
-      "feedback": "After review, support buyer claim, full refund granted",
-      "indemnity": 1000000
-    }
-  },
-  "env": {"account": "arbitration_admin", "network": "testnet", "no_cache": true}
+    "operation_type": "arbitration",
+    "data": {
+      "object": "0xebc9dc62a87d05e87f6bad1f9fd600bb61734ab00a8bd7435818115a1709d6ec",
+      "arbitration": {
+        "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+        "feedback": "After review, support buyer claim, full refund granted",
+        "indemnity": 1000000
+      }
+    },
+    "env": {"account": "arbitration_admin", "network": "testnet", "no_cache": true}
+  }
 }
 ```
 
 **Real Response**:
 ```json
 {
-  "status": "success",
-  "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
-  "type": "Arb",
-  "version": "1654581",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Arb",
+            "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+            "version": "1654581",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1746,26 +2006,49 @@ After arbitration is finalized, the **order owner (buyer)** claims the awarded c
 **Request**:
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
-    "arb_claim_compensation": {
-      "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0"
-    }
-  },
-  "env": {"account": "buyer_account", "network": "testnet", "no_cache": true}
+    "operation_type": "order",
+    "data": {
+      "object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
+      "arb_claim_compensation": {
+        "arb": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0"
+      }
+    },
+    "env": {"account": "buyer_account", "network": "testnet", "no_cache": true}
+  }
 }
 ```
 
 **Real Response**:
 ```json
 {
-  "status": "success",
-  "results": [
-    {"object": "0x50ca67dfb163b8bbab3d3ed59052d28a8859de167ea101b19e012bc4a258f708", "type": "Service", "version": "1660200", "change": "mutated"},
-    {"object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0", "type": "Arb", "version": "1660200", "change": "mutated"},
-    {"object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6", "type": "Order", "version": "1660200", "change": "mutated"}
-  ]
+  "result": {
+    "status": "success",
+    "data": {
+      "results": [
+        {
+          "object": "0x50ca67dfb163b8bbab3d3ed59052d28a8859de167ea101b19e012bc4a258f708",
+          "type": "Service",
+          "version": "1660200",
+          "change": "mutated"
+        },
+        {
+          "object": "0x5e22bd716933ce89d620dd7976627110a0ed26672244516f31b83fd7f6903db0",
+          "type": "Arb",
+          "version": "1660200",
+          "change": "mutated"
+        },
+        {
+          "object": "0x934bf2d62b472082d91b5ba7425228bcb158c33d281ad01ed7fdd20bf5f00ff6",
+          "type": "Order",
+          "version": "1660200",
+          "change": "mutated"
+        }
+      ]
+    }
+  },
+  "schema": null
 }
 ```
 

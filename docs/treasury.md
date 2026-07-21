@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "treasury", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Treasury component is used to create and manage team fund vaults, set deposit/withdrawal rules, etc. Treasury supports two operation modes: permission management through Permission objects, or verification through external Guard objects.
@@ -29,10 +31,13 @@ Treasury operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "treasury",
-  "data": { ... },    // Treasury data definition
-  "env": { ... },       // Execution environment (optional)
-  "submission": { ... }  // Submission data (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "treasury",
+    "data": { ... },    // Treasury data definition
+    "env": { ... },       // Execution environment (optional)
+    "submission": { ... }  // Submission data (optional)
+  }
 }
 ```
 
@@ -157,7 +162,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -182,11 +187,14 @@ When using external Guards for deposit/withdrawal:
 2. **Guard Creation Example**:
    ```json
    {
-     "operation_type": "guard",
+     "tool": "onchain_operations",
      "data": {
-       "namedNew": { "name": "my_guard" },
-       "table": [{ "identifier": 0, "b_submission": false, "value_type": "U64", "value": 1000000000 }],
-       "root": { "type": "node", "node": { "type": "logic_as_u256_greater_or_equal", "nodes": [...] } }
+       "operation_type": "guard",
+       "data": {
+         "namedNew": { "name": "my_guard" },
+         "table": [{ "identifier": 0, "b_submission": false, "value_type": "U64", "value": 1000000000 }],
+         "root": { "type": "node", "node": { "type": "logic_as_u256_greater_or_equal", "nodes": [...] } }
+       }
      }
    }
    ```
@@ -231,14 +239,17 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "team_treasury"
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "team_treasury"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -246,21 +257,31 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0x53ad...08e7",
-      "version": "244384",
-      "change": "created"
-    },
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "244384",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x53ad...08e7",
+            "version": "244384",
+            "change": "created"
+          },
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "244384",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -272,16 +293,19 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "project_fund",
-      "tags": ["project", "finance"]
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "project_fund",
+        "tags": ["project", "finance"]
+      },
+      "description": "Project fund treasury for managing team finances"
     },
-    "description": "Project fund treasury for managing team finances"
-  },
-  "env": {
-    "network": "testnet"
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -289,21 +313,31 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0x20fd...393a",
-      "version": "251892",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0x677f...0767",
-      "version": "251892",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0x20fd...393a",
+            "version": "251892",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0x677f...0767",
+            "version": "251892",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -315,34 +349,37 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "community_fund",
-      "tags": ["community", "fund"]
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "community_fund",
+        "tags": ["community", "fund"]
+      },
+      "description": "Community fund treasury with external Guard access",
+      "external_deposit_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "deposit_guard_u64",
+            "identifier": 0
+          }
+        ]
+      },
+      "external_withdraw_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "withdraw_guard_u64",
+            "identifier": 0
+          }
+        ]
+      }
     },
-    "description": "Community fund treasury with external Guard access",
-    "external_deposit_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "deposit_guard_u64",
-          "identifier": 0
-        }
-      ]
-    },
-    "external_withdraw_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "withdraw_guard_u64",
-          "identifier": 0
-        }
-      ]
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -350,21 +387,31 @@ Create a new Treasury object, can simultaneously create a new Permission object 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Permission",
-      "object": "0x163e...c6a8",
-      "version": "258393",
-      "change": "created"
-    },
-    {
-      "type": "Treasury",
-      "object": "0x5b1a...3dbf",
-      "version": "258393",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x163e...c6a8",
+            "version": "258393",
+            "change": "created"
+          },
+          {
+            "type": "Treasury",
+            "object": "0x5b1a...3dbf",
+            "version": "258393",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -407,21 +454,24 @@ Deposit assets into Treasury, supports verification through Permission or extern
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "deposit": {
-      "coin": {
-        "balance": 100000000000
-      },
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "deposit": {
+        "coin": {
+          "balance": 100000000000
+        },
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        }
       }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -429,15 +479,25 @@ Deposit assets into Treasury, supports verification through Permission or extern
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "244617",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "244617",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -449,25 +509,28 @@ Deposit assets into Treasury, supports verification through Permission or extern
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "deposit": {
-      "coin": {
-        "balance": 1000000000
-      },
-      "by_external_deposit_guard": "deposit_guard_u64",
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
-      },
-      "namedNewPayment": {
-        "name": "deposit_payment"
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "deposit": {
+        "coin": {
+          "balance": 1000000000
+        },
+        "by_external_deposit_guard": "deposit_guard_u64",
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        },
+        "namedNewPayment": {
+          "name": "deposit_payment"
+        }
       }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -475,20 +538,31 @@ Deposit assets into Treasury, supports verification through Permission or extern
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0x5b1a...3dbf",
-      "version": "259562",
-      "change": "mutated"
-    },
-    {
-      "type": "Payment",
-      "object": "0x53a4...f121",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0x5b1a...3dbf",
+            "version": "259562",
+            "change": "mutated"
+          },
+          {
+            "type": "Payment",
+            "object": "0x53a4...f121",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -537,24 +611,27 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "withdraw": {
-      "amount": {
-        "fixed": 50000000000
-      },
-      "recipient": {
-        "name_or_address": "alice"
-      },
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "withdraw": {
+        "amount": {
+          "fixed": 50000000000
+        },
+        "recipient": {
+          "name_or_address": "alice"
+        },
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        }
       }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -562,26 +639,37 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 **Execution Result** (after faucet and deposit):
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "249816",
-      "change": "mutated"
-    },
-    {
-      "type": "WReceivedObject",
-      "object": "0x7de4...7f82",
-      "change": "created",
-      "owner": "alice_address"
-    },
-    {
-      "type": "Payment",
-      "object": "0xfd7c...816e",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "249816",
+            "change": "mutated"
+          },
+          {
+            "type": "WReceivedObject",
+            "object": "0x7de4...7f82",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Payment",
+            "object": "0xfd7c...816e",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -595,27 +683,30 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "withdraw": {
-      "amount": {
-        "by_external_withdraw_guard": "withdraw_guard_u64"
-      },
-      "recipient": {
-        "name_or_address": "bob"
-      },
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
-      },
-      "namedNewPayment": {
-        "name": "withdraw_payment"
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "withdraw": {
+        "amount": {
+          "by_external_withdraw_guard": "withdraw_guard_u64"
+        },
+        "recipient": {
+          "name_or_address": "bob"
+        },
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        },
+        "namedNewPayment": {
+          "name": "withdraw_payment"
+        }
       }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -623,26 +714,37 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0x5b1a...3dbf",
-      "version": "264087",
-      "change": "mutated"
-    },
-    {
-      "type": "WReceivedObject",
-      "object": "0x1094...a712",
-      "change": "created",
-      "owner": "bob_address"
-    },
-    {
-      "type": "Payment",
-      "object": "0x3198...b46e",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0x5b1a...3dbf",
+            "version": "264087",
+            "change": "mutated"
+          },
+          {
+            "type": "WReceivedObject",
+            "object": "0x1094...a712",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Payment",
+            "object": "0x3198...b46e",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -692,21 +794,24 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "external_deposit_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "deposit_guard_u64",
-          "identifier": 0
-        }
-      ]
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "external_deposit_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "deposit_guard_u64",
+            "identifier": 0
+          }
+        ]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -714,15 +819,25 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "265240",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "265240",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -734,17 +849,20 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_deposit_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "unlimited_deposit",
-          "identifier": null
-        }
-      ]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_deposit_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "unlimited_deposit",
+            "identifier": null
+          }
+        ]
+      }
     }
   }
 }
@@ -758,17 +876,20 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_deposit_guard": {
-      "op": "set",
-      "guards": [
-        {
-          "guard": "new_deposit_guard",
-          "identifier": 1
-        }
-      ]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_deposit_guard": {
+        "op": "set",
+        "guards": [
+          {
+            "guard": "new_deposit_guard",
+            "identifier": 1
+          }
+        ]
+      }
     }
   }
 }
@@ -782,16 +903,19 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_deposit_guard": {
-      "op": "remove",
-      "guards": ["deposit_guard_u64"]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_deposit_guard": {
+        "op": "remove",
+        "guards": ["deposit_guard_u64"]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -799,15 +923,25 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0x5b1a...3dbf",
-      "version": "265243",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0x5b1a...3dbf",
+            "version": "265243",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -819,15 +953,18 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "external_deposit_guard": {
-      "op": "clear"
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "external_deposit_guard": {
+        "op": "clear"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -835,15 +972,25 @@ Manage Treasury's external deposit Guard list, supports add, set, remove, clear 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "265241",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "265241",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -888,17 +1035,20 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_withdraw_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "approved_withdraw_guard",
-          "identifier": 1
-        }
-      ]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_withdraw_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "approved_withdraw_guard",
+            "identifier": 1
+          }
+        ]
+      }
     }
   }
 }
@@ -912,17 +1062,20 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_withdraw_guard": {
-      "op": "set",
-      "guards": [
-        {
-          "guard": "new_withdraw_guard",
-          "identifier": 2
-        }
-      ]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_withdraw_guard": {
+        "op": "set",
+        "guards": [
+          {
+            "guard": "new_withdraw_guard",
+            "identifier": 2
+          }
+        ]
+      }
     }
   }
 }
@@ -936,16 +1089,19 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "community_fund",
-    "external_withdraw_guard": {
-      "op": "remove",
-      "guards": ["withdraw_guard_u64"]
+    "operation_type": "treasury",
+    "data": {
+      "object": "community_fund",
+      "external_withdraw_guard": {
+        "op": "remove",
+        "guards": ["withdraw_guard_u64"]
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -953,15 +1109,25 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0x5b1a...3dbf",
-      "version": "265244",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0x5b1a...3dbf",
+            "version": "265244",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -973,15 +1139,18 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "external_withdraw_guard": {
-      "op": "clear"
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "external_withdraw_guard": {
+        "op": "clear"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -989,15 +1158,25 @@ Manage Treasury's external withdrawal Guard list, supports add, set, remove, cle
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "265242",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "265242",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1034,10 +1213,13 @@ Process CoinWrapper objects received by Treasury, can deposit to balance or unwr
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "receive": "recently"
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "receive": "recently"
+    }
   }
 }
 ```
@@ -1050,10 +1232,13 @@ Process CoinWrapper objects received by Treasury, can deposit to balance or unwr
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "owner_receive": "recently"
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "owner_receive": "recently"
+    }
   }
 }
 ```
@@ -1080,33 +1265,36 @@ Perform multiple operations on existing Treasury in a single transaction, such a
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_treasury",
-    "deposit": {
-      "coin": {
-        "balance": 1000000000
+    "operation_type": "treasury",
+    "data": {
+      "object": "team_treasury",
+      "deposit": {
+        "coin": {
+          "balance": 1000000000
+        },
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        }
       },
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
+      "withdraw": {
+        "amount": {
+          "fixed": 500000000
+        },
+        "recipient": {
+          "name_or_address": "alice"
+        },
+        "payment_info": {
+          "remark": "treasury operation",
+          "index": 1
+        }
       }
     },
-    "withdraw": {
-      "amount": {
-        "fixed": 500000000
-      },
-      "recipient": {
-        "name_or_address": "alice"
-      },
-      "payment_info": {
-        "remark": "treasury operation",
-        "index": 1
-      }
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -1114,31 +1302,43 @@ Perform multiple operations on existing Treasury in a single transaction, such a
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Treasury",
-      "object": "0xbf0f...6249",
-      "version": "254284",
-      "change": "mutated"
-    },
-    {
-      "type": "Payment",
-      "object": "0x45d6...fccd",
-      "change": "created"
-    },
-    {
-      "type": "WReceivedObject",
-      "object": "0xb74b...81d1",
-      "change": "created",
-      "owner": "alice_address"
-    },
-    {
-      "type": "Payment",
-      "object": "0xc462...16ac",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "object": "0xbf0f...6249",
+            "version": "254284",
+            "change": "mutated"
+          },
+          {
+            "type": "Payment",
+            "object": "0x45d6...fccd",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "WReceivedObject",
+            "object": "0xb74b...81d1",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Payment",
+            "object": "0xc462...16ac",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1163,4 +1363,3 @@ Perform multiple operations on existing Treasury in a single transaction, such a
 | **[Payment](payment.md)** | Direct coin transfers - payment tracking and management |
 | **[Allocation](allocation.md)** | Automatic fund distribution - auto-distribution of treasury funds |
 | **[Reward](reward.md)** | Marketing incentives - incentive pools linked to treasury |
-

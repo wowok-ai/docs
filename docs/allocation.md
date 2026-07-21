@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "allocation", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Allocation component is WoWok protocol's automatic fund distribution module, used to create distribution plans that auto-distribute funds to multiple recipients. Allocation objects can be created with predefined distribution rules, receive funds, and automatically distribute them based on the configured allocators when Guard verification passes.
@@ -26,10 +28,13 @@ Allocation operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "allocation",
-  "data": { ... },    // Allocation data definition
-  "env": { ... },      // Execution environment (optional)
-  "submission": { ... } // Guard verification submission (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "allocation",
+    "data": { ... },    // Allocation data definition
+    "env": { ... },      // Execution environment (optional)
+    "submission": { ... } // Guard verification submission (optional)
+  }
 }
 ```
 
@@ -121,7 +126,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -181,59 +186,62 @@ Create a new Allocation object with predefined distribution rules. Newly created
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "profit_sharing",
-      "type_parameter": "0x2::wow::WOW",
-      "tags": ["profit", "distribution"],
-      "onChain": false
-    },
-    "allocators": {
-      "description": "Monthly profit distribution",
-      "threshold": 1000000000,
-      "allocators": [
-        {
-          "guard": "always_true_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "alice"
-                }
+    "operation_type": "allocation",
+    "data": {
+      "object": {
+        "name": "profit_sharing",
+        "type_parameter": "0x2::wow::WOW",
+        "tags": ["profit", "distribution"],
+        "onChain": false
+      },
+      "allocators": {
+        "description": "Monthly profit distribution",
+        "threshold": 1000000000,
+        "allocators": [
+          {
+            "guard": "always_true_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "alice"
+                  }
+                },
+                "sharing": 1000000000,
+                "mode": "Amount"
               },
-              "sharing": 1000000000,
-              "mode": "Amount"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "testuser1"
-                }
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "testuser1"
+                  }
+                },
+                "sharing": 500000000,
+                "mode": "Amount"
               },
-              "sharing": 500000000,
-              "mode": "Amount"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "bob"
-                }
-              },
-              "sharing": 500000000,
-              "mode": "Amount"
-            }
-          ],
-          "max": null
-        }
-      ]
-    },
-    "coin": {
-      "balance": 2000000000
-    },
-    "payment_info": {
-      "remark": "Initial deposit",
-      "index": 1
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "bob"
+                  }
+                },
+                "sharing": 500000000,
+                "mode": "Amount"
+              }
+            ],
+            "max": null
+          }
+        ]
+      },
+      "coin": {
+        "balance": 2000000000
+      },
+      "payment_info": {
+        "remark": "Initial deposit",
+        "index": 1
+      }
     }
   }
 }
@@ -242,11 +250,25 @@ Create a new Allocation object with predefined distribution rules. Newly created
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x8a63...331b",
-  "type": "Allocation",
-  "version": "100983",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0x8a63...331b",
+            "version": "100983",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -256,58 +278,61 @@ Create a new Allocation object with predefined distribution rules. Newly created
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "team_payouts",
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "allocators": {
-      "description": "Team weekly payouts",
-      "threshold": 500000000,
-      "allocators": [
-        {
-          "guard": "weekly_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "alice"
-                }
+    "operation_type": "allocation",
+    "data": {
+      "object": {
+        "name": "team_payouts",
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "allocators": {
+        "description": "Team weekly payouts",
+        "threshold": 500000000,
+        "allocators": [
+          {
+            "guard": "weekly_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "alice"
+                  }
+                },
+                "sharing": 500000000,
+                "mode": "Amount"
               },
-              "sharing": 500000000,
-              "mode": "Amount"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "testuser1"
-                }
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "testuser1"
+                  }
+                },
+                "sharing": 300000000,
+                "mode": "Amount"
               },
-              "sharing": 300000000,
-              "mode": "Amount"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "bob"
-                }
-              },
-              "sharing": 200000000,
-              "mode": "Amount"
-            }
-          ],
-          "max": 10000000000
-        }
-      ]
-    },
-    "coin": {
-      "balance": 2000000000
-    },
-    "payment_info": {
-      "remark": "Team payout initial",
-      "index": 2,
-      "for_guard": "weekly_guard"
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "bob"
+                  }
+                },
+                "sharing": 200000000,
+                "mode": "Amount"
+              }
+            ],
+            "max": 10000000000
+          }
+        ]
+      },
+      "coin": {
+        "balance": 2000000000
+      },
+      "payment_info": {
+        "remark": "Team payout initial",
+        "index": 2,
+        "for_guard": "weekly_guard"
+      }
     }
   }
 }
@@ -316,11 +341,25 @@ Create a new Allocation object with predefined distribution rules. Newly created
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xa223...3a4e",
-  "type": "Allocation",
-  "version": "101677",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0xa223...3a4e",
+            "version": "101677",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -330,57 +369,60 @@ Create a new Allocation object with predefined distribution rules. Newly created
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "profit_sharing_rate",
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "allocators": {
-      "description": "Monthly profit distribution by rate",
-      "threshold": 1000000000,
-      "allocators": [
-        {
-          "guard": "always_true_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "alice"
-                }
+    "operation_type": "allocation",
+    "data": {
+      "object": {
+        "name": "profit_sharing_rate",
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "allocators": {
+        "description": "Monthly profit distribution by rate",
+        "threshold": 1000000000,
+        "allocators": [
+          {
+            "guard": "always_true_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "alice"
+                  }
+                },
+                "sharing": 5000,
+                "mode": "Rate"
               },
-              "sharing": 5000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "testuser1"
-                }
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "testuser1"
+                  }
+                },
+                "sharing": 3000,
+                "mode": "Rate"
               },
-              "sharing": 3000,
-              "mode": "Rate"
-            },
-            {
-              "who": {
-                "Entity": {
-                  "name_or_address": "bob"
-                }
-              },
-              "sharing": 2000,
-              "mode": "Rate"
-            }
-          ],
-          "max": null
-        }
-      ]
-    },
-    "coin": {
-      "balance": 2000000000
-    },
-    "payment_info": {
-      "remark": "Rate mode deposit",
-      "index": 3
+              {
+                "who": {
+                  "Entity": {
+                    "name_or_address": "bob"
+                  }
+                },
+                "sharing": 2000,
+                "mode": "Rate"
+              }
+            ],
+            "max": null
+          }
+        ]
+      },
+      "coin": {
+        "balance": 2000000000
+      },
+      "payment_info": {
+        "remark": "Rate mode deposit",
+        "index": 3
+      }
     }
   }
 }
@@ -389,11 +431,25 @@ Create a new Allocation object with predefined distribution rules. Newly created
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xb071...650c",
-  "type": "Allocation",
-  "version": "992",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0xb071...650c",
+            "version": "992",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -429,24 +485,27 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "payment_to_allocation"
-    },
-    "revenue": [
-      {
-        "recipient": {
-          "name_or_address": "profit_sharing"
-        },
-        "amount": {
-          "balance": 1000000000
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "payment_to_allocation"
+      },
+      "revenue": [
+        {
+          "recipient": {
+            "name_or_address": "profit_sharing"
+          },
+          "amount": {
+            "balance": 1000000000
+          }
         }
+      ],
+      "info": {
+        "remark": "Payment to profit sharing allocation",
+        "index": 5
       }
-    ],
-    "info": {
-      "remark": "Payment to profit sharing allocation",
-      "index": 5
     }
   }
 }
@@ -458,10 +517,13 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "profit_sharing",
-    "received_coins": "recently"
+    "operation_type": "allocation",
+    "data": {
+      "object": "profit_sharing",
+      "received_coins": "recently"
+    }
   }
 }
 ```
@@ -469,18 +531,25 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x8a63...331b",
-  "type": "Allocation",
-  "version": "102109",
-  "change": "mutated",
-  "received": [
-    {
-      "id": "0xd9fe...1f70",
-      "type": "0x2::payment::CoinWrapper<0x2::wow::WOW>",
-      "amount": 1000000000
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0x8a63...331b",
+            "version": "102109",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -488,19 +557,22 @@ Receive CoinWrapper objects sent to the Allocation object and deposit them into 
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "profit_sharing",
-    "received_coins": {
-      "balance": 1000000000,
-      "token_type": "0x2::wow::WOW",
-      "received": [
-        {
-          "id": "0xd9fed2a4b98b8125dd252775e5954d6db4be7bc8c9e53d176fa76ba1a5721f70",
-          "payment": "0x2197a9421d457c45bdec487a3e506c89861a2935806493615028994f1b8794ac",
-          "balance": 1000000000
-        }
-      ]
+    "operation_type": "allocation",
+    "data": {
+      "object": "profit_sharing",
+      "received_coins": {
+        "balance": 1000000000,
+        "token_type": "0x2::wow::WOW",
+        "received": [
+          {
+            "id": "0xd9fed2a4b98b8125dd252775e5954d6db4be7bc8c9e53d176fa76ba1a5721f70",
+            "payment": "0x2197a9421d457c45bdec487a3e506c89861a2935806493615028994f1b8794ac",
+            "balance": 1000000000
+          }
+        ]
+      }
     }
   }
 }
@@ -536,10 +608,13 @@ Verify the specified Guard and execute the corresponding fund distribution based
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "profit_sharing",
-    "alloc_by_guard": "always_true_guard"
+    "operation_type": "allocation",
+    "data": {
+      "object": "profit_sharing",
+      "alloc_by_guard": "always_true_guard"
+    }
   }
 }
 ```
@@ -547,11 +622,25 @@ Verify the specified Guard and execute the corresponding fund distribution based
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x8a63...331b",
-  "type": "Allocation",
-  "version": "102951",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0x8a63...331b",
+            "version": "102951",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -582,21 +671,24 @@ Execute multiple operations in a single call: receive funds and execute distribu
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_payouts",
-    "received_coins": {
-      "balance": 1000000000,
-      "token_type": "0x2::wow::WOW",
-      "received": [
-        {
-          "id": "0x7857681fd9b9eeced363dfcf05750d6fa37178995fe88ab6cddd008b7e11365c",
-          "payment": "0xdde7c6c1906bbd0592b742b2772b5fc81fa1d1deb400a2ef3e59a644e9dd84bf",
-          "balance": 1000000000
-        }
-      ]
-    },
-    "alloc_by_guard": "weekly_guard"
+    "operation_type": "allocation",
+    "data": {
+      "object": "team_payouts",
+      "received_coins": {
+        "balance": 1000000000,
+        "token_type": "0x2::wow::WOW",
+        "received": [
+          {
+            "id": "0x7857681fd9b9eeced363dfcf05750d6fa37178995fe88ab6cddd008b7e11365c",
+            "payment": "0xdde7c6c1906bbd0592b742b2772b5fc81fa1d1deb400a2ef3e59a644e9dd84bf",
+            "balance": 1000000000
+          }
+        ]
+      },
+      "alloc_by_guard": "weekly_guard"
+    }
   }
 }
 ```
@@ -604,11 +696,25 @@ Execute multiple operations in a single call: receive funds and execute distribu
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xa223...3a4e",
-  "type": "Allocation",
-  "version": "103485",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "object": "0xa223...3a4e",
+            "version": "103485",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 

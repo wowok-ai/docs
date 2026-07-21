@@ -11,6 +11,8 @@ A complete e-commerce example demonstrating how to build an online store using W
 - **Execution order**: Part 1 (Merchant Setup, Steps 1–7) → Part 2 (Customer Flow, Steps 1–9). Run all build steps in sequence before testing any customer flow. Do not skip steps — each depends on objects created by prior steps.
 - **Prerequisites**: `myshop_merchant` with sufficient WOW for gas and order operations. All on-chain operations require `env.confirmed: true`.
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+
 ---
 
 ## Core Requirements & Features
@@ -104,9 +106,12 @@ Before starting, ensure you have:
 
 ```json
 {
-  "gen": {
-    "name": "myshop_merchant",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "myshop_merchant",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -117,11 +122,14 @@ Before starting, ensure you have:
 
 ```json
 {
-  "transfer": {
-    "name_or_address_to": "myshop_merchant",
-    "amount": 1000000000,
-    "network": "mainnet",
-    "confirmed": true
+  "tool": "account_operation",
+  "data": {
+    "transfer": {
+      "name_or_address_to": "myshop_merchant",
+      "amount": 1000000000,
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -136,20 +144,23 @@ First, create a Permission object to manage access control for your store operat
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_permission_v2",
-      "tags": ["ecommerce", "toys", "shop"],
-      "onChain": false,
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "myshop_permission_v2",
+        "tags": ["ecommerce", "toys", "shop"],
+        "onChain": false,
+        "replaceExistName": true
+      },
+      "description": "Permission management for MyShop toy store"
     },
-    "description": "Permission management for MyShop toy store"
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -166,116 +177,119 @@ Create a Machine to define the order processing workflow. This includes nodes fo
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_machine_v2",
-      "permission": "myshop_permission_v2",
-      "replaceExistName": true
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "myshop_machine_v2",
+        "permission": "myshop_permission_v2",
+        "replaceExistName": true
+      },
+      "description": "Order processing workflow for MyShop toy store",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "Cancelled",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 0,
+                "forwards": [
+                  {
+                    "name": "Cancel Order",
+                    "weight": 1,
+                    "namedOperator": ""
+                  }
+                ]
+              },
+              {
+                "prev_node": "Order Confirmation",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Cancel Order",
+                    "weight": 1,
+                    "namedOperator": ""
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Completed",
+            "pairs": [
+              {
+                "prev_node": "In Transit",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Complete Order",
+                    "weight": 1,
+                    "namedOperator": ""
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "In Transit",
+            "pairs": [
+              {
+                "prev_node": "Shipping",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Confirm Delivery",
+                    "weight": 1,
+                    "permissionIndex": 1002
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Order Confirmation",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 0,
+                "forwards": [
+                  {
+                    "name": "Confirm Order",
+                    "weight": 1,
+                    "permissionIndex": 1000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Shipping",
+            "pairs": [
+              {
+                "prev_node": "Order Confirmation",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Ship Goods",
+                    "weight": 1,
+                    "permissionIndex": 1001
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "publish": true
     },
-    "description": "Order processing workflow for MyShop toy store",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Cancelled",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "Cancel Order",
-                  "weight": 1,
-                  "namedOperator": ""
-                }
-              ]
-            },
-            {
-              "prev_node": "Order Confirmation",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Cancel Order",
-                  "weight": 1,
-                  "namedOperator": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Completed",
-          "pairs": [
-            {
-              "prev_node": "In Transit",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Complete Order",
-                  "weight": 1,
-                  "namedOperator": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "In Transit",
-          "pairs": [
-            {
-              "prev_node": "Shipping",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Delivery",
-                  "weight": 1,
-                  "permissionIndex": 1002
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Order Confirmation",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "Confirm Order",
-                  "weight": 1,
-                  "permissionIndex": 1000
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Shipping",
-          "pairs": [
-            {
-              "prev_node": "Order Confirmation",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Ship Goods",
-                  "weight": 1,
-                  "permissionIndex": 1001
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -403,9 +417,12 @@ Create a Contact object to enable encrypted communication between customers and 
 
 ```json
 {
-  "messenger": {
-    "m": "myshop_merchant_messenger",
-    "name_or_account": "myshop_merchant"
+  "tool": "messenger_operation",
+  "data": {
+    "messenger": {
+      "m": "myshop_merchant_messenger",
+      "name_or_account": "myshop_merchant"
+    }
   }
 }
 ```
@@ -416,28 +433,31 @@ Create a Contact object to enable encrypted communication between customers and 
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_aftersales_contact_v2",
-      "permission": "myshop_permission_v2",
-      "replaceExistName": true
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "myshop_aftersales_contact_v2",
+        "permission": "myshop_permission_v2",
+        "replaceExistName": true
+      },
+      "description": "MyShop after-sales support contact - we're here to help with orders, shipping, and returns",
+      "ims": {
+        "op": "add",
+        "im": [
+          {
+            "at": "myshop_merchant",
+            "description": "Primary after-sales support representative"
+          }
+        ]
+      }
     },
-    "description": "MyShop after-sales support contact - we're here to help with orders, shipping, and returns",
-    "ims": {
-      "op": "add",
-      "im": [
-        {
-          "at": "myshop_merchant",
-          "description": "Primary after-sales support representative"
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -458,103 +478,106 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "myshop_withdraw_guard_v2",
-      "tags": ["order", "completed", "withdraw", "signer-bound"],
-      "onChain": false,
-      "replaceExistName": true
-    },
-    "description": "Verify order progress is at Completed node for merchant withdrawal. RISK ELIMINATION: Three-fold verification - (1) order at Completed node, (2) signer is myshop_merchant (prevents fund theft), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "object_type": "Order",
-        "name": "order_address (Order object submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "myshop_withdraw_guard_v2",
+        "tags": ["order", "completed", "withdraw", "signer-bound"],
+        "onChain": false,
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Completed",
-        "name": "Expected Completed node name (case-sensitive)"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "myshop_merchant",
-        "name": "Authorized merchant address (prevents fund theft by unauthorized callers)"
-      },
-      {
-        "identifier": 3,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "myshop_service_v2",
-        "name": "Expected service address (prevents cross-service fund theft)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Verify order progress is at Completed node for merchant withdrawal. RISK ELIMINATION: Three-fold verification - (1) order at Completed node, (2) signer is myshop_merchant (prevents fund theft), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {
-                "identifier": 0,
-                "convert_witness": "OrderProgress"
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "object_type": "Order",
+          "name": "order_address (Order object submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "context",
-              "context": "Signer"
-            },
-            {
-              "type": "identifier",
-              "identifier": 2
-            }
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Completed",
+          "name": "Expected Completed node name (case-sensitive)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "order.service",
-              "object": {
-                "identifier": 0
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 3
-            }
-          ]
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "myshop_merchant",
+          "name": "Authorized merchant address (prevents fund theft by unauthorized callers)"
+        },
+        {
+          "identifier": 3,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "myshop_service_v2",
+          "name": "Expected service address (prevents cross-service fund theft)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": "OrderProgress"
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Signer"
+              },
+              {
+                "type": "identifier",
+                "identifier": 2
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "order.service",
+                "object": {
+                  "identifier": 0
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -581,100 +604,103 @@ Create a Guard for customer refunds when order is cancelled.
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "myshop_refund_guard_v2",
-      "tags": ["order", "cancelled", "refund", "signer-bound"],
-      "onChain": false,
-      "replaceExistName": true
-    },
-    "description": "Verify order progress is at Cancelled node for customer refund. RISK ELIMINATION: Three-fold verification - (1) order at Cancelled node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "object_type": "Order",
-        "name": "order_address (Order object submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "myshop_refund_guard_v2",
+        "tags": ["order", "cancelled", "refund", "signer-bound"],
+        "onChain": false,
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "String",
-        "value": "Cancelled",
-        "name": "Expected Cancelled node name (case-sensitive)"
-      },
-      {
-        "identifier": 2,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "myshop_service_v2",
-        "name": "Expected service address (prevents cross-service fund theft)"
-      }
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
+      "description": "Verify order progress is at Cancelled node for customer refund. RISK ELIMINATION: Three-fold verification - (1) order at Cancelled node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
+      "table": [
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "progress.current",
-              "object": {
-                "identifier": 0,
-                "convert_witness": "OrderProgress"
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "object_type": "Order",
+          "name": "order_address (Order object submitted at runtime)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "context",
-              "context": "Signer"
-            },
-            {
-              "type": "query",
-              "query": "order.owner",
-              "object": {
-                "identifier": 0
-              },
-              "parameters": []
-            }
-          ]
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "String",
+          "value": "Cancelled",
+          "name": "Expected Cancelled node name (case-sensitive)"
         },
         {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": "order.service",
-              "object": {
-                "identifier": 0
-              },
-              "parameters": []
-            },
-            {
-              "type": "identifier",
-              "identifier": 2
-            }
-          ]
+          "identifier": 2,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "myshop_service_v2",
+          "name": "Expected service address (prevents cross-service fund theft)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "progress.current",
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": "OrderProgress"
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Signer"
+              },
+              {
+                "type": "query",
+                "query": "order.owner",
+                "object": {
+                  "identifier": 0
+                },
+                "parameters": []
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": "order.service",
+                "object": {
+                  "identifier": 0
+                },
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -730,81 +756,84 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_service_v2",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "myshop_permission_v2",
-      "tags": ["ecommerce", "toys", "store"],
-      "onChain": false,
-      "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "myshop_service_v2",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "myshop_permission_v2",
+        "tags": ["ecommerce", "toys", "store"],
+        "onChain": false,
+        "replaceExistName": true
+      },
+      "description": "MyShop - Top quality toys for children",
+      "location": "Online Store",
+      "machine": "myshop_machine_v2",
+      "order_allocators": {
+        "description": "Order revenue allocation - merchant withdraw after completion",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "myshop_withdraw_guard_v2",
+            "sharing": [
+              {
+                "who": { "Signer": "signer" },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "myshop_refund_guard_v2",
+            "sharing": [
+              {
+                "who": { "GuardIdentifier": 0 },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Play Purse Set 35PCS",
+            "price": 50000000,
+            "stock": 100,
+            "suspension": false,
+            "wip": "https://wowok.net/test/three_body.wip",
+            "wip_hash": ""
+          },
+          {
+            "name": "Little Girls Purse with Accessories",
+            "price": 50000000,
+            "stock": 50,
+            "suspension": false,
+            "wip": "https://wowok.net/test/three_body.wip",
+            "wip_hash": ""
+          },
+          {
+            "name": "Tree House Building Set",
+            "price": 30000000,
+            "stock": 75,
+            "suspension": false,
+            "wip": "https://wowok.net/test/three_body.wip",
+            "wip_hash": ""
+          }
+        ]
+      },
+      "um": "myshop_aftersales_contact_v2",
+      "publish": true
     },
-    "description": "MyShop - Top quality toys for children",
-    "location": "Online Store",
-    "machine": "myshop_machine_v2",
-    "order_allocators": {
-      "description": "Order revenue allocation - merchant withdraw after completion",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "myshop_withdraw_guard_v2",
-          "sharing": [
-            {
-              "who": { "Signer": "signer" },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "myshop_refund_guard_v2",
-          "sharing": [
-            {
-              "who": { "GuardIdentifier": 0 },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Play Purse Set 35PCS",
-          "price": 50000000,
-          "stock": 100,
-          "suspension": false,
-          "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
-        },
-        {
-          "name": "Little Girls Purse with Accessories",
-          "price": 50000000,
-          "stock": 50,
-          "suspension": false,
-          "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
-        },
-        {
-          "name": "Tree House Building Set",
-          "price": 30000000,
-          "stock": 75,
-          "suspension": false,
-          "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
-        }
-      ]
-    },
-    "um": "myshop_aftersales_contact_v2",
-    "publish": true
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -824,27 +853,30 @@ To offer promotional pricing, update product prices using the `sales` operation 
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_service_v2",
-    "sales": {
-      "op": "set",
-      "sales": [
-        {
-          "name": "Play Purse Set 35PCS",
-          "price": 40000000,
-          "stock": 100,
-          "suspension": false,
-          "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": ""
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "sales": {
+        "op": "set",
+        "sales": [
+          {
+            "name": "Play Purse Set 35PCS",
+            "price": 40000000,
+            "stock": 100,
+            "suspension": false,
+            "wip": "https://wowok.net/test/three_body.wip",
+            "wip_hash": ""
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -863,9 +895,12 @@ Create a customer account:
 
 ```json
 {
-  "gen": {
-    "name": "myshop_customer",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "myshop_customer",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -876,11 +911,14 @@ Create a customer account:
 
 ```json
 {
-  "transfer": {
-    "name_or_address_to": "myshop_customer",
-    "amount": 1000000000,
-    "network": "mainnet",
-    "confirmed": true
+  "tool": "account_operation",
+  "data": {
+    "transfer": {
+      "name_or_address_to": "myshop_customer",
+      "amount": 1000000000,
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -897,9 +935,12 @@ Customers can query the Service to see available products.
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["myshop_service_v2"],
-  "no_cache": true
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["myshop_service_v2"],
+    "no_cache": true
+  }
 }
 ```
 
@@ -915,40 +956,43 @@ Customer creates an order by purchasing products from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_service_v2",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Play Purse Set 35PCS",
-            "stock": 1,
-            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Play Purse Set 35PCS",
+              "stock": 1,
+              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+            }
+          ],
+          "total_pay": {
+            "balance": 50000000
           }
-        ],
-        "total_pay": {
-          "balance": 50000000
+        },
+        "namedNewOrder": {
+          "name": "myshop_test_order",
+          "replaceExistName": true
+        },
+        "namedNewProgress": {
+          "name": "myshop_test_progress",
+          "replaceExistName": true
+        },
+        "namedNewAllocation": {
+          "name": "myshop_test_allocation",
+          "replaceExistName": true
         }
-      },
-      "namedNewOrder": {
-        "name": "myshop_test_order",
-        "replaceExistName": true
-      },
-      "namedNewProgress": {
-        "name": "myshop_test_progress",
-        "replaceExistName": true
-      },
-      "namedNewAllocation": {
-        "name": "myshop_test_allocation",
-        "replaceExistName": true
       }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1003,9 +1047,12 @@ After creating the order, the customer sends their shipping address and contact 
 
 ```json
 {
-  "messenger": {
-    "m": "customer_messenger",
-    "name_or_account": "myshop_customer"
+  "tool": "messenger_operation",
+  "data": {
+    "messenger": {
+      "m": "customer_messenger",
+      "name_or_account": "myshop_customer"
+    }
   }
 }
 ```
@@ -1016,10 +1063,13 @@ After creating the order, the customer sends their shipping address and contact 
 
 ```json
 {
-  "operation": "send_message",
-  "from": "myshop_customer",
-  "to": "myshop_merchant",
-  "content": "Order Shipping Information:\n\nOrder ID: 0xa6db...3d5\nProduct: Play Purse Set 35PCS\n\nRecipient: Zhang San\nPhone: 138-0000-0000\nAddress: Building 123, Unit 456, Room 789\n         Chaoyang District, Beijing\n         China, 100000\n\nPlease confirm receipt of this information."
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "myshop_customer",
+    "to": "myshop_merchant",
+    "content": "Order Shipping Information:\n\nOrder ID: 0xa6db...3d5\nProduct: Play Purse Set 35PCS\n\nRecipient: Zhang San\nPhone: 138-0000-0000\nAddress: Building 123, Unit 456, Room 789\n         Chaoyang District, Beijing\n         China, 100000\n\nPlease confirm receipt of this information."
+  }
 }
 ```
 
@@ -1033,10 +1083,13 @@ After creating the order, the customer sends their shipping address and contact 
 
 ```json
 {
-  "operation": "send_message",
-  "from": "myshop_merchant",
-  "to": "myshop_customer",
-  "content": "Dear Customer,\n\nWe have received your shipping information:\n- Order ID: 0xa6db...3d5 confirmed\n- Shipping address verified\n- Contact phone: 138-0000-0000\n\nYour order will be processed within 24 hours. We'll send you the tracking number once shipped.\n\nThank you for shopping with MyShop!"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "myshop_merchant",
+    "to": "myshop_customer",
+    "content": "Dear Customer,\n\nWe have received your shipping information:\n- Order ID: 0xa6db...3d5 confirmed\n- Shipping address verified\n- Contact phone: 138-0000-0000\n\nYour order will be processed within 24 hours. We'll send you the tracking number once shipped.\n\nThank you for shopping with MyShop!"
+  }
 }
 ```
 
@@ -1046,10 +1099,13 @@ After creating the order, the customer sends their shipping address and contact 
 
 ```json
 {
-  "operation": "watch_messages",
-  "filter": {
-    "peerAddress": "myshop_merchant",
-    "account": "myshop_customer"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_messages",
+    "filter": {
+      "peerAddress": "myshop_merchant",
+      "account": "myshop_customer"
+    }
   }
 }
 ```
@@ -1064,9 +1120,12 @@ Customer can query the order status and progress.
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["myshop_test_order"],
-  "no_cache": true
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["myshop_test_order"],
+    "no_cache": true
+  }
 }
 ```
 
@@ -1080,9 +1139,12 @@ Check the current workflow node of the order.
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["myshop_test_progress"],
-  "no_cache": true
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["myshop_test_progress"],
+    "no_cache": true
+  }
 }
 ```
 
@@ -1098,22 +1160,25 @@ Merchant advances the order from initial state to "Order Confirmation" node.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Confirmation",
-        "forward": "Confirm Order"
-      },
-      "hold": false,
-      "message": "Order confirmed by merchant"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Order Confirmation",
+          "forward": "Confirm Order"
+        },
+        "hold": false,
+        "message": "Order confirmed by merchant"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1128,22 +1193,25 @@ Merchant ships the order and advances from "Order Confirmation" to "Shipping".
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Shipping",
-        "forward": "Ship Goods"
-      },
-      "hold": false,
-      "message": "Goods shipped via express delivery"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Shipping",
+          "forward": "Ship Goods"
+        },
+        "hold": false,
+        "message": "Goods shipped via express delivery"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1158,22 +1226,25 @@ Merchant or delivery service confirms the order has been delivered.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "In Transit",
-        "forward": "Confirm Delivery"
-      },
-      "hold": false,
-      "message": "Goods delivered successfully"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "In Transit",
+          "forward": "Confirm Delivery"
+        },
+        "hold": false,
+        "message": "Goods delivered successfully"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1188,22 +1259,25 @@ Customer confirms receipt and completes the order.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Completed",
-        "forward": "Complete Order"
-      },
-      "hold": false,
-      "message": "Order received and completed"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Completed",
+          "forward": "Complete Order"
+        },
+        "hold": false,
+        "message": "Order received and completed"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1226,39 +1300,42 @@ First, activate the Allocation by submitting the Guard verification with the Ord
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_allocation",
-    "alloc_by_guard": "0x5af9...1074"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "0x5af9...1074",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "0x5af9...1074",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "0xa6db...3d5",
-            "name": "order_address"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true,
-    "no_cache": true
+    "operation_type": "allocation",
+    "data": {
+      "object": "myshop_test_allocation",
+      "alloc_by_guard": "0x5af9...1074"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "0x5af9...1074",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "0x5af9...1074",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "0xa6db...3d5",
+              "name": "order_address"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true,
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1273,15 +1350,18 @@ After the Allocation is activated, withdraw the funds from the Service.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_service_v2",
-    "owner_receive": "recently"
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "owner_receive": "recently"
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1298,22 +1378,25 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Confirmation",
-        "forward": "Confirm Order"
-      },
-      "hold": false,
-      "message": "Order confirmed by merchant"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Order Confirmation",
+          "forward": "Confirm Order"
+        },
+        "hold": false,
+        "message": "Order confirmed by merchant"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1324,22 +1407,25 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Cancelled",
-        "forward": "Cancel Order"
-      },
-      "hold": false,
-      "message": "Order cancelled by customer"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Cancelled",
+          "forward": "Cancel Order"
+        },
+        "hold": false,
+        "message": "Order cancelled by customer"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1352,39 +1438,42 @@ After the order is cancelled, the customer can activate the refund allocation us
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_allocation",
-    "alloc_by_guard": "0x5792...5d2c"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "0x5792...5d2c",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "0x5792...5d2c",
-        "submission": [
-          {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "0xa6db...3d5",
-            "name": "order_address"
-          }
-        ]
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true,
-    "no_cache": true
+    "operation_type": "allocation",
+    "data": {
+      "object": "myshop_test_allocation",
+      "alloc_by_guard": "0x5792...5d2c"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "0x5792...5d2c",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "0x5792...5d2c",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "0xa6db...3d5",
+              "name": "order_address"
+            }
+          ]
+        }
+      ]
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true,
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1412,15 +1501,18 @@ The Service must have a compensation fund balance ≥ the arbitration indemnity 
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_service_v2",
-    "compensation_fund_add": {"balance": 50000000}
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "compensation_fund_add": {"balance": 50000000}
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1433,23 +1525,26 @@ Create an Arbitration object for handling order disputes.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_arbitration_v2",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "myshop_permission_v2",
-      "tags": ["ecommerce", "dispute", "toys"],
-      "onChain": false
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "myshop_arbitration_v2",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "myshop_permission_v2",
+        "tags": ["ecommerce", "dispute", "toys"],
+        "onChain": false
+      },
+      "description": "Arbitration system for MyShop toy store disputes",
+      "location": "Online arbitration system",
+      "fee": 5000000
     },
-    "description": "Arbitration system for MyShop toy store disputes",
-    "location": "Online arbitration system",
-    "fee": 5000000
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1464,15 +1559,18 @@ The merchant unpauses the Arbitration object to enable dispute submissions.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_arbitration_v2",
-    "pause": false
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
+    "operation_type": "arbitration",
+    "data": {
+      "object": "myshop_arbitration_v2",
+      "pause": false
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -1485,29 +1583,32 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_service_v2",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Tree House Building Set",
-            "stock": 1,
-            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
-          }
-        ],
-        "total_pay": {"balance": 30000000}
-      },
-      "namedNewOrder": {"name": "myshop_arb_order", "replaceExistName": true},
-      "namedNewProgress": {"name": "myshop_arb_progress", "replaceExistName": true},
-      "namedNewAllocation": {"name": "myshop_arb_allocation", "replaceExistName": true}
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Tree House Building Set",
+              "stock": 1,
+              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+            }
+          ],
+          "total_pay": {"balance": 30000000}
+        },
+        "namedNewOrder": {"name": "myshop_arb_order", "replaceExistName": true},
+        "namedNewProgress": {"name": "myshop_arb_progress", "replaceExistName": true},
+        "namedNewAllocation": {"name": "myshop_arb_allocation", "replaceExistName": true}
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1522,21 +1623,24 @@ The customer submits a dispute against the order, creating an Arb object.
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_arbitration_v2",
-    "dispute": {
-      "order": "myshop_arb_order",
-      "description": "Product quality issue - the tree house set arrived damaged",
-      "proposition": ["Full refund to customer", "Partial refund 50%", "Replace with new product"],
-      "fee": {"balance": 5000000},
-      "namedArb": {"name": "myshop_arb_case", "replaceExistName": true}
+    "operation_type": "arbitration",
+    "data": {
+      "object": "myshop_arbitration_v2",
+      "dispute": {
+        "order": "myshop_arb_order",
+        "description": "Product quality issue - the tree house set arrived damaged",
+        "proposition": ["Full refund to customer", "Partial refund 50%", "Replace with new product"],
+        "fee": {"balance": 5000000},
+        "namedArb": {"name": "myshop_arb_case", "replaceExistName": true}
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1551,18 +1655,21 @@ The merchant confirms the dispute materials are valid and sets the voting deadli
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_arbitration_v2",
-    "confirm": {
-      "arb": "myshop_arb_case",
-      "voting_deadline": 0
+    "operation_type": "arbitration",
+    "data": {
+      "object": "myshop_arbitration_v2",
+      "confirm": {
+        "arb": "myshop_arb_case",
+        "voting_deadline": 0
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1577,19 +1684,22 @@ The merchant provides the final arbitration result with feedback and indemnity a
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_arbitration_v2",
-    "arbitration": {
-      "arb": "myshop_arb_case",
-      "feedback": "After investigation, the product quality issue is confirmed. Full refund to customer and return shipping cost covered by merchant.",
-      "indemnity": 30000000
+    "operation_type": "arbitration",
+    "data": {
+      "object": "myshop_arbitration_v2",
+      "arbitration": {
+        "arb": "myshop_arb_case",
+        "feedback": "After investigation, the product quality issue is confirmed. Full refund to customer and return shipping cost covered by merchant.",
+        "indemnity": 30000000
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1604,17 +1714,20 @@ The customer claims the compensation from the Service's compensation fund.
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_arb_order",
-    "arb_claim_compensation": {
-      "arb": "myshop_arb_case"
+    "operation_type": "order",
+    "data": {
+      "object": "myshop_arb_order",
+      "arb_claim_compensation": {
+        "arb": "myshop_arb_case"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```
@@ -1629,10 +1742,13 @@ Check the final status of the arbitration.
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["myshop_arb_case"],
-  "no_cache": true,
-  "network": "mainnet"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["myshop_arb_case"],
+    "no_cache": true,
+    "network": "mainnet"
+  }
 }
 ```
 
@@ -1669,7 +1785,7 @@ This MyShop e-commerce example demonstrates:
    - Dispute submission and arbitration process (7-step state machine)
    - Compensation claim from Service compensation fund
 
-All operations use the WoWok SDK patterns with JSON-based tool calls, making it easy for AI agents to interact with the blockchain e-commerce system.
+All operations use the WoWok SDK patterns with JSON-based sub-tool calls, making it easy for AI agents to interact with the blockchain e-commerce system.
 
 ---
 
@@ -1679,22 +1795,25 @@ When advancing order workflows, use `operation_type: "progress"` with the `opera
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_test_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Target Node Name",
-        "forward": "Forward Name"
-      },
-      "hold": false,
-      "message": "Operation description"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_test_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Target Node Name",
+          "forward": "Forward Name"
+        },
+        "hold": false,
+        "message": "Operation description"
+      }
+    },
+    "env": {
+      "account": "operator_account",
+      "network": "mainnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "operator_account",
-    "network": "mainnet",
-    "confirmed": true
   }
 }
 ```

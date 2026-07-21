@@ -1,40 +1,226 @@
 
 
+
 # Response Format Reference (📋 MCP Output Structure)
 
 ---
 
 ## Component Overview
 
-All WoWok MCP tool responses follow a unified output structure. This document describes the response format for on-chain operations, local operations, and query operations — including the semantic layer, error classification, and optional harness report that enrich responses for AI-driven workflows.
+All WoWok MCP responses come from a **single unified tool** named `wowok`. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`, and the handler pre-validates parameters, dispatches to the appropriate sub-tool, and wraps the result in a uniform envelope. This document describes that envelope, the inner result variants, the semantic layer, error classification, and the optional harness report.
 
 ---
 
-## Top-Level Structure
+## Architecture: Single Unified `wowok` Tool
 
-Every MCP tool response contains a `structuredContent` object with the following shape:
+The MCP server registers exactly **one tool** (`wowok`) with MCP clients. The 17 sub-tools (onchain_operations, account_operation, query_toolkit, etc.) live in an internal `TOOL_REGISTRY` and are dispatched by the `wowok` handler.
+
+### Why a Single Tool?
+
+| Problem with Multi-Tool | Solution with Single Tool |
+|-------------------------|---------------------------|
+| 17 tools × full schemas ≈ 2.4 MB in `tools/list` — overflows AI context | One `wowok` tool with a minimal display schema (~2 KB) |
+| AI must choose the right tool from 17 options — frequent mis-selection | Only one tool to call; AI specifies the sub-tool by name in `data.tool` |
+| Schema mismatches return cryptic SDK `-32602` errors | Handler returns the correct schema + actionable errors for self-correction |
+
+### Call Format
+
+```json
+{
+  "tool": "<sub-tool-name>",
+  "data": { "<sub-tool parameters>" }
+}
+```
+
+**Accepted aliases (deprecated but supported):**
+- `tool_name` / `name` → normalized to `tool`
+- `args` / `params` → normalized to `data`
+- Inline params: `{ "tool": "<sub-tool>", <param1>: ..., <param2>: ... }` (auto-wrapped into `data`)
+
+**Example:**
+```json
+{
+  "tool": "schema_query",
+  "data": { "action": "get", "name": "onchain_operations" }
+}
+```
+
+---
+
+## Top-Level Envelope
+
+Every `wowok` tool response contains a `structuredContent` object with this shape:
+
+```json
+{
+  "result": {
+    "status": "success | error | schema_mismatch",
+    "data": { ... },
+    "errors": [ ... ]
+  },
+  "schema": null | {
+    "input": { ... },
+    "tool": "<sub-tool-name>"
+  }
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `result` | object | Yes | Wrapper containing `status`, sub-tool payload (`data`), and optional `errors`/`hint` |
+| `result.status` | enum | Yes | `success` \| `error` \| `schema_mismatch` — determines how to process the response |
+| `result.data` | object | Conditional | Sub-tool's structured result; present on `success` (and `error` when the sub-tool returned a structured error) |
+| `result.errors` | string[] | Conditional | Present on `error` and `schema_mismatch` — specific validation or runtime errors |
+| `result.hint` | string | Optional | Present on `schema_mismatch` — instructions to fix and retry |
+| `result.suggestions` | string[] | Optional | Present when the sub-tool name was unknown — closest matches |
+| `result.received` | any | Optional | Present on `schema_mismatch` when `tool` was missing — echoes the received input |
+| `schema` | object \| null | Yes | Schema payload on mismatch; `null` on success/error |
+
+---
+
+## Status Variants
+
+### status: "success"
+
+The sub-tool executed successfully. `result.data` contains the sub-tool's structured content (the `CallResult`, query payload, or operation output described in the next section).
+
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "digest": "0xabc...",
+        "effects": { ... },
+        "objectChanges": [ ... ]
+      },
+      "message": "Service published successfully",
+      "semantic": { ... },
+      "harness_report": { ... }
+    }
+  },
+  "schema": null
+}
+```
+
+### status: "error"
+
+The sub-tool handler returned an error (runtime failure, on-chain rejection, etc.). `result.errors` lists the error messages; `result.data` may also carry the sub-tool's structured error payload.
+
+```json
+{
+  "result": {
+    "status": "error",
+    "data": { ... },
+    "errors": ["Insufficient balance for gas"]
+  },
+  "schema": null
+}
+```
+
+### status: "schema_mismatch"
+
+The input parameters did not match the sub-tool's Zod schema. The response includes the **correct schema** so the AI can fix parameters and retry — **no separate `schema_query` call is needed**.
+
+```json
+{
+  "result": {
+    "status": "schema_mismatch",
+    "errors": [
+      "data: Expected object, received string",
+      "Unknown field(s): invalid_field"
+    ],
+    "hint": "Fix your parameters based on the schema below and retry. CACHE THIS SCHEMA for future onchain_operations calls — you don't need to query it again."
+  },
+  "schema": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "operation_type": { "type": "string", "enum": ["permission", "service", ...] },
+        "data": { ... },
+        "env": { ... }
+      },
+      "required": ["operation_type", "data"]
+    },
+    "tool": "onchain_operations"
+  }
+}
+```
+
+**Recommended handling:**
+1. Read `schema.input` carefully.
+2. Fix the parameters in your next `wowok` call.
+3. **Cache** the schema in your context for future calls to the same sub-tool.
+
+> **Note:** For `onchain_operations`, the mismatch response automatically returns the operation-type-specific sub-schema (e.g. `onchain_operations_service`) when `operation_type` is present in the input — giving you the exact field requirements for that operation.
+
+### Unknown Sub-Tool
+
+If the `tool` field references a name that is not registered, the response includes `suggestions` with closest matches:
+
+```json
+{
+  "result": {
+    "status": "error",
+    "errors": ["Unknown sub-tool: onchain_op"],
+    "hint": "Available sub-tools: onchain_operations, account_operation, ... Did you mean: onchain_operations?",
+    "suggestions": ["onchain_operations"]
+  },
+  "schema": null
+}
+```
+
+### Missing `tool` Field
+
+If the call omits the `tool` field entirely, the response returns the unified `wowok` display schema so the AI can learn the expected call format:
+
+```json
+{
+  "result": {
+    "status": "schema_mismatch",
+    "errors": ["Missing 'tool' field. Received keys: action, name"],
+    "hint": "Provide 'tool' (one of: onchain_operations, account_operation, ...) and 'data' (sub-tool parameters).",
+    "received": { "action": "get", "name": "onchain_operations" }
+  },
+  "schema": {
+    "input": { "type": "object", "properties": { "tool": { ... }, "data": { ... } } },
+    "tool": "wowok"
+  }
+}
+```
+
+---
+
+## Inner Sub-Tool Payload (result.data)
+
+When `result.status === "success"`, `result.data` contains the sub-tool's structured content. For most sub-tools this is an object with the following fields (the shape documented in earlier versions of this reference):
 
 ```json
 {
   "result": { ... },
   "message": "Human-readable summary or hint",
   "semantic": { ... },
-  "harness_report": { ... }
+  "harness_report": { ... },
+  "schema_warning": { ... }
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `result` | CallResult | Yes | Discriminated union of 5 result types — check `result.type` first |
+| `result` | CallResult | Yes | Discriminated union of 6 result types — check `result.type` first |
 | `message` | string | Optional | Human-readable summary; always present for error/transaction results |
 | `semantic` | SemanticSummary | Optional | Business-level semantic summary; prefer this over raw result parsing |
 | `harness_report` | HarnessReport | Optional | Verify + Recover loop report; present only when Harness is enabled |
+| `schema_warning` | SchemaWarning | Optional | Schema compatibility warning; present only when `client_schema_version` is provided in `env` and a mismatch is detected |
+
+> **Note:** The sub-tool payload shape varies slightly across sub-tools. Query sub-tools (`query_toolkit`, `onchain_table_data`, `schema_query`) return their own structured results inside `result.data`. The `CallResult` union below applies to `onchain_operations`, `account_operation`, `local_mark_operation`, `local_info_operation`, `messenger_operation`, `wip_file`, `guard2file`, `machineNode2file`, and `bridge_operation`.
 
 ---
 
 ## Result Types (CallResult)
 
-The `result` field is a discriminated union on the `type` field. Always check `result.type` first to determine how to process the response.
+The inner `result` field (inside `result.data.result`) is a discriminated union on the `type` field. Always check `result.type` first to determine how to process the response.
 
 ### type: "transaction"
 
@@ -142,11 +328,52 @@ Returned when the operation completes successfully but produces no output data.
 }
 ```
 
+### type: "pending_confirmation"
+
+Returned when the **ConfirmGate** blocks the operation before execution. The operation was **NOT** submitted on-chain. Read the `preview` to understand what would happen, then re-call with `env.confirmed = true` to proceed (or modify/cancel).
+
+```json
+{
+  "type": "pending_confirmation",
+  "preview": {
+    "level": "publish",
+    "operation": "service",
+    "object": "my-shop",
+    "network": "testnet",
+    "account": "",
+    "immutable_after": ["machine", "order_allocators"],
+    "warnings": ["Using default account (env.account=\"\")"],
+    "irreversible": false
+  },
+  "rule_id": "publish_immutable"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `preview` | OperationPreview | Preview of the operation awaiting confirmation |
+| `preview.level` | enum | `none` \| `standard` \| `amount` \| `publish` \| `irreversible` — severity of the confirmation |
+| `preview.operation` | string | `operation_type` that triggered the gate |
+| `preview.object` | string \| object \| null | Object name/ID involved (string for existing, object for new creation) |
+| `preview.network` | string | Network in use |
+| `preview.account` | string | Signing account (`""` = default) |
+| `preview.amount` | object | Amount info for `amount`-level confirmations (value, token, human_readable, recipient) |
+| `preview.immutable_after` | string[] | Fields that become immutable after this op (for `publish` level) |
+| `preview.warnings` | string[] | Default-value warnings |
+| `preview.irreversible` | boolean | True when the operation cannot be reverted |
+| `rule_id` | string | ID of the confirmation rule that matched |
+
+**Recommended handling:**
+1. Read `preview.level` to understand the severity.
+2. Present the preview to the user (or decide autonomously for `standard` level).
+3. If proceeding: re-invoke the **same** `wowok` call with `env.confirmed = true`.
+4. If canceling: do nothing (the operation was never executed).
+
 ---
 
 ## Semantic Layer
 
-The `semantic` field provides a business-level summary that AI agents can directly understand without parsing raw transaction data. When `semantic` is present, prefer it over raw `result` parsing.
+The inner `semantic` field (inside `result.data.semantic`) provides a business-level summary that AI agents can directly understand without parsing raw transaction data. When `semantic` is present, prefer it over raw `result` parsing.
 
 ### SemanticSummary
 
@@ -265,7 +492,7 @@ A recommended next action with priority and rationale.
 |-------|------|-------------|
 | `action` | string | Recommended next action |
 | `reason` | string | Why this action is recommended |
-| `tool` | string | MCP tool to use, if applicable |
+| `tool` | string | Sub-tool to use (passed as `data.tool` in the next `wowok` call), if applicable |
 | `prerequisite` | string | Condition that must hold before this action |
 | `priority` | enum | `required`, `recommended`, `optional` |
 
@@ -339,26 +566,44 @@ When enabled, the MCP server:
 
 ### Recommended Processing Order
 
-1. **Check `result.type`** — Determine the result variant (`transaction`, `submission`, `error`, `data`, `null`)
-2. **Read `semantic` first** (if present) — The semantic summary provides business-level understanding
-3. **Check `harness_report`** (if present) — When verify status is `fail`, follow the recovery strategy
-4. **Fall back to `result` parsing** — Only when `semantic` is absent
+1. **Check `result.status`** — Determine the envelope status (`success`, `error`, `schema_mismatch`)
+2. **If `schema_mismatch`** — Read `schema.input`, fix parameters, cache the schema, and retry the `wowok` call
+3. **If `error`** — Read `result.errors`; follow any recovery hint
+4. **If `success`** — Drill into `result.data`:
+   - Read `result.data.semantic` first (if present) for business-level understanding
+   - Check `result.data.result.type` (`transaction`, `submission`, `error`, `data`, `null`)
+   - Check `result.data.harness_report` (if present) when verify status is `fail`
+   - Fall back to `result.data.result` parsing only when `semantic` is absent
+
+### Schema Mismatch Flow (Self-Correcting)
+
+```
+result.status === "schema_mismatch"
+  → read result.errors for specific field issues
+  → read schema.input (the correct JSON schema for the sub-tool)
+  → CACHE the schema in context for future calls to the same sub-tool
+  → fix parameters
+  → retry wowok({ tool: schema.tool, data: {fixed params} })
+```
 
 ### Error Handling Flow
 
 ```
-result.type === "error"
-  → read error_code
-  → check retryable
-  → follow recovery_hint
-  → if harness_report present, check recovery.strategy
+result.status === "error"
+  → read result.errors
+  → if result.data.result.type === "error":
+      → read error_code
+      → check retryable
+      → follow recovery_hint
+      → if harness_report present, check recovery.strategy
   → retry or escalate as indicated
 ```
 
 ### Guard Submission Flow
 
 ```
-result.type === "submission"
+result.status === "success"
+  → result.data.result.type === "submission"
   → read guard[] for required Guards
   → fill submission[] with user data
   → resubmit via call_with_submission
@@ -368,11 +613,15 @@ result.type === "submission"
 
 ## Important Notes
 
-⚠️ **Always check `result.type` first** — The 5 result variants have different fields and require different handling.
+⚠️ **Single tool entry point** — The MCP server exposes only one tool (`wowok`). All 17 sub-tools are dispatched via `wowok({ tool, data })`.
 
-⚠️ **Prefer `semantic` over raw parsing** — When `semantic` is present, it provides business-level understanding that is more reliable than parsing raw transaction data.
+⚠️ **Check `result.status` first** — The envelope status (`success`/`error`/`schema_mismatch`) determines the response shape before you look at the inner `result.data`.
 
-⚠️ **Error classification enables programmatic recovery** — Use `error_code` and `retryable` to decide whether to retry, adjust parameters, or escalate.
+⚠️ **Schema mismatches are self-correcting** — On mismatch, the response includes the correct schema; no need to call `schema_query` separately. Cache the schema to avoid repeated mismatches.
+
+⚠️ **Prefer `semantic` over raw parsing** — When `semantic` is present inside `result.data`, it provides business-level understanding that is more reliable than parsing raw transaction data.
+
+⚠️ **Error classification enables programmatic recovery** — Use `error_code` and `retryable` (inside `result.data.result`) to decide whether to retry, adjust parameters, or escalate.
 
 ⚠️ **Harness is opt-in** — The `harness_report` field is only present when `WOWOK_HARNESS_ENABLED=1`. When disabled, responses behave exactly as before.
 
@@ -384,6 +633,7 @@ result.type === "submission"
 
 | Component | Description |
 |-----------|-------------|
+| **[Schema Query](schema-query.md)** | Meta-tool for looking up sub-tool and operation schemas |
 | **[Query](query.md)** | Data query toolkit |
 | **[Proof](proof.md)** | On-chain proof objects |
 | **[Messenger](messenger.md)** | Encrypted messaging system |

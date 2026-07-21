@@ -6,9 +6,11 @@
 
 The Bridge component is a **simplified cross-chain bridge** between **WOW mainnet** and **EVM** (currently Ethereum mainnet). It enables AI agents to move assets between the two chains without dealing with signing infrastructure, multi-sig coordinators, or per-chain RPC plumbing.
 
-All bridge operations are exposed through a single MCP tool: **`bridge_operation`**. The tool is **discriminative** — you select one of 10 operation types via the `operation_type` field, and the rest of the parameters are validated against the corresponding schema.
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "bridge_operation", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
 
-> **📋 Schema Reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"` for full parameter/type definitions.
+All bridge operations are exposed through a single MCP sub-tool: **`bridge_operation`**. The sub-tool is **discriminative** — you select one of 10 operation types via the `operation_type` field, and the rest of the parameters are validated against the corresponding schema.
+
+> **📋 Schema Reference**: Use MCP `schema_query` sub-tool with `action: "get"` and `name: "bridge_operation"` for full parameter/type definitions.
 
 ---
 
@@ -92,7 +94,10 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 
 ```json
 {
-  "operation_type": "query_supported_evm_chains"
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_supported_evm_chains"
+  }
 }
 ```
 
@@ -103,17 +108,34 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 ```
 
 ```json
-[
-  {
-    "chainId": 1,
-    "name": "mainnet",
-    "description": "Ethereum Mainnet",
-    "bridgeChainId": 10,
-    "explorerUrl": "https://etherscan.io",
-    "rpcCount": 11,
-    "healthyRpcCount": 11
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "1 EVM chain(s) supported",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "chainId": 1,
+            "name": "mainnet",
+            "description": "Ethereum Mainnet",
+            "bridgeChainId": 10,
+            "explorerUrl": "https://etherscan.io",
+            "rpcCount": 11,
+            "healthyRpcCount": 11
+          }
+        ]
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "1 EVM chain(s) supported"
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -128,68 +150,88 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 
 ```json
 {
-  "operation_type": "query_supported_tokens",
-  "data": { "network": "mainnet" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_supported_tokens",
+    "data": { "network": "mainnet" }
+  }
 }
 ```
 
 **✅ Execution Successful** (real MCP server response):
 
 ```json
-[
-  {
-    "chainId": 1,
-    "chainName": "mainnet",
-    "bridgeChainId": 10,
-    "tokens": [
-      {
-        "tokenId": 1,
-        "symbol": "WBTC",
-        "evmAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-        "evmDecimals": 8,
-        "wowTypeTag": "0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC",
-        "wowDecimals": 8,
-        "description": "Wrapped BTC (ERC20). Bitcoin price exposure on Ethereum; 1 WBTC = 1 BTC."
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "1 EVM chain(s) supported",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "chainId": 1,
+            "chainName": "mainnet",
+            "bridgeChainId": 10,
+            "tokens": [
+              {
+                "tokenId": 1,
+                "symbol": "WBTC",
+                "evmAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+                "evmDecimals": 8,
+                "wowTypeTag": "0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC",
+                "wowDecimals": 8,
+                "description": "Wrapped BTC (ERC20). Bitcoin price exposure on Ethereum; 1 WBTC = 1 BTC."
+              },
+              {
+                "tokenId": 2,
+                "symbol": "ETH",
+                "evmAddress": "0x0000000000000000000000000000000000000000",
+                "evmDecimals": 18,
+                "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+                "wowDecimals": 8,
+                "description": "Native ETH. Calls bridgeETHV2{value}; vault auto-wraps to WETH internally. 18 decimals on EVM, 8 decimals on WOW."
+              },
+              {
+                "tokenId": 2,
+                "symbol": "WETH",
+                "evmAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+                "evmDecimals": 18,
+                "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+                "wowDecimals": 8,
+                "description": "Wrapped ETH (ERC20). Calls bridgeERC20V2; shares Token ID 2 and WOW type tag with native ETH."
+              },
+              {
+                "tokenId": 3,
+                "symbol": "USDC",
+                "evmAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                "evmDecimals": 6,
+                "wowTypeTag": "0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC",
+                "wowDecimals": 6,
+                "description": "USD Coin (USDC). Fully collateralized USD stablecoin; 6 decimals on both sides."
+              },
+              {
+                "tokenId": 4,
+                "symbol": "USDT",
+                "evmAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                "evmDecimals": 6,
+                "wowTypeTag": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT",
+                "wowDecimals": 6,
+                "description": "Tether USD (USDT). Fiat-collateralized stablecoin; 6 decimals on both sides."
+              }
+            ]
+          }
+        ]
       },
-      {
-        "tokenId": 2,
-        "symbol": "ETH",
-        "evmAddress": "0x0000000000000000000000000000000000000000",
-        "evmDecimals": 18,
-        "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
-        "wowDecimals": 8,
-        "description": "Native ETH. Calls bridgeETHV2{value}; vault auto-wraps to WETH internally. 18 decimals on EVM, 8 decimals on WOW."
-      },
-      {
-        "tokenId": 2,
-        "symbol": "WETH",
-        "evmAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        "evmDecimals": 18,
-        "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
-        "wowDecimals": 8,
-        "description": "Wrapped ETH (ERC20). Calls bridgeERC20V2; shares Token ID 2 and WOW type tag with native ETH."
-      },
-      {
-        "tokenId": 3,
-        "symbol": "USDC",
-        "evmAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-        "evmDecimals": 6,
-        "wowTypeTag": "0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC",
-        "wowDecimals": 6,
-        "description": "USD Coin (USDC). Fully collateralized USD stablecoin; 6 decimals on both sides."
-      },
-      {
-        "tokenId": 4,
-        "symbol": "USDT",
-        "evmAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        "evmDecimals": 6,
-        "wowTypeTag": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT",
-        "wowDecimals": 6,
-        "description": "Tether USD (USDT). Fiat-collateralized stablecoin; 6 decimals on both sides."
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "1 EVM chain(s) supported"
       }
-    ]
-  }
-]
+    }
+  },
+  "schema": null
+}
 ```
 
 > **Note**: `ETH` and `WETH` share `tokenId=2` and the same WOW type tag — the bridge treats them as the same underlying asset, just with different deposit entry points (`bridgeETHV2{value}` vs. `bridgeERC20V2`).
@@ -206,7 +248,10 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
 
 ```json
 {
-  "operation_type": "query_active_evm_account"
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_active_evm_account"
+  }
 }
 ```
 
@@ -218,14 +263,31 @@ activeEvmAccount: 0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412 (1 chain(s))
 
 ```json
 {
-  "address": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-  "chains": [
-    {
-      "chainId": 1,
-      "name": "mainnet",
-      "nativeBalance": "151954693179315936"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "activeEvmAccount: 0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412 (1 chain(s))",
+      "result": {
+        "type": "data",
+        "data": {
+          "address": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+          "chains": [
+            {
+              "chainId": 1,
+              "name": "mainnet",
+              "nativeBalance": "151954693179315936"
+            }
+          ]
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "activeEvmAccount: 0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412 (1 chain(s))"
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -245,8 +307,11 @@ activeEvmAccount: 0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412 (1 chain(s))
 
 ```json
 {
-  "operation_type": "query_transfer_list",
-  "data": { "limit": 5 }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_list",
+    "data": { "limit": 5 }
+  }
 }
 ```
 
@@ -257,44 +322,64 @@ activeEvmAccount: 0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412 (1 chain(s))
 ```
 
 ```json
-[
-  {
-    "transferId": "br_1783383544244_20",
-    "direction": "wow_to_evm",
-    "token": "ETH",
-    "amount": "100000",
-    "recipientEth": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-    "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-    "withdrawToProvided": false,
-    "step": "deposit",
-    "status": "in_progress",
-    "createdAt": 1783383544244,
-    "updatedAt": 1783383553198,
-    "depositTxDigest": "6NJU4RahjFMfvNU66c3yaYUP855ZvWqz6AZgWZZdyeAt",
-    "bridgeSeq": "19"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "2 transfer record(s)",
+      "result": {
+        "type": "data",
+        "data": [
+          {
+            "transferId": "br_1783383544244_20",
+            "direction": "wow_to_evm",
+            "token": "ETH",
+            "amount": "100000",
+            "recipientEth": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+            "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+            "withdrawToProvided": false,
+            "step": "deposit",
+            "status": "in_progress",
+            "createdAt": 1783383544244,
+            "updatedAt": 1783383553198,
+            "depositTxDigest": "6NJU4RahjFMfvNU66c3yaYUP855ZvWqz6AZgWZZdyeAt",
+            "bridgeSeq": "19"
+          },
+          {
+            "transferId": "br_1783383520516_19",
+            "direction": "evm_to_wow",
+            "token": "ETH",
+            "amount": "1000000000000000",
+            "recipientWow": "0x48386bd7bf48f462fe594358ca6674f7483d23441d28a377762b1767bf207f06",
+            "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+            "step": "deposit",
+            "status": "in_progress",
+            "createdAt": 1783383520516,
+            "updatedAt": 1783383544241,
+            "depositTxHash": "0x2623878058763d37f997c584a6021b2bc76787e3665c1f99cf072bba17f59ed0"
+          }
+        ]
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "2 transfer record(s)"
+      }
+    }
   },
-  {
-    "transferId": "br_1783383520516_19",
-    "direction": "evm_to_wow",
-    "token": "ETH",
-    "amount": "1000000000000000",
-    "recipientWow": "0x48386bd7bf48f462fe594358ca6674f7483d23441d28a377762b1767bf207f06",
-    "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-    "step": "deposit",
-    "status": "in_progress",
-    "createdAt": 1783383520516,
-    "updatedAt": 1783383544241,
-    "depositTxHash": "0x2623878058763d37f997c584a6021b2bc76787e3665c1f99cf072bba17f59ed0"
-  }
-]
+  "schema": null
+}
 ```
 
 ### Example 4.2: List only in-progress transfers
 
 ```json
 {
-  "operation_type": "query_transfer_list",
-  "data": { "onlyActive": true }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_list",
+    "data": { "onlyActive": true }
+  }
 }
 ```
 
@@ -303,8 +388,8 @@ Returns only transfers with `status: "in_progress"`. Useful for monitoring pendi
 ### Filter combinations
 
 ```json
-{ "data": { "direction": "evm_to_wow", "token": "ETH", "onlyActive": true, "limit": 10 } }
-{ "data": { "status": "failed" } }
+{ "tool": "bridge_operation", "data": { "operation_type": "query_transfer_list", "data": { "direction": "evm_to_wow", "token": "ETH", "onlyActive": true, "limit": 10 } } }
+{ "tool": "bridge_operation", "data": { "operation_type": "query_transfer_list", "data": { "status": "failed" } } }
 ```
 
 ---
@@ -319,8 +404,11 @@ Returns only transfers with `status: "in_progress"`. Useful for monitoring pendi
 
 ```json
 {
-  "operation_type": "query_transfer_status",
-  "data": { "transferId": "br_1783379714784_14", "refresh": false }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_status",
+    "data": { "transferId": "br_1783379714784_14", "refresh": false }
+  }
 }
 ```
 
@@ -332,19 +420,36 @@ Transfer br_1783379714784_14: wow_to_evm / claimed / success
 
 ```json
 {
-  "transferId": "br_1783379714784_14",
-  "direction": "wow_to_evm",
-  "token": "ETH",
-  "amount": "600000",
-  "recipientEth": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-  "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-  "withdrawToProvided": false,
-  "step": "claimed",
-  "status": "success",
-  "createdAt": 1783379714784,
-  "updatedAt": 1783379719021,
-  "depositTxDigest": "92qt2UjZrPAjiuVyA1K2BrSyZW9izCFvDTcSVdX18cUd",
-  "bridgeSeq": "17"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transfer br_1783379714784_14: wow_to_evm / claimed / success",
+      "result": {
+        "type": "data",
+        "data": {
+          "transferId": "br_1783379714784_14",
+          "direction": "wow_to_evm",
+          "token": "ETH",
+          "amount": "600000",
+          "recipientEth": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+          "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+          "withdrawToProvided": false,
+          "step": "claimed",
+          "status": "success",
+          "createdAt": 1783379714784,
+          "updatedAt": 1783379719021,
+          "depositTxDigest": "92qt2UjZrPAjiuVyA1K2BrSyZW9izCFvDTcSVdX18cUd",
+          "bridgeSeq": "17"
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "Transfer br_1783379714784_14: wow_to_evm / claimed / success"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -352,8 +457,11 @@ Transfer br_1783379714784_14: wow_to_evm / claimed / success
 
 ```json
 {
-  "operation_type": "query_transfer_status",
-  "data": { "transferId": "br_1783383680255_21", "refresh": true }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_status",
+    "data": { "transferId": "br_1783383680255_21", "refresh": true }
+  }
 }
 ```
 
@@ -361,37 +469,54 @@ Transfer br_1783379714784_14: wow_to_evm / claimed / success
 
 ```json
 {
-  "transferId": "br_1783383680255_21",
-  "direction": "evm_to_wow",
-  "token": "ETH",
-  "amount": "1000000000000000",
-  "recipientWow": "0x48386bd7bf48f462fe594358ca6674f7483d23441d28a377762b1767bf207f06",
-  "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-  "step": "deposit",
-  "status": "in_progress",
-  "createdAt": 1783383680255,
-  "updatedAt": 1783383686333,
-  "depositTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
-  "latestState": {
-    "status": "confirmed",
-    "stepDescription": "源链交易已确认，等待 bridge 节点签名 approve",
-    "updatedAt": 1783383690068,
-    "step": "source_tx_confirmed",
-    "direction": "evm_to_wow",
-    "sourceTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
-    "bridgeSeq": "47",
-    "confirmations": 0,
-    "ethReceipt": {
-      "blockHash": "0xed36de80dc568c17da2b29440b6346bef2d2fb0c0a05241be45e0ba6591bca21",
-      "blockNumber": "0x184bfb9",
-      "status": "0x1",
-      "from": "0x2cba468e82e7ecb8dab23bf14aa5fa3ffb060412",
-      "to": "0xa8d914cc121cb2d2179ca540bc0b8213f224aa00",
-      "gasUsed": "0x19e4b",
-      "effectiveGasPrice": "0x4173a0d8",
-      "transactionHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transfer br_1783383680255_21: evm_to_wow / deposit / in_progress",
+      "result": {
+        "type": "data",
+        "data": {
+          "transferId": "br_1783383680255_21",
+          "direction": "evm_to_wow",
+          "token": "ETH",
+          "amount": "1000000000000000",
+          "recipientWow": "0x48386bd7bf48f462fe594358ca6674f7483d23441d28a377762b1767bf207f06",
+          "intermediateEthAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+          "step": "deposit",
+          "status": "in_progress",
+          "createdAt": 1783383680255,
+          "updatedAt": 1783383686333,
+          "depositTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
+          "latestState": {
+            "status": "confirmed",
+            "stepDescription": "源链交易已确认，等待 bridge 节点签名 approve",
+            "updatedAt": 1783383690068,
+            "step": "source_tx_confirmed",
+            "direction": "evm_to_wow",
+            "sourceTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
+            "bridgeSeq": "47",
+            "confirmations": 0,
+            "ethReceipt": {
+              "blockHash": "0xed36de80dc568c17da2b29440b6346bef2d2fb0c0a05241be45e0ba6591bca21",
+              "blockNumber": "0x184bfb9",
+              "status": "0x1",
+              "from": "0x2cba468e82e7ecb8dab23bf14aa5fa3ffb060412",
+              "to": "0xa8d914cc121cb2d2179ca540bc0b8213f224aa00",
+              "gasUsed": "0x19e4b",
+              "effectiveGasPrice": "0x4173a0d8",
+              "transactionHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573"
+            }
+          }
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "Transfer br_1783383680255_21: evm_to_wow / deposit / in_progress"
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -421,12 +546,15 @@ Transfer **0.001 ETH** from `activeEvmAccount` to the WOW account. Bridge will a
 
 ```json
 {
-  "operation_type": "cross_chain_evm_to_wow",
+  "tool": "bridge_operation",
   "data": {
-    "token": "ETH",
-    "amount": "1000000000000000"
-  },
-  "env": { "network": "mainnet" }
+    "operation_type": "cross_chain_evm_to_wow",
+    "data": {
+      "token": "ETH",
+      "amount": "1000000000000000"
+    },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -440,9 +568,26 @@ EVM→WOW cross-chain submitted. transferId=br_1783383680255_21, activeEvmAccoun
 
 ```json
 {
-  "depositTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
-  "activeEvmAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
-  "transferId": "br_1783383680255_21"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Cross-chain transfer submitted. transferId=br_1783383680255_21, activeEvmAccount=0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+      "result": {
+        "type": "data",
+        "data": {
+          "depositTxHash": "0xbdd8afe66deed902035c487d6b075ef1aecdf42273213f6c1cdac51266e71573",
+          "activeEvmAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+          "transferId": "br_1783383680255_21"
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "Cross-chain transfer submitted. transferId=br_1783383680255_21, activeEvmAccount=0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -450,8 +595,11 @@ EVM→WOW cross-chain submitted. transferId=br_1783383680255_21, activeEvmAccoun
 
 ```json
 {
-  "operation_type": "query_transfer_status",
-  "data": { "transferId": "br_1783383680255_21", "refresh": true }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "query_transfer_status",
+    "data": { "transferId": "br_1783383680255_21", "refresh": true }
+  }
 }
 ```
 
@@ -471,12 +619,15 @@ Transfer **0.001 ETH** from the WOW account to `activeEvmAccount`. This is **ste
 
 ```json
 {
-  "operation_type": "cross_chain_wow_to_evm",
+  "tool": "bridge_operation",
   "data": {
-    "token": "ETH",
-    "amount": "100000"
-  },
-  "env": { "network": "mainnet" }
+    "operation_type": "cross_chain_wow_to_evm",
+    "data": {
+      "token": "ETH",
+      "amount": "100000"
+    },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -486,10 +637,27 @@ Transfer **0.001 ETH** from the WOW account to `activeEvmAccount`. This is **ste
 
 ```json
 {
-  "depositTxDigest": "6NJU4RahjFMfvNU66c3yaYUP855ZvWqz6AZgWZZdyeAt",
-  "bridgeSeq": "19",
-  "transferId": "br_1783383544244_20",
-  "activeEvmAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Cross-chain transfer submitted. transferId=br_1783383544244_20, activeEvmAccount=0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412",
+      "result": {
+        "type": "data",
+        "data": {
+          "depositTxDigest": "6NJU4RahjFMfvNU66c3yaYUP855ZvWqz6AZgWZZdyeAt",
+          "bridgeSeq": "19",
+          "transferId": "br_1783383544244_20",
+          "activeEvmAccount": "0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412"
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "Cross-chain transfer submitted. transferId=br_1783383544244_20, activeEvmAccount=0x2cbA468e82E7EcB8dAb23BF14aA5fA3Ffb060412"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -511,9 +679,12 @@ Once `query_transfer_status` shows `latestState.step === "signatures_ready"`, ca
 
 ```json
 {
-  "operation_type": "claim_wow_to_evm",
-  "data": { "transferId": "br_1783383544244_20" },
-  "env": { "network": "mainnet" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "claim_wow_to_evm",
+    "data": { "transferId": "br_1783383544244_20" },
+    "env": { "network": "mainnet" }
+  }
 }
 ```
 
@@ -521,8 +692,25 @@ Once `query_transfer_status` shows `latestState.step === "signatures_ready"`, ca
 
 ```json
 {
-  "claimTxHash": "0x...",
-  "transferId": "br_1783383544244_20"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "WOW→EVM claim (step 2) completed. transferId=br_1783383544244_20, claimTxHash=0x...",
+      "result": {
+        "type": "data",
+        "data": {
+          "claimTxHash": "0x...",
+          "transferId": "br_1783383544244_20"
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "WOW→EVM claim (step 2) completed. transferId=br_1783383544244_20, claimTxHash=0x..."
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -544,11 +732,14 @@ Move 0.001 ETH from `activeEvmAccount` to an external EVM wallet (e.g. your Meta
 
 ```json
 {
-  "operation_type": "withdraw",
+  "tool": "bridge_operation",
   "data": {
-    "to": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
-    "amount": "1000000000000000",
-    "token": "ETH"
+    "operation_type": "withdraw",
+    "data": {
+      "to": "0xABCDEF1234567890ABCDEF1234567890ABCDEF12",
+      "amount": "1000000000000000",
+      "token": "ETH"
+    }
   }
 }
 ```
@@ -557,8 +748,25 @@ Move 0.001 ETH from `activeEvmAccount` to an external EVM wallet (e.g. your Meta
 
 ```json
 {
-  "txHash": "0x...",
-  "transferId": "br_..."
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Withdrawal submitted. transferId=br_..., txHash=0x...",
+      "result": {
+        "type": "data",
+        "data": {
+          "txHash": "0x...",
+          "transferId": "br_..."
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "Withdrawal submitted. transferId=br_..., txHash=0x..."
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -574,8 +782,11 @@ Move 0.001 ETH from `activeEvmAccount` to an external EVM wallet (e.g. your Meta
 
 ```json
 {
-  "operation_type": "manage_evm_rpc",
-  "data": { "op": "list" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "manage_evm_rpc",
+    "data": { "op": "list" }
+  }
 }
 ```
 
@@ -587,21 +798,83 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "op": "list",
-  "success": true,
-  "result": [
-    { "url": "https://rpc.ankr.com/eth",                  "healthy": false, "retryInMs": 299021, "failCount": 1 },
-    { "url": "https://ethereum-rpc.publicnode.com",       "healthy": true,  "failCount": 0 },
-    { "url": "https://eth.drpc.org",                      "healthy": true,  "failCount": 0 },
-    { "url": "https://rpc.mevblocker.io",                 "healthy": true,  "failCount": 0 },
-    { "url": "https://rpc.flashbots.net",                 "healthy": true,  "failCount": 0 },
-    { "url": "https://cloudflare-eth.com",                "healthy": true,  "failCount": 0 },
-    { "url": "https://eth.merkle.io",                     "healthy": true,  "failCount": 0 },
-    { "url": "https://0xrpc.io/eth",                      "healthy": true,  "failCount": 0 },
-    { "url": "https://ethereum.blockpi.network/v1/rpc/public", "healthy": true,  "failCount": 0 },
-    { "url": "https://eth.llamarpc.com",                  "healthy": true,  "failCount": 0 },
-    { "url": "https://api.zan.top/eth/mainnet",           "healthy": true,  "failCount": 0 }
-  ]
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "RPC 'list' operation succeeded",
+      "result": {
+        "type": "data",
+        "data": {
+          "op": "list",
+          "success": true,
+          "result": [
+            {
+              "url": "https://rpc.ankr.com/eth",
+              "healthy": false,
+              "retryInMs": 299021,
+              "failCount": 1
+            },
+            {
+              "url": "https://ethereum-rpc.publicnode.com",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://eth.drpc.org",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://rpc.mevblocker.io",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://rpc.flashbots.net",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://cloudflare-eth.com",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://eth.merkle.io",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://0xrpc.io/eth",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://ethereum.blockpi.network/v1/rpc/public",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://eth.llamarpc.com",
+              "healthy": true,
+              "failCount": 0
+            },
+            {
+              "url": "https://api.zan.top/eth/mainnet",
+              "healthy": true,
+              "failCount": 0
+            }
+          ]
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "RPC 'list' operation succeeded"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -611,8 +884,11 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "operation_type": "manage_evm_rpc",
-  "data": { "op": "ping" }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "manage_evm_rpc",
+    "data": { "op": "ping" }
+  }
 }
 ```
 
@@ -620,21 +896,71 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "op": "ping",
-  "success": true,
-  "result": [
-    { "url": "https://rpc.ankr.com/eth",                       "healthy": true  },
-    { "url": "https://ethereum-rpc.publicnode.com",            "healthy": true  },
-    { "url": "https://eth.drpc.org",                           "healthy": true  },
-    { "url": "https://rpc.mevblocker.io",                      "healthy": true  },
-    { "url": "https://rpc.flashbots.net",                      "healthy": true  },
-    { "url": "https://cloudflare-eth.com",                     "healthy": true  },
-    { "url": "https://eth.merkle.io",                          "healthy": true  },
-    { "url": "https://0xrpc.io/eth",                           "healthy": true  },
-    { "url": "https://ethereum.blockpi.network/v1/rpc/public", "healthy": false },
-    { "url": "https://eth.llamarpc.com",                       "healthy": false },
-    { "url": "https://api.zan.top/eth/mainnet",                "healthy": false }
-  ]
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "RPC 'ping' operation succeeded",
+      "result": {
+        "type": "data",
+        "data": {
+          "op": "ping",
+          "success": true,
+          "result": [
+            {
+              "url": "https://rpc.ankr.com/eth",
+              "healthy": true
+            },
+            {
+              "url": "https://ethereum-rpc.publicnode.com",
+              "healthy": true
+            },
+            {
+              "url": "https://eth.drpc.org",
+              "healthy": true
+            },
+            {
+              "url": "https://rpc.mevblocker.io",
+              "healthy": true
+            },
+            {
+              "url": "https://rpc.flashbots.net",
+              "healthy": true
+            },
+            {
+              "url": "https://cloudflare-eth.com",
+              "healthy": true
+            },
+            {
+              "url": "https://eth.merkle.io",
+              "healthy": true
+            },
+            {
+              "url": "https://0xrpc.io/eth",
+              "healthy": true
+            },
+            {
+              "url": "https://ethereum.blockpi.network/v1/rpc/public",
+              "healthy": false
+            },
+            {
+              "url": "https://eth.llamarpc.com",
+              "healthy": false
+            },
+            {
+              "url": "https://api.zan.top/eth/mainnet",
+              "healthy": false
+            }
+          ]
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "RPC 'ping' operation succeeded"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -644,8 +970,11 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "operation_type": "manage_evm_rpc",
-  "data": { "op": "add", "rpcUrls": ["https://rpc.ankr.com/eth"] }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "manage_evm_rpc",
+    "data": { "op": "add", "rpcUrls": ["https://rpc.ankr.com/eth"] }
+  }
 }
 ```
 
@@ -653,20 +982,42 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "op": "add",
-  "success": false,
-  "result": { "added": 0 }
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "RPC 'add' operation failed",
+      "result": {
+        "type": "data",
+        "data": {
+          "op": "add",
+          "success": false,
+          "result": {
+            "added": 0
+          }
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "RPC 'add' operation failed"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
-**Result on successful add**: `{ "op": "add", "success": true, "result": { "added": 1 } }`.
+**Result on successful add**: `{ "result": { "status": "success", "data": { "message": "RPC 'add' operation succeeded", "result": { "type": "data", "data": { "op": "add", "success": true, "result": { "added": 1 } } }, "semantic": { "intent": "bridge_operation", "status": "success", "summary": "RPC 'add' operation succeeded" } } }, "schema": null }`.
 
 ### Example 7.4: Remove an RPC endpoint
 
 ```json
 {
-  "operation_type": "manage_evm_rpc",
-  "data": { "op": "remove", "rpcUrls": ["https://rpc.ankr.com/eth"] }
+  "tool": "bridge_operation",
+  "data": {
+    "operation_type": "manage_evm_rpc",
+    "data": { "op": "remove", "rpcUrls": ["https://rpc.ankr.com/eth"] }
+  }
 }
 ```
 
@@ -674,9 +1025,28 @@ RPC 'list' operation succeeded
 
 ```json
 {
-  "op": "remove",
-  "success": true,
-  "result": { "removed": 1 }
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "RPC 'remove' operation succeeded",
+      "result": {
+        "type": "data",
+        "data": {
+          "op": "remove",
+          "success": true,
+          "result": {
+            "removed": 1
+          }
+        }
+      },
+      "semantic": {
+        "intent": "bridge_operation",
+        "status": "success",
+        "summary": "RPC 'remove' operation succeeded"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -686,14 +1056,17 @@ Replace the entire RPC pool with a custom list:
 
 ```json
 {
-  "operation_type": "manage_evm_rpc",
+  "tool": "bridge_operation",
   "data": {
-    "op": "set",
-    "rpcUrls": [
-      "https://ethereum-rpc.publicnode.com",
-      "https://cloudflare-eth.com",
-      "https://eth.drpc.org"
-    ]
+    "operation_type": "manage_evm_rpc",
+    "data": {
+      "op": "set",
+      "rpcUrls": [
+        "https://ethereum-rpc.publicnode.com",
+        "https://cloudflare-eth.com",
+        "https://eth.drpc.org"
+      ]
+    }
   }
 }
 ```
@@ -738,7 +1111,7 @@ Step 8  (optional) withdraw from activeEvmAccount to your MetaMask
 
 ## 🔗 See Also
 
-- **Schema reference**: Use MCP `schema_query` tool with `tool_name: "bridge_operation"`
+- **Schema reference**: Use MCP `schema_query` sub-tool with `action: "get"` and `name: "bridge_operation"`
 - **Stage entry**: [stage-09-bridge.md](stage-09-bridge.md)
 - **Live test script**: [`agent/mcp/scripts/test-bridge.mjs`](../../agent/mcp/scripts/test-bridge.mjs)
 - **Live test output**: [`agent/mcp/scripts/test-bridge-output.log`](../../agent/mcp/scripts/test-bridge-output.log)

@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "reward", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 Reward is WoWok's reward pool component, used to create reward pools, set reward rules, and distribute rewards. Reward is usually bound to Service and triggered by Guard verification.
@@ -30,10 +32,13 @@ Reward operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "reward",
-  "data": { ... },    // Reward data definition
-  "env": { ... },       // Execution environment (optional)
-  "submission": { ... }  // Submission data (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "reward",
+    "data": { ... },    // Reward data definition
+    "env": { ... },       // Execution environment (optional)
+    "submission": { ... }  // Submission data (optional)
+  }
 }
 ```
 
@@ -130,7 +135,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -168,14 +173,17 @@ Create a new Reward object for managing rewards.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "reward_test_1"
+    "operation_type": "reward",
+    "data": {
+      "object": {
+        "name": "reward_test_1"
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -183,21 +191,31 @@ Create a new Reward object for managing rewards.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x11a5...b44e",
-      "version": "214214",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0xb991...16cd",
-      "version": "214214",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x11a5...b44e",
+            "version": "214214",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0xb991...16cd",
+            "version": "214214",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -209,16 +227,19 @@ Create a new Reward object for managing rewards.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "reward_test_2",
-      "tags": ["referral", "incentive"]
+    "operation_type": "reward",
+    "data": {
+      "object": {
+        "name": "reward_test_2",
+        "tags": ["referral", "incentive"]
+      },
+      "description": "Referral reward program"
     },
-    "description": "Referral reward program"
-  },
-  "env": {
-    "network": "testnet"
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -226,21 +247,31 @@ Create a new Reward object for managing rewards.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x85cb...ab07",
-      "version": "214844",
-      "change": "created"
-    },
-    {
-      "type": "Permission",
-      "object": "0xe6cc...1508",
-      "version": "214844",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x85cb...ab07",
+            "version": "214844",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0xe6cc...1508",
+            "version": "214844",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -253,38 +284,44 @@ Create a new Reward object for managing rewards.
 > **Prerequisite**: Need to create Guard object first for subsequent reward rules
 > ```json
 > {
->   "operation_type": "guard",
+>   "tool": "onchain_operations",
 >   "data": {
->     "namedNew": {"name": "new_user_guard"},
->     "description": "New user reward guard",
->     "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
->     "root": {
->       "type": "node",
->       "node": {
->         "type": "logic_equal",
->         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>     "operation_type": "guard",
+>     "data": {
+>       "namedNew": {"name": "new_user_guard"},
+>       "description": "New user reward guard",
+>       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
+>       "root": {
+>         "type": "node",
+>         "node": {
+>           "type": "logic_equal",
+>           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
+>         }
 >       }
->     }
->   },
->   "env": {"network": "testnet"}
+>     },
+>     "env": {"network": "testnet"}
+>   }
 > }
 > ```
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "reward_test_3",
-      "tags": ["incentive", "promotion"]
+    "operation_type": "reward",
+    "data": {
+      "object": {
+        "name": "reward_test_3",
+        "tags": ["incentive", "promotion"]
+      },
+      "description": "Complete reward pool example",
+      "coin_add": {
+        "balance": 100000000000
+      }
     },
-    "description": "Complete reward pool example",
-    "coin_add": {
-      "balance": 100000000000
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -292,8 +329,18 @@ Create a new Reward object for managing rewards.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": []
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -325,15 +372,18 @@ Add assets to the Reward object's balance.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "reward_test_1",
-    "coin_add": {
-      "balance": 500000000000
+    "operation_type": "reward",
+    "data": {
+      "object": "reward_test_1",
+      "coin_add": {
+        "balance": 500000000000
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -341,15 +391,25 @@ Add assets to the Reward object's balance.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x11a5...b44e",
-      "version": "216638",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x11a5...b44e",
+            "version": "216638",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -361,15 +421,18 @@ Add assets to the Reward object's balance.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "reward_test_2",
-    "coin_add": {
-      "balance": 200000000000
+    "operation_type": "reward",
+    "data": {
+      "object": "reward_test_2",
+      "coin_add": {
+        "balance": 200000000000
+      }
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -377,15 +440,25 @@ Add assets to the Reward object's balance.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x85cb...ab07",
-      "version": "217xxx",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x85cb...ab07",
+            "version": "217xxx",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -421,10 +494,13 @@ Verify the specified Guard and execute the corresponding reward distribution.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "new_user_reward",
-    "claim": "new_user_guard"
+    "operation_type": "reward",
+    "data": {
+      "object": "new_user_reward",
+      "claim": "new_user_guard"
+    }
   }
 }
 ```
@@ -500,25 +576,28 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "reward_test_1",
-    "guard_add": [
-      {
-        "guard": "new_user_guard",
-        "recipient": {
-          "Signer": "signer"
-        },
-        "amount": {
-          "type": "Fixed",
-          "value": 1000000000
-        },
-        "expiration_time": 1876000000000
-      }
-    ]
-  },
-  "env": {
-    "network": "testnet"
+    "operation_type": "reward",
+    "data": {
+      "object": "reward_test_1",
+      "guard_add": [
+        {
+          "guard": "new_user_guard",
+          "recipient": {
+            "Signer": "signer"
+          },
+          "amount": {
+            "type": "Fixed",
+            "value": 1000000000
+          },
+          "expiration_time": 1876000000000
+        }
+      ]
+    },
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -526,15 +605,25 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x11a5...b44e",
-      "version": "218xxx",
-      "change": "modified"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x11a5...b44e",
+            "version": "218xxx",
+            "change": "modified"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -546,31 +635,34 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "referral_reward",
-    "guard_add": [
-      {
-        "guard": "referrer_guard",
-        "recipient": {
-          "Entity": { "name_or_address": "referrer" }
+    "operation_type": "reward",
+    "data": {
+      "object": "referral_reward",
+      "guard_add": [
+        {
+          "guard": "referrer_guard",
+          "recipient": {
+            "Entity": { "name_or_address": "referrer" }
+          },
+          "amount": {
+            "type": "Fixed",
+            "value": 500000000
+          }
         },
-        "amount": {
-          "type": "Fixed",
-          "value": 500000000
+        {
+          "guard": "referee_guard",
+          "recipient": {
+            "Entity": { "name_or_address": "referee" }
+          },
+          "amount": {
+            "type": "Fixed",
+            "value": 300000000
+          }
         }
-      },
-      {
-        "guard": "referee_guard",
-        "recipient": {
-          "Entity": { "name_or_address": "referee" }
-        },
-        "amount": {
-          "type": "Fixed",
-          "value": 300000000
-        }
-      }
-    ]
+      ]
+    }
   }
 }
 ```
@@ -583,10 +675,13 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "new_user_reward",
-    "guard_remove_expired": true
+    "operation_type": "reward",
+    "data": {
+      "object": "new_user_reward",
+      "guard_remove_expired": true
+    }
   }
 }
 ```
@@ -599,13 +694,16 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "reward_test_2",
-    "guard_expiration_time": 1876000000000
-  },
-  "env": {
-    "network": "testnet"
+    "operation_type": "reward",
+    "data": {
+      "object": "reward_test_2",
+      "guard_expiration_time": 1876000000000
+    },
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -613,15 +711,25 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x85cb...ab07",
-      "version": "228609",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x85cb...ab07",
+            "version": "228609",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -633,10 +741,13 @@ This indicates that the set `expiration_time` is less than or equal to the curre
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "campaign_reward",
-    "guard_expiration_time": null
+    "operation_type": "reward",
+    "data": {
+      "object": "campaign_reward",
+      "guard_expiration_time": null
+    }
   }
 }
 ```
@@ -674,10 +785,13 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "new_user_reward",
-    "receive": "recently"
+    "operation_type": "reward",
+    "data": {
+      "object": "new_user_reward",
+      "receive": "recently"
+    }
   }
 }
 ```
@@ -692,24 +806,27 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": {"name_or_address": "reward_test_1"},
-        "amount": {"balance": "5000000000"}
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": {"name_or_address": "reward_test_1"},
+          "amount": {"balance": "5000000000"}
+        }
+      ],
+      "info": {
+        "remark": "Send coin to reward object",
+        "index": 1
       }
-    ],
-    "info": {
-      "remark": "Send coin to reward object",
-      "index": 1
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
 ```
@@ -717,19 +834,31 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 **Step 1 Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "WReceivedObject",
-      "object": "0x3b5e...af84",
-      "change": "created"
-    },
-    {
-      "type": "Payment",
-      "object": "0x4fa5...b21e",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "WReceivedObject",
+            "object": "0x3b5e...af84",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Payment",
+            "object": "0x4fa5...b21e",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -737,13 +866,16 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "reward_test_1",
-    "owner_receive": "recently"
-  },
-  "env": {
-    "network": "testnet"
+    "operation_type": "reward",
+    "data": {
+      "object": "reward_test_1",
+      "owner_receive": "recently"
+    },
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -751,21 +883,31 @@ Process CoinWrapper objects received by Reward, can deposit to pending balance o
 **Step 2 Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Reward",
-      "object": "0x11a5...b44e",
-      "version": "233053",
-      "change": "mutated"
-    },
-    {
-      "type": "WReceivedObject",
-      "object": "0x3b5e...af84",
-      "version": "233053",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Reward",
+            "object": "0x11a5...b44e",
+            "version": "233053",
+            "change": "mutated"
+          },
+          {
+            "type": "WReceivedObject",
+            "object": "0x3b5e...af84",
+            "version": "233053",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -791,36 +933,39 @@ Perform multiple operations on existing Reward in a single transaction, such as 
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "complete_reward",
-    "description": "Complete reward setup example",
-    "coin_add": {
-      "balance": 500000000000
-    },
-    "receive": "recently",
-    "guard_add": [
-      {
-        "guard": "bonus_guard_1",
-        "recipient": {
-          "Signer": "signer"
-        },
-        "amount": {
-          "type": "Fixed",
-          "value": 2000000000
-        }
+    "operation_type": "reward",
+    "data": {
+      "object": "complete_reward",
+      "description": "Complete reward setup example",
+      "coin_add": {
+        "balance": 500000000000
       },
-      {
-        "guard": "bonus_guard_2",
-        "recipient": {
-          "Entity": { "name_or_address": "team_member" }
+      "receive": "recently",
+      "guard_add": [
+        {
+          "guard": "bonus_guard_1",
+          "recipient": {
+            "Signer": "signer"
+          },
+          "amount": {
+            "type": "Fixed",
+            "value": 2000000000
+          }
         },
-        "amount": {
-          "type": "Fixed",
-          "value": 1000000000
+        {
+          "guard": "bonus_guard_2",
+          "recipient": {
+            "Entity": { "name_or_address": "team_member" }
+          },
+          "amount": {
+            "type": "Fixed",
+            "value": 1000000000
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }
 ```
@@ -846,4 +991,3 @@ Perform multiple operations on existing Reward in a single transaction, such as 
 | **[Permission](permission.md)** | Permission management |
 | **[Treasury](treasury.md)** | Team fund management - can fund reward pools from treasury |
 | **[Allocation](allocation.md)** | Automatic fund distribution - similar distribution mechanism |
-

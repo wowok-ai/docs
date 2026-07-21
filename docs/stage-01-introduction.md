@@ -52,6 +52,8 @@ Blockchain addresses are usually long strings of characters that are hard to rem
 
 ## 🎓 Practice Exercises
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ### Exercise 1: Create Your First Account
 
 **💬 You**: Generate a new account named "my_first_account".
@@ -62,8 +64,11 @@ Blockchain addresses are usually long strings of characters that are hard to rem
 
 ```json
 {
-  "gen": {
-    "name": "my_first_account"
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "my_first_account"
+    }
   }
 }
 ```
@@ -81,12 +86,23 @@ Account successfully generated!
   "result": {
     "status": "success",
     "data": {
-      "gen": {
-        "address": "...",
-        "name": "my_first_account"
+      "result": {
+        "status": "success",
+        "data": {
+          "gen": {
+            "address": "...",
+            "name": "my_first_account"
+          }
+        }
+      },
+      "semantic": {
+        "intent": "account_gen",
+        "status": "success",
+        "summary": "Generated new account my_first_account"
       }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -102,9 +118,12 @@ Account successfully generated!
 
 ```json
 {
-  "faucet": {
-    "name_or_address": "my_first_account",
-    "network": "testnet"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "name_or_address": "my_first_account",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -122,13 +141,24 @@ Successfully claimed test tokens from testnet!
   "result": {
     "status": "success",
     "data": {
-      "faucet": {
-        "name_or_address": "my_first_account",
-        "result": [...],
-        "network": "testnet"
+      "result": {
+        "status": "success",
+        "data": {
+          "faucet": {
+            "name_or_address": "my_first_account",
+            "result": ["..."],
+            "network": "testnet"
+          }
+        }
+      },
+      "semantic": {
+        "intent": "account_faucet",
+        "status": "success",
+        "summary": "Claimed faucet tokens for my_first_account on testnet"
       }
     }
-  }
+  },
+  "schema": null
 }
 ```
 ---
@@ -143,15 +173,18 @@ Successfully claimed test tokens from testnet!
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "Chat Account" },
-        "address": "...",
-        "tags": ["Chat"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "Chat Account" },
+          "address": "...",
+          "tags": ["Chat"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -169,17 +202,28 @@ Successfully added mark for my_first_account!
   "result": {
     "status": "success",
     "data": {
-      "add": [
-        {
-          "name": "Chat Account",
-          "address": "...",
-          "tags": ["Chat"],
-          "createdAt": ...,
-          "updatedAt": ...
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "Chat Account",
+              "address": "...",
+              "tags": ["Chat"],
+              "createdAt": "...",
+              "updatedAt": "..."
+            }
+          ]
         }
-      ]
+      },
+      "semantic": {
+        "intent": "local_mark_add",
+        "status": "success",
+        "summary": "Added local mark Chat Account"
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -195,15 +239,18 @@ Successfully added mark for my_first_account!
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "Alice" },
-        "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
-        "tags": ["My Friend"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "Alice" },
+          "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
+          "tags": ["My Friend"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -221,17 +268,28 @@ Done! Successfully added mark for this address.
   "result": {
     "status": "success",
     "data": {
-      "add": [
-        {
-          "name": "Alice",
-          "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
-          "tags": ["My Friend"],
-          "createdAt": ...,
-          "updatedAt": ...
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "Alice",
+              "address": "0x731f779a62d5f7a883e1111586fe260cb9fa558911e4223d073ff8c49347d4aa",
+              "tags": ["My Friend"],
+              "createdAt": "...",
+              "updatedAt": "..."
+            }
+          ]
         }
-      ]
+      },
+      "semantic": {
+        "intent": "local_mark_add",
+        "status": "success",
+        "summary": "Added local mark Alice"
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 

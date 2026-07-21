@@ -14,6 +14,8 @@ In this stage, you will learn about business components in WoWok, including:
 - How to use Treasury to manage team funds
 - How to use Reward for marketing incentives
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -92,14 +94,17 @@ Create a data repository and add some data
 
 ```json
 {
-  "operation_type": "repository",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "my_data_repo"
-    },
-    "data_add": {
-      "name": "config",
-      "data": "my_config_value"
+    "operation_type": "repository",
+    "data": {
+      "object": {
+        "name": "my_data_repo"
+      },
+      "data_add": {
+        "name": "config",
+        "data": "my_config_value"
+      }
     }
   }
 }
@@ -113,10 +118,13 @@ Create a team fund pool
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "team_treasury"
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "team_treasury"
+      }
     }
   }
 }

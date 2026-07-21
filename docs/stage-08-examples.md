@@ -8,12 +8,16 @@
 
 ## 🎯 Stage Objectives
 
-In this stage, you will explore three complete practical examples that demonstrate how to use WoWok in real-world scenarios. By the end, you will understand:
+In this stage, you will explore five complete practical examples that demonstrate how to use WoWok in real-world scenarios. By the end, you will understand:
 
 - How to build a basic e-commerce store with MyShop
 - How to create a signed book service with ThreeBody_Signature
 - How to implement advanced e-commerce with MyShop_Advanced
+- How to process time-lock insurance claims with Insurance
+- How to build weather-dependent travel workflows with Travel
 - Practical patterns and best practices from each example
+
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
 
 ---
 
@@ -43,7 +47,6 @@ A complete online toy store demonstrating how to build a basic e-commerce platfo
 
 #### 🔗 Project Links
 - [MyShop Full Documentation](../examples/MyShop/MyShop.md)
-- [MyShop Test Results](../examples/MyShop/MyShop_TestResults.md)
 
 ---
 
@@ -69,7 +72,6 @@ A specialized service for book signing by the Three-Body author, demonstrating B
 
 #### 🔗 Project Links
 - [ThreeBody_Signature Full Documentation](../examples/ThreeBody_Signature/ThreeBody_Signature.md)
-- [ThreeBody_Signature Test Results](../examples/ThreeBody_Signature/ThreeBody_Signature_TestResults.md)
 
 ---
 
@@ -99,8 +101,53 @@ An enterprise-grade e-commerce platform with multi-path workflows, milestone-bas
 
 #### 🔗 Project Links
 - [MyShop_Advanced Full Documentation](../examples/MyShop_Advanced/MyShop_Advanced.md)
-- [MyShop_Advanced Test Results (Order Flow)](../examples/MyShop_Advanced/MyShop_Advanced_OrderFlow_TestResults.md)
-- [MyShop_Advanced Test Results (Merchant System)](../examples/MyShop_Advanced/MyShop_Advanced_MerchantSystem_TestResults.md)
+
+---
+
+### Example 4: Insurance - Time-Lock Insurance Claims
+
+#### One-Sentence Introduction
+An insurance claim processing system demonstrating time-lock Guard verification and conditional fund release using `convert_witness`.
+
+#### Key Features
+- Time-lock verification using `convert_witness` Guard queries
+- Insurance claim workflow with conditional progression
+- Treasury-backed fund allocation for approved claims
+- Guard-gated withdrawal protection
+- Machine-driven claim approval and rejection flow
+
+#### Skills You Will Learn
+- How to use `convert_witness` for time-based Guard conditions
+- How to design insurance claim workflows with approval/rejection paths
+- How to integrate Treasury with Guard-protected withdrawals
+- How to build conditional fund release mechanisms
+
+#### 🔗 Project Links
+- [Insurance Full Documentation](../examples/Insurance/Insurance.md)
+
+---
+
+### Example 5: Travel - Weather-Dependent Travel Service
+
+#### One-Sentence Introduction
+An Iceland travel service with weather-dependent activities, demonstrating multi-node workflows, sub-orders, and Guard-based weather verification.
+
+#### Key Features
+- Multi-activity travel workflow (insurance, SPA, ice scooting)
+- Weather-dependent Guard verification using Repository data
+- Sub-order creation for each travel activity
+- Multiple allocation outcomes (merchant victory, customer refund)
+- Cancellation and completion paths based on weather conditions
+- Arbitration integration for dispute resolution
+
+#### Skills You Will Learn
+- How to design multi-node workflows with conditional branches
+- How to use Repository data in Guard queries for weather verification
+- How to create sub-orders for multi-service purchases
+- How to handle multiple allocation scenarios based on workflow outcomes
+
+#### 🔗 Project Links
+- [Travel Full Documentation](../examples/Travel/Travel.md)
 
 ---
 
@@ -139,7 +186,9 @@ Guards are your security backbone. Use them for:
 
 1. **Start with MyShop** - Understand the basics of e-commerce in WoWok
 2. **Then ThreeBody_Signature** - Learn about Buy Guards and simple workflows
-3. **Finally MyShop_Advanced** - Master complex multi-path workflows and privacy patterns
+3. **Then MyShop_Advanced** - Master complex multi-path workflows and privacy patterns
+4. **Then Insurance** - Learn time-lock Guards and conditional fund release
+5. **Finally Travel** - Explore multi-node workflows and weather-dependent Guards
 
 Each example builds on the previous one, introducing new concepts incrementally.
 
@@ -148,7 +197,7 @@ Each example builds on the previous one, introducing new concepts incrementally.
 ## 🏆 Stage Checklist
 
 Before moving on, confirm you have:
-- [ ] Read and understood all three examples
+- [ ] Read and understood all five examples
 - [ ] Identified which example best matches your use case
 - [ ] Learned the object creation order best practices
 - [ ] Understand when to use each WoWok component
@@ -158,7 +207,7 @@ Before moving on, confirm you have:
 
 ## 🎉 Congratulations!
 
-You have completed all stages of WoWok learning! You are now ready to:
+You have completed the practical examples stage! Next, continue to Stage 9 to learn about cross-chain bridge operations. You are now ready to:
 
 - Build complete e-commerce platforms
 - Create signed digital services

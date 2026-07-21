@@ -24,6 +24,8 @@ This example sets `env.confirmed: true` on irreversible operations (e.g., `publi
 
 ***
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+
 ## Core Requirements & Features
 
 | Requirement                    | Description                                                               | Implementation                                                                        |
@@ -163,7 +165,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Phase 1: Foundation                                                        │
-│  ═══════════════════════════                                                │
+│  ═══════════════════════════════════════════════                            │
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐                                │
 │  │   Permission    │    │   Accounts      │                                │
@@ -221,7 +223,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘         │
 │                                                                             │
 │  Phase 3: Machine Creation                                                  │
-│  ═══════════════════════════════                                            │
+│  ═══════════════════════════════════════                                    │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │     Machine     │◄─── Requires: Permission + Guards                     │
@@ -231,7 +233,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │           │                                                                 │
 │           ▼                                                                 │
 │  Phase 4: Machine Binding                                                   │
-│  ═══════════════════════════════                                            │
+│  ═══════════════════════════════════════                                    │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │ Bind Machine    │◄─── Requires: Service + Machine                       │
@@ -240,7 +242,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │           │                                                                 │
 │           ▼                                                                 │
 │  Phase 5: Arbitration Creation                                              │
-│  ═══════════════════════════════                                            │
+│  ═══════════════════════════════════════                                    │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │   Arbitration   │◄─── Independent, but needs Service binding            │
@@ -250,7 +252,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │           │                                                                 │
 │           ▼                                                                 │
 │  Phase 6: Service Configuration                                             │
-│  ════════════════════════════════                                           │
+│  ═════════════════════════════════════════                                  │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │ Update Service  │◄─── Add: order_allocators, sales, arbitrations        │
@@ -258,7 +260,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 │  └─────────────────┘                                                        │
 │                                                                             │
 │  Phase 7: Reward Pool Configuration                                         │
-│  ══════════════════════════════════                                         │
+│  ═══════════════════════════════════════════                                │
 │                                                                             │
 │  ┌─────────────────┐                                                       │
 │  │  Add Guards to  │◄─── Add reward guards with store_from_id              │
@@ -397,18 +399,21 @@ Create a new permission object for the advanced shop.
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_perm_v2",
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "myshop_perm_v2",
+        "replaceExistName": true
+      },
+      "description": "Permission object for MyShop Advanced e-commerce system"
     },
-    "description": "Permission object for MyShop Advanced e-commerce system"
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -423,26 +428,29 @@ Add custom permission indexes for advanced operations.
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_perm_v2",
-    "remark": {
-      "op": "set",
-      "index": 1000,
-      "remark": "Order Confirmed and Order Cancel - Merchant confirms or cancels order"
-    },
-    "table": {
-      "op": "add perm by index",
-      "index": 1000,
-      "entity": {
-        "entities": [{"name_or_address": "myshop_merchant"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "myshop_perm_v2",
+      "remark": {
+        "op": "set",
+        "index": 1000,
+        "remark": "Order Confirmed and Order Cancel - Merchant confirms or cancels order"
+      },
+      "table": {
+        "op": "add perm by index",
+        "index": 1000,
+        "entity": {
+          "entities": [{"name_or_address": "myshop_merchant"}]
+        }
       }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -451,26 +459,29 @@ Add custom permission indexes for advanced operations.
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_perm_v2",
-    "remark": {
-      "op": "set",
-      "index": 1001,
-      "remark": "Shipping, Order Complete, Lost, Return operations - Merchant logistics operations"
-    },
-    "table": {
-      "op": "add perm by index",
-      "index": 1001,
-      "entity": {
-        "entities": [{"name_or_address": "myshop_merchant"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "myshop_perm_v2",
+      "remark": {
+        "op": "set",
+        "index": 1001,
+        "remark": "Shipping, Order Complete, Lost, Return operations - Merchant logistics operations"
+      },
+      "table": {
+        "op": "add perm by index",
+        "index": 1001,
+        "entity": {
+          "entities": [{"name_or_address": "myshop_merchant"}]
+        }
       }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -485,20 +496,23 @@ Create the Service without publishing to obtain its address for Guard creation.
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "three_body_signature_service_v2",
-      "replaceExistName": true,
-      "permission": "myshop_perm_v2"
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "three_body_signature_service_v2",
+        "replaceExistName": true,
+        "permission": "myshop_perm_v2"
+      },
+      "description": "Three-Body Problem Signature Edition - Limited collector's item with WIP verification",
+      "pause": false
     },
-    "description": "Three-Body Problem Signature Edition - Limited collector's item with WIP verification",
-    "pause": false
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -515,20 +529,23 @@ Create a Treasury object to aggregate merchant revenue. The Treasury uses the **
 
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_treasury_v2",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "myshop_perm_v2",
-      "replaceExistName": true
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "myshop_treasury_v2",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "myshop_perm_v2",
+        "replaceExistName": true
+      },
+      "description": "Treasury for aggregating MyShop merchant revenue. Uses the same Permission as the Service (myshop_perm_v2) for consistency — a single permission organization governs both fund collection and service operations."
     },
-    "description": "Treasury for aggregating MyShop merchant revenue. Uses the same Permission as the Service (myshop_perm_v2) for consistency — a single permission organization governs both fund collection and service operations."
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -548,8 +565,11 @@ Create Guards using the Service address. Guards verify order state and service o
 >
 > ```json
 > {
->   "info": "guard instructions",
->   "filter": { "scope": "all" }
+>   "tool": "wowok_buildin_info",
+>   "data": {
+>     "info": "guard instructions",
+>     "filter": { "scope": "all" }
+>   }
 > }
 > ```
 >
@@ -561,29 +581,32 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "machine_merkle_root_v2",
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "machine_merkle_root_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify Merkle Root string length is 66 characters (0x prefix + 64 hex)",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "String"},
+        {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "66"}
+      ],
+      "root": {
+        "type": "logic_as_u256_equal",
+        "nodes": [
+          {"type": "calc_string_length", "node": {"type": "identifier", "identifier": 0}},
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
     },
-    "description": "Verify Merkle Root string length is 66 characters (0x prefix + 64 hex)",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "String"},
-      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "66"}
-    ],
-    "root": {
-      "type": "logic_as_u256_equal",
-      "nodes": [
-        {"type": "calc_string_length", "node": {"type": "identifier", "identifier": 0}},
-        {"type": "identifier", "identifier": 1}
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -601,49 +624,52 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "machine_messenger_proof_v2",
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "machine_messenger_proof_v2",
+        "replaceExistName": true
+      },
+      "description": "Strict-mode privacy delivery: verify Signer==proof.signer AND proof.time>order.time AND order.service==service (verifier submits Proof+Order object addresses)",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "Proof object from submitChainProof"},
+        {"identifier": 1, "b_submission": true, "value_type": "Address", "name": "Order object submitted by verifier"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "context", "context": "Signer"},
+              {"type": "query", "query": "proof.signer", "object": {"identifier": 0}, "parameters": []}
+            ]
+          },
+          {
+            "type": "logic_as_u256_greater",
+            "nodes": [
+              {"type": "query", "query": "proof.time", "object": {"identifier": 0}, "parameters": []},
+              {"type": "query", "query": "order.time", "object": {"identifier": 1}, "parameters": []}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 1}, "parameters": []},
+              {"type": "identifier", "identifier": 2}
+            ]
+          }
+        ]
+      }
     },
-    "description": "Strict-mode privacy delivery: verify Signer==proof.signer AND proof.time>order.time AND order.service==service (verifier submits Proof+Order object addresses)",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "Proof object from submitChainProof"},
-      {"identifier": 1, "b_submission": true, "value_type": "Address", "name": "Order object submitted by verifier"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "context", "context": "Signer"},
-            {"type": "query", "query": "proof.signer", "object": {"identifier": 0}, "parameters": []}
-          ]
-        },
-        {
-          "type": "logic_as_u256_greater",
-          "nodes": [
-            {"type": "query", "query": "proof.time", "object": {"identifier": 0}, "parameters": []},
-            {"type": "query", "query": "order.time", "object": {"identifier": 1}, "parameters": []}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 1}, "parameters": []},
-            {"type": "identifier", "identifier": 2}
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -671,35 +697,38 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "machine_time_10d_v2",
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "machine_time_10d_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify time elapsed >= 10 days (864000000 ms)",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "U64"},
+        {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "864000000"}
+      ],
+      "root": {
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          {
+            "type": "calc_number_subtract",
+            "nodes": [
+              {"type": "context", "context": "Clock"},
+              {"type": "identifier", "identifier": 0}
+            ]
+          },
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
     },
-    "description": "Verify time elapsed >= 10 days (864000000 ms)",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "U64"},
-      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "864000000"}
-    ],
-    "root": {
-      "type": "logic_as_u256_greater_or_equal",
-      "nodes": [
-        {
-          "type": "calc_number_subtract",
-          "nodes": [
-            {"type": "context", "context": "Clock"},
-            {"type": "identifier", "identifier": 0}
-          ]
-        },
-        {"type": "identifier", "identifier": 1}
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -708,35 +737,38 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "machine_time_2d_v2",
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "machine_time_2d_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify time elapsed >= 2 days (172800000 ms)",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "U64"},
+        {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "172800000"}
+      ],
+      "root": {
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          {
+            "type": "calc_number_subtract",
+            "nodes": [
+              {"type": "context", "context": "Clock"},
+              {"type": "identifier", "identifier": 0}
+            ]
+          },
+          {"type": "identifier", "identifier": 1}
+        ]
+      }
     },
-    "description": "Verify time elapsed >= 2 days (172800000 ms)",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "U64"},
-      {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "172800000"}
-    ],
-    "root": {
-      "type": "logic_as_u256_greater_or_equal",
-      "nodes": [
-        {
-          "type": "calc_number_subtract",
-          "nodes": [
-            {"type": "context", "context": "Clock"},
-            {"type": "identifier", "identifier": 0}
-          ]
-        },
-        {"type": "identifier", "identifier": 1}
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -747,64 +779,67 @@ Create Guards using the Service address. Guards verify order state and service o
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "service_merchant_win_v2",
-      "tags": ["order", "merchant-win", "level3-scene-combined"],
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "service_merchant_win_v2",
+        "tags": ["order", "merchant-win", "level3-scene-combined"],
+        "replaceExistName": true
+      },
+      "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (myshop_treasury_v2) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at merchant win node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
+        {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Wonderful"},
+        {"identifier": 3, "b_submission": false, "value_type": "String", "value": "Return Fail"},
+        {"identifier": 4, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_or",
+            "nodes": [
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+                  {"type": "identifier", "identifier": 1}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+                  {"type": "identifier", "identifier": 2}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+                  {"type": "identifier", "identifier": 3}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 4}
+            ]
+          }
+        ]
+      }
     },
-    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (myshop_treasury_v2) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at merchant win node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
-      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Wonderful"},
-      {"identifier": 3, "b_submission": false, "value_type": "String", "value": "Return Fail"},
-      {"identifier": 4, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_or",
-          "nodes": [
-            {
-              "type": "logic_string_nocase_equal",
-              "nodes": [
-                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-                {"type": "identifier", "identifier": 1}
-              ]
-            },
-            {
-              "type": "logic_string_nocase_equal",
-              "nodes": [
-                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-                {"type": "identifier", "identifier": 2}
-              ]
-            },
-            {
-              "type": "logic_string_nocase_equal",
-              "nodes": [
-                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-                {"type": "identifier", "identifier": 3}
-              ]
-            }
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 4}
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -826,43 +861,46 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "service_merchant_win_v2",
-      "tags": ["order", "merchant-win", "level3-scene-combined"],
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "service_merchant_win_v2",
+        "tags": ["order", "merchant-win", "level3-scene-combined"],
+        "replaceExistName": true
+      },
+      "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses three String constants + logic_or[logic_string_nocase_equal x 3] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence' tests).",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Order Complete", "Wonderful", "Return Fail"], "name": "merchant_win_nodes"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "vec_contains_string_nocase",
+            "nodes": [
+              {"type": "identifier", "identifier": 1},
+              {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 2}
+            ]
+          }
+        ]
+      }
     },
-    "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses three String constants + logic_or[logic_string_nocase_equal x 3] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence' tests).",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Order Complete", "Wonderful", "Return Fail"], "name": "merchant_win_nodes"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "vec_contains_string_nocase",
-          "nodes": [
-            {"type": "identifier", "identifier": 1},
-            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 2}
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -892,37 +930,40 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "machine_service_order_v2",
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "machine_service_order_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify order belongs to three_body_signature_service_v2",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": "order.service",
+            "object": {"identifier": 0},
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
     },
-    "description": "Verify order belongs to three_body_signature_service_v2",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_equal",
-      "nodes": [
-        {
-          "type": "query",
-          "query": "order.service",
-          "object": {"identifier": 0},
-          "parameters": []
-        },
-        {
-          "type": "identifier",
-          "identifier": 1
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -933,63 +974,66 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "service_customer_win_v2",
-      "tags": ["order", "customer-win", "level2-dynamic-binding"],
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "service_customer_win_v2",
+        "tags": ["order", "customer-win", "level2-dynamic-binding"],
+        "replaceExistName": true
+      },
+      "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query('order.owner') — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
+        {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Return Complete"},
+        {"identifier": 3, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_or",
+            "nodes": [
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+                  {"type": "identifier", "identifier": 1}
+                ]
+              },
+              {
+                "type": "logic_string_nocase_equal",
+                "nodes": [
+                  {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+                  {"type": "identifier", "identifier": 2}
+                ]
+              }
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+              {"type": "context", "context": "Signer"}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 3}
+            ]
+          }
+        ]
+      }
     },
-    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query('order.owner') — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
-      {"identifier": 2, "b_submission": false, "value_type": "String", "value": "Return Complete"},
-      {"identifier": 3, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_or",
-          "nodes": [
-            {
-              "type": "logic_string_nocase_equal",
-              "nodes": [
-                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-                {"type": "identifier", "identifier": 1}
-              ]
-            },
-            {
-              "type": "logic_string_nocase_equal",
-              "nodes": [
-                {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-                {"type": "identifier", "identifier": 2}
-              ]
-            }
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
-            {"type": "context", "context": "Signer"}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 3}
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1012,50 +1056,53 @@ The `logic_or` of two `logic_string_nocase_equal` checks above can be collapsed 
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "service_customer_win_v2",
-      "tags": ["order", "customer-win", "level2-dynamic-binding"],
-      "replaceExistName": true
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "service_customer_win_v2",
+        "tags": ["order", "customer-win", "level2-dynamic-binding"],
+        "replaceExistName": true
+      },
+      "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses two String constants + logic_or[logic_string_nocase_equal x 2] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence — Guard 6 Shorthand' tests).",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Lost", "Return Complete"], "name": "customer_win_nodes"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "vec_contains_string_nocase",
+            "nodes": [
+              {"type": "identifier", "identifier": 1},
+              {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+              {"type": "context", "context": "Signer"}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 2}
+            ]
+          }
+        ]
+      }
     },
-    "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses two String constants + logic_or[logic_string_nocase_equal x 2] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence — Guard 6 Shorthand' tests).",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "VecString", "value": ["Lost", "Return Complete"], "name": "customer_win_nodes"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "name": "service_address", "value": "three_body_signature_service_v2"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "vec_contains_string_nocase",
-          "nodes": [
-            {"type": "identifier", "identifier": 1},
-            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
-            {"type": "context", "context": "Signer"}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 2}
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1096,249 +1143,252 @@ Create Machine with all nodes and guards in a single operation.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_advanced_machine_v2",
-      "replaceExistName": true,
-      "permission": "myshop_perm_v2"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "myshop_advanced_machine_v2",
+        "replaceExistName": true,
+        "permission": "myshop_perm_v2"
+      },
+      "description": "Multi-path order processing with delivery confirmation, wonderful rating, lost handling and return processing - Complete workflow with guards",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "Order Confirmed",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Confirm Order",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Order Cancel",
+            "pairs": [
+              {
+                "prev_node": "Order Confirmed",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Cancel Order",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Shipping",
+            "pairs": [
+              {
+                "prev_node": "Order Confirmed",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Confirm Signature and Submit Merkle Root",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_merkle_root_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Delivery Complete",
+            "pairs": [
+              {
+                "prev_node": "Shipping",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Confirm Receipt",
+                    "weight": 1,
+                    "namedOperator": ""
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Wonderful",
+            "pairs": [
+              {
+                "prev_node": "Delivery Complete",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Rate as Wonderful",
+                    "weight": 1,
+                    "namedOperator": ""
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Order Complete",
+            "pairs": [
+              {
+                "prev_node": "Delivery Complete",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Complete Order",
+                    "permissionIndex": 1001,
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "prev_node": "Shipping",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Auto Complete from Shipping",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_time_10d_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Lost",
+            "pairs": [
+              {
+                "prev_node": "Shipping",
+                "threshold": 2,
+                "forwards": [
+                  {
+                    "name": "Report Lost",
+                    "weight": 1,
+                    "namedOperator": ""
+                  },
+                  {
+                    "name": "Confirm Lost with Merkle Root",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_merkle_root_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Non-receipt Return",
+            "pairs": [
+              {
+                "prev_node": "Shipping",
+                "threshold": 2,
+                "forwards": [
+                  {
+                    "name": "Request Return",
+                    "weight": 1,
+                    "namedOperator": ""
+                  },
+                  {
+                    "name": "Confirm Return with Merkle Root",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_merkle_root_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Receipt Return",
+            "pairs": [
+              {
+                "prev_node": "Delivery Complete",
+                "threshold": 2,
+                "forwards": [
+                  {
+                    "name": "Request Return with Receipt",
+                    "weight": 1,
+                    "namedOperator": ""
+                  },
+                  {
+                    "name": "Confirm Return Address with Merkle Root",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_merkle_root_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Return Fail",
+            "pairs": [
+              {
+                "prev_node": "Receipt Return",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Timeout Return Not Received",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": { "guard": "machine_time_10d_v2" }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Return Complete",
+            "pairs": [
+              {
+                "prev_node": "Receipt Return",
+                "threshold": 2,
+                "forwards": [
+                  {
+                    "name": "Submit Return Merkle Root",
+                    "weight": 1,
+                    "namedOperator": "",
+                    "guard": { "guard": "machine_merkle_root_v2" }
+                  },
+                  {
+                    "name": "Confirm Return Received",
+                    "permissionIndex": 1001,
+                    "weight": 1
+                  }
+                ]
+              },
+              {
+                "prev_node": "Non-receipt Return",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Confirm Goods Recovered",
+                    "permissionIndex": 1001,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     },
-    "description": "Multi-path order processing with delivery confirmation, wonderful rating, lost handling and return processing - Complete workflow with guards",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Order Confirmed",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Order",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Order Cancel",
-          "pairs": [
-            {
-              "prev_node": "Order Confirmed",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Cancel Order",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Shipping",
-          "pairs": [
-            {
-              "prev_node": "Order Confirmed",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Signature and Submit Merkle Root",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Delivery Complete",
-          "pairs": [
-            {
-              "prev_node": "Shipping",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Receipt",
-                  "weight": 1,
-                  "namedOperator": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Wonderful",
-          "pairs": [
-            {
-              "prev_node": "Delivery Complete",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Rate as Wonderful",
-                  "weight": 1,
-                  "namedOperator": ""
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Order Complete",
-          "pairs": [
-            {
-              "prev_node": "Delivery Complete",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Complete Order",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            },
-            {
-              "prev_node": "Shipping",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Auto Complete from Shipping",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_time_10d_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Lost",
-          "pairs": [
-            {
-              "prev_node": "Shipping",
-              "threshold": 2,
-              "forwards": [
-                {
-                  "name": "Report Lost",
-                  "weight": 1,
-                  "namedOperator": ""
-                },
-                {
-                  "name": "Confirm Lost with Merkle Root",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Non-receipt Return",
-          "pairs": [
-            {
-              "prev_node": "Shipping",
-              "threshold": 2,
-              "forwards": [
-                {
-                  "name": "Request Return",
-                  "weight": 1,
-                  "namedOperator": ""
-                },
-                {
-                  "name": "Confirm Return with Merkle Root",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Receipt Return",
-          "pairs": [
-            {
-              "prev_node": "Delivery Complete",
-              "threshold": 2,
-              "forwards": [
-                {
-                  "name": "Request Return with Receipt",
-                  "weight": 1,
-                  "namedOperator": ""
-                },
-                {
-                  "name": "Confirm Return Address with Merkle Root",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Return Fail",
-          "pairs": [
-            {
-              "prev_node": "Receipt Return",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Timeout Return Not Received",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": { "guard": "machine_time_10d_v2" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Return Complete",
-          "pairs": [
-            {
-              "prev_node": "Receipt Return",
-              "threshold": 2,
-              "forwards": [
-                {
-                  "name": "Submit Return Merkle Root",
-                  "weight": 1,
-                  "namedOperator": "",
-                  "guard": { "guard": "machine_merkle_root_v2" }
-                },
-                {
-                  "name": "Confirm Return Received",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            },
-            {
-              "prev_node": "Non-receipt Return",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Confirm Goods Recovered",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1351,8 +1401,11 @@ Create Machine with all nodes and guards in a single operation.
 >
 > ```json
 > {
->   "object": "myshop_advanced_machine_v2",
->   "format": "json"
+>   "tool": "machineNode2file",
+>   "data": {
+>     "object": "myshop_advanced_machine_v2",
+>     "format": "json"
+>   }
 > }
 > ```
 >
@@ -1362,15 +1415,18 @@ Machine must be published before binding to Service.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_advanced_machine_v2",
-    "publish": true
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "operation_type": "machine",
+    "data": {
+      "object": "myshop_advanced_machine_v2",
+      "publish": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1385,15 +1441,18 @@ Bind the Machine to the Service. **Important**: The Service must be unpublished 
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "machine": "myshop_advanced_machine_v2"
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service_v2",
+      "machine": "myshop_advanced_machine_v2"
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1427,30 +1486,33 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_arbitration_v2",
-      "replaceExistName": true,
-      "permission": "myshop_perm_v2"
-    },
-    "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism",
-    "voting_guard": {
-      "op": "add",
-      "guards": [
-        {
-          "guard": "machine_merkle_root_v2",
-          "vote_weight": {
-            "FixedValue": 1
+    "operation_type": "arbitration",
+    "data": {
+      "object": {
+        "name": "myshop_arbitration_v2",
+        "replaceExistName": true,
+        "permission": "myshop_perm_v2"
+      },
+      "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism",
+      "voting_guard": {
+        "op": "add",
+        "guards": [
+          {
+            "guard": "machine_merkle_root_v2",
+            "vote_weight": {
+              "FixedValue": 1
+            }
           }
-        }
-      ]
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1468,10 +1530,13 @@ Configure order_allocators to define fund distribution rules, then publish the S
 >
 > ```json
 > {
->   "query_type": "service",
->   "object": "three_body_signature_service_v2",
->   "network": "mainnet",
->   "no_cache": true
+>   "tool": "query_toolkit",
+>   "data": {
+>     "query_type": "service",
+>     "object": "three_body_signature_service_v2",
+>     "network": "mainnet",
+>     "no_cache": true
+>   }
 > }
 > ```
 >
@@ -1483,62 +1548,65 @@ Configure order_allocators to define fund distribution rules, then publish the S
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "The Three-Body Problem + Author Signature",
-          "price": 100000000,
-          "stock": 100,
-          "suspension": false,
-          "wip": "https://wowok.net/test/three_body.wip",
-          "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service_v2",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "The Three-Body Problem + Author Signature",
+            "price": 100000000,
+            "stock": 100,
+            "suspension": false,
+            "wip": "https://wowok.net/test/three_body.wip",
+            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+          }
+        ]
+      },
+      "order_allocators": {
+        "description": "Order fund allocation - 100% to Treasury when order complete/wonderful/return fail, 100% to Order owner when lost/return complete",
+        "threshold": 1,
+        "allocators": [
+          {
+            "guard": "service_merchant_win_v2",
+            "sharing": [
+              {
+                "who": {"Entity": {"name_or_address": "myshop_treasury_v2"}},
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          },
+          {
+            "guard": "service_customer_win_v2",
+            "sharing": [
+              {
+                "who": {"Signer": "signer"},
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "arbitrations": {
+        "op": "add",
+        "objects": ["myshop_arbitration_v2"]
+      },
+      "rewards": {
+        "op": "add",
+        "objects": ["myshop_reward_v2"]
+      },
+      "publish": true
     },
-    "order_allocators": {
-      "description": "Order fund allocation - 100% to Treasury when order complete/wonderful/return fail, 100% to Order owner when lost/return complete",
-      "threshold": 1,
-      "allocators": [
-        {
-          "guard": "service_merchant_win_v2",
-          "sharing": [
-            {
-              "who": {"Entity": {"name_or_address": "myshop_treasury_v2"}},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        },
-        {
-          "guard": "service_customer_win_v2",
-          "sharing": [
-            {
-              "who": {"Signer": "signer"},
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
-    },
-    "arbitrations": {
-      "op": "add",
-      "objects": ["myshop_arbitration_v2"]
-    },
-    "rewards": {
-      "op": "add",
-      "objects": ["myshop_reward_v2"]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1600,19 +1668,22 @@ Create an empty reward object first. This object will be referenced by reward gu
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "myshop_reward_v2",
-      "replaceExistName": true,
-      "permission": "myshop_perm_v2"
+    "operation_type": "reward",
+    "data": {
+      "object": {
+        "name": "myshop_reward_v2",
+        "replaceExistName": true,
+        "permission": "myshop_perm_v2"
+      },
+      "description": "MyShop reward pool for wonderful service and compensation"
     },
-    "description": "MyShop reward pool for wonderful service and compensation"
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -1631,60 +1702,63 @@ Create guards for reward verification with double-claim protection:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "reward_wonderful_v2",
-      "replaceExistName": true
-    },
-    "description": "Verify order at Wonderful node for reward, signer must be order owner, order belongs to this service, and not claimed before",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Wonderful"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
-      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_string_nocase_equal",
-          "nodes": [
-            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-            {"type": "identifier", "identifier": 1}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
-            {"type": "context", "context": "Signer"}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 3}
-          ]
-        },
-        {
-          "type": "logic_not",
-          "node": {
-            "type": "query_reward_record_exists",
-            "object": {"identifier": 2},
-            "where": {
-              "storeFromId": {"identifier": 0}
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "reward_wonderful_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify order at Wonderful node for reward, signer must be order owner, order belongs to this service, and not claimed before",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Wonderful"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+        {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_string_nocase_equal",
+            "nodes": [
+              {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+              {"type": "identifier", "identifier": 1}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+              {"type": "context", "context": "Signer"}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 3}
+            ]
+          },
+          {
+            "type": "logic_not",
+            "node": {
+              "type": "query_reward_record_exists",
+              "object": {"identifier": 2},
+              "where": {
+                "storeFromId": {"identifier": 0}
+              }
             }
           }
-        }
-      ]
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1693,60 +1767,63 @@ Create guards for reward verification with double-claim protection:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "reward_lost_v2",
-      "replaceExistName": true
-    },
-    "description": "Verify order at Lost node for compensation, signer must be order owner, order belongs to this service, and not claimed before",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
-      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_string_nocase_equal",
-          "nodes": [
-            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-            {"type": "identifier", "identifier": 1}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
-            {"type": "context", "context": "Signer"}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 3}
-          ]
-        },
-        {
-          "type": "logic_not",
-          "node": {
-            "type": "query_reward_record_exists",
-            "object": {"identifier": 2},
-            "where": {
-              "storeFromId": {"identifier": 0}
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "reward_lost_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify order at Lost node for compensation, signer must be order owner, order belongs to this service, and not claimed before",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+        {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_string_nocase_equal",
+            "nodes": [
+              {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+              {"type": "identifier", "identifier": 1}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+              {"type": "context", "context": "Signer"}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 3}
+            ]
+          },
+          {
+            "type": "logic_not",
+            "node": {
+              "type": "query_reward_record_exists",
+              "object": {"identifier": 2},
+              "where": {
+                "storeFromId": {"identifier": 0}
+              }
             }
           }
-        }
-      ]
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1755,60 +1832,63 @@ Create guards for reward verification with double-claim protection:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "reward_shipping_timeout_v2",
-      "replaceExistName": true
-    },
-    "description": "Verify order at Shipping node for timeout compensation, signer must be order owner, order belongs to this service, and not claimed before",
-    "table": [
-      {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
-      {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"},
-      {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
-      {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
-    ],
-    "root": {
-      "type": "logic_and",
-      "nodes": [
-        {
-          "type": "logic_string_nocase_equal",
-          "nodes": [
-            {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
-            {"type": "identifier", "identifier": 1}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
-            {"type": "context", "context": "Signer"}
-          ]
-        },
-        {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
-            {"type": "identifier", "identifier": 3}
-          ]
-        },
-        {
-          "type": "logic_not",
-          "node": {
-            "type": "query_reward_record_exists",
-            "object": {"identifier": 2},
-            "where": {
-              "storeFromId": {"identifier": 0}
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "reward_shipping_timeout_v2",
+        "replaceExistName": true
+      },
+      "description": "Verify order at Shipping node for timeout compensation, signer must be order owner, order belongs to this service, and not claimed before",
+      "table": [
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
+        {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"},
+        {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
+        {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
+      ],
+      "root": {
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_string_nocase_equal",
+            "nodes": [
+              {"type": "query", "query": "progress.current", "object": {"identifier": 0, "convert_witness": "OrderProgress"}, "parameters": []},
+              {"type": "identifier", "identifier": 1}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.owner", "object": {"identifier": 0}, "parameters": []},
+              {"type": "context", "context": "Signer"}
+            ]
+          },
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
+              {"type": "identifier", "identifier": 3}
+            ]
+          },
+          {
+            "type": "logic_not",
+            "node": {
+              "type": "query_reward_record_exists",
+              "object": {"identifier": 2},
+              "where": {
+                "storeFromId": {"identifier": 0}
+              }
             }
           }
-        }
-      ]
+        ]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1823,36 +1903,40 @@ Add reward guards to the reward object with `store_from_id` set to the order ide
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_reward_v2",
-    "guard_add": [
-      {
-        "guard": "reward_wonderful_v2",
-        "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 10000},
-        "store_from_id": 0
-      },
-      {
-        "guard": "reward_lost_v2",
-        "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 20000},
-        "store_from_id": 0
-      },
-      {
-        "guard": "reward_shipping_timeout_v2",
-        "recipient": {"Signer": "signer"},
-        "amount": {"type": "Fixed", "value": 20000},
-        "store_from_id": 0
-      }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    "operation_type": "reward",
+    "data": {
+      "object": "myshop_reward_v2",
+      "guard_add": [
+        {
+          "guard": "reward_wonderful_v2",
+          "recipient": {"Signer": "signer"},
+          "amount": {"type": "Fixed", "value": 10000},
+          "store_from_id": 0
+        },
+        {
+          "guard": "reward_lost_v2",
+          "recipient": {"Signer": "signer"},
+          "amount": {"type": "Fixed", "value": 20000},
+          "store_from_id": 0
+        },
+        {
+          "guard": "reward_shipping_timeout_v2",
+          "recipient": {"Signer": "signer"},
+          "amount": {"type": "Fixed", "value": 20000},
+          "store_from_id": 0
+        }
+      ]
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
+```
 
 ***
 
@@ -1864,17 +1948,20 @@ Deposit WOW tokens to the reward pool for rewards and compensation.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_reward_v2",
-    "coin_add": {
-      "balance": 150000000
+    "operation_type": "reward",
+    "data": {
+      "object": "myshop_reward_v2",
+      "coin_add": {
+        "balance": 150000000
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1891,41 +1978,44 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
 
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service_v2",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "The Three-Body Problem + Author Signature",
-            "stock": 1,
-            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
-          }
-        ],
-        "total_pay": {
-          "balance": 100000000
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service_v2",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "The Three-Body Problem + Author Signature",
+              "stock": 1,
+              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+            }
+          ],
+          "total_pay": {
+            "balance": 100000000
+          },
+          "payment_remark": "To my dear friend - keep exploring the universe"
         },
-        "payment_remark": "To my dear friend - keep exploring the universe"
-      },
-      "namedNewOrder": {
-        "name": "myshop_order_v2",
-        "replaceExistName": true
-      },
-      "namedNewAllocation": {
-        "name": "myshop_allocation_v2",
-        "replaceExistName": true
-      },
-      "namedNewProgress": {
-        "name": "myshop_progress_v2",
-        "replaceExistName": true
+        "namedNewOrder": {
+          "name": "myshop_order_v2",
+          "replaceExistName": true
+        },
+        "namedNewAllocation": {
+          "name": "myshop_allocation_v2",
+          "replaceExistName": true
+        },
+        "namedNewProgress": {
+          "name": "myshop_progress_v2",
+          "replaceExistName": true
+        }
       }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1940,21 +2030,24 @@ Merchant confirms the order. This step uses permission index 1000 (no Guard subm
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Confirmed",
-        "forward": "Confirm Order"
-      },
-      "message": "Order confirmed by merchant"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Order Confirmed",
+          "forward": "Confirm Order"
+        },
+        "message": "Order confirmed by merchant"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -1969,43 +2062,46 @@ Merchant starts shipping after signature service is completed. The merchant subm
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Shipping",
-        "forward": "Confirm Signature and Submit Merkle Root"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Shipping",
+          "forward": "Confirm Signature and Submit Merkle Root"
+        },
+        "message": "Shipping started - signature completed and Merkle Root submitted"
       },
-      "message": "Shipping started - signature completed and Merkle Root submitted"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_merkle_root_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_merkle_root_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_merkle_root_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "guard": "machine_merkle_root_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "String",
+                "value": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2022,21 +2118,24 @@ Customer confirms receipt of goods.
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_order_v2",
-    "progress": {
-      "operation": {
-        "next_node_name": "Delivery Complete",
-        "forward": "Confirm Receipt"
-      },
-      "message": "Delivery confirmed - goods received"
+    "operation_type": "order",
+    "data": {
+      "object": "myshop_order_v2",
+      "progress": {
+        "operation": {
+          "next_node_name": "Delivery Complete",
+          "forward": "Confirm Receipt"
+        },
+        "message": "Delivery confirmed - goods received"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2051,21 +2150,24 @@ Alternatively, customer can rate as Wonderful (very satisfied).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_order_v2",
-    "progress": {
-      "operation": {
-        "next_node_name": "Wonderful",
-        "forward": "Rate as Wonderful"
-      },
-      "message": "Rated as Wonderful - very satisfied with the service"
+    "operation_type": "order",
+    "data": {
+      "object": "myshop_order_v2",
+      "progress": {
+        "operation": {
+          "next_node_name": "Wonderful",
+          "forward": "Rate as Wonderful"
+        },
+        "message": "Rated as Wonderful - very satisfied with the service"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2080,37 +2182,40 @@ Customer claims Wonderful reward from reward pool.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_reward_v2",
-    "claim": "reward_wonderful_v2"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "reward_wonderful_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "reward_wonderful_v2",
+    "operation_type": "reward",
+    "data": {
+      "object": "myshop_reward_v2",
+      "claim": "reward_wonderful_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "reward_wonderful_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_order_v2"
+            "guard": "reward_wonderful_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_order_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2125,44 +2230,47 @@ Order can auto-complete after time thresholds or be manually completed.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Complete",
-        "forward": "Auto Complete from Shipping"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Order Complete",
+          "forward": "Auto Complete from Shipping"
+        },
+        "hold": false,
+        "message": "Order auto-completed after 10 days"
       },
-      "hold": false,
-      "message": "Order auto-completed after 10 days"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_time_10d_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_time_10d_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_time_10d_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_progress_v2"
+            "guard": "machine_time_10d_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_progress_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2171,44 +2279,47 @@ Order can auto-complete after time thresholds or be manually completed.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Order Complete",
-        "forward": "Auto Complete from Delivery"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Order Complete",
+          "forward": "Auto Complete from Delivery"
+        },
+        "hold": false,
+        "message": "Order auto-completed after 2 days from delivery"
       },
-      "hold": false,
-      "message": "Order auto-completed after 2 days from delivery"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_time_2d_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_time_2d_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_time_2d_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_progress_v2"
+            "guard": "machine_time_2d_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_progress_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2223,22 +2334,25 @@ If package is lost, customer reports and merchant confirms.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Lost",
-        "forward": "Report Lost"
-      },
-      "hold": false,
-      "message": "Package reported as lost"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Lost",
+          "forward": "Report Lost"
+        },
+        "hold": false,
+        "message": "Package reported as lost"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2247,44 +2361,47 @@ If package is lost, customer reports and merchant confirms.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Lost",
-        "forward": "Confirm Lost with Merkle Root"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Lost",
+          "forward": "Confirm Lost with Merkle Root"
+        },
+        "hold": false,
+        "message": "Lost confirmed with Merkle Root"
       },
-      "hold": false,
-      "message": "Lost confirmed with Merkle Root"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_merkle_root_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_merkle_root_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_merkle_root_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            "guard": "machine_merkle_root_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "String",
+                "value": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2293,37 +2410,40 @@ If package is lost, customer reports and merchant confirms.
 
 ```json
 {
-  "operation_type": "reward",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_reward_v2",
-    "claim": "reward_lost_v2"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "reward_lost_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "reward_lost_v2",
+    "operation_type": "reward",
+    "data": {
+      "object": "myshop_reward_v2",
+      "claim": "reward_lost_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "reward_lost_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_order_v2"
+            "guard": "reward_lost_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_order_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2338,22 +2458,25 @@ Customer requests return after delivery confirmation.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Receipt Return",
-        "forward": "Request Return with Receipt"
-      },
-      "hold": false,
-      "message": "Return requested after delivery"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Receipt Return",
+          "forward": "Request Return with Receipt"
+        },
+        "hold": false,
+        "message": "Return requested after delivery"
+      }
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2362,44 +2485,47 @@ Customer requests return after delivery confirmation.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Receipt Return",
-        "forward": "Confirm Return Address with Merkle Root"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Receipt Return",
+          "forward": "Confirm Return Address with Merkle Root"
+        },
+        "hold": false,
+        "message": "Return address confirmed with Merkle Root"
       },
-      "hold": false,
-      "message": "Return address confirmed with Merkle Root"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_merkle_root_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_merkle_root_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_merkle_root_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            "guard": "machine_merkle_root_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "String",
+                "value": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2408,44 +2534,47 @@ Customer requests return after delivery confirmation.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Return Complete",
-        "forward": "Submit Return Merkle Root"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Return Complete",
+          "forward": "Submit Return Merkle Root"
+        },
+        "hold": false,
+        "message": "Return shipping Merkle Root submitted"
       },
-      "hold": false,
-      "message": "Return shipping Merkle Root submitted"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_merkle_root_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_merkle_root_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_merkle_root_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "String",
-            "value": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            "guard": "machine_merkle_root_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "String",
+                "value": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2454,22 +2583,25 @@ Customer requests return after delivery confirmation.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Return Complete",
-        "forward": "Confirm Return Received"
-      },
-      "hold": false,
-      "message": "Return received and confirmed"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Return Complete",
+          "forward": "Confirm Return Received"
+        },
+        "hold": false,
+        "message": "Return received and confirmed"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2482,22 +2614,25 @@ For the Non-receipt Return path, the customer never received the goods and has n
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Return Complete",
-        "forward": "Confirm Goods Recovered"
-      },
-      "hold": false,
-      "message": "Goods recovered by merchant - non-receipt return complete"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Return Complete",
+          "forward": "Confirm Goods Recovered"
+        },
+        "hold": false,
+        "message": "Goods recovered by merchant - non-receipt return complete"
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
   }
 }
 ```
@@ -2512,44 +2647,47 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_progress_v2",
-    "operate": {
-      "operation": {
-        "next_node_name": "Return Fail",
-        "forward": "Timeout Return Not Received"
+    "operation_type": "progress",
+    "data": {
+      "object": "myshop_progress_v2",
+      "operate": {
+        "operation": {
+          "next_node_name": "Return Fail",
+          "forward": "Timeout Return Not Received"
+        },
+        "hold": false,
+        "message": "Return failed - timeout"
       },
-      "hold": false,
-      "message": "Return failed - timeout"
-    }
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "machine_time_10d_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "machine_time_10d_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "machine_time_10d_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_progress_v2"
+            "guard": "machine_time_10d_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_progress_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2566,37 +2704,40 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_allocation_v2",
-    "alloc_by_guard": "service_merchant_win_v2"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "service_merchant_win_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "service_merchant_win_v2",
+    "operation_type": "allocation",
+    "data": {
+      "object": "myshop_allocation_v2",
+      "alloc_by_guard": "service_merchant_win_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "service_merchant_win_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_order_v2"
+            "guard": "service_merchant_win_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_order_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_merchant",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```
@@ -2609,37 +2750,40 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
 
 ```json
 {
-  "operation_type": "allocation",
+  "tool": "onchain_operations",
   "data": {
-    "object": "myshop_allocation_v2",
-    "alloc_by_guard": "service_customer_win_v2"
-  },
-  "submission": {
-    "type": "submission",
-    "guard": [
-      {
-        "object": "service_customer_win_v2",
-        "impack": true
-      }
-    ],
-    "submission": [
-      {
-        "guard": "service_customer_win_v2",
+    "operation_type": "allocation",
+    "data": {
+      "object": "myshop_allocation_v2",
+      "alloc_by_guard": "service_customer_win_v2",
+      "submission": {
+        "type": "submission",
+        "guard": [
+          {
+            "object": "service_customer_win_v2",
+            "impack": true
+          }
+        ],
         "submission": [
           {
-            "identifier": 0,
-            "b_submission": true,
-            "value_type": "Address",
-            "value": "myshop_order_v2"
+            "guard": "service_customer_win_v2",
+            "submission": [
+              {
+                "identifier": 0,
+                "b_submission": true,
+                "value_type": "Address",
+                "value": "myshop_order_v2"
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "env": {
-    "account": "myshop_customer",
-    "network": "mainnet",
-    "no_cache": true
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "no_cache": true
+    }
   }
 }
 ```

@@ -2,11 +2,13 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "machine", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Machine component is WoWok's workflow automation engine, used to design and deploy automated workflow templates that define how services are delivered. Machines consist of nodes (workflow states) and forwards (operations that move the workflow forward), with permission checks and optional Guard validations.
 
-> **Note**: Use the `machineNode2file` tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file) to quickly build new workflows from existing ones.
+> **Note**: Use the `machineNode2file` sub-tool (see [Sub-feature 19](#sub-feature-19-export-node-definitions-with-machinenode2file)) to export existing Machine node definitions from the blockchain to a JSON or Markdown file for editing and reuse. Pair with [Sub-feature 11](#sub-feature-11-complete-node-replacement-via-file) to quickly build new workflows from existing ones.
 
 ## Function List
 
@@ -141,7 +143,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -151,10 +153,13 @@ Machine operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "machine",
-  "data": { ... },
-  "env": { ... },
-  "submission": { ... }
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "machine",
+    "data": { ... },
+    "env": { ... },
+    "submission": { ... }
+  }
 }
 ```
 
@@ -280,9 +285,12 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {}
+    "operation_type": "machine",
+    "data": {
+      "object": {}
+    }
   }
 }
 ```
@@ -293,14 +301,17 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "design_workflow",
-      "tags": ["design", "service", "workflow"],
-      "onChain": false
-    },
-    "description": "Design service workflow - manages the complete lifecycle from order creation to delivery"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "design_workflow",
+        "tags": ["design", "service", "workflow"],
+        "onChain": false
+      },
+      "description": "Design service workflow - manages the complete lifecycle from order creation to delivery"
+    }
   }
 }
 ```
@@ -308,25 +319,31 @@ Returns transaction block information.
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "digest": "...",
-    "objectChanges": [
-      {
-        "type": "Machine",
-        "object": "0xec7a...0d51",
-        "version": "301932",
-        "change": "created"
-      },
-      {
-        "type": "Permission",
-        "object": "0x4203...1097",
-        "version": "301932",
-        "change": "created"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Machine",
+            "object": "0xec7a...0d51",
+            "version": "301932",
+            "change": "created"
+          },
+          {
+            "type": "Permission",
+            "object": "0x4203...1097",
+            "version": "301932",
+            "change": "created"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -336,11 +353,14 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "service_workflow",
-      "permission": "team_permission"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "service_workflow",
+        "permission": "team_permission"
+      }
     }
   }
 }
@@ -352,13 +372,16 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "marketing_workflow",
-      "permission": {
-        "name": "marketing_perm",
-        "tags": ["marketing", "team"]
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "marketing_workflow",
+        "permission": {
+          "name": "marketing_perm",
+          "tags": ["marketing", "team"]
+        }
       }
     }
   }
@@ -371,13 +394,16 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "public_design_flow",
-      "onChain": true
-    },
-    "description": "Public design workflow template - can be referenced by any service"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "public_design_flow",
+        "onChain": true
+      },
+      "description": "Public design workflow template - can be referenced by any service"
+    }
   }
 }
 ```
@@ -388,16 +414,19 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "file_based_workflow",
-      "permission": {
-        "name": "file_workflow_perm"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "file_based_workflow",
+        "permission": {
+          "name": "file_workflow_perm"
+        }
+      },
+      "node": {
+        "json_or_markdown_file": "/path/to/workflow_nodes.json"
       }
-    },
-    "node": {
-      "json_or_markdown_file": "/path/to/workflow_nodes.json"
     }
   }
 }
@@ -407,46 +436,46 @@ Returns transaction block information.
 ```json
 [
   {
-    "name": "created",
-    "pairs": [
-      {
-        "prev_node": "",
-        "threshold": 1,
-        "forwards": [
-          {
-            "name": "start",
-            "permissionIndex": 1000,
-            "weight": 1
-          }
-        ]
-      }
-    ]
+  "name": "created",
+  "pairs": [
+    {
+      "prev_node": "",
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "start",
+          "permissionIndex": 1000,
+          "weight": 1
+        }
+      ]
+    }
+  ]
   },
   {
-    "name": "in_progress",
-    "pairs": [
-      {
-        "prev_node": "created",
-        "threshold": 1,
-        "forwards": [
-          {
-            "name": "complete",
-            "permissionIndex": 1000,
-            "weight": 1
-          }
-        ]
-      }
-    ]
+  "name": "in_progress",
+  "pairs": [
+    {
+      "prev_node": "created",
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "complete",
+          "permissionIndex": 1000,
+          "weight": 1
+        }
+      ]
+    }
+  ]
   },
   {
-    "name": "completed",
-    "pairs": [
-      {
-        "prev_node": "in_progress",
-        "threshold": 1,
-        "forwards": []
-      }
-    ]
+  "name": "completed",
+  "pairs": [
+    {
+      "prev_node": "in_progress",
+      "threshold": 1,
+      "forwards": []
+    }
+  ]
   }
 ]
 ```
@@ -454,33 +483,43 @@ Returns transaction block information.
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Permission",
-      "type_raw": "0x2::permission::Permission",
-      "object": "0x8fd49ffe18acb15d8aa5501e93cbfb24ced6b914dc57c759c13f7b0674017671",
-      "version": "1172268",
-      "owner": {
-        "Shared": {
-          "initial_shared_version": 1172268
-        }
-      },
-      "change": "created"
-    },
-    {
-      "type": "Machine",
-      "type_raw": "0x2::machine::Machine",
-      "object": "0xd45bb45481fcb2aa13884acf55bf6f4f52fd94625cae8dcd808c748eefb535ff",
-      "version": "1172268",
-      "owner": {
-        "Shared": {
-          "initial_shared_version": 1172268
-        }
-      },
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "type_raw": "0x2::permission::Permission",
+            "object": "0x8fd49ffe18acb15d8aa5501e93cbfb24ced6b914dc57c759c13f7b0674017671",
+            "version": "1172268",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 1172268
+              }
+            },
+            "change": "created"
+          },
+          {
+            "type": "Machine",
+            "type_raw": "0x2::machine::Machine",
+            "object": "0xd45bb45481fcb2aa13884acf55bf6f4f52fd94625cae8dcd808c748eefb535ff",
+            "version": "1172268",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 1172268
+              }
+            },
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -532,17 +571,17 @@ When designing workflow nodes, you need to understand how the **init node** (emp
 {
   "name": "requirement",
   "pairs": [
-    {
-      "prev_node": "",  // Connects from init node
-      "threshold": 1,
-      "forwards": [
-        {
-          "name": "start_project",
-          "permissionIndex": 1000,
-          "weight": 1
-        }
-      ]
-    }
+  {
+    "prev_node": "",  // Connects from init node
+    "threshold": 1,
+    "forwards": [
+      {
+        "name": "start_project",
+        "permissionIndex": 1000,
+        "weight": 1
+      }
+    ]
+  }
   ]
 }
 ```
@@ -563,29 +602,32 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "created",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "created",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -614,29 +656,32 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "confirmed",
-          "pairs": [
-            {
-              "prev_node": "created",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "confirm_order",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "confirmed",
+            "pairs": [
+              {
+                "prev_node": "created",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "confirm_order",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -648,32 +693,35 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "delivered",
-          "pairs": [
-            {
-              "prev_node": "confirmed",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "confirm_delivery",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "delivery_guard"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "delivered",
+            "pairs": [
+              {
+                "prev_node": "confirmed",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "confirm_delivery",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "delivery_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -685,29 +733,32 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "processing",
-          "pairs": [
-            {
-              "prev_node": "confirmed",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_processing",
-                  "namedOperator": "operator",
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "processing",
+            "pairs": [
+              {
+                "prev_node": "confirmed",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_processing",
+                    "namedOperator": "operator",
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -719,61 +770,64 @@ Returns transaction block information.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "preparing",
-          "pairs": [
-            {
-              "prev_node": "confirmed",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_preparing",
-                  "permissionIndex": 1002,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "shipping",
-          "pairs": [
-            {
-              "prev_node": "preparing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_shipping",
-                  "permissionIndex": 1003,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "completed",
-          "pairs": [
-            {
-              "prev_node": "shipping",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "complete_order",
-                  "permissionIndex": 1004,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "preparing",
+            "pairs": [
+              {
+                "prev_node": "confirmed",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_preparing",
+                    "permissionIndex": 1002,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "shipping",
+            "pairs": [
+              {
+                "prev_node": "preparing",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_shipping",
+                    "permissionIndex": 1003,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "completed",
+            "pairs": [
+              {
+                "prev_node": "shipping",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "complete_order",
+                    "permissionIndex": 1004,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -803,35 +857,38 @@ Set (replace) existing nodes in a Machine. Use `bReplace` flag to control whethe
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "set",
-      "nodes": [
-        {
-          "name": "confirmed",
-          "pairs": [
-            {
-              "prev_node": "created",
-              "threshold": 2,
-              "forwards": [
-                {
-                  "name": "confirm_order",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                },
-                {
-                  "name": "admin_confirm",
-                  "permissionIndex": 1005,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "bReplace": true
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "set",
+        "nodes": [
+          {
+            "name": "confirmed",
+            "pairs": [
+              {
+                "prev_node": "created",
+                "threshold": 2,
+                "forwards": [
+                  {
+                    "name": "confirm_order",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  },
+                  {
+                    "name": "admin_confirm",
+                    "permissionIndex": 1005,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "bReplace": true
+      }
     }
   }
 }
@@ -860,12 +917,15 @@ Remove one or more nodes from a Machine by their names.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove",
-      "nodes": ["temp_node"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "remove",
+        "nodes": ["temp_node"]
+      }
     }
   }
 }
@@ -877,12 +937,15 @@ Remove one or more nodes from a Machine by their names.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove",
-      "nodes": ["temp_node1", "temp_node2"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "remove",
+        "nodes": ["temp_node1", "temp_node2"]
+      }
     }
   }
 }
@@ -910,11 +973,14 @@ Remove all nodes from a Machine. Use with caution!
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "clear"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -944,13 +1010,16 @@ Swap the positions of two nodes in the workflow. This exchanges all their connec
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "exchange",
-      "node_one": "preparing",
-      "node_other": "shipping"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "exchange",
+        "node_one": "preparing",
+        "node_other": "shipping"
+      }
     }
   }
 }
@@ -980,13 +1049,16 @@ Rename a node while preserving all its connections and forwards.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "rename",
-      "node_name_old": "confirmed",
-      "node_name_new": "validated"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "rename",
+        "node_name_old": "confirmed",
+        "node_name_new": "validated"
+      }
     }
   }
 }
@@ -1015,17 +1087,20 @@ Remove specific previous node connections from a node. This removes the edge bet
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove prior node",
-      "pairs": [
-        {
-          "prior_node_name": ["created"],
-          "node_name": "confirmed"
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "remove prior node",
+        "pairs": [
+          {
+            "prior_node_name": ["created"],
+            "node_name": "confirmed"
+          }
+        ]
+      }
     }
   }
 }
@@ -1054,25 +1129,28 @@ Add forward operations to existing node connections. This adds new transition op
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add forward",
-      "data": [
-        {
-          "prior_node_name": "created",
-          "node_name": "confirmed",
-          "forward": [
-            {
-              "name": "urgent_confirm",
-              "permissionIndex": 1006,
-              "weight": 1
-            }
-          ],
-          "threshold": 1
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add forward",
+        "data": [
+          {
+            "prior_node_name": "created",
+            "node_name": "confirmed",
+            "forward": [
+              {
+                "name": "urgent_confirm",
+                "permissionIndex": 1006,
+                "weight": 1
+              }
+            ],
+            "threshold": 1
+          }
+        ]
+      }
     }
   }
 }
@@ -1084,37 +1162,40 @@ Add forward operations to existing node connections. This adds new transition op
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add forward",
-      "data": [
-        {
-          "prior_node_name": "created",
-          "node_name": "confirmed",
-          "forward": [
-            {
-              "name": "standard_confirm",
-              "permissionIndex": 1000,
-              "weight": 1
-            }
-          ],
-          "threshold": 1
-        },
-        {
-          "prior_node_name": "confirmed",
-          "node_name": "processing",
-          "forward": [
-            {
-              "name": "auto_process",
-              "permissionIndex": 1007,
-              "weight": 1
-            }
-          ],
-          "threshold": 1
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add forward",
+        "data": [
+          {
+            "prior_node_name": "created",
+            "node_name": "confirmed",
+            "forward": [
+              {
+                "name": "standard_confirm",
+                "permissionIndex": 1000,
+                "weight": 1
+              }
+            ],
+            "threshold": 1
+          },
+          {
+            "prior_node_name": "confirmed",
+            "node_name": "processing",
+            "forward": [
+              {
+                "name": "auto_process",
+                "permissionIndex": 1007,
+                "weight": 1
+              }
+            ],
+            "threshold": 1
+          }
+        ]
+      }
     }
   }
 }
@@ -1143,18 +1224,21 @@ Remove specific forward operations from node connections.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "remove forward",
-      "data": [
-        {
-          "prior_node_name": "created",
-          "node_name": "confirmed",
-          "forward_name": ["urgent_confirm"]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "remove forward",
+        "data": [
+          {
+            "prior_node_name": "created",
+            "node_name": "confirmed",
+            "forward_name": ["urgent_confirm"]
+          }
+        ]
+      }
     }
   }
 }
@@ -1181,12 +1265,12 @@ The file must contain a JSON array of node objects:
 ```json
 [
   {
-    "name": "node1",
-    "pairs": [...]
+  "name": "node1",
+  "pairs": [...]
   },
   {
-    "name": "node2",
-    "pairs": [...]
+  "name": "node2",
+  "pairs": [...]
   }
 ]
 ```
@@ -1199,11 +1283,14 @@ The file must contain a JSON array of node objects:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "json_or_markdown_file": "/path/to/workflow_v2.json"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "json_or_markdown_file": "/path/to/workflow_v2.json"
+      }
     }
   }
 }
@@ -1212,8 +1299,18 @@ The file must contain a JSON array of node objects:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": []
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1223,11 +1320,14 @@ The file must contain a JSON array of node objects:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "json_or_markdown_file": "/path/to/workflow_doc.md"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "json_or_markdown_file": "/path/to/workflow_doc.md"
+      }
     }
   }
 }
@@ -1236,8 +1336,18 @@ The file must contain a JSON array of node objects:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": []
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1263,10 +1373,13 @@ Add or update the description of a Machine object.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "description": "Design service workflow - manages the complete lifecycle from order creation to delivery, including confirmation, preparation, shipping, and completion stages."
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "description": "Design service workflow - manages the complete lifecycle from order creation to delivery, including confirmation, preparation, shipping, and completion stages."
+    }
   }
 }
 ```
@@ -1294,12 +1407,15 @@ Attach or detach Repository objects to a Machine for consensus data management.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "repository": {
-      "op": "add",
-      "objects": ["config_repo", "data_repo"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "repository": {
+        "op": "add",
+        "objects": ["config_repo", "data_repo"]
+      }
     }
   }
 }
@@ -1311,12 +1427,15 @@ Attach or detach Repository objects to a Machine for consensus data management.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "repository": {
-      "op": "set",
-      "objects": ["new_config_repo"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "repository": {
+        "op": "set",
+        "objects": ["new_config_repo"]
+      }
     }
   }
 }
@@ -1328,12 +1447,15 @@ Attach or detach Repository objects to a Machine for consensus data management.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "repository": {
-      "op": "remove",
-      "objects": ["config_repo"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "repository": {
+        "op": "remove",
+        "objects": ["config_repo"]
+      }
     }
   }
 }
@@ -1345,11 +1467,14 @@ Attach or detach Repository objects to a Machine for consensus data management.
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "repository": {
-      "op": "clear"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "repository": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -1387,10 +1512,13 @@ Create a new Progress instance from a published Machine. Progress represents an 
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "progress_new": {}
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "progress_new": {}
+    }
   }
 }
 ```
@@ -1401,13 +1529,16 @@ Create a new Progress instance from a published Machine. Progress represents an 
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "order_12345",
-        "tags": ["urgent", "vip"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "order_12345",
+          "tags": ["urgent", "vip"]
+        }
       }
     }
   }
@@ -1420,21 +1551,24 @@ Create a new Progress instance from a published Machine. Progress represents an 
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "order_12346"
-      },
-      "progress_namedOperator": {
-        "op": "set",
-        "name": "operator",
-        "operators": {
-          "entities": [
-            {"name_or_address": "alice"},
-            {"name_or_address": "bob"}
-          ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "order_12346"
+        },
+        "progress_namedOperator": {
+          "op": "set",
+          "name": "operator",
+          "operators": {
+            "entities": [
+              {"name_or_address": "alice"},
+              {"name_or_address": "bob"}
+            ]
+          }
         }
       }
     }
@@ -1448,16 +1582,19 @@ Create a new Progress instance from a published Machine. Progress represents an 
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "order_12347"
-      },
-      "repository": {
-        "op": "add",
-        "objects": ["order_data_repo"]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "order_12347"
+        },
+        "repository": {
+          "op": "add",
+          "objects": ["order_data_repo"]
+        }
       }
     }
   }
@@ -1486,10 +1623,13 @@ Pause or resume a Machine to control whether new Progress instances can be creat
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "pause": true
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "pause": true
+    }
   }
 }
 ```
@@ -1500,10 +1640,13 @@ Pause or resume a Machine to control whether new Progress instances can be creat
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "pause": false
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "pause": false
+    }
   }
 }
 ```
@@ -1536,10 +1679,13 @@ Publish a Machine to lock its nodes and enable Progress creation. **Warning**: A
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "publish": true
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "publish": true
+    }
   }
 }
 ```
@@ -1566,10 +1712,13 @@ Receive and unwrap objects (coins, NFTs) that have been sent to the Machine obje
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "owner_receive": "recently"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "owner_receive": "recently"
+    }
   }
 }
 ```
@@ -1580,13 +1729,16 @@ Receive and unwrap objects (coins, NFTs) that have been sent to the Machine obje
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "owner_receive": [
-      {"id": "0x1234...", "type": "0x2::coin::Coin<0x2::wow::WOW>"},
-      {"id": "0x5678...", "type": "0x2::nft::NFT"}
-    ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "owner_receive": [
+        {"id": "0x1234...", "type": "0x2::coin::Coin<0x2::wow::WOW>"},
+        {"id": "0x5678...", "type": "0x2::nft::NFT"}
+      ]
+    }
   }
 }
 ```
@@ -1613,10 +1765,13 @@ Set or remove a Contact object reference for the Machine. Contact objects enable
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "um": "dev_team_contact"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "um": "dev_team_contact"
+    }
   }
 }
 ```
@@ -1627,10 +1782,13 @@ Set or remove a Contact object reference for the Machine. Contact objects enable
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "um": null
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "um": null
+    }
   }
 }
 ```
@@ -1663,12 +1821,15 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 
 ```json
 {
-  "machine": "software_dev_workflow",
-  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
-  "format": "json",
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "software_dev_workflow",
+    "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+    "format": "json",
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1676,11 +1837,16 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
-  "format": "json",
-  "machine_object": "software_dev_workflow",
-  "node_count": 8
+  "result": {
+    "status": "success",
+    "data": {
+      "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+      "format": "json",
+      "machine_object": "software_dev_workflow",
+      "node_count": 8
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1690,12 +1856,15 @@ Export a Machine object's node definitions from the blockchain to a local JSON o
 
 ```json
 {
-  "machine": "software_dev_workflow",
-  "file_path": "d:\\wowok\\docs\\workflow_nodes.md",
-  "format": "markdown",
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "software_dev_workflow",
+    "file_path": "d:\\wowok\\docs\\workflow_nodes.md",
+    "format": "markdown",
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1755,12 +1924,15 @@ Before creating the Machine workflow, you need to:
 
 ### Step 1: Create Team Accounts
 
-Create accounts for each team member using the `account_operation` tool:
+Create accounts for each team member using the `account_operation` sub-tool:
 
 ```json
 {
-  "gen": {
-    "name": "pm_alice"
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "pm_alice"
+    }
   }
 }
 ```
@@ -1768,10 +1940,16 @@ Create accounts for each team member using the `account_operation` tool:
 **Execution Result**:
 ```json
 {
-  "gen": {
-    "address": "0xd3a1e00fb2401dadf0f5c229f8993b5a8934552b1dc2b1cd719f5d9e2aeff33d",
-    "name": "pm_alice"
-  }
+  "result": {
+    "status": "success",
+    "data": {
+      "gen": {
+        "address": "0xd3a1e00fb2401dadf0f5c229f8993b5a8934552b1dc2b1cd719f5d9e2aeff33d",
+        "name": "pm_alice"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1791,17 +1969,20 @@ Create a Permission object to manage workflow access control:
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "dev_team_permission",
-      "tags": ["development", "team", "workflow"]
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "dev_team_permission",
+        "tags": ["development", "team", "workflow"]
+      },
+      "description": "Permission object for software development team workflow"
     },
-    "description": "Permission object for software development team workflow"
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1825,25 +2006,28 @@ Assign user-defined permission indexes (1000-1004) to team members:
 **Permission 1000 - Product Manager (Requirement Approval)**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dev_team_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 1000,
-      "entity": {
-        "entities": [{"name_or_address": "pm_alice"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "dev_team_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 1000,
+        "entity": {
+          "entities": [{"name_or_address": "pm_alice"}]
+        }
+      },
+      "remark": {
+        "op": "set",
+        "index": 1000,
+        "remark": "Product Manager - Requirement approval permission"
       }
     },
-    "remark": {
-      "op": "set",
-      "index": 1000,
-      "remark": "Product Manager - Requirement approval permission"
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1851,20 +2035,23 @@ Assign user-defined permission indexes (1000-1004) to team members:
 **Permission 1001 - Architect (Design Approval)**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dev_team_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 1001,
-      "entity": {
-        "entities": [{"name_or_address": "arch_bob"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "dev_team_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 1001,
+        "entity": {
+          "entities": [{"name_or_address": "arch_bob"}]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1872,20 +2059,23 @@ Assign user-defined permission indexes (1000-1004) to team members:
 **Permission 1002 - Development Lead (Code Review & Deployment)**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dev_team_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 1002,
-      "entity": {
-        "entities": [{"name_or_address": "dev_lead_carol"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "dev_team_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 1002,
+        "entity": {
+          "entities": [{"name_or_address": "dev_lead_carol"}]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1893,20 +2083,23 @@ Assign user-defined permission indexes (1000-1004) to team members:
 **Permission 1003 - Test Lead (Testing Approval)**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dev_team_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 1003,
-      "entity": {
-        "entities": [{"name_or_address": "test_lead_dave"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "dev_team_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 1003,
+        "entity": {
+          "entities": [{"name_or_address": "test_lead_dave"}]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1914,20 +2107,23 @@ Assign user-defined permission indexes (1000-1004) to team members:
 **Permission 1004 - Customer (UAT Approval)**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dev_team_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 1004,
-      "entity": {
-        "entities": [{"name_or_address": "customer_eve"}]
+    "operation_type": "permission",
+    "data": {
+      "object": "dev_team_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 1004,
+        "entity": {
+          "entities": [{"name_or_address": "customer_eve"}]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1940,35 +2136,38 @@ Create an always-true Guard for workflow transitions:
 
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "dev_workflow_guard",
-      "tags": ["guard", "workflow", "development"]
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "dev_workflow_guard",
+        "tags": ["guard", "workflow", "development"]
+      },
+      "description": "Always true guard for development workflow transitions",
+      "table": [
+        {
+          "identifier": 0,
+          "value_type": "Bool",
+          "b_submission": false,
+          "value": true
+        }
+      ],
+      "root": {
+        "type": "node",
+        "node": {
+          "type": "logic_equal",
+          "nodes": [
+            {"type": "identifier", "identifier": 0},
+            {"type": "identifier", "identifier": 0}
+          ]
+        }
+      }
     },
-    "description": "Always true guard for development workflow transitions",
-    "table": [
-      {
-        "identifier": 0,
-        "value_type": "Bool",
-        "b_submission": false,
-        "value": true
-      }
-    ],
-    "root": {
-      "type": "node",
-      "node": {
-        "type": "logic_equal",
-        "nodes": [
-          {"type": "identifier", "identifier": 0},
-          {"type": "identifier", "identifier": 0}
-        ]
-      }
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1991,19 +2190,22 @@ Create the Machine with the Permission object:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "software_dev_workflow",
-      "permission": "dev_team_permission",
-      "tags": ["development", "workflow", "sdlc"],
-      "onChain": true
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "software_dev_workflow",
+        "permission": "dev_team_permission",
+        "tags": ["development", "workflow", "sdlc"],
+        "onChain": true
+      },
+      "description": "Software Development Lifecycle Workflow - manages the complete process from requirements to deployment"
     },
-    "description": "Software Development Lifecycle Workflow - manages the complete process from requirements to deployment"
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -2026,170 +2228,173 @@ Add all 8 nodes with their connections:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "software_dev_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "requirement",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_project",
-                  "permissionIndex": 1000,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+    "operation_type": "machine",
+    "data": {
+      "object": "software_dev_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "requirement",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_project",
+                    "permissionIndex": 1000,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "design",
-          "pairs": [
-            {
-              "prev_node": "requirement",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "submit_design",
-                  "permissionIndex": 1000,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "design",
+            "pairs": [
+              {
+                "prev_node": "requirement",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "submit_design",
+                    "permissionIndex": 1000,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "development",
-          "pairs": [
-            {
-              "prev_node": "design",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_development",
-                  "permissionIndex": 1001,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "development",
+            "pairs": [
+              {
+                "prev_node": "design",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_development",
+                    "permissionIndex": 1001,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "code_review",
-          "pairs": [
-            {
-              "prev_node": "development",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "submit_code",
-                  "namedOperator": "developer",
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "code_review",
+            "pairs": [
+              {
+                "prev_node": "development",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "submit_code",
+                    "namedOperator": "developer",
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "testing",
-          "pairs": [
-            {
-              "prev_node": "code_review",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "approve_code",
-                  "permissionIndex": 1002,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "testing",
+            "pairs": [
+              {
+                "prev_node": "code_review",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "approve_code",
+                    "permissionIndex": 1002,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "uat",
-          "pairs": [
-            {
-              "prev_node": "testing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "pass_testing",
-                  "permissionIndex": 1003,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "uat",
+            "pairs": [
+              {
+                "prev_node": "testing",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "pass_testing",
+                    "permissionIndex": 1003,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "deployment",
-          "pairs": [
-            {
-              "prev_node": "uat",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "approve_uat",
-                  "permissionIndex": 1004,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "deployment",
+            "pairs": [
+              {
+                "prev_node": "uat",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "approve_uat",
+                    "permissionIndex": 1004,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "completed",
-          "pairs": [
-            {
-              "prev_node": "deployment",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "deploy_production",
-                  "permissionIndex": 1002,
-                  "weight": 1,
-                  "guard": {
-                    "guard": "dev_workflow_guard"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "completed",
+            "pairs": [
+              {
+                "prev_node": "deployment",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "deploy_production",
+                    "permissionIndex": 1002,
+                    "weight": 1,
+                    "guard": {
+                      "guard": "dev_workflow_guard"
+                    }
                   }
-                }
-              ]
-            }
-          ]
-        }
-      ]
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -2209,16 +2414,19 @@ Add all 8 nodes with their connections:
 
 ### Step 7: Export Node Definitions to File
 
-Export the node definitions for reuse using the `machineNode2file` tool:
+Export the node definitions for reuse using the `machineNode2file` sub-tool:
 
 ```json
 {
-  "machine": "software_dev_workflow",
-  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
-  "format": "json",
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+  "tool": "machineNode2file",
+  "data": {
+    "machine": "software_dev_workflow",
+    "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+    "format": "json",
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -2226,11 +2434,16 @@ Export the node definitions for reuse using the `machineNode2file` tool:
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "file_path": "d:\\wowok\\docs\\exported_nodes.json",
-  "format": "json",
-  "machine_object": "software_dev_workflow",
-  "node_count": 8
+  "result": {
+    "status": "success",
+    "data": {
+      "file_path": "d:\\wowok\\docs\\exported_nodes.json",
+      "format": "json",
+      "machine_object": "software_dev_workflow",
+      "node_count": 8
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -2238,44 +2451,44 @@ The exported file contains the complete node array:
 ```json
 [
   {
-    "name": "requirement",
-    "pairs": [
-      {
-        "prev_node": "",
-        "threshold": 1,
-        "forwards": [
-          {
-            "name": "start_project",
-            "permissionIndex": 1000,
-            "weight": 1,
-            "guard": {
-              "guard": "0x6ee9...e48a",
-              "retained_submission": []
-            }
+  "name": "requirement",
+  "pairs": [
+    {
+      "prev_node": "",
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "start_project",
+          "permissionIndex": 1000,
+          "weight": 1,
+          "guard": {
+            "guard": "0x6ee9...e48a",
+            "retained_submission": []
           }
-        ]
-      }
-    ]
+        }
+      ]
+    }
+  ]
   },
   {
-    "name": "design",
-    "pairs": [
-      {
-        "prev_node": "requirement",
-        "threshold": 1,
-        "forwards": [
-          {
-            "name": "submit_design",
-            "permissionIndex": 1000,
-            "weight": 1,
-            "guard": {
-              "guard": "0x6ee9...e48a",
-              "retained_submission": []
-            }
+  "name": "design",
+  "pairs": [
+    {
+      "prev_node": "requirement",
+      "threshold": 1,
+      "forwards": [
+        {
+          "name": "submit_design",
+          "permissionIndex": 1000,
+          "weight": 1,
+          "guard": {
+            "guard": "0x6ee9...e48a",
+            "retained_submission": []
           }
-        ]
-      }
-    ]
+        }
+      ]
+    }
+  ]
   }
   // ... more nodes
 ]
@@ -2294,21 +2507,21 @@ Add a `security_audit` node between `code_review` and `testing`:
 {
   "name": "security_audit",
   "pairs": [
-    {
-      "prev_node": "code_review",
-      "threshold": 1,
-      "forwards": [
-        {
-          "name": "pass_code_review",
-          "permissionIndex": 1002,
-          "weight": 1,
-          "guard": {
-            "guard": "0x6ee9...e48a",
-            "retained_submission": []
-          }
+  {
+    "prev_node": "code_review",
+    "threshold": 1,
+    "forwards": [
+      {
+        "name": "pass_code_review",
+        "permissionIndex": 1002,
+        "weight": 1,
+        "guard": {
+          "guard": "0x6ee9...e48a",
+          "retained_submission": []
         }
-      ]
-    }
+      }
+    ]
+  }
   ]
 }
 ```
@@ -2317,22 +2530,25 @@ Create new Machine with file-based node setup:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "secure_dev_workflow",
-      "permission": "dev_team_permission",
-      "tags": ["security", "development", "workflow"],
-      "onChain": true
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "secure_dev_workflow",
+        "permission": "dev_team_permission",
+        "tags": ["security", "development", "workflow"],
+        "onChain": true
+      },
+      "description": "Secure Software Development Workflow with Security Audit - enhanced version with security review phase",
+      "node": {
+        "json_or_markdown_file": "d:\\wowok\\docs\\modified_nodes.json"
+      }
     },
-    "description": "Secure Software Development Workflow with Security Audit - enhanced version with security review phase",
-    "node": {
-      "json_or_markdown_file": "d:\\wowok\\docs\\modified_nodes.json"
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -2355,14 +2571,17 @@ Publish the Machine to enable Progress creation:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "software_dev_workflow",
-    "publish": true
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "operation_type": "machine",
+    "data": {
+      "object": "software_dev_workflow",
+      "publish": true
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -2386,26 +2605,29 @@ Create a Progress instance for Project Alpha:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "software_dev_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_alpha",
-        "tags": ["project", "alpha", "mobile_app"]
-      },
-      "progress_namedOperator": {
-        "op": "set",
-        "name": "developer",
-        "operators": {
-          "entities": [{"name_or_address": "dev_lead_carol"}]
+    "operation_type": "machine",
+    "data": {
+      "object": "software_dev_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "project_alpha",
+          "tags": ["project", "alpha", "mobile_app"]
+        },
+        "progress_namedOperator": {
+          "op": "set",
+          "name": "developer",
+          "operators": {
+            "entities": [{"name_or_address": "dev_lead_carol"}]
+          }
         }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -2424,26 +2646,29 @@ Create another Progress with a different developer:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "secure_dev_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_beta",
-        "tags": ["project", "beta", "web_app"]
-      },
-      "progress_namedOperator": {
-        "op": "set",
-        "name": "developer",
-        "operators": {
-          "entities": [{"name_or_address": "arch_bob"}]
+    "operation_type": "machine",
+    "data": {
+      "object": "secure_dev_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "project_beta",
+          "tags": ["project", "beta", "web_app"]
+        },
+        "progress_namedOperator": {
+          "op": "set",
+          "name": "developer",
+          "operators": {
+            "entities": [{"name_or_address": "arch_bob"}]
+          }
         }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```

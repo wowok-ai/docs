@@ -6,7 +6,9 @@
 
 The LocalMark component manages local address book entries, storing ID names and tags exclusively on the local device. Users can use names to reference and operate on user addresses and object IDs.
 
-> **Note**: Use the `query_toolkit` tool to query all or filtered marks.
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "local_mark_operation", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
+> **Note**: Use the `query_toolkit` sub-tool to query all or filtered marks.
 
 ---
 
@@ -78,11 +80,14 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      { "address": "0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82" }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        { "address": "0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82" }
+      ]
+    }
   }
 }
 ```
@@ -90,13 +95,24 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "address": "0xe639...2e82",
-      "createdAt": 1776658023742,
-      "updatedAt": 1776658023742
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "address": "0xe639...2e82",
+              "createdAt": 1776658023742,
+              "updatedAt": 1776658023742
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -106,14 +122,17 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "alice" },
-        "address": "0x531a921e6ec7ea894ee293f94ae03d586b167ed53ff4877599e41522ad92be66"
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "alice" },
+          "address": "0x531a921e6ec7ea894ee293f94ae03d586b167ed53ff4877599e41522ad92be66"
+        }
+      ]
+    }
   }
 }
 ```
@@ -121,14 +140,25 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "name": "alice",
-      "address": "0x531a...be66",
-      "createdAt": 1776658030346,
-      "updatedAt": 1776658030346
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "alice",
+              "address": "0x531a...be66",
+              "createdAt": 1776658030346,
+              "updatedAt": 1776658030346
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -138,14 +168,17 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "address": "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
-        "tags": ["friend", "designer"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "address": "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
+          "tags": ["friend", "designer"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -153,14 +186,28 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "address": "0x2400...e3b3",
-      "tags": ["friend", "designer"],
-      "createdAt": 1776658033799,
-      "updatedAt": 1776658033799
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "address": "0x2400...e3b3",
+              "tags": [
+                "friend",
+                "designer"
+              ],
+              "createdAt": 1776658033799,
+              "updatedAt": 1776658033799
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -170,15 +217,18 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "bob" },
-        "address": "0x2bce0d2c3060e426ed93f65d0a7afbc7a0653e2813b972c088faaab9ce504937",
-        "tags": ["friend", "designer", "colleague"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "bob" },
+          "address": "0x2bce0d2c3060e426ed93f65d0a7afbc7a0653e2813b972c088faaab9ce504937",
+          "tags": ["friend", "designer", "colleague"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -186,15 +236,30 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "name": "bob",
-      "address": "0x2bce...4937",
-      "tags": ["friend", "designer", "colleague"],
-      "createdAt": 1776658036962,
-      "updatedAt": 1776658036962
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "bob",
+              "address": "0x2bce...4937",
+              "tags": [
+                "friend",
+                "designer",
+                "colleague"
+              ],
+              "createdAt": 1776658036962,
+              "updatedAt": 1776658036962
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -204,15 +269,18 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "alice", "replaceExistName": true },
-        "address": "0x03174f2f61766b2135c9822039fddd1ec0f5e11661e0805f1618fca08288b606",
-        "tags": ["vip"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "alice", "replaceExistName": true },
+          "address": "0x03174f2f61766b2135c9822039fddd1ec0f5e11661e0805f1618fca08288b606",
+          "tags": ["vip"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -220,15 +288,28 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "name": "alice",
-      "address": "0x0317...b606",
-      "tags": ["vip"],
-      "createdAt": 1776658040182,
-      "updatedAt": 1776658040182
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "alice",
+              "address": "0x0317...b606",
+              "tags": [
+                "vip"
+              ],
+              "createdAt": 1776658040182,
+              "updatedAt": 1776658040182
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -238,23 +319,26 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "name": { "value": "charlie" },
-        "address": "0x499773f65060e35c1b8acee9452083b2ee078155f02c39b30ec12ab4692bbb7a",
-        "tags": ["friend"]
-      },
-      {
-        "name": { "value": "dave" },
-        "address": "0xef686f7f13ce876f498b4fb293046620bf3754cc82541d7b06909ec53b479b3d",
-        "tags": ["colleague", "developer"]
-      },
-      {
-        "address": "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f"
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "name": { "value": "charlie" },
+          "address": "0x499773f65060e35c1b8acee9452083b2ee078155f02c39b30ec12ab4692bbb7a",
+          "tags": ["friend"]
+        },
+        {
+          "name": { "value": "dave" },
+          "address": "0xef686f7f13ce876f498b4fb293046620bf3754cc82541d7b06909ec53b479b3d",
+          "tags": ["colleague", "developer"]
+        },
+        {
+          "address": "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f"
+        }
+      ]
+    }
   }
 }
 ```
@@ -262,27 +346,43 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "name": "charlie",
-      "address": "0x4997...bb7a",
-      "tags": ["friend"],
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
-    },
-    {
-      "name": "dave",
-      "address": "0xef68...9b3d",
-      "tags": ["colleague", "developer"],
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
-    },
-    {
-      "address": "0xa539...063f",
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "name": "charlie",
+              "address": "0x4997...bb7a",
+              "tags": [
+                "friend"
+              ],
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            },
+            {
+              "name": "dave",
+              "address": "0xef68...9b3d",
+              "tags": [
+                "colleague",
+                "developer"
+              ],
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            },
+            {
+              "address": "0xa539...063f",
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -292,14 +392,17 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 
 ```json
 {
-  "add": {
-    "op": "add",
-    "data": [
-      {
-        "address": "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35",
-        "tags": ["contract", "important"]
-      }
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "add": {
+      "op": "add",
+      "data": [
+        {
+          "address": "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35",
+          "tags": ["contract", "important"]
+        }
+      ]
+    }
   }
 }
 ```
@@ -307,14 +410,28 @@ Add one or more local marks. Each mark includes name, address, and tags for loca
 **Execution Result:**
 ```json
 {
-  "add": [
-    {
-      "address": "0xfe92...aa35",
-      "tags": ["contract", "important"],
-      "createdAt": 1776658047449,
-      "updatedAt": 1776658047449
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "add": [
+            {
+              "address": "0xfe92...aa35",
+              "tags": [
+                "contract",
+                "important"
+              ],
+              "createdAt": 1776658047449,
+              "updatedAt": 1776658047449
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -341,9 +458,12 @@ Remove one or more local marks by name or address.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "names": ["alice"]
+  "tool": "local_mark_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "names": ["alice"]
+    }
   }
 }
 ```
@@ -351,15 +471,28 @@ Remove one or more local marks by name or address.
 **Execution Result:**
 ```json
 {
-  "remove": [
-    {
-      "name": "alice",
-      "address": "0x0317...b606",
-      "tags": ["vip"],
-      "createdAt": 1776658040182,
-      "updatedAt": 1776658040182
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "remove": [
+            {
+              "name": "alice",
+              "address": "0x0317...b606",
+              "tags": [
+                "vip"
+              ],
+              "createdAt": 1776658040182,
+              "updatedAt": 1776658040182
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -369,9 +502,12 @@ Remove one or more local marks by name or address.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "names": ["0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82"]
+  "tool": "local_mark_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "names": ["0xe639a6382527a57e9213ad08b65f6b6cbd6fcc827356a2ab34f63f42c7c32e82"]
+    }
   }
 }
 ```
@@ -379,13 +515,24 @@ Remove one or more local marks by name or address.
 **Execution Result:**
 ```json
 {
-  "remove": [
-    {
-      "address": "0xe639...2e82",
-      "createdAt": 1776658023742,
-      "updatedAt": 1776658023742
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "remove": [
+            {
+              "address": "0xe639...2e82",
+              "createdAt": 1776658023742,
+              "updatedAt": 1776658023742
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -395,13 +542,16 @@ Remove one or more local marks by name or address.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "names": [
-      "bob",
-      "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
-      "charlie"
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "names": [
+        "bob",
+        "0x24008bde7867f17fc210785b5195f5de8ac605cc9d5269eaebb99002944ae3b3",
+        "charlie"
+      ]
+    }
   }
 }
 ```
@@ -409,28 +559,48 @@ Remove one or more local marks by name or address.
 **Execution Result:**
 ```json
 {
-  "remove": [
-    {
-      "address": "0x2400...e3b3",
-      "tags": ["friend", "designer"],
-      "createdAt": 1776658033799,
-      "updatedAt": 1776658033799
-    },
-    {
-      "name": "bob",
-      "address": "0x2bce...4937",
-      "tags": ["friend", "designer", "colleague"],
-      "createdAt": 1776658036962,
-      "updatedAt": 1776658036962
-    },
-    {
-      "name": "charlie",
-      "address": "0x4997...bb7a",
-      "tags": ["friend"],
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "remove": [
+            {
+              "address": "0x2400...e3b3",
+              "tags": [
+                "friend",
+                "designer"
+              ],
+              "createdAt": 1776658033799,
+              "updatedAt": 1776658033799
+            },
+            {
+              "name": "bob",
+              "address": "0x2bce...4937",
+              "tags": [
+                "friend",
+                "designer",
+                "colleague"
+              ],
+              "createdAt": 1776658036962,
+              "updatedAt": 1776658036962
+            },
+            {
+              "name": "charlie",
+              "address": "0x4997...bb7a",
+              "tags": [
+                "friend"
+              ],
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -440,9 +610,12 @@ Remove one or more local marks by name or address.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "names": ["dave"]
+  "tool": "local_mark_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "names": ["dave"]
+    }
   }
 }
 ```
@@ -450,15 +623,29 @@ Remove one or more local marks by name or address.
 **Execution Result:**
 ```json
 {
-  "remove": [
-    {
-      "name": "dave",
-      "address": "0xef68...9b3d",
-      "tags": ["colleague", "developer"],
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "remove": [
+            {
+              "name": "dave",
+              "address": "0xef68...9b3d",
+              "tags": [
+                "colleague",
+                "developer"
+              ],
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -468,12 +655,15 @@ Remove one or more local marks by name or address.
 
 ```json
 {
-  "remove": {
-    "op": "remove",
-    "names": [
-      "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f",
-      "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35"
-    ]
+  "tool": "local_mark_operation",
+  "data": {
+    "remove": {
+      "op": "remove",
+      "names": [
+        "0xa5396433f8ea8802dc338d9eba91da916bfeb1eb8ce76adc44e3a32a5635063f",
+        "0xfe9262f13c663112a17b6ad17252e4fd1aa75d4c4e8ea3d805e20ff63eb1aa35"
+      ]
+    }
   }
 }
 ```
@@ -481,19 +671,33 @@ Remove one or more local marks by name or address.
 **Execution Result:**
 ```json
 {
-  "remove": [
-    {
-      "address": "0xa539...063f",
-      "createdAt": 1776658044403,
-      "updatedAt": 1776658044403
-    },
-    {
-      "address": "0xfe92...aa35",
-      "tags": ["contract", "important"],
-      "createdAt": 1776658047449,
-      "updatedAt": 1776658047449
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "remove": [
+            {
+              "address": "0xa539...063f",
+              "createdAt": 1776658044403,
+              "updatedAt": 1776658044403
+            },
+            {
+              "address": "0xfe92...aa35",
+              "tags": [
+                "contract",
+                "important"
+              ],
+              "createdAt": 1776658047449,
+              "updatedAt": 1776658047449
+            }
+          ]
+        }
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -519,8 +723,11 @@ Remove all local marks. This operation is irreversible, use with caution.
 
 ```json
 {
-  "clear": {
-    "op": "clear"
+  "tool": "local_mark_operation",
+  "data": {
+    "clear": {
+      "op": "clear"
+    }
   }
 }
 ```
@@ -528,7 +735,18 @@ Remove all local marks. This operation is irreversible, use with caution.
 **Execution Result:**
 ```json
 {
-  "clear": true
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "status": "success",
+        "data": {
+          "clear": true
+        }
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -538,7 +756,10 @@ Remove all local marks. This operation is irreversible, use with caution.
 
 ```json
 {
-  "query_type": "local_mark_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_mark_list"
+  }
 }
 ```
 
@@ -546,9 +767,12 @@ Remove all local marks. This operation is irreversible, use with caution.
 
 ```json
 {
-  "query_type": "local_mark_list",
-  "filter": {
-    "tags": ["friend"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_mark_list",
+    "filter": {
+      "tags": ["friend"]
+    }
   }
 }
 ```

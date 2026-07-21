@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "order", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Order Component manages the complete lifecycle of an order. **Orders are usually created automatically by the [Service](service.md) component** when customers make purchases. Once created, orders can be operated directly to manage agents, required information, workflow progress, arbitration, fund receipt, and ownership transfer.
@@ -104,7 +106,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -114,10 +116,13 @@ Order operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "order",
-  "data": { ... },
-  "env": { ... },
-  "submission": { ... }
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "order",
+    "data": { ... },
+    "env": { ... },
+    "submission": { ... }
+  }
 }
 ```
 
@@ -156,10 +161,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "customer_order_123",
-    "agent": ["order_manager"]
+    "operation_type": "order",
+    "data": {
+      "object": "customer_order_123",
+      "agent": ["order_manager"]
+    }
   }
 }
 ```
@@ -172,10 +180,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_order_456",
-    "agent": ["agent_alice", "agent_bob", "agent_charlie"]
+    "operation_type": "order",
+    "data": {
+      "object": "service_order_456",
+      "agent": ["agent_alice", "agent_bob", "agent_charlie"]
+    }
   }
 }
 ```
@@ -188,10 +199,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "old_order_789",
-    "agent": []
+    "operation_type": "order",
+    "data": {
+      "object": "old_order_789",
+      "agent": []
+    }
   }
 }
 ```
@@ -253,10 +267,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "delivery_order_001",
-    "required_info": "customer_contact"
+    "operation_type": "order",
+    "data": {
+      "object": "delivery_order_001",
+      "required_info": "customer_contact"
+    }
   }
 }
 ```
@@ -278,10 +295,13 @@ After setting the Contact, use [Messenger](messenger.md) to send your private in
 
 ```json
 {
-  "operation": "send_message",
-  "from": "customer_account",
-  "to": "service_contact_object",
-  "content": "Order: order_123\nShipping Address: 123 Main St, City, Country\nPhone: +1234567890\nEmail: customer@example.com"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "customer_account",
+    "to": "service_contact_object",
+    "content": "Order: order_123\nShipping Address: 123 Main St, City, Country\nPhone: +1234567890\nEmail: customer@example.com"
+  }
 }
 ```
 
@@ -303,10 +323,13 @@ This ensures that all communication about order details (shipping address, deliv
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "completed_order_003",
-    "required_info": null
+    "operation_type": "order",
+    "data": {
+      "object": "completed_order_003",
+      "required_info": null
+    }
   }
 }
 ```
@@ -355,16 +378,19 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "workflow_order_101",
-    "progress": {
-      "operation": {
-        "next_node_name": "in_review",
-        "forward": "submit_review"
-      },
-      "hold": false,
-      "message": "Order submitted for review successfully"
+    "operation_type": "order",
+    "data": {
+      "object": "workflow_order_101",
+      "progress": {
+        "operation": {
+          "next_node_name": "in_review",
+          "forward": "submit_review"
+        },
+        "hold": false,
+        "message": "Order submitted for review successfully"
+      }
     }
   }
 }
@@ -378,17 +404,20 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "critical_order_102",
-    "progress": {
-      "operation": {
-        "next_node_name": "processing",
-        "forward": "start_process"
-      },
-      "hold": true,
-      "adminUnhold": true,
-      "message": "Locking for exclusive processing"
+    "operation_type": "order",
+    "data": {
+      "object": "critical_order_102",
+      "progress": {
+        "operation": {
+          "next_node_name": "processing",
+          "forward": "start_process"
+        },
+        "hold": true,
+        "adminUnhold": true,
+        "message": "Locking for exclusive processing"
+      }
     }
   }
 }
@@ -402,15 +431,18 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_order_103",
-    "progress": {
-      "operation": {
-        "next_node_name": "completed",
-        "forward": "finish"
-      },
-      "hold": false
+    "operation_type": "order",
+    "data": {
+      "object": "simple_order_103",
+      "progress": {
+        "operation": {
+          "next_node_name": "completed",
+          "forward": "finish"
+        },
+        "hold": false
+      }
     }
   }
 }
@@ -456,14 +488,17 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "dispute_order_201",
-    "arb_confirm": {
-      "arb": "order_dispute_arb",
-      "confirm": true,
-      "description": "Requesting arbitration compensation as product was not delivered on time",
-      "proposition": ["Full payment refund", "Late delivery penalty compensation"]
+    "operation_type": "order",
+    "data": {
+      "object": "dispute_order_201",
+      "arb_confirm": {
+        "arb": "order_dispute_arb",
+        "confirm": true,
+        "description": "Requesting arbitration compensation as product was not delivered on time",
+        "proposition": ["Full payment refund", "Late delivery penalty compensation"]
+      }
     }
   }
 }
@@ -477,12 +512,15 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "simple_dispute_202",
-    "arb_confirm": {
-      "arb": "simple_arb",
-      "confirm": true
+    "operation_type": "order",
+    "data": {
+      "object": "simple_dispute_202",
+      "arb_confirm": {
+        "arb": "simple_arb",
+        "confirm": true
+      }
     }
   }
 }
@@ -524,12 +562,15 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "appeal_order_301",
-    "arb_objection": {
-      "arb": "dispute_arb_result",
-      "objection": "Arbitration result is unfair. I have new evidence proving the product has quality issues. Requesting re-arbitration."
+    "operation_type": "order",
+    "data": {
+      "object": "appeal_order_301",
+      "arb_objection": {
+        "arb": "dispute_arb_result",
+        "objection": "Arbitration result is unfair. I have new evidence proving the product has quality issues. Requesting re-arbitration."
+      }
     }
   }
 }
@@ -578,11 +619,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "compensation_order_401",
-    "arb_claim_compensation": {
-      "arb": "awarded_arb"
+    "operation_type": "order",
+    "data": {
+      "object": "compensation_order_401",
+      "arb_claim_compensation": {
+        "arb": "awarded_arb"
+      }
     }
   }
 }
@@ -623,19 +667,22 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "payment_order_501",
-    "receive": {
-      "balance": "10000000000",
-      "token_type": "CoinWrapper<0x2::wow::WOW>",
-      "received": [
-        {
-          "id": "coin_wrapper_1",
-          "balance": "10000000000",
-          "payment": "payment_obj_1"
-        }
-      ]
+    "operation_type": "order",
+    "data": {
+      "object": "payment_order_501",
+      "receive": {
+        "balance": "10000000000",
+        "token_type": "CoinWrapper<0x2::wow::WOW>",
+        "received": [
+          {
+            "id": "coin_wrapper_1",
+            "balance": "10000000000",
+            "payment": "payment_obj_1"
+          }
+        ]
+      }
     }
   }
 }
@@ -649,19 +696,22 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "asset_order_502",
-    "receive": [
-      {
-        "id": "nft_object_1",
-        "type": "0x2::nft::NFT"
-      },
-      {
-        "id": "document_object_1",
-        "type": "0x2::doc::Document"
-      }
-    ]
+    "operation_type": "order",
+    "data": {
+      "object": "asset_order_502",
+      "receive": [
+        {
+          "id": "nft_object_1",
+          "type": "0x2::nft::NFT"
+        },
+        {
+          "id": "document_object_1",
+          "type": "0x2::doc::Document"
+        }
+      ]
+    }
   }
 }
 ```
@@ -703,10 +753,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "transfer_order_601",
-    "transfer_to": "new_owner_account"
+    "operation_type": "order",
+    "data": {
+      "object": "transfer_order_601",
+      "transfer_to": "new_owner_account"
+    }
   }
 }
 ```
@@ -731,16 +784,19 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "combined_order_701",
-    "agent": ["operations_manager"],
-    "progress": {
-      "operation": {
-        "next_node_name": "active",
-        "forward": "activate"
-      },
-      "hold": false
+    "operation_type": "order",
+    "data": {
+      "object": "combined_order_701",
+      "agent": ["operations_manager"],
+      "progress": {
+        "operation": {
+          "next_node_name": "active",
+          "forward": "activate"
+        },
+        "hold": false
+      }
     }
   }
 }
@@ -754,16 +810,19 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "fulfillment_order_702",
-    "required_info": "shipping_contact",
-    "receive": [
-      {
-        "id": "delivery_nft",
-        "type": "0x2::nft::NFT"
-      }
-    ]
+    "operation_type": "order",
+    "data": {
+      "object": "fulfillment_order_702",
+      "required_info": "shipping_contact",
+      "receive": [
+        {
+          "id": "delivery_nft",
+          "type": "0x2::nft::NFT"
+        }
+      ]
+    }
   }
 }
 ```
@@ -776,34 +835,37 @@ Execute multiple Order operations in one transaction, such as setting agents and
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "full_order_703",
-    "agent": ["agent_1", "agent_2"],
-    "required_info": "customer_contact",
-    "progress": {
-      "operation": {
-        "next_node_name": "delivered",
-        "forward": "confirm_delivery"
+    "operation_type": "order",
+    "data": {
+      "object": "full_order_703",
+      "agent": ["agent_1", "agent_2"],
+      "required_info": "customer_contact",
+      "progress": {
+        "operation": {
+          "next_node_name": "delivered",
+          "forward": "confirm_delivery"
+        },
+        "hold": false,
+        "message": "Order delivery confirmed"
       },
-      "hold": false,
-      "message": "Order delivery confirmed"
+      "receive": {
+        "balance": "25000000000",
+        "token_type": "CoinWrapper<0x2::wow::WOW>",
+        "received": [
+          {
+            "id": "payment_wrapper",
+            "balance": "25000000000",
+            "payment": "order_payment"
+          }
+        ]
+      }
     },
-    "receive": {
-      "balance": "25000000000",
-      "token_type": "CoinWrapper<0x2::wow::WOW>",
-      "received": [
-        {
-          "id": "payment_wrapper",
-          "balance": "25000000000",
-          "payment": "order_payment"
-        }
-      ]
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -823,14 +885,17 @@ This section provides a quick reference for order owners (buyers). For detailed 
 
 ```json
 {
-  "operation_type": "arbitration",
+  "tool": "onchain_operations",
   "data": {
-    "object": "arbitration_object_id",
-    "dispute": {
-      "order": "your_order_id",
-      "description": "Issue description",
-      "proposition": ["Full refund", "Partial refund"],
-      "fee": {"balance": 1000000000}
+    "operation_type": "arbitration",
+    "data": {
+      "object": "arbitration_object_id",
+      "dispute": {
+        "order": "your_order_id",
+        "description": "Issue description",
+        "proposition": ["Full refund", "Partial refund"],
+        "fee": {"balance": 1000000000}
+      }
     }
   }
 }
@@ -842,11 +907,14 @@ This section provides a quick reference for order owners (buyers). For detailed 
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "your_order_id",
-    "arb_claim_compensation": {
-      "arb": "your_arb_object_id"
+    "operation_type": "order",
+    "data": {
+      "object": "your_order_id",
+      "arb_claim_compensation": {
+        "arb": "your_arb_object_id"
+      }
     }
   }
 }
@@ -856,12 +924,15 @@ This section provides a quick reference for order owners (buyers). For detailed 
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "your_order_id",
-    "arb_objection": {
-      "arb": "your_arb_object_id",
-      "objection": "Reason for objection with new evidence"
+    "operation_type": "order",
+    "data": {
+      "object": "your_order_id",
+      "arb_objection": {
+        "arb": "your_arb_object_id",
+        "objection": "Reason for objection with new evidence"
+      }
     }
   }
 }
@@ -888,12 +959,15 @@ Instead, use the secure Contact/Messenger system:
 
 ```json
 {
-  "operation_type": "order",
+  "tool": "onchain_operations",
   "data": {
-    "object": "your_order_id",
-    "required_info": "your_contact_object_id"
-  },
-  "env": {"account": "your_account", "network": "testnet"}
+    "operation_type": "order",
+    "data": {
+      "object": "your_order_id",
+      "required_info": "your_contact_object_id"
+    },
+    "env": {"account": "your_account", "network": "testnet"}
+  }
 }
 ```
 
@@ -905,14 +979,17 @@ Instead, use the secure Contact/Messenger system:
 
 #### Method 2: Direct Messenger Communication
 
-Use the `messenger_operation` tool to send an encrypted message directly to the service staff's Contact object:
+Use the `messenger_operation` sub-tool to send an encrypted message directly to the service staff's Contact object:
 
 ```json
 {
-  "operation": "send_message",
-  "from": "your_account",
-  "to": "service_contact_object",
-  "content": "Order #12345 - Delivery Information\nName: John Doe\nAddress: 123 Main St, City, Country\nPhone: +1234567890"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "your_account",
+    "to": "service_contact_object",
+    "content": "Order #12345 - Delivery Information\nName: John Doe\nAddress: 123 Main St, City, Country\nPhone: +1234567890"
+  }
 }
 ```
 
@@ -989,3 +1066,4 @@ Day 14: Process complete, received funds
 | **[Arbitration](arbitration.md)** | Dispute resolution |
 | **[Contact](contact.md)** | Public contact information for secure communication |
 | **[Messenger](messenger.md)** | End-to-end encrypted messaging for private information exchange |
+| **[Trust Score](trust-score.md)** | Service trust & risk assessment — check before placing an order |

@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "progress", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 Progress is WoWok's workflow execution component, used to execute workflow instances created by Machine. Progress tracks the execution status of workflows, manages node transitions, and records execution history.
@@ -103,7 +105,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations.
 
 ---
 
@@ -113,10 +115,13 @@ Progress operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "progress",
-  "data": { ... },
-  "env": { ... },
-  "submission": { ... }
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "progress",
+    "data": { ... },
+    "env": { ... },
+    "submission": { ... }
+  }
 }
 ```
 
@@ -141,14 +146,17 @@ Progress instances are created from published Machine objects using `operation_t
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "sdlc_workflow_v2",
-    "progress_new": {}
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "operation_type": "machine",
+    "data": {
+      "object": "sdlc_workflow_v2",
+      "progress_new": {}
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -159,19 +167,22 @@ Progress instances are created from published Machine objects using `operation_t
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "sdlc_workflow_v2",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_gamma",
-        "tags": ["mobile", "ecommerce"]
+    "operation_type": "machine",
+    "data": {
+      "object": "sdlc_workflow_v2",
+      "progress_new": {
+        "namedNew": {
+          "name": "project_gamma",
+          "tags": ["mobile", "ecommerce"]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -182,23 +193,26 @@ Progress instances are created from published Machine objects using `operation_t
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "sdlc_workflow_v2",
-    "progress_new": {
-      "namedNew": { "name": "project_delta" },
-      "progress_namedOperator": {
-        "op": "set",
-        "name": "developer",
-        "operators": {
-          "entities": [{ "name_or_address": "dev_lead_carol" }]
+    "operation_type": "machine",
+    "data": {
+      "object": "sdlc_workflow_v2",
+      "progress_new": {
+        "namedNew": { "name": "project_delta" },
+        "progress_namedOperator": {
+          "op": "set",
+          "name": "developer",
+          "operators": {
+            "entities": [{ "name_or_address": "dev_lead_carol" }]
+          }
         }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -241,21 +255,24 @@ Advance Progress to the next node by executing node transition operations. There
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_gamma",
-    "operate": {
-      "operation": {
-        "next_node_name": "requirement",
-        "forward": "start_project"
-      },
-      "message": "Starting new project from init node"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_gamma",
+      "operate": {
+        "operation": {
+          "next_node_name": "requirement",
+          "forward": "start_project"
+        },
+        "message": "Starting new project from init node"
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -271,14 +288,24 @@ Advance Progress to the next node by executing node transition operations. There
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "object": "0x147f5f648a6e993bc5c29ae3a8143b8b5cb2b54a45cecb8ef1f81cf545292a5b",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x147f5f648a6e993bc5c29ae3a8143b8b5cb2b54a45cecb8ef1f81cf545292a5b",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -292,21 +319,24 @@ Advance Progress to the next node by executing node transition operations. There
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "design",
-        "forward": "submit_design"
-      },
-      "message": "Requirements approved, proceeding to design phase"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "design",
+          "forward": "submit_design"
+        },
+        "message": "Requirements approved, proceeding to design phase"
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -316,31 +346,41 @@ Advance Progress to the next node by executing node transition operations. There
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "type_raw": "0x2::progress::Progress",
-      "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
-      "version": "644547",
-      "owner": {
-        "Shared": {
-          "initial_shared_version": 639744
-        }
-      },
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_ProgressHistory",
-      "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
-      "object": "0x20fe9fed2c2f7645dee9cf8b8c4148e13b399917ef1df7f12895fa32f838cb2a",
-      "version": "650074",
-      "owner": {
-        "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
-      },
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
+            "version": "644547",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 639744
+              }
+            },
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_ProgressHistory",
+            "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+            "object": "0x20fe9fed2c2f7645dee9cf8b8c4148e13b399917ef1df7f12895fa32f838cb2a",
+            "version": "650074",
+            "owner": {
+              "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
+            },
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -358,22 +398,25 @@ Advance Progress to the next node by executing node transition operations. There
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "development",
-        "forward": "start_development"
-      },
-      "hold": true,
-      "message": "Design completed, awaiting architect approval"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "development",
+          "forward": "start_development"
+        },
+        "hold": true,
+        "message": "Design completed, awaiting architect approval"
+      }
+    },
+    "env": {
+      "account": "arch_bob",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "arch_bob",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -383,31 +426,41 @@ Advance Progress to the next node by executing node transition operations. There
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "type_raw": "0x2::progress::Progress",
-      "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
-      "version": "644547",
-      "owner": {
-        "Shared": {
-          "initial_shared_version": 639744
-        }
-      },
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_ProgressHistory",
-      "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
-      "object": "0x1099682492f682addbd65091eadee32c2dc7cdd4dc517672a72485aa517e0649",
-      "version": "648986",
-      "owner": {
-        "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
-      },
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
+            "version": "644547",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 639744
+              }
+            },
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_ProgressHistory",
+            "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+            "object": "0x1099682492f682addbd65091eadee32c2dc7cdd4dc517672a72485aa517e0649",
+            "version": "648986",
+            "owner": {
+              "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
+            },
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -417,23 +470,26 @@ Advance Progress to the next node by executing node transition operations. There
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "code_review",
-        "forward": "submit_code"
-      },
-      "hold": true,
-      "adminUnhold": true,
-      "message": "Design approved by admin, proceeding to development"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "code_review",
+          "forward": "submit_code"
+        },
+        "hold": true,
+        "adminUnhold": true,
+        "message": "Design approved by admin, proceeding to development"
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -443,31 +499,41 @@ Advance Progress to the next node by executing node transition operations. There
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "type_raw": "0x2::progress::Progress",
-      "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
-      "version": "644547",
-      "owner": {
-        "Shared": {
-          "initial_shared_version": 639744
-        }
-      },
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_ProgressHistory",
-      "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
-      "object": "0xfe3a2f01d9f8d00f9755c783b2bbdb9e0a67eff31160bb079e18e38364c30369",
-      "version": "648986",
-      "owner": {
-        "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
-      },
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f",
+            "version": "644547",
+            "owner": {
+              "Shared": {
+                "initial_shared_version": 639744
+              }
+            },
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_ProgressHistory",
+            "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+            "object": "0xfe3a2f01d9f8d00f9755c783b2bbdb9e0a67eff31160bb079e18e38364c30369",
+            "version": "648986",
+            "owner": {
+              "ObjectOwner": "0x28d5f8d9cc3f4e2082827140739ee29b6e33125f7eeb586690a786cdb00bfe3f"
+            },
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -477,21 +543,24 @@ Advance Progress to the next node by executing node transition operations. There
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "testing",
-        "forward": "submit_code"
-      },
-      "hold": false,
-      "message": "Code submitted for review"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "testing",
+          "forward": "submit_code"
+        },
+        "hold": false,
+        "message": "Code submitted for review"
+      }
+    },
+    "env": {
+      "account": "dev_lead_carol",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "dev_lead_carol",
-    "network": "testnet"
   }
 }
 ```
@@ -532,23 +601,26 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "progress_namedOperator": {
-      "op": "set",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "dev_lead_carol" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "dev_lead_carol" }
+          ],
+          "check_all_founded": true
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -556,18 +628,24 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523550",
-        "change": "mutated"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523550",
+            "change": "mutated"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -577,23 +655,26 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "progress_namedOperator": {
-      "op": "add",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "arch_bob" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "progress_namedOperator": {
+        "op": "add",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "arch_bob" }
+          ],
+          "check_all_founded": true
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -604,23 +685,26 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "progress_namedOperator": {
-      "op": "remove",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "arch_bob" }
-        ],
-        "check_all_founded": false
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "progress_namedOperator": {
+        "op": "remove",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "arch_bob" }
+          ],
+          "check_all_founded": false
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -631,25 +715,28 @@ Manage named operators of Progress, used for dynamic permission assignment. Each
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_beta",
-    "progress_namedOperator": {
-      "op": "set",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "arch_bob" },
-          { "name_or_address": "dev_lead_carol" },
-          { "name_or_address": "test_lead_dave" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_beta",
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "arch_bob" },
+            { "name_or_address": "dev_lead_carol" },
+            { "name_or_address": "test_lead_dave" }
+          ],
+          "check_all_founded": true
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -680,14 +767,17 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "task": "mobile_app_order_001"
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "task": "mobile_app_order_001"
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -697,18 +787,24 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523551",
-        "change": "mutated"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523551",
+            "change": "mutated"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -718,14 +814,17 @@ Set the task ID of Progress for associating with other objects. Task cannot be c
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_beta",
-    "task": "web_development_service"
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_beta",
+      "task": "web_development_service"
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -762,17 +861,20 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "add",
-      "objects": ["project_alpha_specs", "project_alpha_assets"]
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "add",
+        "objects": ["project_alpha_specs", "project_alpha_assets"]
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -780,18 +882,24 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523552",
-        "change": "mutated"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523552",
+            "change": "mutated"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -801,17 +909,20 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "set",
-      "objects": ["project_alpha_code", "project_alpha_docs"]
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "set",
+        "objects": ["project_alpha_code", "project_alpha_docs"]
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -824,17 +935,20 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "remove",
-      "objects": ["project_alpha_specs"]
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "remove",
+        "objects": ["project_alpha_specs"]
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -845,16 +959,19 @@ Manage repositories of Progress for storing workflow-related data. Repositories 
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "clear"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "clear"
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -875,36 +992,39 @@ Execute multiple operations in one call to the Progress object. This is useful f
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "task": "mobile_app_order_001",
-    "repository": {
-      "op": "add",
-      "objects": ["project_alpha_deliverables"]
-    },
-    "progress_namedOperator": {
-      "op": "add",
-      "name": "reviewers",
-      "operators": {
-        "entities": [
-          { "name_or_address": "test_lead_dave" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "task": "mobile_app_order_001",
+      "repository": {
+        "op": "add",
+        "objects": ["project_alpha_deliverables"]
+      },
+      "progress_namedOperator": {
+        "op": "add",
+        "name": "reviewers",
+        "operators": {
+          "entities": [
+            { "name_or_address": "test_lead_dave" }
+          ],
+          "check_all_founded": true
+        }
+      },
+      "operate": {
+        "operation": {
+          "next_node_name": "testing",
+          "forward": "approve_code"
+        },
+        "hold": false,
+        "message": "Code review passed, moving to testing phase"
       }
     },
-    "operate": {
-      "operation": {
-        "next_node_name": "testing",
-        "forward": "approve_code"
-      },
-      "hold": false,
-      "message": "Code review passed, moving to testing phase"
+    "env": {
+      "account": "dev_lead_carol",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "dev_lead_carol",
-    "network": "testnet"
   }
 }
 ```
@@ -912,19 +1032,25 @@ Execute multiple operations in one call to the Progress object. This is useful f
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "digest": "...",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523553",
-        "change": "mutated"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523553",
+            "change": "mutated"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -934,31 +1060,34 @@ Execute multiple operations in one call to the Progress object. This is useful f
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "progress_namedOperator": {
-      "op": "add",
-      "name": "approvers",
-      "operators": {
-        "entities": [
-          { "name_or_address": "customer_eve" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "progress_namedOperator": {
+        "op": "add",
+        "name": "approvers",
+        "operators": {
+          "entities": [
+            { "name_or_address": "customer_eve" }
+          ],
+          "check_all_founded": true
+        }
+      },
+      "operate": {
+        "operation": {
+          "next_node_name": "uat",
+          "forward": "pass_testing"
+        },
+        "hold": true,
+        "message": "Testing completed, awaiting UAT approval"
       }
     },
-    "operate": {
-      "operation": {
-        "next_node_name": "uat",
-        "forward": "pass_testing"
-      },
-      "hold": true,
-      "message": "Testing completed, awaiting UAT approval"
+    "env": {
+      "account": "test_lead_dave",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "test_lead_dave",
-    "network": "testnet"
   }
 }
 ```
@@ -969,29 +1098,32 @@ Execute multiple operations in one call to the Progress object. This is useful f
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_gamma",
-    "task": "ecommerce_platform_order",
-    "repository": {
-      "op": "set",
-      "objects": ["project_gamma_specs", "project_gamma_designs", "project_gamma_code"]
-    },
-    "progress_namedOperator": {
-      "op": "set",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "dev_lead_carol" },
-          { "name_or_address": "arch_bob" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_gamma",
+      "task": "ecommerce_platform_order",
+      "repository": {
+        "op": "set",
+        "objects": ["project_gamma_specs", "project_gamma_designs", "project_gamma_code"]
+      },
+      "progress_namedOperator": {
+        "op": "set",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "dev_lead_carol" },
+            { "name_or_address": "arch_bob" }
+          ],
+          "check_all_founded": true
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1046,19 +1178,22 @@ First, create a Progress instance from the published Machine:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "software_dev_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "project_alpha",
-        "tags": ["mobile", "ecommerce"]
+    "operation_type": "machine",
+    "data": {
+      "object": "software_dev_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "project_alpha",
+          "tags": ["mobile", "ecommerce"]
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1066,14 +1201,24 @@ First, create a Progress instance from the published Machine:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1100,21 +1245,24 @@ Execute the first forward to move from init node to "requirement" node:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "requirement",
-        "forward": "start_project"
-      },
-      "hold": false,
-      "message": "Starting Project Alpha - Mobile e-commerce app development"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "requirement",
+          "forward": "start_project"
+        },
+        "hold": false,
+        "message": "Starting Project Alpha - Mobile e-commerce app development"
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1126,14 +1274,24 @@ Execute the first forward to move from init node to "requirement" node:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
-  "result": [
-    {
-      "type": "Progress",
-      "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -1145,23 +1303,26 @@ Link the Progress to the order and set up data repositories:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "task": "mobile_app_order_001",
-    "repository": {
-      "op": "set",
-      "objects": [
-        "alpha_requirements",
-        "alpha_designs", 
-        "alpha_code",
-        "alpha_test_reports"
-      ]
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "task": "mobile_app_order_001",
+      "repository": {
+        "op": "set",
+        "objects": [
+          "alpha_requirements",
+          "alpha_designs", 
+          "alpha_code",
+          "alpha_test_reports"
+        ]
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1169,18 +1330,24 @@ Link the Progress to the order and set up data repositories:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523554",
-        "change": "mutated"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523554",
+            "change": "mutated"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1190,21 +1357,24 @@ Product Manager approves requirements and advances to design phase:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "design",
-        "forward": "submit_design"
-      },
-      "hold": false,
-      "message": "Requirements approved. Scope: Mobile e-commerce app with payment integration. Budget: $50,000. Timeline: 3 months."
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "design",
+          "forward": "submit_design"
+        },
+        "hold": false,
+        "message": "Requirements approved. Scope: Mobile e-commerce app with payment integration. Budget: $50,000. Timeline: 3 months."
+      }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1212,19 +1382,25 @@ Product Manager approves requirements and advances to design phase:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523555",
-        "change": "mutated",
-        "current_node": "design"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523555",
+            "change": "mutated",
+            "current_node": "design"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1234,21 +1410,24 @@ Architect reviews design and approves proceeding to development:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "development",
-        "forward": "start_development"
-      },
-      "hold": false,
-      "message": "Architecture design approved. Tech stack: React Native + Node.js + PostgreSQL. Microservices architecture with 3 services."
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "development",
+          "forward": "start_development"
+        },
+        "hold": false,
+        "message": "Architecture design approved. Tech stack: React Native + Node.js + PostgreSQL. Microservices architecture with 3 services."
+      }
+    },
+    "env": {
+      "account": "arch_bob",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "arch_bob",
-    "network": "testnet"
   }
 }
 ```
@@ -1256,19 +1435,25 @@ Architect reviews design and approves proceeding to development:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523556",
-        "change": "mutated",
-        "current_node": "development"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523556",
+            "change": "mutated",
+            "current_node": "development"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1278,23 +1463,26 @@ Add another developer to the project for faster delivery:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "progress_namedOperator": {
-      "op": "add",
-      "name": "developer",
-      "operators": {
-        "entities": [
-          { "name_or_address": "arch_bob" }
-        ],
-        "check_all_founded": true
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "progress_namedOperator": {
+        "op": "add",
+        "name": "developer",
+        "operators": {
+          "entities": [
+            { "name_or_address": "arch_bob" }
+          ],
+          "check_all_founded": true
+        }
       }
+    },
+    "env": {
+      "account": "pm_alice",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "pm_alice",
-    "network": "testnet"
   }
 }
 ```
@@ -1305,21 +1493,24 @@ Developer submits code for review using namedOperator:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "code_review",
-        "forward": "submit_code"
-      },
-      "hold": true,
-      "message": "Initial implementation complete. Features: User auth, product catalog, shopping cart. 85% test coverage."
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "code_review",
+          "forward": "submit_code"
+        },
+        "hold": true,
+        "message": "Initial implementation complete. Features: User auth, product catalog, shopping cart. 85% test coverage."
+      }
+    },
+    "env": {
+      "account": "dev_lead_carol",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "dev_lead_carol",
-    "network": "testnet"
   }
 }
 ```
@@ -1327,20 +1518,26 @@ Developer submits code for review using namedOperator:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523557",
-        "change": "mutated",
-        "current_node": "code_review",
-        "hold_status": "held"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523557",
+            "change": "mutated",
+            "current_node": "code_review",
+            "hold_status": "held"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1350,21 +1547,24 @@ Development lead reviews and approves code:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "testing",
-        "forward": "approve_code"
-      },
-      "hold": false,
-      "message": "Code review passed. All critical issues resolved. Ready for QA testing."
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "testing",
+          "forward": "approve_code"
+        },
+        "hold": false,
+        "message": "Code review passed. All critical issues resolved. Ready for QA testing."
+      }
+    },
+    "env": {
+      "account": "dev_lead_carol",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "dev_lead_carol",
-    "network": "testnet"
   }
 }
 ```
@@ -1372,19 +1572,25 @@ Development lead reviews and approves code:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523558",
-        "change": "mutated",
-        "current_node": "testing"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523558",
+            "change": "mutated",
+            "current_node": "testing"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1394,25 +1600,28 @@ QA testing complete, move to User Acceptance Testing:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "add",
-      "objects": ["alpha_qa_report_v1"]
-    },
-    "operate": {
-      "operation": {
-        "next_node_name": "uat",
-        "forward": "pass_testing"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "add",
+        "objects": ["alpha_qa_report_v1"]
       },
-      "hold": false,
-      "message": "QA testing complete. 47 test cases passed, 0 critical bugs, 2 minor UI issues documented."
+      "operate": {
+        "operation": {
+          "next_node_name": "uat",
+          "forward": "pass_testing"
+        },
+        "hold": false,
+        "message": "QA testing complete. 47 test cases passed, 0 critical bugs, 2 minor UI issues documented."
+      }
+    },
+    "env": {
+      "account": "test_lead_dave",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "test_lead_dave",
-    "network": "testnet"
   }
 }
 ```
@@ -1420,19 +1629,25 @@ QA testing complete, move to User Acceptance Testing:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523559",
-        "change": "mutated",
-        "current_node": "uat"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523559",
+            "change": "mutated",
+            "current_node": "uat"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1442,21 +1657,24 @@ Customer approves UAT and authorizes deployment:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "operate": {
-      "operation": {
-        "next_node_name": "deployment",
-        "forward": "approve_uat"
-      },
-      "hold": false,
-      "message": "UAT approved. All acceptance criteria met. Payment flow verified with test transactions. Ready for production."
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "operate": {
+        "operation": {
+          "next_node_name": "deployment",
+          "forward": "approve_uat"
+        },
+        "hold": false,
+        "message": "UAT approved. All acceptance criteria met. Payment flow verified with test transactions. Ready for production."
+      }
+    },
+    "env": {
+      "account": "customer_eve",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "customer_eve",
-    "network": "testnet"
   }
 }
 ```
@@ -1464,19 +1682,25 @@ Customer approves UAT and authorizes deployment:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523560",
-        "change": "mutated",
-        "current_node": "deployment"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523560",
+            "change": "mutated",
+            "current_node": "deployment"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1486,25 +1710,28 @@ Final deployment to production:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "project_alpha",
-    "repository": {
-      "op": "add",
-      "objects": ["alpha_deployment_logs", "alpha_production_config"]
-    },
-    "operate": {
-      "operation": {
-        "next_node_name": "completed",
-        "forward": "deploy_production"
+    "operation_type": "progress",
+    "data": {
+      "object": "project_alpha",
+      "repository": {
+        "op": "add",
+        "objects": ["alpha_deployment_logs", "alpha_production_config"]
       },
-      "hold": false,
-      "message": "Successfully deployed to production. App Store: v1.0.0 live. Play Store: v1.0.0 live. Monitoring active."
+      "operate": {
+        "operation": {
+          "next_node_name": "completed",
+          "forward": "deploy_production"
+        },
+        "hold": false,
+        "message": "Successfully deployed to production. App Store: v1.0.0 live. Play Store: v1.0.0 live. Monitoring active."
+      }
+    },
+    "env": {
+      "account": "dev_lead_carol",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "dev_lead_carol",
-    "network": "testnet"
   }
 }
 ```
@@ -1512,19 +1739,25 @@ Final deployment to production:
 **Execution Result**:
 ```json
 {
-  "message": "Transaction completed successfully",
   "result": {
-    "type": "transaction",
-    "objectChanges": [
-      {
-        "type": "Progress",
-        "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
-        "version": "523561",
-        "change": "mutated",
-        "current_node": "completed"
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "object": "0x5255787477424a2d17b8b9902957aaaf1f196d0c8a382ef52876153895dd9cb4",
+            "version": "523561",
+            "change": "mutated",
+            "current_node": "completed"
+          }
+        ]
       }
-    ]
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1536,27 +1769,27 @@ Final deployment to production:
   "current_node": "completed",
   "machine": "software_dev_workflow",
   "named_operators": {
-    "developer": ["dev_lead_carol", "arch_bob"]
+  "developer": ["dev_lead_carol", "arch_bob"]
   },
   "repositories": [
-    "alpha_requirements",
-    "alpha_designs",
-    "alpha_code",
-    "alpha_test_reports",
-    "alpha_qa_report_v1",
-    "alpha_deployment_logs",
-    "alpha_production_config"
+  "alpha_requirements",
+  "alpha_designs",
+  "alpha_code",
+  "alpha_test_reports",
+  "alpha_qa_report_v1",
+  "alpha_deployment_logs",
+  "alpha_production_config"
   ],
   "task": "mobile_app_order_001",
   "execution_history": [
-    { "from": "", "to": "requirement", "by": "pm_alice", "forward": "start_project" },
-    { "from": "requirement", "to": "design", "by": "pm_alice", "forward": "submit_design" },
-    { "from": "design", "to": "development", "by": "arch_bob", "forward": "start_development" },
-    { "from": "development", "to": "code_review", "by": "dev_lead_carol", "forward": "submit_code" },
-    { "from": "code_review", "to": "testing", "by": "dev_lead_carol", "forward": "approve_code" },
-    { "from": "testing", "to": "uat", "by": "test_lead_dave", "forward": "pass_testing" },
-    { "from": "uat", "to": "deployment", "by": "customer_eve", "forward": "approve_uat" },
-    { "from": "deployment", "to": "completed", "by": "dev_lead_carol", "forward": "deploy_production" }
+  { "from": "", "to": "requirement", "by": "pm_alice", "forward": "start_project" },
+  { "from": "requirement", "to": "design", "by": "pm_alice", "forward": "submit_design" },
+  { "from": "design", "to": "development", "by": "arch_bob", "forward": "start_development" },
+  { "from": "development", "to": "code_review", "by": "dev_lead_carol", "forward": "submit_code" },
+  { "from": "code_review", "to": "testing", "by": "dev_lead_carol", "forward": "approve_code" },
+  { "from": "testing", "to": "uat", "by": "test_lead_dave", "forward": "pass_testing" },
+  { "from": "uat", "to": "deployment", "by": "customer_eve", "forward": "approve_uat" },
+  { "from": "deployment", "to": "completed", "by": "dev_lead_carol", "forward": "deploy_production" }
   ]
 }
 ```
@@ -1600,18 +1833,21 @@ Before starting, ensure you have:
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "your_machine_name",
-    "progress_new": {
-      "namedNew": {
-        "name": "my_first_progress"
+    "operation_type": "machine",
+    "data": {
+      "object": "your_machine_name",
+      "progress_new": {
+        "namedNew": {
+          "name": "my_first_progress"
+        }
       }
+    },
+    "env": {
+      "account": "your_account",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "your_account",
-    "network": "testnet"
   }
 }
 ```
@@ -1620,21 +1856,24 @@ Before starting, ensure you have:
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_first_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "first_node",
-        "forward": "start"
-      },
-      "hold": false,
-      "message": "Starting workflow"
+    "operation_type": "progress",
+    "data": {
+      "object": "my_first_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "first_node",
+          "forward": "start"
+        },
+        "hold": false,
+        "message": "Starting workflow"
+      }
+    },
+    "env": {
+      "account": "your_account",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "your_account",
-    "network": "testnet"
   }
 }
 ```

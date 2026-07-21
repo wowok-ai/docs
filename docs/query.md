@@ -2,9 +2,11 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "query_toolkit", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
-The WatchQuery component (`query_toolkit`) is WoWok's core data query tool. It queries both **LOCAL** data (stored only on your device, never published to blockchain) and **ONCHAIN** data (published on the blockchain). Supports 9 query types across accounts, balances, objects, profiles, and received assets.
+The WatchQuery component (`query_toolkit`) is WoWok's core data query sub-tool. It queries both **LOCAL** data (stored only on your device, never published to blockchain) and **ONCHAIN** data (published on the blockchain). Supports 9 query types across accounts, balances, objects, profiles, and received assets.
 
 **LOCAL queries** (device-only): `local_mark_list` | `account_list` | `local_info_list` | `token_list` | `account_balance` | `local_names`
 
@@ -12,7 +14,7 @@ The WatchQuery component (`query_toolkit`) is WoWok's core data query tool. It q
 
 Use local queries for account management and address book lookups. Use onchain queries for blockchain data exploration, user profiles, object inspection, and payment tracking.
 
-> **Note**: Dynamic table data queries (`onchain_table`, `onchain_table_item_*`) have been moved to the dedicated **[onchain_table_data](query.md#onchain_table_data-tool)** tool. See the [onchain_table_data section](#onchain_table_data-tool) below for details.
+> **Note**: Dynamic table data queries (`onchain_table`, `onchain_table_item_*`) have been moved to the dedicated **[onchain_table_data](query.md#onchain_table_data-sub-tool)** sub-tool. See the [onchain_table_data section](#onchain_table_data-sub-tool) below for details.
 
 ---
 
@@ -94,9 +96,12 @@ Please help me query my local mark list, filtering for marks tagged with 'friend
 
 ```json
 {
-  "query_type": "local_mark_list",
-  "filter": {
-    "tags": ["friend"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_mark_list",
+    "filter": {
+      "tags": ["friend"]
+    }
   }
 }
 ```
@@ -113,7 +118,10 @@ Please help me query all my local accounts.
 
 ```json
 {
-  "query_type": "account_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_list"
+  }
 }
 ```
 
@@ -129,7 +137,10 @@ Please help me query all my locally saved information entries.
 
 ```json
 {
-  "query_type": "local_info_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "local_info_list"
+  }
 }
 ```
 
@@ -145,7 +156,10 @@ Please help me query the list of available token types.
 
 ```json
 {
-  "query_type": "token_list"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "token_list"
+  }
 }
 ```
 
@@ -161,10 +175,13 @@ Please help me query the WOW token balance for my account named 'alice'.
 
 ```json
 {
-  "query_type": "account_balance",
-  "name_or_address": "alice",
-  "balance": true,
-  "token_type": "0x2::wow::WOW"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "name_or_address": "alice",
+    "balance": true,
+    "token_type": "0x2::wow::WOW"
+  }
 }
 ```
 
@@ -180,13 +197,16 @@ Please help me list the individual WOW coin objects for my default account, firs
 
 ```json
 {
-  "query_type": "account_balance",
-  "name_or_address": "",
-  "coin": {
-    "cursor": null,
-    "limit": 10
-  },
-  "token_type": "0x2::wow::WOW"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "name_or_address": "",
+    "coin": {
+      "cursor": null,
+      "limit": 10
+    },
+    "token_type": "0x2::wow::WOW"
+  }
 }
 ```
 
@@ -202,10 +222,13 @@ Please help me query the public on-chain personal profile for the account named 
 
 ```json
 {
-  "query_type": "onchain_personal_profile",
-  "account": "bob",
-  "no_cache": true,
-  "network": "testnet"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_personal_profile",
+    "account": "bob",
+    "no_cache": true,
+    "network": "testnet"
+  }
 }
 ```
 
@@ -221,8 +244,11 @@ Please help me query the on-chain objects with IDs 'service_marketplace' and 'tr
 
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["service_marketplace", "treasury_main"]
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["service_marketplace", "treasury_main"]
+  }
 }
 ```
 
@@ -238,10 +264,13 @@ Please help me query all types of received objects for the treasury 'service_wal
 
 ```json
 {
-  "query_type": "onchain_received",
-  "name_or_address": "service_wallet",
-  "cursor": null,
-  "limit": 50
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_received",
+    "name_or_address": "service_wallet",
+    "cursor": null,
+    "limit": 50
+  }
 }
 ```
 
@@ -256,7 +285,7 @@ Use filters to narrow query scope and improve efficiency. Local queries support 
 Use `onchain_objects` to query multiple objects at once, reducing network requests.
 
 ### 3. Use Pagination for Large Results
-For `onchain_received` and `account_balance.coin`, use `cursor`/`limit` to paginate through large result sets. For table queries, use the `onchain_table_data` tool which also supports pagination.
+For `onchain_received` and `account_balance.coin`, use `cursor`/`limit` to paginate through large result sets. For table queries, use the `onchain_table_data` sub-tool which also supports pagination.
 
 ### 4. Control Cache with no_cache
 Set `no_cache: true` when you need the latest on-chain data. Leave it unset (default) for faster cached responses.
@@ -281,11 +310,11 @@ Use `balance: true` for a quick total balance check. Use `coin: { cursor, limit 
 
 ---
 
-## onchain_table_data Tool
+## onchain_table_data Sub-tool
 
-The `onchain_table_data` tool is a dedicated tool for querying dynamic table data of on-chain objects. It was split from `query_toolkit` to handle the unique characteristics of dynamic table queries — objects have fixed size, but their table data can grow dynamically.
+The `onchain_table_data` sub-tool is a dedicated sub-tool for querying dynamic table data of on-chain objects. It was split from `query_toolkit` to handle the unique characteristics of dynamic table queries — objects have fixed size, but their table data can grow dynamically.
 
-### Why a Separate Tool?
+### Why a Separate Sub-tool?
 
 - **Different data model**: Table queries operate on dynamic fields (key-value stores) attached to objects, not the objects themselves
 - **Parent-child relationships**: Each table item belongs to a specific parent object type with well-defined semantics
@@ -395,10 +424,13 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table",
-  "parent": "my_service",
-  "cursor": null,
-  "limit": 20
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table",
+    "parent": "my_service",
+    "cursor": null,
+    "limit": 20
+  }
 }
 ```
 
@@ -406,9 +438,12 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table_item_permission_perm",
-  "parent": "perm_admin",
-  "address": "alice"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_permission_perm",
+    "parent": "perm_admin",
+    "address": "alice"
+  }
 }
 ```
 
@@ -416,10 +451,13 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table_item_repository_data",
-  "parent": "repo_main",
-  "name": "user_settings",
-  "entity": "alice"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_repository_data",
+    "parent": "repo_main",
+    "name": "user_settings",
+    "entity": "alice"
+  }
 }
 ```
 
@@ -427,8 +465,11 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table_item_entity_registrar",
-  "address": "service_provider"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_entity_registrar",
+    "address": "service_provider"
+  }
 }
 ```
 
@@ -436,9 +477,12 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table_item_machine_node",
-  "parent": "workflow_v1",
-  "key": "validation_step"
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_machine_node",
+    "parent": "workflow_v1",
+    "key": "validation_step"
+  }
 }
 ```
 
@@ -446,9 +490,12 @@ OnchainTableDataResult {
 
 ```json
 {
-  "query_type": "onchain_table_item_progress_history",
-  "parent": "order_456",
-  "u64": 1
+  "tool": "onchain_table_data",
+  "data": {
+    "query_type": "onchain_table_item_progress_history",
+    "parent": "order_456",
+    "u64": 1
+  }
 }
 ```
 
@@ -464,5 +511,5 @@ OnchainTableDataResult {
 | **[Personal](personal.md)** | Personal on-chain portal |
 | **[On-chain Events](onchain_events.md)** | Watch and query on-chain events |
 | **[WoWok Build-in Info](wowok_buildin_info.md)** | Query protocol constants and info |
-| **Schema: query_toolkit** | Use MCP `schema_query` tool with `tool_name: "query_toolkit"` |
-| **Schema: onchain_table_data** | Use MCP `schema_query` tool with `tool_name: "onchain_table_data"` |
+| **Schema: query_toolkit** | Use MCP `schema_query` sub-tool with `action: "get"` and `name: "query_toolkit"` |
+| **Schema: onchain_table_data** | Use MCP `schema_query` sub-tool with `action: "get"` and `name: "onchain_table_data"` |

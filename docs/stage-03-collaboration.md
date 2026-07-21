@@ -14,6 +14,8 @@ In this stage, you will learn about open collaboration mechanisms in WoWok, incl
 - How to use Messenger for secure private communication
 - How to use Contact to manage public contact information
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ---
 
 ## 📚 Learning Content
@@ -106,12 +108,15 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "design_workflow"
-    },
-    "description": "Design service workflow - complete process from order creation to delivery"
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "design_workflow"
+      },
+      "description": "Design service workflow - complete process from order creation to delivery"
+    }
   }
 }
 ```
@@ -124,49 +129,52 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "created",
-          "pairs": []
-        },
-        {
-          "name": "designing",
-          "pairs": [
-            {
-              "prev_node": "created",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "start_design",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "completed",
-          "pairs": [
-            {
-              "prev_node": "designing",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "complete_design",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "created",
+            "pairs": []
+          },
+          {
+            "name": "designing",
+            "pairs": [
+              {
+                "prev_node": "created",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "start_design",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "completed",
+            "pairs": [
+              {
+                "prev_node": "designing",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "complete_design",
+                    "permissionIndex": 1001,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
@@ -180,10 +188,13 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "publish": true
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "publish": true
+    }
   }
 }
 ```
@@ -198,12 +209,15 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": "design_workflow",
-    "progress_new": {
-      "namedNew": {
-        "name": "my_first_progress"
+    "operation_type": "machine",
+    "data": {
+      "object": "design_workflow",
+      "progress_new": {
+        "namedNew": {
+          "name": "my_first_progress"
+        }
       }
     }
   }
@@ -218,16 +232,19 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_first_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "designing",
-        "forward": "start_design"
-      },
-      "hold": false,
-      "message": "Start design work"
+    "operation_type": "progress",
+    "data": {
+      "object": "my_first_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "designing",
+          "forward": "start_design"
+        },
+        "hold": false,
+        "message": "Start design work"
+      }
     }
   }
 }
@@ -243,11 +260,14 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation": "send_message",
-  "to": {
-    "name_or_address": "alice"
-  },
-  "content": "Hello, I would like to inquire about design services"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "to": {
+      "name_or_address": "alice"
+    },
+    "content": "Hello, I would like to inquire about design services"
+  }
 }
 ```
 
@@ -261,7 +281,10 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation": "watch_conversations"
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "watch_conversations"
+  }
 }
 ```
 
@@ -275,15 +298,18 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "design_service_contact"
-    },
-    "description": "Design service contact - 24/7 online support",
-    "location": "Online service",
-    "ims": {
-      "op": "clear"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "design_service_contact"
+      },
+      "description": "Design service contact - 24/7 online support",
+      "location": "Online service",
+      "ims": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -299,10 +325,13 @@ Collaboration requires contact information. Contact manages public contact infor
 
 ```json
 {
-  "operation": "blacklist",
-  "blacklist": {
-    "op": "add",
-    "users": ["0x1234abcd5678efgh9012ijkl3456mnop7890qrst"]
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "blacklist",
+    "blacklist": {
+      "op": "add",
+      "users": ["0x1234abcd5678efgh9012ijkl3456mnop7890qrst"]
+    }
   }
 }
 ```

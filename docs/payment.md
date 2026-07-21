@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "payment", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Payment component is used to send instant, irreversible token transfers to any wallet address. Payment is an immutable object that can only be created, not modified.
@@ -26,9 +28,12 @@ Payment operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "payment",
-  "data": { ... },    // Payment data definition
-  "env": { ... }       // Execution environment (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "payment",
+    "data": { ... },    // Payment data definition
+    "env": { ... }       // Execution environment (optional)
+  }
 }
 ```
 
@@ -105,44 +110,56 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "alice" },
-        "amount": { "balance": "5000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "alice" },
+          "amount": { "balance": "5000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Thanks for the help!",
+        "index": 1
       }
-    ],
-    "info": {
-      "remark": "Thanks for the help!",
-      "index": 1
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xc8e8...1bb4",
-  "type": "Payment",
-  "version": "30128",
-  "change": "created",
-  "objects": [
-    {
-      "type": "WReceivedObject",
-      "object": "0x1a88...9649",
-      "change": "created"
-    },
-    {
-      "type": "Payment",
-      "object": "0xc8e8...1bb4",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "WReceivedObject",
+            "object": "0x1a88...9649",
+            "version": "...",
+            "change": "created"
+          },
+          {
+            "type": "Payment",
+            "object": "0xc8e8...1bb4",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -154,34 +171,52 @@ Create a Payment object to send tokens to a single recipient. Payment is an immu
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "payment_to_alice",
-      "tags": ["personal", "payment"],
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "alice" },
-        "amount": { "balance": "10000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "payment_to_alice",
+        "tags": ["personal", "payment"],
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "alice" },
+          "amount": { "balance": "10000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Birthday gift",
+        "index": 2
       }
-    ],
-    "info": {
-      "remark": "Birthday gift",
-      "index": 2
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x...",
-  "type": "Payment",
-  "version": "...",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Payment",
+            "object": "0x...",
+            "version": "...",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -203,32 +238,47 @@ Create a Payment object to send tokens to multiple recipients in a single transa
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "alice" },
-        "amount": { "balance": "3000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
       },
-      {
-        "recipient": { "name_or_address": "bob" },
-        "amount": { "balance": "2000000000" }
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "alice" },
+          "amount": { "balance": "3000000000" }
+        },
+        {
+          "recipient": { "name_or_address": "bob" },
+          "amount": { "balance": "2000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Team bonus",
+        "index": 10
       }
-    ],
-    "info": {
-      "remark": "Team bonus",
-      "index": 10
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -240,38 +290,53 @@ Create a Payment object to send tokens to multiple recipients in a single transa
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "q1_bonus_payment",
-      "tags": ["payroll", "q1-2025"],
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "charlie" },
-        "amount": { "balance": "5000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "q1_bonus_payment",
+        "tags": ["payroll", "q1-2025"],
+        "type_parameter": "0x2::wow::WOW"
       },
-      {
-        "recipient": { "name_or_address": "dave" },
-        "amount": { "balance": "4000000000" }
-      },
-      {
-        "recipient": { "name_or_address": "eve" },
-        "amount": { "balance": "3500000000" }
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "charlie" },
+          "amount": { "balance": "5000000000" }
+        },
+        {
+          "recipient": { "name_or_address": "dave" },
+          "amount": { "balance": "4000000000" }
+        },
+        {
+          "recipient": { "name_or_address": "eve" },
+          "amount": { "balance": "3500000000" }
+        }
+      ],
+      "info": {
+        "remark": "Q1 2025 performance bonus",
+        "index": 15
       }
-    ],
-    "info": {
-      "remark": "Q1 2025 performance bonus",
-      "index": 15
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -293,29 +358,44 @@ Create a Payment with additional metadata, such as linking to a specific object 
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "service_provider" },
-        "amount": { "balance": "8000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "service_provider" },
+          "amount": { "balance": "8000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Service order payment",
+        "index": 100,
+        "for_object": "my_service_order"
       }
-    ],
-    "info": {
-      "remark": "Service order payment",
-      "index": 100,
-      "for_object": "my_service_order"
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -334,30 +414,45 @@ Create a Payment with additional metadata, such as linking to a specific object 
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "purchase_payment",
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "merchant" },
-        "amount": { "balance": "25000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "purchase_payment",
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "merchant" },
+          "amount": { "balance": "25000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Purchase payment",
+        "index": 200,
+        "for_guard": "purchase_guard"
       }
-    ],
-    "info": {
-      "remark": "Purchase payment",
-      "index": 200,
-      "for_guard": "purchase_guard"
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -369,32 +464,47 @@ Create a Payment with additional metadata, such as linking to a specific object 
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "order_500_payment",
-      "tags": ["service", "order-500"],
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "vendor_alice" },
-        "amount": { "balance": "15000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "order_500_payment",
+        "tags": ["service", "order-500"],
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "vendor_alice" },
+          "amount": { "balance": "15000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Payment for service order #500",
+        "index": 500,
+        "for_object": "service_order_500",
+        "for_guard": "service_guard"
       }
-    ],
-    "info": {
-      "remark": "Payment for service order #500",
-      "index": 500,
-      "for_object": "service_order_500",
-      "for_guard": "service_guard"
     }
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -416,31 +526,46 @@ Create a Payment with custom environment settings, such as specifying network or
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "test_recipient" },
-        "amount": { "balance": "1000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "test_recipient" },
+          "amount": { "balance": "1000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Test payment",
+        "index": 1
       }
-    ],
-    "info": {
-      "remark": "Test payment",
-      "index": 1
+    },
+    "env": {
+      "network": "testnet"
     }
-  },
-  "env": {
-    "network": "testnet"
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -452,31 +577,46 @@ Create a Payment with custom environment settings, such as specifying network or
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "type_parameter": "0x2::wow::WOW"
-    },
-    "revenue": [
-      {
-        "recipient": { "name_or_address": "recipient_bob" },
-        "amount": { "balance": "6000000000" }
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "type_parameter": "0x2::wow::WOW"
+      },
+      "revenue": [
+        {
+          "recipient": { "name_or_address": "recipient_bob" },
+          "amount": { "balance": "6000000000" }
+        }
+      ],
+      "info": {
+        "remark": "Project milestone payment",
+        "index": 88
       }
-    ],
-    "info": {
-      "remark": "Project milestone payment",
-      "index": 88
+    },
+    "env": {
+      "account": "payment_manager"
     }
-  },
-  "env": {
-    "account": "payment_manager"
   }
 }
+```
 
 **Execution Result**:
 ```json
 {
-  "status": "success"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -512,4 +652,3 @@ Create a Payment with custom environment settings, such as specifying network or
 | **[Service](service.md)** | WYSIWYG product trading |
 | **[Order](order.md)** | Order management |
 | **[Guard](guard.md)** | Trust verification engine |
-

@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "contact", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Contact component is used to manage on-chain instant messaging contact profiles, serving as the core for secure IM address management.
@@ -148,7 +150,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -176,14 +178,17 @@ Create a new Contact object for managing instant messaging contacts.
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "service_support",
-      "permission": "existing_permission"
-    },
-    "description": "Customer support contact information",
-    "location": "Online service"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "service_support",
+        "permission": "existing_permission"
+      },
+      "description": "Customer support contact information",
+      "location": "Online service"
+    }
   }
 }
 ```
@@ -191,11 +196,25 @@ Create a new Contact object for managing instant messaging contacts.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xb607...190c",
-  "type": "Contact",
-  "version": "93060",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xb607...190c",
+            "version": "93060",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -205,23 +224,26 @@ Create a new Contact object for managing instant messaging contacts.
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "team_contact",
-      "permission": {
-        "name": "team_permission"
-      }
-    },
-    "description": "Team contact information",
-    "ims": {
-      "op": "add",
-      "im": [
-        {
-          "at": "alice",
-          "description": "Product Manager"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "team_contact",
+        "permission": {
+          "name": "team_permission"
         }
-      ]
+      },
+      "description": "Team contact information",
+      "ims": {
+        "op": "add",
+        "im": [
+          {
+            "at": "alice",
+            "description": "Product Manager"
+          }
+        ]
+      }
     }
   }
 }
@@ -230,11 +252,25 @@ Create a new Contact object for managing instant messaging contacts.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x3c06...c965",
-  "type": "Contact",
-  "version": "93537",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0x3c06...c965",
+            "version": "93537",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -280,17 +316,20 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_support",
-    "ims": {
-      "op": "add",
-      "im": [
-        {
-          "at": "testuser1",
-          "description": "Technical Support"
-        }
-      ]
+    "operation_type": "contact",
+    "data": {
+      "object": "service_support",
+      "ims": {
+        "op": "add",
+        "im": [
+          {
+            "at": "testuser1",
+            "description": "Technical Support"
+          }
+        ]
+      }
     }
   }
 }
@@ -299,11 +338,25 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xb607...190c",
-  "type": "Contact",
-  "version": "94028",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xb607...190c",
+            "version": "94028",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -313,21 +366,24 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_contact",
-    "ims": {
-      "op": "set",
-      "im": [
-        {
-          "at": "alice",
-          "description": "Designer"
-        },
-        {
-          "at": "testuser1",
-          "description": "Developer"
-        }
-      ]
+    "operation_type": "contact",
+    "data": {
+      "object": "team_contact",
+      "ims": {
+        "op": "set",
+        "im": [
+          {
+            "at": "alice",
+            "description": "Designer"
+          },
+          {
+            "at": "testuser1",
+            "description": "Developer"
+          }
+        ]
+      }
     }
   }
 }
@@ -336,11 +392,25 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x3c06...c965",
-  "type": "Contact",
-  "version": "94531",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0x3c06...c965",
+            "version": "94531",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -350,12 +420,15 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_support",
-    "ims": {
-      "op": "remove",
-      "im": ["testuser1"]
+    "operation_type": "contact",
+    "data": {
+      "object": "service_support",
+      "ims": {
+        "op": "remove",
+        "im": ["testuser1"]
+      }
     }
   }
 }
@@ -364,11 +437,25 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xb607...190c",
-  "type": "Contact",
-  "version": "94532",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xb607...190c",
+            "version": "94532",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -378,11 +465,14 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "team_contact",
-    "ims": {
-      "op": "clear"
+    "operation_type": "contact",
+    "data": {
+      "object": "team_contact",
+      "ims": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -391,11 +481,25 @@ Manage the Contact object's instant messaging contact list, supporting add, set,
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x3c06...c965",
-  "type": "Contact",
-  "version": "94533",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0x3c06...c965",
+            "version": "94533",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -423,10 +527,13 @@ Set your status message in this contact list.
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "service_support",
-    "my_status": "Online, available for contact"
+    "operation_type": "contact",
+    "data": {
+      "object": "service_support",
+      "my_status": "Online, available for contact"
+    }
   }
 }
 ```
@@ -434,11 +541,25 @@ Set your status message in this contact list.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xb607...190c",
-  "type": "Contact",
-  "version": "95965",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xb607...190c",
+            "version": "95965",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -474,12 +595,15 @@ This function allows the Contact object owner to receive objects (including Coin
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "contact_receive_test_v3"
-    },
-    "description": "Contact for testing owner receive functionality"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "contact_receive_test_v3"
+      },
+      "description": "Contact for testing owner receive functionality"
+    }
   }
 }
 ```
@@ -488,24 +612,27 @@ This function allows the Contact object owner to receive objects (including Coin
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "payment_to_contact_v3"
-    },
-    "revenue": [
-      {
-        "recipient": {
-          "name_or_address": "contact_receive_test_v3"
-        },
-        "amount": {
-          "balance": 1000000000
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "payment_to_contact_v3"
+      },
+      "revenue": [
+        {
+          "recipient": {
+            "name_or_address": "contact_receive_test_v3"
+          },
+          "amount": {
+            "balance": 1000000000
+          }
         }
+      ],
+      "info": {
+        "remark": "Test payment to contact",
+        "index": 11
       }
-    ],
-    "info": {
-      "remark": "Test payment to contact",
-      "index": 11
     }
   }
 }
@@ -517,10 +644,13 @@ This function allows the Contact object owner to receive objects (including Coin
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "contact_receive_test_v3",
-    "owner_receive": "recently"
+    "operation_type": "contact",
+    "data": {
+      "object": "contact_receive_test_v3",
+      "owner_receive": "recently"
+    }
   }
 }
 ```
@@ -528,11 +658,25 @@ This function allows the Contact object owner to receive objects (including Coin
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xaee9...1db7",
-  "type": "Contact",
-  "version": "14541",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xaee9...1db7",
+            "version": "14541",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -542,15 +686,18 @@ This function allows the Contact object owner to receive objects (including Coin
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": "contact_receive_test_v3",
-    "owner_receive": [
-      {
-        "id": "0xaee9b75f7903d05dbfb4ee2abe9e036503c66f4bc552d835543b9b49d3851db7",
-        "type": "0x2::payment::CoinWrapper<0x2::wow::WOW>"
-      }
-    ]
+    "operation_type": "contact",
+    "data": {
+      "object": "contact_receive_test_v3",
+      "owner_receive": [
+        {
+          "id": "0xaee9b75f7903d05dbfb4ee2abe9e036503c66f4bc552d835543b9b49d3851db7",
+          "type": "0x2::payment::CoinWrapper<0x2::wow::WOW>"
+        }
+      ]
+    }
   }
 }
 ```
@@ -558,11 +705,25 @@ This function allows the Contact object owner to receive objects (including Coin
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0xaee9...1db7",
-  "type": "Contact",
-  "version": "14542",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0xaee9...1db7",
+            "version": "14542",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -582,26 +743,29 @@ Execute multiple operations in a single call.
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "customer_service",
-      "permission": "service_permission"
-    },
-    "description": "Customer service team contact information",
-    "location": "7x24 Online Support",
-    "ims": {
-      "op": "add",
-      "im": [
-        {
-          "at": "alice",
-          "description": "Pre-sales Consulting"
-        },
-        {
-          "at": "testuser1",
-          "description": "After-sales Support"
-        }
-      ]
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "customer_service",
+        "permission": "service_permission"
+      },
+      "description": "Customer service team contact information",
+      "location": "7x24 Online Support",
+      "ims": {
+        "op": "add",
+        "im": [
+          {
+            "at": "alice",
+            "description": "Pre-sales Consulting"
+          },
+          {
+            "at": "testuser1",
+            "description": "After-sales Support"
+          }
+        ]
+      }
     }
   }
 }
@@ -610,11 +774,25 @@ Execute multiple operations in a single call.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x7a22...080b",
-  "type": "Contact",
-  "version": "96881",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "object": "0x7a22...080b",
+            "version": "96881",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -628,20 +806,23 @@ Create a Contact object that will serve as your public identity for secure messa
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "my_contact",
-      "onChain": true
-    },
-    "description": "My secure contact for encrypted messaging"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "my_contact",
+        "onChain": true
+      },
+      "description": "My secure contact for encrypted messaging"
+    }
   }
 }
 ```
 
 ### Step 2: Enable Messenger for Your Account
 
-Use the `account_operation` tool (see [account.md](account.md)) to enable Messenger for your account by setting a messenger name (here using the Contact object's name):
+Use the `account_operation` sub-tool (see [account.md](account.md)) to enable Messenger for your account by setting a messenger name (here using the Contact object's name):
 
 ```json
 {
@@ -656,14 +837,17 @@ See [account.md](account.md) for detailed messenger configuration.
 
 ### Step 3: Start Secure Conversations
 
-Once Messenger is enabled, use the `messenger_operation` tool (see [messenger.md](messenger.md)) to send encrypted messages to any Contact object:
+Once Messenger is enabled, use the `messenger_operation` sub-tool (see [messenger.md](messenger.md)) to send encrypted messages to any Contact object:
 
 ```json
 {
-  "operation": "send_message",
-  "from": "my_account",
-  "to": "recipient_contact",
-  "content": "Hello! This message is end-to-end encrypted."
+  "tool": "messenger_operation",
+  "data": {
+    "operation": "send_message",
+    "from": "my_account",
+    "to": "recipient_contact",
+    "content": "Hello! This message is end-to-end encrypted."
+  }
 }
 ```
 

@@ -20,6 +20,8 @@ This example sets `env.confirmed: true` on irreversible operations (e.g., `publi
 
 > Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the `publish: true` step on the ThreeBody Machine (Step 4 in Part 2), which is an irreversible lock of the `machine` and `order_allocators` fields.
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+
 ---
 
 ## Overview
@@ -51,9 +53,12 @@ If the accounts do not exist locally, generate them first.
 **Request (generate author account)**:
 ```json
 {
-  "gen": {
-    "name": "three_body_author",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "three_body_author",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -61,9 +66,12 @@ If the accounts do not exist locally, generate them first.
 **Request (generate customer account)**:
 ```json
 {
-  "gen": {
-    "name": "three_body_customer",
-    "replaceExistName": true
+  "tool": "account_operation",
+  "data": {
+    "gen": {
+      "name": "three_body_customer",
+      "replaceExistName": true
+    }
   }
 }
 ```
@@ -71,10 +79,16 @@ If the accounts do not exist locally, generate them first.
 **Expected Result**:
 ```json
 {
-  "gen": {
-    "address": "0x...",
-    "name": "three_body_author"
-  }
+  "result": {
+    "status": "success",
+    "data": {
+      "gen": {
+        "address": "0x...",
+        "name": "three_body_author"
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -83,10 +97,13 @@ If the accounts do not exist locally, generate them first.
 **Request**:
 ```json
 {
-  "query_type": "account_balance",
-  "name_or_address": "three_body_author",
-  "balance": true,
-  "network": "testnet"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "name_or_address": "three_body_author",
+    "balance": true,
+    "network": "testnet"
+  }
 }
 ```
 
@@ -94,19 +111,25 @@ If the accounts do not exist locally, generate them first.
 ```json
 {
   "result": {
-    "query_type": "account_balance",
-    "result": {
-      "address": "0x...",
-      "name_or_address": "three_body_author",
-      "balance": {
-        "coinType": "0x2::wow::WOW",
-        "coinObjectCount": 3,
-        "totalBalance": "3000000000",
-        "lockedBalance": {},
-        "fundsInAddressBalance": "0"
+    "status": "success",
+    "data": {
+      "result": {
+        "query_type": "account_balance",
+        "result": {
+          "address": "0x...",
+          "name_or_address": "three_body_author",
+          "balance": {
+            "coinType": "0x2::wow::WOW",
+            "coinObjectCount": 3,
+            "totalBalance": "3000000000",
+            "lockedBalance": {},
+            "fundsInAddressBalance": "0"
+          }
+        }
       }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -115,9 +138,12 @@ If the accounts do not exist locally, generate them first.
 **Request**:
 ```json
 {
-  "faucet": {
-    "network": "testnet",
-    "name_or_address": "three_body_author"
+  "tool": "account_operation",
+  "data": {
+    "faucet": {
+      "network": "testnet",
+      "name_or_address": "three_body_author"
+    }
   }
 }
 ```
@@ -125,27 +151,33 @@ If the accounts do not exist locally, generate them first.
 **Expected Result**:
 ```json
 {
-  "faucet": {
-    "name_or_address": "three_body_author",
-    "result": [
-      {
-        "amount": 1000000000,
-        "id": "0x...",
-        "transferTxDigest": "..."
-      },
-      {
-        "amount": 1000000000,
-        "id": "0x...",
-        "transferTxDigest": "..."
-      },
-      {
-        "amount": 1000000000,
-        "id": "0x...",
-        "transferTxDigest": "..."
+  "result": {
+    "status": "success",
+    "data": {
+      "faucet": {
+        "name_or_address": "three_body_author",
+        "result": [
+          {
+            "amount": 1000000000,
+            "id": "0x...",
+            "transferTxDigest": "..."
+          },
+          {
+            "amount": 1000000000,
+            "id": "0x...",
+            "transferTxDigest": "..."
+          },
+          {
+            "amount": 1000000000,
+            "id": "0x...",
+            "transferTxDigest": "..."
+          }
+        ],
+        "network": "testnet"
       }
-    ],
-    "network": "testnet"
-  }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -162,23 +194,26 @@ Create a Permission object to manage the service.
 **Request**:
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "three_body_permission",
-      "replaceExistName": true
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "three_body_permission",
+        "replaceExistName": true
+      },
+      "description": "Permission for Three-Body Signature Service",
+      "table": {
+        "op": "add perm by entity",
+        "entity": {"name_or_address": "three_body_author"},
+        "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
+      }
     },
-    "description": "Permission for Three-Body Signature Service",
-    "table": {
-      "op": "add perm by entity",
-      "entity": {"name_or_address": "three_body_author"},
-      "index": [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 306]
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
   }
 }
 ```
@@ -193,24 +228,35 @@ Create a Permission object to manage the service.
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Permission",
-    "type_raw": "0x2::permission::Permission",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "type_raw": "0x2::permission::Permission",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          },
+          {
+            "type": "TableItem_PermissionPerm",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::parent_linked_table::Node<address, vector<u16>>>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_PermissionPerm",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::parent_linked_table::Node<address, vector<u16>>>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x..."},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -222,41 +268,44 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 **Request**:
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "three_body_buy_guard",
-      "tags": ["signature", "book", "buy-guard", "level1-strict"],
-      "replaceExistName": true
-    },
-    "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service. VERIFIER CONSTRAINT LEVEL 1 (strict single-identity binding): The author role is permanently tied to a single address. The designer explicitly accepts the lock-in risk because (a) the author is the sole service operator in this minimal example, and (b) Guard immutability guarantees the buyer whitelist cannot be tampered with. R-C4-04 (info): if the author address is lost or rotated, the Guard must be rebuilt and the Service's buy_guard must be re-bound.",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "three_body_author",
-        "name": "Author address"
-      }
-    ],
-    "root": {
-      "type": "logic_equal",
-      "nodes": [
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "three_body_buy_guard",
+        "tags": ["signature", "book", "buy-guard", "level1-strict"],
+        "replaceExistName": true
+      },
+      "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service. VERIFIER CONSTRAINT LEVEL 1 (strict single-identity binding): The author role is permanently tied to a single address. The designer explicitly accepts the lock-in risk because (a) the author is the sole service operator in this minimal example, and (b) Guard immutability guarantees the buyer whitelist cannot be tampered with. R-C4-04 (info): if the author address is lost or rotated, the Guard must be rebuilt and the Service's buy_guard must be re-bound.",
+      "table": [
         {
-          "type": "context",
-          "context": "Signer"
-        },
-        {
-          "type": "identifier",
-          "identifier": 0
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "three_body_author",
+          "name": "Author address"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "context",
+            "context": "Signer"
+          },
+          {
+            "type": "identifier",
+            "identifier": 0
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
   }
 }
 ```
@@ -269,16 +318,27 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Guard",
-    "type_raw": "0x2::guard::Guard",
-    "object": "0x...",
-    "version": "...",
-    "owner": "Immutable",
-    "change": "created"
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Guard",
+            "type_raw": "0x2::guard::Guard",
+            "object": "0x...",
+            "version": "...",
+            "owner": "Immutable",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -292,57 +352,60 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 **Request**:
 ```json
 {
-  "operation_type": "machine",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "three_body_machine",
-      "permission": "three_body_permission",
-      "replaceExistName": true
+    "operation_type": "machine",
+    "data": {
+      "object": {
+        "name": "three_body_machine",
+        "permission": "three_body_permission",
+        "replaceExistName": true
+      },
+      "description": "Three-Body signature service workflow: Book Delivery -> Signature Completion",
+      "node": {
+        "op": "add",
+        "nodes": [
+          {
+            "name": "Book Delivered",
+            "pairs": [
+              {
+                "prev_node": "",
+                "threshold": 0,
+                "forwards": [
+                  {
+                    "name": "Confirm Delivery",
+                    "permissionIndex": 1000,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Signature Completed",
+            "pairs": [
+              {
+                "prev_node": "Book Delivered",
+                "threshold": 1,
+                "forwards": [
+                  {
+                    "name": "Complete Signature",
+                    "permissionIndex": 1001,
+                    "weight": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "publish": true
     },
-    "description": "Three-Body signature service workflow: Book Delivery -> Signature Completion",
-    "node": {
-      "op": "add",
-      "nodes": [
-        {
-          "name": "Book Delivered",
-          "pairs": [
-            {
-              "prev_node": "",
-              "threshold": 0,
-              "forwards": [
-                {
-                  "name": "Confirm Delivery",
-                  "permissionIndex": 1000,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Signature Completed",
-          "pairs": [
-            {
-              "prev_node": "Book Delivered",
-              "threshold": 1,
-              "forwards": [
-                {
-                  "name": "Complete Signature",
-                  "permissionIndex": 1001,
-                  "weight": 1
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    "publish": true
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -351,40 +414,51 @@ Create a Machine to define the service workflow: Book Delivery → Signature Com
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "TableItem_MachineNode",
-    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x..."},
-    "change": "created"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "TableItem_MachineNode",
+            "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          },
+          {
+            "type": "TableItem_MachineNode",
+            "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          },
+          {
+            "type": "Machine",
+            "type_raw": "0x2::machine::Machine",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_MachineNode",
-    "type_raw": "0x2::dynamic_field::Field<0x1::string::String, 0x2::parent_linked_table::Node<0x1::string::String, vector<0x2::machine::NodePair>>>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x..."},
-    "change": "created"
-  },
-  {
-    "type": "Machine",
-    "type_raw": "0x2::machine::Machine",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
-  },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -396,21 +470,24 @@ Create the Three-Body signature service without publishing. The Service must be 
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "three_body_signature_service",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "three_body_permission",
-      "replaceExistName": true
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "three_body_signature_service",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "three_body_permission",
+        "replaceExistName": true
+      },
+      "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+      "publish": false
     },
-    "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
-    "publish": false
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -419,24 +496,35 @@ Create the Three-Body signature service without publishing. The Service must be 
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "mutated"
+          },
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -448,38 +536,52 @@ Bind the published Machine to the Service. **Important**: The Service must be un
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "machine": "three_body_machine"
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "machine": "three_body_machine"
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    }
   }
 }
 ```
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -491,38 +593,52 @@ Configure the Buy Guard to restrict purchases to the author only.
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "buy_guard": "three_body_buy_guard"
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "buy_guard": "three_body_buy_guard"
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    }
   }
 }
 ```
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -534,20 +650,23 @@ Create a Treasury object to aggregate signature service revenue (public funds fo
 **Request**:
 ```json
 {
-  "operation_type": "treasury",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "three_body_treasury",
-      "type_parameter": "0x2::wow::WOW",
-      "permission": "three_body_permission",
-      "replaceExistName": true
+    "operation_type": "treasury",
+    "data": {
+      "object": {
+        "name": "three_body_treasury",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "three_body_permission",
+        "replaceExistName": true
+      },
+      "description": "Treasury for aggregating Three-Body signature service revenue (author's public funds for operations and distribution). Uses the same Permission as the Service (three_body_permission) for consistency — a single permission organization governs both fund collection and service operations."
     },
-    "description": "Treasury for aggregating Three-Body signature service revenue (author's public funds for operations and distribution). Uses the same Permission as the Service (three_body_permission) for consistency — a single permission organization governs both fund collection and service operations."
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -561,24 +680,35 @@ Create a Treasury object to aggregate signature service revenue (public funds fo
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Treasury",
-    "type_raw": "0x2::treasury::Treasury<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "type_raw": "0x2::treasury::Treasury<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---
@@ -595,49 +725,52 @@ order.service == three_body_signature_service
 **Request**:
 ```json
 {
-  "operation_type": "guard",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "three_body_allocator_guard",
-      "tags": ["signature", "book", "allocator", "level3-scene-combined"],
-      "replaceExistName": true
-    },
-    "description": "Allocator guard for Three-Body signature service: verifies order.service == three_body_signature_service to prevent cross-service theft (R-C3-05). VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity(three_body_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe).",
-    "table": [
-      {
-        "identifier": 0,
-        "b_submission": true,
-        "value_type": "Address",
-        "name": "Order ID (submitted at runtime)"
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "three_body_allocator_guard",
+        "tags": ["signature", "book", "allocator", "level3-scene-combined"],
+        "replaceExistName": true
       },
-      {
-        "identifier": 1,
-        "b_submission": false,
-        "value_type": "Address",
-        "value": "three_body_signature_service",
-        "name": "Service address (this service)"
-      }
-    ],
-    "root": {
-      "type": "logic_equal",
-      "nodes": [
+      "description": "Allocator guard for Three-Body signature service: verifies order.service == three_body_signature_service to prevent cross-service theft (R-C3-05). VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity(three_body_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe).",
+      "table": [
         {
-          "type": "query",
-          "query": "order.service",
-          "object": {"identifier": 0},
-          "parameters": []
+          "identifier": 0,
+          "b_submission": true,
+          "value_type": "Address",
+          "name": "Order ID (submitted at runtime)"
         },
         {
-          "type": "identifier",
-          "identifier": 1
+          "identifier": 1,
+          "b_submission": false,
+          "value_type": "Address",
+          "value": "three_body_signature_service",
+          "name": "Service address (this service)"
         }
-      ]
+      ],
+      "root": {
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": "order.service",
+            "object": {"identifier": 0},
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
+      }
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
   }
 }
 ```
@@ -655,16 +788,27 @@ order.service == three_body_signature_service
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Guard",
-    "type_raw": "0x2::guard::Guard",
-    "object": "0x...",
-    "version": "...",
-    "owner": "Immutable",
-    "change": "created"
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Guard",
+            "type_raw": "0x2::guard::Guard",
+            "object": "0x...",
+            "version": "...",
+            "owner": "Immutable",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -676,32 +820,35 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "order_allocators": {
-      "description": "Three-Body signature service fund allocation - 100% to author Treasury",
-      "threshold": 0,
-      "allocators": [
-        {
-          "guard": "three_body_allocator_guard",
-          "sharing": [
-            {
-              "who": {
-                "Entity": {"name_or_address": "three_body_treasury"}
-              },
-              "sharing": 10000,
-              "mode": "Rate"
-            }
-          ]
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "order_allocators": {
+        "description": "Three-Body signature service fund allocation - 100% to author Treasury",
+        "threshold": 0,
+        "allocators": [
+          {
+            "guard": "three_body_allocator_guard",
+            "sharing": [
+              {
+                "who": {
+                  "Entity": {"name_or_address": "three_body_treasury"}
+                },
+                "sharing": 10000,
+                "mode": "Rate"
+              }
+            ]
+          }
+        ]
+      },
+      "customer_required": ["phone", "email", "shipping_address"]
     },
-    "customer_required": ["phone", "email", "shipping_address"]
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -713,16 +860,27 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -734,28 +892,31 @@ Add sales items and publish the service to make it available for orders.
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "sales": {
-      "op": "add",
-      "sales": [
-        {
-          "name": "Three-Body Book Signature",
-          "price": 888,
-          "stock": 100,
-          "suspension": false,
-          "wip": "",
-          "wip_hash": ""
-        }
-      ]
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "sales": {
+        "op": "add",
+        "sales": [
+          {
+            "name": "Three-Body Book Signature",
+            "price": 888,
+            "stock": 100,
+            "suspension": false,
+            "wip": "",
+            "wip_hash": ""
+          }
+        ]
+      },
+      "publish": true
     },
-    "publish": true
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "confirmed": true
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
+    }
   }
 }
 ```
@@ -764,16 +925,27 @@ Add sales items and publish the service to make it available for orders.
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -785,30 +957,44 @@ Unpause the service to allow order creation.
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "pause": false
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "pause": false
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    }
   }
 }
 ```
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
-  }
-]
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
 ```
 
 ---
@@ -820,10 +1006,13 @@ Query the service to verify all configurations.
 **Request**:
 ```json
 {
-  "query_type": "onchain_objects",
-  "objects": ["three_body_signature_service"],
-  "no_cache": true,
-  "network": "testnet"
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["three_body_signature_service"],
+    "no_cache": true,
+    "network": "testnet"
+  }
 }
 ```
 
@@ -831,65 +1020,71 @@ Query the service to verify all configurations.
 ```json
 {
   "result": {
-    "query_type": "onchain_objects",
-    "result": {
-      "objects": [
-        {
-          "object": "0x...",
-          "type": "Service",
-          "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-          "owner": {"Shared": {"initial_shared_version": "..."}},
-          "version": "...",
-          "previousTransaction": "...",
-          "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
-          "location": "",
-          "sales": [
+    "status": "success",
+    "data": {
+      "result": {
+        "query_type": "onchain_objects",
+        "result": {
+          "objects": [
             {
-              "name": "Three-Body Book Signature",
-              "stock": "100",
-              "suspension": false,
-              "price": "888",
-              "wip": "",
-              "wip_hash": ""
-            }
-          ],
-          "repositories": [],
-          "buy_guard": "0x...",
-          "machine": "0x...",
-          "bPublished": true,
-          "bPaused": false,
-          "customer_required": ["phone", "email", "shipping_address"],
-          "arbitrations": [],
-          "compensation_fund": "0",
-          "paused_time": null,
-          "setting_lock_duration": "2592000000",
-          "order_allocators": {
-            "description": "Three-Body signature service fund allocation - 100% to author Treasury",
-            "threshold": "0",
-            "allocators": [
-              {
-                "guard": "0x...",
-                "sharing": [
+              "object": "0x...",
+              "type": "Service",
+              "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+              "owner": {"Shared": {"initial_shared_version": "..."}},
+              "version": "...",
+              "previousTransaction": "...",
+              "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+              "location": "",
+              "sales": [
+                {
+                  "name": "Three-Body Book Signature",
+                  "stock": "100",
+                  "suspension": false,
+                  "price": "888",
+                  "wip": "",
+                  "wip_hash": ""
+                }
+              ],
+              "repositories": [],
+              "buy_guard": "0x...",
+              "machine": "0x...",
+              "bPublished": true,
+              "bPaused": false,
+              "customer_required": ["phone", "email", "shipping_address"],
+              "arbitrations": [],
+              "compensation_fund": "0",
+              "paused_time": null,
+              "setting_lock_duration": "2592000000",
+              "order_allocators": {
+                "description": "Three-Body signature service fund allocation - 100% to author Treasury",
+                "threshold": "0",
+                "allocators": [
                   {
-                    "who": {"Entity": "0x..."},
-                    "sharing": "10000",
-                    "mode": 1
+                    "guard": "0x...",
+                    "sharing": [
+                      {
+                        "who": {"Entity": "0x..."},
+                        "sharing": "10000",
+                        "mode": 1
+                      }
+                    ],
+                    "fix": "0",
+                    "max": null
                   }
-                ],
-                "fix": "0",
-                "max": null
-              }
-            ]
-          },
-          "rewards": [],
-          "um": null,
-          "permission": "0x...",
-          "cache_expire": 1234567890,
-          "query_name": "three_body_signature_service"
+                ]
+              },
+              "rewards": [],
+              "um": null,
+              "permission": "0x...",
+              "cache_expire": 1234567890,
+              "query_name": "three_body_signature_service"
+            }
+          ]
         }
-      ]
+      }
     }
-  }
+  },
+  "schema": null
 }
 ```
 
@@ -912,103 +1107,117 @@ The author (`three_body_author`) should be able to purchase the service.
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Three-Body Book Signature",
-            "stock": 1,
-            "wip_hash": ""
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Three-Body Book Signature",
+              "stock": 1,
+              "wip_hash": ""
+            }
+          ],
+          "total_pay": {
+            "balance": 888
           }
-        ],
-        "total_pay": {
-          "balance": 888
+        },
+        "namedNewOrder": {
+          "name": "three_body_order",
+          "replaceExistName": true
+        },
+        "namedNewProgress": {
+          "name": "three_body_progress",
+          "replaceExistName": true
+        },
+        "namedNewAllocation": {
+          "name": "three_body_allocation",
+          "replaceExistName": true
         }
-      },
-      "namedNewOrder": {
-        "name": "three_body_order",
-        "replaceExistName": true
-      },
-      "namedNewProgress": {
-        "name": "three_body_progress",
-        "replaceExistName": true
-      },
-      "namedNewAllocation": {
-        "name": "three_body_allocation",
-        "replaceExistName": true
       }
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet"
   }
 }
 ```
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Service",
-    "type_raw": "0x2::service::Service<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Service",
+            "type_raw": "0x2::service::Service<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityLinker",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
+            "change": "created"
+          },
+          {
+            "type": "Allocation",
+            "type_raw": "0x2::allocation::Allocation<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          },
+          {
+            "type": "Order",
+            "type_raw": "0x2::order::Order",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          },
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "mutated"
-  },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "mutated"
-  },
-  {
-    "type": "TableItem_EntityLinker",
-    "type_raw": "0x2::dynamic_field::Field<address, 0x2::registrar::Votes>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x0000000000000000000000000000000000000000000000000000000000000aaa"},
-    "change": "created"
-  },
-  {
-    "type": "Allocation",
-    "type_raw": "0x2::allocation::Allocation<0x2::wow::WOW>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
-  },
-  {
-    "type": "Order",
-    "type_raw": "0x2::order::Order",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
-  },
-  {
-    "type": "Progress",
-    "type_raw": "0x2::progress::Progress",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 > **Why So Many Objects? (Information Injection Design)**
@@ -1034,27 +1243,30 @@ Any other account attempting to purchase should fail with Buy Guard verification
 **Request**:
 ```json
 {
-  "operation_type": "service",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_signature_service",
-    "order_new": {
-      "buy": {
-        "items": [
-          {
-            "name": "Three-Body Book Signature",
-            "stock": 1,
-            "wip_hash": ""
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service",
+      "order_new": {
+        "buy": {
+          "items": [
+            {
+              "name": "Three-Body Book Signature",
+              "stock": 1,
+              "wip_hash": ""
+            }
+          ],
+          "total_pay": {
+            "balance": 888
           }
-        ],
-        "total_pay": {
-          "balance": 888
         }
       }
+    },
+    "env": {
+      "account": "three_body_customer",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "three_body_customer",
-    "network": "testnet"
   }
 }
 ```
@@ -1091,20 +1303,23 @@ The author confirms the book has been delivered.
 **Request**:
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Book Delivered",
-        "forward": "Confirm Delivery"
+    "operation_type": "progress",
+    "data": {
+      "object": "three_body_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Book Delivered",
+          "forward": "Confirm Delivery"
+        }
       }
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
@@ -1113,24 +1328,35 @@ The author confirms the book has been delivered.
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Progress",
-    "type_raw": "0x2::progress::Progress",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_ProgressHistory",
+            "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_ProgressHistory",
-    "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x..."},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ### Node 2: Signature Completed
@@ -1142,44 +1368,58 @@ The author completes the signature.
 **Request**:
 ```json
 {
-  "operation_type": "progress",
+  "tool": "onchain_operations",
   "data": {
-    "object": "three_body_progress",
-    "operate": {
-      "operation": {
-        "next_node_name": "Signature Completed",
-        "forward": "Complete Signature"
+    "operation_type": "progress",
+    "data": {
+      "object": "three_body_progress",
+      "operate": {
+        "operation": {
+          "next_node_name": "Signature Completed",
+          "forward": "Complete Signature"
+        }
       }
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "no_cache": true
     }
-  },
-  "env": {
-    "account": "three_body_author",
-    "network": "testnet",
-    "no_cache": true
   }
 }
 ```
 
 **Expected Result**:
 ```json
-[
-  {
-    "type": "Progress",
-    "type_raw": "0x2::progress::Progress",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"Shared": {"initial_shared_version": "..."}},
-    "change": "mutated"
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Progress",
+            "type_raw": "0x2::progress::Progress",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_ProgressHistory",
+            "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          }
+        ]
+      }
+    }
   },
-  {
-    "type": "TableItem_ProgressHistory",
-    "type_raw": "0x2::dynamic_field::Field<u64, 0x2::progress::History>",
-    "object": "0x...",
-    "version": "...",
-    "owner": {"ObjectOwner": "0x..."},
-    "change": "created"
-  }
-]
+  "schema": null
+}
 ```
 
 ---

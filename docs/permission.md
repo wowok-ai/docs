@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "permission", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Permission component is used to manage access control permissions for WoWok objects. Through the Permission object, you can define who (entities) can perform which operations (permission indexes), making it the core of the WoWok permission system.
@@ -11,7 +13,7 @@ The Permission component is used to manage access control permissions for WoWok 
 
 ## Object Type Permission Range Overview
 
-**Note**: Use the `wowok_buildin_info` tool to view all built-in permission numbers and their detailed descriptions.
+**Note**: Use the `wowok_buildin_info` sub-tool to view all built-in permission numbers and their detailed descriptions.
 
 WoWok organizes built-in permissions by object type. Each object type has a dedicated permission index range:
 
@@ -152,10 +154,13 @@ Permission operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "permission",
-  "data": { ... },    // Permission data definition
-  "env": { ... },       // Execution environment (optional)
-  "submission": { ... }  // Submission data (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "permission",
+    "data": { ... },    // Permission data definition
+    "env": { ... },       // Execution environment (optional)
+    "submission": { ... }  // Submission data (optional)
+  }
 }
 ```
 
@@ -222,7 +227,7 @@ If the execution returns a `submission` field in the response, it indicates that
 
 The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
 
-**Query Value Types**: Use the `wowok_buildin_info` tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
 
 ---
 
@@ -258,15 +263,18 @@ Create a new Permission object. You can set the name, description, and tags. The
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "my_permission"
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "my_permission"
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -274,11 +282,25 @@ Create a new Permission object. You can set the name, description, and tags. The
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x414d0d...88eb0c",
-  "type": "Permission",
-  "version": "10316068",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x414d0d...88eb0c",
+            "version": "10316068",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -290,16 +312,19 @@ Create a new Permission object. You can set the name, description, and tags. The
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "service_team_permission"
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "service_team_permission"
+      },
+      "description": "Service team permission management - responsible for service creation, sales, and customer operations"
     },
-    "description": "Service team permission management - responsible for service creation, sales, and customer operations"
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -307,11 +332,25 @@ Create a new Permission object. You can set the name, description, and tags. The
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x43f904...0df93",
-  "type": "Permission",
-  "version": "10316069",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x43f904...0df93",
+            "version": "10316069",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -323,16 +362,19 @@ Create a new Permission object. You can set the name, description, and tags. The
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "design_team_permission",
-      "tags": ["design", "team", "internal", "creative"]
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "design_team_permission",
+        "tags": ["design", "team", "internal", "creative"]
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -340,11 +382,25 @@ Create a new Permission object. You can set the name, description, and tags. The
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x0bfbcf...c8295",
-  "type": "Permission",
-  "version": "10316070",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x0bfbcf...c8295",
+            "version": "10316070",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -375,22 +431,25 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "admin": {
-      "op": "add",
-      "addresses": {
-        "entities": [
-          { "name_or_address": "product_manager" },
-          { "name_or_address": "team_lead" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "admin": {
+        "op": "add",
+        "addresses": {
+          "entities": [
+            { "name_or_address": "product_manager" },
+            { "name_or_address": "team_lead" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -398,11 +457,25 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x414d0d...88eb0c",
-  "type": "Permission",
-  "version": "10316071",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x414d0d...88eb0c",
+            "version": "10316071",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -414,21 +487,24 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "admin": {
-      "op": "remove",
-      "addresses": {
-        "entities": [
-          { "name_or_address": "former_lead" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "admin": {
+        "op": "remove",
+        "addresses": {
+          "entities": [
+            { "name_or_address": "former_lead" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -436,11 +512,25 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x414d0d...88eb0c",
-  "type": "Permission",
-  "version": "10316072",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x414d0d...88eb0c",
+            "version": "10316072",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -452,22 +542,25 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "admin": {
-      "op": "set",
-      "addresses": {
-        "entities": [
-          { "name_or_address": "product_manager" },
-          { "name_or_address": "tech_lead" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "admin": {
+        "op": "set",
+        "addresses": {
+          "entities": [
+            { "name_or_address": "product_manager" },
+            { "name_or_address": "tech_lead" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -475,11 +568,25 @@ Add, remove, or set administrators for the Permission object. Only the object ow
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x414d0d...88eb0c",
-  "type": "Permission",
-  "version": "10316073",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x414d0d...88eb0c",
+            "version": "10316073",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -511,22 +618,25 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 300,
-      "entity": {
-        "entities": [
-          { "name_or_address": "marketing_specialist" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 300,
+        "entity": {
+          "entities": [
+            { "name_or_address": "marketing_specialist" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -534,11 +644,25 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10318774",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10318774",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -550,24 +674,27 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "add perm by index",
-      "index": 300,
-      "entity": {
-        "entities": [
-          { "name_or_address": "marketing_specialist_1" },
-          { "name_or_address": "marketing_specialist_2" },
-          { "name_or_address": "marketing_specialist_3" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "add perm by index",
+        "index": 300,
+        "entity": {
+          "entities": [
+            { "name_or_address": "marketing_specialist_1" },
+            { "name_or_address": "marketing_specialist_2" },
+            { "name_or_address": "marketing_specialist_3" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -575,11 +702,25 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10319086",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10319086",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -591,22 +732,25 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "remove perm by index",
-      "index": 300,
-      "entity": {
-        "entities": [
-          { "name_or_address": "former_team_member" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "remove perm by index",
+        "index": 300,
+        "entity": {
+          "entities": [
+            { "name_or_address": "former_team_member" }
+          ]
+        }
       }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -614,11 +758,25 @@ Add, set, or remove entities (accounts or Guard IDs) for a specific permission i
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10319087",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10319087",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -650,18 +808,21 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "add perm by entity",
-      "entity": { "name_or_address": "product_manager" },
-      "index": [300]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "add perm by entity",
+        "entity": { "name_or_address": "product_manager" },
+        "index": [300]
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -669,11 +830,25 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10319645",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10319645",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -685,18 +860,21 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "add perm by entity",
-      "entity": { "name_or_address": "marketing_manager" },
-      "index": [300, 301, 305]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "add perm by entity",
+        "entity": { "name_or_address": "marketing_manager" },
+        "index": [300, 301, 305]
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -704,11 +882,25 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10319887",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10319887",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -720,18 +912,21 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "table": {
-      "op": "remove perm by entity",
-      "entity": { "name_or_address": "marketing_manager" },
-      "index": [305]
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "table": {
+        "op": "remove perm by entity",
+        "entity": { "name_or_address": "marketing_manager" },
+        "index": [305]
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -739,11 +934,25 @@ Add, set, or remove permission indexes for a specific entity. This is the entity
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10319888",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10319888",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -775,18 +984,21 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "remark": {
-      "op": "set",
-      "index": 1001,
-      "remark": "Machine Node 'order confirm': confirm operation"
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "remark": {
+        "op": "set",
+        "index": 1001,
+        "remark": "Machine Node 'order confirm': confirm operation"
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -794,11 +1006,25 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x030c79...9b5faa",
-  "type": "Permission",
-  "version": "10319890",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x030c79...9b5faa",
+            "version": "10319890",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -810,17 +1036,20 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "remark": {
-      "op": "remove",
-      "index": 1001
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "remark": {
+        "op": "remove",
+        "index": 1001
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -828,11 +1057,25 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x030c79...9b5faa",
-  "type": "Permission",
-  "version": "10319891",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x030c79...9b5faa",
+            "version": "10319891",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -844,16 +1087,19 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "remark": {
-      "op": "clear"
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "remark": {
+        "op": "clear"
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -861,11 +1107,25 @@ Set, remove, or clear remarks for permission indexes (custom permissions with in
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x030c79...9b5faa",
-  "type": "Permission",
-  "version": "10319892",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x030c79...9b5faa",
+            "version": "10319892",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -898,18 +1158,21 @@ Perform advanced operations on entity permissions, including swapping permission
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "entity": {
-      "op": "copy",
-      "entity1": { "name_or_address": "senior_marketer" },
-      "entity2": { "name_or_address": "junior_marketer" }
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "entity": {
+        "op": "copy",
+        "entity1": { "name_or_address": "senior_marketer" },
+        "entity2": { "name_or_address": "junior_marketer" }
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -917,11 +1180,25 @@ Perform advanced operations on entity permissions, including swapping permission
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10321162",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10321162",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -933,18 +1210,21 @@ Perform advanced operations on entity permissions, including swapping permission
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "entity": {
-      "op": "swap",
-      "entity1": { "name_or_address": "role_a" },
-      "entity2": { "name_or_address": "role_b" }
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "entity": {
+        "op": "swap",
+        "entity1": { "name_or_address": "role_a" },
+        "entity2": { "name_or_address": "role_b" }
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -952,11 +1232,25 @@ Perform advanced operations on entity permissions, including swapping permission
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10321754",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10321754",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -968,18 +1262,21 @@ Perform advanced operations on entity permissions, including swapping permission
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "entity": {
-      "op": "replace",
-      "entity1": { "name_or_address": "old_manager" },
-      "entity2": { "name_or_address": "new_manager" }
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "entity": {
+        "op": "replace",
+        "entity1": { "name_or_address": "old_manager" },
+        "entity2": { "name_or_address": "new_manager" }
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -987,11 +1284,25 @@ Perform advanced operations on entity permissions, including swapping permission
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10322233",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10322233",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1003,17 +1314,20 @@ Perform advanced operations on entity permissions, including swapping permission
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "entity": {
-      "op": "del",
-      "entity": { "name_or_address": "former_employee" }
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "entity": {
+        "op": "del",
+        "entity": { "name_or_address": "former_employee" }
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1021,11 +1335,25 @@ Perform advanced operations on entity permissions, including swapping permission
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10322234",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10322234",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1055,14 +1383,17 @@ Apply the current Permission object to other WoWok objects so that these objects
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "marketing_team_permission",
-    "apply": ["service_marketing_workflow"]
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "operation_type": "permission",
+    "data": {
+      "object": "marketing_team_permission",
+      "apply": ["service_marketing_workflow"]
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1070,11 +1401,25 @@ Apply the current Permission object to other WoWok objects so that these objects
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x40cfa6...35e653",
-  "type": "Repository",
-  "version": "10322920",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Repository",
+            "object": "0x40cfa6...35e653",
+            "version": "10322920",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1086,14 +1431,17 @@ Apply the current Permission object to other WoWok objects so that these objects
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "marketing_team_permission",
-    "apply": ["service_marketing_workflow", "customer_service_workflow", "campaign_management_repo"]
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "operation_type": "permission",
+    "data": {
+      "object": "marketing_team_permission",
+      "apply": ["service_marketing_workflow", "customer_service_workflow", "campaign_management_repo"]
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1101,11 +1449,24 @@ Apply the current Permission object to other WoWok objects so that these objects
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    { "object": "0x40cfa6...35e653", "type": "Repository", "change": "mutated" },
-    { "object": "0xc44fbd...c2046", "type": "Repository", "change": "mutated" }
-  ]
+  "result": {
+    "status": "success",
+    "data": {
+      "objects": [
+        {
+          "object": "0x40cfa6...35e653",
+          "type": "Repository",
+          "change": "mutated"
+        },
+        {
+          "object": "0xc44fbd...c2046",
+          "type": "Repository",
+          "change": "mutated"
+        }
+      ]
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1135,14 +1496,17 @@ Transfer ownership of the Permission object to another user. Only the current ow
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "my_permission",
-    "builder": { "name_or_address": "new_owner" }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "operation_type": "permission",
+    "data": {
+      "object": "my_permission",
+      "builder": { "name_or_address": "new_owner" }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1150,11 +1514,25 @@ Transfer ownership of the Permission object to another user. Only the current ow
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x030c79...9b5faa",
-  "type": "Permission",
-  "version": "10323203",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x030c79...9b5faa",
+            "version": "10323203",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1188,15 +1566,18 @@ See [Contact Documentation](contact.md) for more details.
 
 ```json
 {
-  "operation_type": "contact",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "test_contact_um"
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "test_contact_um"
+      }
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1207,14 +1588,17 @@ See [Contact Documentation](contact.md) for more details.
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "test_permission_for_table",
-    "um": "test_contact_um"
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "operation_type": "permission",
+    "data": {
+      "object": "test_permission_for_table",
+      "um": "test_contact_um"
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1222,11 +1606,25 @@ See [Contact Documentation](contact.md) for more details.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10355080",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10355080",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1260,29 +1658,32 @@ See [Payment Documentation](payment.md) for more details.
 
 ```json
 {
-  "operation_type": "payment",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "test_payment_for_perm"
-    },
-    "revenue": [
-      {
-        "recipient": {
-          "name_or_address": "test_permission_for_table"
-        },
-        "amount": {
-          "balance": 1000000
+    "operation_type": "payment",
+    "data": {
+      "object": {
+        "name": "test_payment_for_perm"
+      },
+      "revenue": [
+        {
+          "recipient": {
+            "name_or_address": "test_permission_for_table"
+          },
+          "amount": {
+            "balance": 1000000
+          }
         }
+      ],
+      "info": {
+        "remark": "Test payment",
+        "index": 1
       }
-    ],
-    "info": {
-      "remark": "Test payment",
-      "index": 1
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1293,14 +1694,17 @@ See [Payment Documentation](payment.md) for more details.
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": "test_permission_for_table",
-    "owner_receive": "recently"
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
+    "operation_type": "permission",
+    "data": {
+      "object": "test_permission_for_table",
+      "owner_receive": "recently"
+    },
+    "env": {
+      "account": "",
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -1308,11 +1712,25 @@ See [Payment Documentation](payment.md) for more details.
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x9233e7...1699de",
-  "type": "Permission",
-  "version": "10356781",
-  "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x9233e7...1699de",
+            "version": "10356781",
+            "change": "mutated"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1334,40 +1752,43 @@ Perform multiple operations in a single call, such as creating an object while c
 
 ```json
 {
-  "operation_type": "permission",
+  "tool": "onchain_operations",
   "data": {
-    "object": {
-      "name": "full_marketing_permission",
-      "tags": ["marketing", "team", "complete-setup"]
-    },
-    "description": "Complete marketing department permission configuration - includes administrator, service creation, sales management, and other permissions",
-    "admin": {
-      "op": "add",
-      "addresses": {
-        "entities": [
-          { "name_or_address": "marketing_director" }
-        ]
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "full_marketing_permission",
+        "tags": ["marketing", "team", "complete-setup"]
+      },
+      "description": "Complete marketing department permission configuration - includes administrator, service creation, sales management, and other permissions",
+      "admin": {
+        "op": "add",
+        "addresses": {
+          "entities": [
+            { "name_or_address": "marketing_director" }
+          ]
+        }
+      },
+      "table": {
+        "op": "add perm by index",
+        "index": 300,
+        "entity": {
+          "entities": [
+            { "name_or_address": "marketing_specialist_1" },
+            { "name_or_address": "marketing_specialist_2" }
+          ]
+        }
+      },
+      "remark": {
+        "op": "set",
+        "index": 1001,
+        "remark": "Machine Node 'order confirm': confirm operation"
       }
     },
-    "table": {
-      "op": "add perm by index",
-      "index": 300,
-      "entity": {
-        "entities": [
-          { "name_or_address": "marketing_specialist_1" },
-          { "name_or_address": "marketing_specialist_2" }
-        ]
-      }
-    },
-    "remark": {
-      "op": "set",
-      "index": 1001,
-      "remark": "Machine Node 'order confirm': confirm operation"
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -1375,11 +1796,25 @@ Perform multiple operations in a single call, such as creating an object while c
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "object": "0x19f825...e7eb5",
-  "type": "Permission",
-  "version": "10323983",
-  "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Permission",
+            "object": "0x19f825...e7eb5",
+            "version": "10323983",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -1393,11 +1828,14 @@ All examples in this document use the **testnet** network and **default account*
 
 ```json
 {
-  "operation_type": "permission",
-  "data": { ... },
-  "env": {
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "permission",
+    "data": { ... },
+    "env": {
     "account": "",              // Empty string for default account, or use account name/address
     "network": "testnet"        // Options: "localnet" | "testnet" | "mainnet"
+    }
   }
 }
 ```
@@ -1424,7 +1862,7 @@ All examples in this document use the **testnet** network and **default account*
 
 ### ⚠️ Tool Reference
 
-- Use `wowok_buildin_info` tool to query the most up-to-date permission list and detailed descriptions.
+- Use `wowok_buildin_info` sub-tool to query the most up-to-date permission list and detailed descriptions.
 ---
 
 ## Related Components

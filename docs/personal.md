@@ -2,6 +2,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "personal", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Personal component is used to establish and manage on-chain public identity.
@@ -77,9 +79,12 @@ Personal operations use the following top-level structure:
 
 ```json
 {
-  "operation_type": "personal",
-  "data": { ... },
-  "env": { ... }
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "personal",
+    "data": { ... },
+    "env": { ... }
+  }
 }
 ```
 
@@ -118,9 +123,12 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "Web3 developer and open source contributor"
+    "operation_type": "personal",
+    "data": {
+      "description": "Web3 developer and open source contributor"
+    }
   }
 }
 ```
@@ -133,10 +141,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "Blockchain enthusiast and builder",
-    "referrer": "alice"
+    "operation_type": "personal",
+    "data": {
+      "description": "Blockchain enthusiast and builder",
+      "referrer": "alice"
+    }
   }
 }
 ```
@@ -144,15 +155,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "72768",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "72768",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -198,22 +219,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "information": {
-      "op": "add",
-      "data": [
-        {
-          "name": "github",
-          "value_type": "String",
-          "value": "https://github.com/devuser"
-        },
-        {
-          "name": "twitter",
-          "value_type": "String",
-          "value": "@devuser"
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "information": {
+        "op": "add",
+        "data": [
+          {
+            "name": "github",
+            "value_type": "String",
+            "value": "https://github.com/devuser"
+          },
+          {
+            "name": "twitter",
+            "value_type": "String",
+            "value": "@devuser"
+          }
+        ]
+      }
     }
   }
 }
@@ -222,15 +246,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "75363",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "75363",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -242,11 +276,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "information": {
-      "op": "remove",
-      "name": ["old_website"]
+    "operation_type": "personal",
+    "data": {
+      "information": {
+        "op": "remove",
+        "name": ["old_website"]
+      }
     }
   }
 }
@@ -255,8 +292,18 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": []
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": []
+      }
+    }
+  },
+  "schema": null
 }
 ```
 
@@ -268,10 +315,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "information": {
-      "op": "clear"
+    "operation_type": "personal",
+    "data": {
+      "information": {
+        "op": "clear"
+      }
     }
   }
 }
@@ -280,15 +330,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "75365",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "75365",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -300,18 +360,21 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "Building the future of decentralized applications",
-    "information": {
-      "op": "add",
-      "data": [
-        {
-          "name": "website",
-          "value_type": "String",
-          "value": "https://myproject.io"
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "description": "Building the future of decentralized applications",
+      "information": {
+        "op": "add",
+        "data": [
+          {
+            "name": "website",
+            "value_type": "String",
+            "value": "https://myproject.io"
+          }
+        ]
+      }
     }
   }
 }
@@ -320,15 +383,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "76707",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "76707",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -338,7 +411,7 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ### Description
 
-Manage on-chain identity marks. For private marks, please use the 'local' tool.
+Manage on-chain identity marks. For private marks, please use the 'local' sub-tool.
 
 ### Parameters
 
@@ -354,7 +427,7 @@ Manage on-chain identity marks. For private marks, please use the 'local' tool.
 
 ### Important Notes
 
-⚠️ **This is on-chain public marks!** For private marks, please use the 'local' tool.
+⚠️ **This is on-chain public marks!** For private marks, please use the 'local' sub-tool.
 
 ⚠️ **Marks are permanently public!**
 
@@ -372,17 +445,20 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "add",
-      "data": [
-        {
-          "address": "service_wallet",
-          "name": "my_decentralized_service",
-          "tags": ["service", "active"]
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "add",
+        "data": [
+          {
+            "address": "service_wallet",
+            "name": "my_decentralized_service",
+            "tags": ["service", "active"]
+          }
+        ]
+      }
     }
   }
 }
@@ -391,21 +467,31 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Resource",
-      "object": "0x6db5...efbe",
-      "version": "76708",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_AddressMark",
-      "object": "0xed10...9f66",
-      "version": "76708",
-      "change": "created"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Resource",
+            "object": "0x6db5...efbe",
+            "version": "76708",
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_AddressMark",
+            "object": "0xed10...9f66",
+            "version": "76708",
+            "change": "created"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -417,16 +503,19 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "remove",
-      "data": [
-        {
-          "address": "old_service_wallet",
-          "tags": ["deprecated"]
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "remove",
+        "data": [
+          {
+            "address": "old_service_wallet",
+            "tags": ["deprecated"]
+          }
+        ]
+      }
     }
   }
 }
@@ -435,21 +524,31 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Resource",
-      "object": "0x6db5...efbe",
-      "version": "76709",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_AddressMark",
-      "object": "0xed10...9f66",
-      "version": "76709",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Resource",
+            "object": "0x6db5...efbe",
+            "version": "76709",
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_AddressMark",
+            "object": "0xed10...9f66",
+            "version": "76709",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -461,11 +560,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "clear",
-      "address": ["wallet_1", "wallet_2"]
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "clear",
+        "address": ["wallet_1", "wallet_2"]
+      }
     }
   }
 }
@@ -474,21 +576,31 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Resource",
-      "object": "0x6db5...efbe",
-      "version": "76710",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_AddressMark",
-      "object": "0xed10...9f66",
-      "version": "76710",
-      "change": "deleted"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Resource",
+            "object": "0x6db5...efbe",
+            "version": "76710",
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_AddressMark",
+            "object": "0xed10...9f66",
+            "version": "76710",
+            "change": "deleted"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -500,11 +612,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "transfer",
-      "to": "new_owner_wallet"
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "transfer",
+        "to": "new_owner_wallet"
+      }
     }
   }
 }
@@ -513,21 +628,31 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "Resource",
-      "object": "0x6db5...efbe",
-      "version": "76712",
-      "change": "mutated"
-    },
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "76712",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "Resource",
+            "object": "0x6db5...efbe",
+            "version": "76712",
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "76712",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -539,11 +664,14 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "replace",
-      "new_mark_object": "new_mark_object_id"
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "replace",
+        "new_mark_object": "new_mark_object_id"
+      }
     }
   }
 }
@@ -552,15 +680,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "172994",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "172994",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -572,10 +710,13 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "mark": {
-      "op": "destroy"
+    "operation_type": "personal",
+    "data": {
+      "mark": {
+        "op": "destroy"
+      }
     }
   }
 }
@@ -584,15 +725,25 @@ Returns transaction block information (WowTransactionBlockSchema).
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "172995",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "172995",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -616,28 +767,31 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "Full-stack developer building decentralized services",
-    "information": {
-      "op": "add",
-      "data": [
-        {
-          "name": "github",
-          "value_type": "String",
-          "value": "https://github.com/devbuilder"
-        }
-      ]
-    },
-    "mark": {
-      "op": "add",
-      "data": [
-        {
-          "address": "service_wallet",
-          "name": "my_service",
-          "tags": ["service"]
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "description": "Full-stack developer building decentralized services",
+      "information": {
+        "op": "add",
+        "data": [
+          {
+            "name": "github",
+            "value_type": "String",
+            "value": "https://github.com/devbuilder"
+          }
+        ]
+      },
+      "mark": {
+        "op": "add",
+        "data": [
+          {
+            "address": "service_wallet",
+            "name": "my_service",
+            "tags": ["service"]
+          }
+        ]
+      }
     }
   }
 }
@@ -646,15 +800,25 @@ Execute multiple Personal operations in one transaction, such as adding personal
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "172993",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "172993",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -666,39 +830,42 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ```json
 {
-  "operation_type": "personal",
+  "tool": "onchain_operations",
   "data": {
-    "description": "Complete public identity profile",
-    "referrer": "bob",
-    "information": {
-      "op": "add",
-      "data": [
-        {
-          "name": "website",
-          "value_type": "String",
-          "value": "https://myprofile.io"
-        },
-        {
-          "name": "twitter",
-          "value_type": "String",
-          "value": "@myprofile"
-        }
-      ]
+    "operation_type": "personal",
+    "data": {
+      "description": "Complete public identity profile",
+      "referrer": "bob",
+      "information": {
+        "op": "add",
+        "data": [
+          {
+            "name": "website",
+            "value_type": "String",
+            "value": "https://myprofile.io"
+          },
+          {
+            "name": "twitter",
+            "value_type": "String",
+            "value": "@myprofile"
+          }
+        ]
+      },
+      "mark": {
+        "op": "add",
+        "data": [
+          {
+            "address": "main_wallet",
+            "name": "primary_wallet",
+            "tags": ["personal", "primary"]
+          }
+        ]
+      }
     },
-    "mark": {
-      "op": "add",
-      "data": [
-        {
-          "address": "main_wallet",
-          "name": "primary_wallet",
-          "tags": ["personal", "primary"]
-        }
-      ]
+    "env": {
+      "account": "",
+      "network": "testnet"
     }
-  },
-  "env": {
-    "account": "",
-    "network": "testnet"
   }
 }
 ```
@@ -706,15 +873,25 @@ Execute multiple Personal operations in one transaction, such as adding personal
 **Execution Result**:
 ```json
 {
-  "status": "success",
-  "objects": [
-    {
-      "type": "TableItem_EntityRegistrar",
-      "object": "0xe597...d5f4",
-      "version": "173106",
-      "change": "mutated"
+  "result": {
+    "status": "success",
+    "data": {
+      "message": "Transaction completed successfully",
+      "result": {
+        "type": "transaction",
+        "digest": "...",
+        "objectChanges": [
+          {
+            "type": "TableItem_EntityRegistrar",
+            "object": "0xe597...d5f4",
+            "version": "173106",
+            "change": "mutated"
+          }
+        ]
+      }
     }
-  ]
+  },
+  "schema": null
 }
 ```
 
@@ -728,7 +905,7 @@ Execute multiple Personal operations in one transaction, such as adding personal
 
 ⚠️ **Never include: phone numbers, addresses, private keys!**
 
-⚠️ **On-chain marks are permanently public!** For private marks, please use the 'local' tool.
+⚠️ **On-chain marks are permanently public!** For private marks, please use the 'local' sub-tool.
 
 ---
 

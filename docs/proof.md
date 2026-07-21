@@ -3,6 +3,8 @@
 
 ---
 
+> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "onchain_operations", data: { operation_type: "proof" | "gen_proof", data: {<params>}, env: {<env>} } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+
 ## Component Overview
 
 The Proof component creates immutable on-chain proof objects with server signatures. Proofs are used for timestamped message proofs (WTS), Merkle tree root proofs, and other verifiable claims. A Proof object can only be created, not modified.
@@ -20,15 +22,18 @@ The Proof component creates immutable on-chain proof objects with server signatu
 
 ## Complete Tool Call Structure
 
-Proof operations use the `onchain_operations` tool with `operation_type` set to `"proof"` or `"gen_proof"`.
+Proof operations use the `onchain_operations` sub-tool with `operation_type` set to `"proof"` or `"gen_proof"`.
 
 ### Option 1: proof (full data structure)
 
 ```json
 {
-  "operation_type": "proof",
-  "data": { ... },    // Proof data definition
-  "env": { ... }      // Execution environment (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "proof",
+    "data": { ... },    // Proof data definition
+    "env": { ... }      // Execution environment (optional)
+  }
 }
 ```
 
@@ -36,12 +41,15 @@ Proof operations use the `onchain_operations` tool with `operation_type` set to 
 
 ```json
 {
-  "operation_type": "gen_proof",
-  "proof": "...",           // Proof content
-  "server_pubkey": "...",   // Server public key
-  "server_signature": "...",// Server signature
-  "proof_type": 1,          // Proof type (1 = WTS proof)
-  "env": { ... }            // Execution environment (optional)
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_proof",
+    "proof": "...",           // Proof content
+    "server_pubkey": "...",   // Server public key
+    "server_signature": "...",// Server signature
+    "proof_type": 1,          // Proof type (1 = WTS proof)
+    "env": { ... }            // Execution environment (optional)
+  }
 }
 ```
 
@@ -106,21 +114,24 @@ gen_proof (Generate Proof Shortcut)
 
 ```json
 {
-  "operation_type": "proof",
+  "tool": "onchain_operations",
   "data": {
-    "namedNew": {
-      "name": "my_wts_proof"
+    "operation_type": "proof",
+    "data": {
+      "namedNew": {
+        "name": "my_wts_proof"
+      },
+      "description": "WTS proof for conversation session",
+      "proof": "0xc9a405abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234",
+      "server_pubkey": "base64-encoded-server-public-key",
+      "server_signature": "base64-encoded-server-signature",
+      "proof_type": 1,
+      "item_count": 42,
+      "about_address": "0x74f63587fa505ca4e422a406feccaa699ae2804701e7ca1d9f6f2d07f31eb9bc"
     },
-    "description": "WTS proof for conversation session",
-    "proof": "0xc9a405abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234",
-    "server_pubkey": "base64-encoded-server-public-key",
-    "server_signature": "base64-encoded-server-signature",
-    "proof_type": 1,
-    "item_count": 42,
-    "about_address": "0x74f63587fa505ca4e422a406feccaa699ae2804701e7ca1d9f6f2d07f31eb9bc"
-  },
-  "env": {
-    "network": "testnet"
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
@@ -131,15 +142,18 @@ gen_proof (Generate Proof Shortcut)
 
 ```json
 {
-  "operation_type": "gen_proof",
-  "proof": "0xabc123merkleRoot",
-  "server_pubkey": "base64-encoded-server-public-key",
-  "server_signature": "base64-encoded-server-signature",
-  "proof_type": 1,
-  "description": "Quick proof",
-  "item_count": 10,
-  "env": {
-    "network": "testnet"
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "gen_proof",
+    "proof": "0xabc123merkleRoot",
+    "server_pubkey": "base64-encoded-server-public-key",
+    "server_signature": "base64-encoded-server-signature",
+    "proof_type": 1,
+    "description": "Quick proof",
+    "item_count": 10,
+    "env": {
+      "network": "testnet"
+    }
   }
 }
 ```
