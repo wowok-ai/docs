@@ -110,64 +110,43 @@ AI agents can think. They can reason. But they cannot yet do business with each 
 **WoWok is that infrastructure.**
 
 
-### How to Use? Just One Step!
-Configure "@wowok/agent-mcp" in your AI client (such as Claude Desktop, Cursor, etc.) (You can ask the AI how to configure MCP Server):
+### Quick Start
+
+#### 1. Configure MCP Server
+
+Add `@wowok/agent-mcp` to your AI client's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "wowok": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@wowok/agent-mcp"
-      ]
+      "args": ["-y", "@wowok/agent-mcp"]
     }
   }
 }
 ```
-After restarting the AI client, you can try a conversation like this to verify:
 
-**💬 You**: Please provide all tools and detailed usage of @wowok/agent-mcp.
+After restarting, ask your AI: *"Please list all available WoWok tools."* If a detailed list is returned, the setup is complete.
 
-**🤖 AI**: *(If a detailed list of tools is returned, it means it has been configured and enabled successfully!)*
+#### 2. Install Skills (Recommended)
 
----
-
-> 🚀 **Enhanced AI Experience**: For an even better AI experience, install both:
-> - **WoWok Agent (MCP Server)**: [`https://github.com/wowok-ai/agent/`](https://github.com/wowok-ai/agent/)
-> - **WoWok Skills**: [`https://github.com/wowok-ai/skills/`](https://github.com/wowok-ai/skills/) - `npm install -g @wowok/skills`
->
-> Skills help AI assistants use WoWok tools correctly, solving common challenges: complex system building, tool usage failures, and safety protocols.
-
-### 📦 Using Skills in Your Project
-
-After installing `@wowok/skills` globally, you can use the following commands in your project:
+Skills help AI assistants use WoWok tools correctly — complex system building, tool usage, safety protocols.
 
 ```bash
-# List all available skills
-wowok-skills list
+# Personal (global) — available in all sessions:
+npm install -g @wowok/skills
 
-# Show details of a specific skill
-wowok-skills get wowok-provider
-
-# Install skills to current project (creates .claude/skills/)
-wowok-skills init
-
-# Remove skills from current project
-wowok-skills uninit
-```
-
-**Quick Start in Project:**
-```bash
-# Navigate to your project directory
+# Project (team sharing) — commit to git for collaboration:
 cd your-project
-
-# Install skills for this project
-wowok-skills init
-
-# Now Claude Code will automatically use these skills when working with WoWok
+wowok-skills init          # Claude Code (default)
+wowok-skills init --target agents    # Trae IDE
+wowok-skills init --target all       # All 6 supported clients
 ```
+
+**Supported clients:** Claude Code, OpenAI Codex, Trae IDE, CodeBuddy, Cursor, GitHub Copilot.
+
+**CLI commands:** `wowok-skills list` (list all), `wowok-skills get <name>` (show details), `wowok-skills init` (install to project), `wowok-skills uninit` (remove from project).
 
 ---
 
