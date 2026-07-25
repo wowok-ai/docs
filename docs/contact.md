@@ -822,13 +822,13 @@ Create a Contact object that will serve as your public identity for secure messa
 
 ### Step 2: Enable Messenger for Your Account
 
-Use the `account_operation` sub-tool (see [account.md](account.md)) to enable Messenger for your account by setting a messenger name (here using the Contact object's name):
+Use the `account_operation` sub-tool (see [account.md](account.md)) to enable Messenger for your account:
 
 ```json
 {
   "messenger": {
     "name_or_account": "my_account",
-    "m": "my_contact"
+    "enabled": true
   }
 }
 ```

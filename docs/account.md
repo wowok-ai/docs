@@ -64,7 +64,7 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
 |----------------|------|----------|-------------|-------------|
 | `name` | string | No | Account name | Max 64 BCS characters, cannot start with '0x'. Omit or empty string uses default account |
 | `replaceExistName` | boolean | No | Whether to replace existing name | true=replace; false=error if name exists (default) |
-| `m` | string | null | No | Messenger name | Max 64 BCS characters. null=disable messenger; omit=no change |
+| `messenger` | boolean | No | Enable messenger | true=enable; false=disable; omit=unchanged. Account name is used for messenger identity |
 
 ### Return Result
 
@@ -79,7 +79,7 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
           "gen": {
             "address": "0x1234...abcd",
             "name": "my_account",
-            "m": "my_messenger"
+            "messenger": true
           }
         }
       }
@@ -186,7 +186,7 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
           "gen": {
             "address": "0x56bf...b5d7",
             "name": "bob",
-            "m": "bob_messenger"
+            "messenger": true
           }
         }
       }
@@ -232,13 +232,13 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
 
 #### Example 1.5: Generate Account and Enable Messenger
 
-**Prompt**: Generate a new account with the name "test_messenger" and enable messenger functionality with the messenger name "my_messenger". This account will be ready for encrypted messaging.
+**Prompt**: Generate a new account with the name "test_messenger" and enable messenger functionality. This account will be ready for encrypted messaging.
 
 ```json
 {
   "tool": "account_operation",
   "data": {
-    "gen": { "name": "test_messenger", "m": "my_messenger" }
+    "gen": { "name": "test_messenger", "messenger": true }
   }
 }
 ```
@@ -255,7 +255,7 @@ Generate a new WoWok account, optionally specifying a name, whether to replace a
           "gen": {
             "address": "0xb580...f4f4",
             "name": "test_messenger",
-            "m": "my_messenger"
+            "messenger": true
           }
         }
       }
@@ -1310,7 +1310,7 @@ Enable or disable messenger functionality for an account.
 | Parameter Name | Type | Required | Description | Constraints |
 |----------------|------|----------|-------------|-------------|
 | `name_or_account` | string | No | Account name or address | Empty string '' uses default account |
-| `m` | string \| null | Yes | Messenger name | Max 64 BCS characters. null=disable messenger |
+| `enabled` | boolean | Yes | Enable/disable messenger | true=enable; false=disable |
 
 ### Return Result
 
@@ -1324,7 +1324,7 @@ Enable or disable messenger functionality for an account.
         "data": {
           "messenger": {
             "name_or_account": "my_account",
-            "m": "my_messenger"
+            "enabled": true
           }
         }
       }
@@ -1340,13 +1340,13 @@ Enable or disable messenger functionality for an account.
 
 #### Example 10.1: Enable Messenger for Default Account
 
-**Prompt**: Enable messenger functionality for the default account with the messenger name "my_messenger". This will allow the account to send and receive encrypted messages using the specified messenger identifier.
+**Prompt**: Enable messenger functionality for the default account. This will allow the account to send and receive encrypted messages.
 
 ```json
 {
   "tool": "account_operation",
   "data": {
-    "messenger": { "m": "my_messenger" }
+    "messenger": { "enabled": true }
   }
 }
 ```
@@ -1361,7 +1361,7 @@ Enable or disable messenger functionality for an account.
         "status": "success",
         "data": {
           "messenger": {
-            "m": "my_messenger"
+            "enabled": true
           }
         }
       }
@@ -1373,13 +1373,13 @@ Enable or disable messenger functionality for an account.
 
 #### Example 10.2: Enable Messenger for Named Account
 
-**Prompt**: Enable messenger functionality for the account named "bob" with the messenger name "bob_messenger_updated". This explicitly specifies which account to configure by name.
+**Prompt**: Enable messenger functionality for the account named "bob". This explicitly specifies which account to configure by name.
 
 ```json
 {
   "tool": "account_operation",
   "data": {
-    "messenger": { "name_or_account": "bob", "m": "bob_messenger_updated" }
+    "messenger": { "name_or_account": "bob", "enabled": true }
   }
 }
 ```
@@ -1395,7 +1395,7 @@ Enable or disable messenger functionality for an account.
         "data": {
           "messenger": {
             "name_or_account": "bob",
-            "m": "bob_messenger_updated"
+            "enabled": true
           }
         }
       }
@@ -1407,26 +1407,26 @@ Enable or disable messenger functionality for an account.
 
 #### Example 10.3: Disable Default Account Messenger
 
-**Prompt**: Disable messenger functionality for the default account. Set "m" to null to indicate that messenger should be turned off, preventing the account from sending or receiving encrypted messages.
+**Prompt**: Disable messenger functionality for the default account. Set "enabled" to false to turn off messenger, preventing the account from sending or receiving encrypted messages.
 
 ```json
 {
   "tool": "account_operation",
   "data": {
-    "messenger": { "m": null }
+    "messenger": { "enabled": false }
   }
 }
 ```
 
 #### Example 10.4: Disable Named Account Messenger
 
-**Prompt**: Disable messenger functionality for the account named "alice". Set "m" to null to turn off messenger for this specific account.
+**Prompt**: Disable messenger functionality for the account named "alice". Set "enabled" to false to turn off messenger for this specific account.
 
 ```json
 {
   "tool": "account_operation",
   "data": {
-    "messenger": { "name_or_account": "alice", "m": null }
+    "messenger": { "name_or_account": "alice", "enabled": false }
   }
 }
 ```

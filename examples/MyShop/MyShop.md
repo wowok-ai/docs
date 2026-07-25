@@ -420,7 +420,7 @@ Create a Contact object to enable encrypted communication between customers and 
   "tool": "messenger_operation",
   "data": {
     "messenger": {
-      "m": "myshop_merchant_messenger",
+      "enabled": true,
       "name_or_account": "myshop_merchant"
     }
   }
@@ -1050,7 +1050,7 @@ After creating the order, the customer sends their shipping address and contact 
   "tool": "messenger_operation",
   "data": {
     "messenger": {
-      "m": "customer_messenger",
+      "enabled": true,
       "name_or_account": "myshop_customer"
     }
   }
