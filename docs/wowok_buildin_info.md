@@ -192,7 +192,7 @@ Get definitions of built-in permissions, including their indexes, names, descrip
         {"index": 314, "name": "service.compensation_fund_withdraw", "description": "Withdraw from service compensation fund", "object_type": "Service"},
         {"index": 315, "name": "service.compensation_fund_deposit", "description": "Deposit to service compensation fund", "object_type": "Service"},
         {"index": 316, "name": "service.compensation_fund_receive", "description": "Receive payments for service compensation fund", "object_type": "Service"},
-        {"index": 317, "name": "service.setting_locked_time_add", "description": "Add locked time to service compensation", "object_type": "Service"},
+        {"index": 317, "name": "service.setting_lock_duration_add", "description": "Add lock duration (ms) to service compensation fund — only-increase, affects withdraw waiting time", "object_type": "Service"},
         {"index": 318, "name": "service.reward", "description": "Manage service rewards", "object_type": "Service"},
         {"index": 319, "name": "service.owner_receive", "description": "Receive objects or payments for service", "object_type": "Service"},
         {"index": 320, "name": "service.um", "description": "Manage service UM (User Manager)", "object_type": "Service"},
@@ -277,7 +277,7 @@ Get definitions of built-in permissions, including their indexes, names, descrip
         {"index": 314, "name": "service.compensation_fund_withdraw", "description": "Withdraw from service compensation fund", "object_type": "Service"},
         {"index": 315, "name": "service.compensation_fund_deposit", "description": "Deposit to service compensation fund", "object_type": "Service"},
         {"index": 316, "name": "service.compensation_fund_receive", "description": "Receive payments for service compensation fund", "object_type": "Service"},
-        {"index": 317, "name": "service.setting_locked_time_add", "description": "Add locked time to service compensation", "object_type": "Service"},
+        {"index": 317, "name": "service.setting_lock_duration_add", "description": "Add lock duration (ms) to service compensation fund — only-increase, affects withdraw waiting time", "object_type": "Service"},
         {"index": 318, "name": "service.reward", "description": "Manage service rewards", "object_type": "Service"},
         {"index": 319, "name": "service.owner_receive", "description": "Receive objects or payments for service", "object_type": "Service"},
         {"index": 320, "name": "service.um", "description": "Manage service UM (User Manager)", "object_type": "Service"}
@@ -331,7 +331,7 @@ Get definitions of built-in permissions, including their indexes, names, descrip
         {"index": 314, "name": "service.compensation_fund_withdraw", "description": "Withdraw from service compensation fund", "object_type": "Service"},
         {"index": 315, "name": "service.compensation_fund_deposit", "description": "Deposit to service compensation fund", "object_type": "Service"},
         {"index": 316, "name": "service.compensation_fund_receive", "description": "Receive payments for service compensation fund", "object_type": "Service"},
-        {"index": 317, "name": "service.setting_locked_time_add", "description": "Add locked time to service compensation", "object_type": "Service"},
+        {"index": 317, "name": "service.setting_lock_duration_add", "description": "Add lock duration (ms) to service compensation fund — only-increase, affects withdraw waiting time", "object_type": "Service"},
         {"index": 318, "name": "service.reward", "description": "Manage service rewards", "object_type": "Service"},
         {"index": 319, "name": "service.owner_receive", "description": "Receive objects or payments for service", "object_type": "Service"},
         {"index": 320, "name": "service.um", "description": "Manage service UM (User Manager)", "object_type": "Service"}

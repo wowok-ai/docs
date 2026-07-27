@@ -91,7 +91,7 @@ All built-in permissions are listed below:
 | **314** | Service | SERVICE_COMPENSATION_FUND_WITHDRAW | Withdraw from compensation fund |
 | **315** | Service | SERVICE_COMPENSATION_FUND_DEPOSIT | Deposit to compensation fund |
 | **316** | Service | SERVICE_COMPENSATION_FUND_RECEIVE | Receive payments for compensation fund |
-| **317** | Service | SERVICE_COMPENSATION_LOCKED_TIME_ADD | Add locked time to compensation |
+| **317** | Service | SERVICE_COMPENSATION_LOCK_DURATION_ADD | Add lock duration to compensation fund (only-increase) |
 | **318** | Service | SERVICE_REWARD | Manage Service rewards |
 | **319** | Service | SERVICE_OWNER_RECEIVE | Receive objects/payments for Service |
 | **320** | Service | SERVICE_UM | Manage Service UM (User Manager) |

@@ -180,7 +180,7 @@ service (Service Object)
 │   │       ├── fix (number/string, optional) - Fixed allocation amount
 │   │       └── max (number/string, optional)
 │   ├── compensation_fund_add (CoinParam, optional) - add compensation
-│   ├── setting_locked_time_add (number, optional) - additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive
+│   ├── setting_lock_duration_add (number, optional) - additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive
 │   ├── compensation_fund_receive (ReceivedBalanceOrRecently, optional)
 │   ├── owner_receive (ReceivedObjectsOrRecently, optional)
 │   ├── um (NameOrAddress|null, optional) - Contact object ID or name
@@ -1534,7 +1534,7 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
 | `data.object` | string | Yes | Reference existing Service | Service name or ID |
 | `data.compensation_fund_add.balance` | number/string | No | Amount value | Pay from transaction account |
 | `data.compensation_fund_add.coin` | string | No | Coin object ID | Use specified Coin |
-| `data.setting_locked_time_add` | number | No | Additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive | 
+| `data.setting_lock_duration_add` | number | No | Additional lock duration (ms) to extend 'setting_lock_duration'. Initial value is 30 days, can only be increased. Affects: rewards, arbitrations, and compensation_fund_receive | 
 
 ---
 
@@ -1554,7 +1554,7 @@ Add funds to the compensation fund pool. These funds are used for arbitration co
       "compensation_fund_add": {
         "balance": 1000000000000
       },
-      "setting_locked_time_add": 86400000
+      "setting_lock_duration_add": 86400000
     }
   }
 }
