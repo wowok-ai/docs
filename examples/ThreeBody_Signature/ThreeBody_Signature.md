@@ -18,9 +18,11 @@ This example sets `env.confirmed: true` on irreversible operations (e.g., `publi
 1. **Phase 1 — Preview**: Call the tool **without** `env.confirmed`. The server returns `{ status: "pending_confirmation", confirmation_text: "..." }` containing the full operation summary, risk assessment, and irreversible-action warnings.
 2. **Phase 2 — Confirm**: Review `confirmation_text` with the user. Only after explicit user approval, call the tool again **with** `env.confirmed: true` to actually execute the on-chain transaction.
 
-> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the `publish: true` step on the ThreeBody Machine (Step 4 in Part 2), which is an irreversible lock of the `machine` and `order_allocators` fields.
+> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the two `publish: true` steps in this doc: the Machine publish (**Step 3**), which irreversibly locks the workflow definition (`nodes`/`pairs`/`forwards`), and the Service publish (**Step 10**), which irreversibly locks the `machine` and `order_allocators` fields.
 
 > **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
+>
+> **📄 Expected Results**: The Expected Result envelopes below omit the optional `message` and `semantic` fields (human-readable summary / business semantic summary) for brevity — real responses may include them.
 
 ---
 
@@ -35,7 +37,7 @@ This example demonstrates:
 1. **Buy Guard Protection**: Only the author (`three_body_author`) can purchase this service, preventing unauthorized usage
 2. **Simple Two-Node Workflow**: Clear progression from delivery to completion
 3. **WIP Files Optional**: Can use WIP files or empty strings
-4. **Fixed Price**: 888 tokens for the signature service
+4. **Fixed Price**: 888 WOW for the signature service
 
 ---
 
@@ -182,6 +184,8 @@ If the accounts do not exist locally, generate them first.
 ```
 
 > **Note**: Each faucet result item includes a `transferTxDigest` field representing the on-chain transaction digest for the faucet transfer. This is useful for tracking and verifying the faucet transaction on a block explorer.
+>
+> **Amount Note**: Each faucet request distributes 3 WOW (3 × 1 WOW; WOW has 9 decimals, so 1 WOW = 1,000,000,000 smallest units). Since the sale price in this example is 888 WOW, repeat the faucet request until each account holds ≥ 1000 WOW (price + gas).
 
 > **Important**: Repeat the faucet request for `three_body_customer` as well, since Test 2 requires a funded non-author account to attempt the blocked purchase.
 
@@ -219,8 +223,10 @@ Create a Permission object to manage the service.
 ```
 
 > **Permission Index Explanation**:
-> - **`1000`–`1009`**: User-defined permission indexes (starting from `USER_DEFINED_PERM_INDEX_START = 1000`). In this example, `1000` is used for the "Confirm Delivery" forward and `1001` for the "Complete Signature" forward in the Machine workflow (see Step 3). The remaining indexes (`1002`–`1009`) are reserved for future workflow extensions.
-> - **`306`**: The built-in `SERVICE_MACHINE` permission (Service module permission index `306`), which authorizes binding a Machine to a Service. This is required in Step 5 (Configure Machine) where the Machine is bound to the Service.
+> - **Admin bypass (why this single-account flow works)**: The Permission creator (`three_body_author`) automatically becomes an **admin** of the Permission object, and admins bypass per-index checks — the SDK's permission check only looks up granted indexes when the caller is NOT an admin. So the author can execute every step below even though the granted index list does not enumerate every built-in index used.
+> - **`1000`–`1009`**: User-defined permission indexes (starting from `USER_DEFINED_PERM_INDEX_START = 1000`). In this example, `1000` is used for the "Confirm Delivery" forward and `1001` for the "Complete Signature" forward in the Machine workflow (see Step 3). The remaining indexes (`1002`–`1009`) are reserved for future workflow extensions. These grants matter for non-admin operators: a Machine forward checks its `permissionIndex` against the operator's granted indexes (or admin status).
+> - **`306`**: The built-in `SERVICE_MACHINE` permission (Service module permission index `306`), which authorizes binding a Machine to a Service (used in Step 5, Configure Machine). It is granted here defensively — the author does not strictly need it thanks to the admin bypass above, but a non-admin operator would.
+> - **Full built-in index list a NON-admin operator would need for this example**: Service ops — `305` (SERVICE_SALES), `306` (SERVICE_MACHINE), `307` (SERVICE_BUY_GUARD), `309` (SERVICE_CUSTOMER_INFO_REQUIRED), `310` (SERVICE_PAUSE), `311` (SERVICE_PUBLISH), `313` (SERVICE_ORDER_ALLOCATOR); Machine ops — `200` (MACHINE_NEW), `201` (MACHINE_DESCRIPTION), `205` (MACHINE_PUBLISH), `206` (MACHINE_NODE); Treasury — `250` (TREASURY_NEW), `251` (TREASURY_DESCRIPTION).
 >
 > See `BuiltinPermissionIndex` in `ts-sdk/packages/wowok/src/w/call/permission.ts` for the full list of built-in permission indexes.
 
@@ -480,7 +486,7 @@ Create the Three-Body signature service without publishing. The Service must be 
         "permission": "three_body_permission",
         "replaceExistName": true
       },
-      "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+      "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888 WOW.",
       "publish": false
     },
     "env": {
@@ -643,7 +649,7 @@ Configure the Buy Guard to restrict purchases to the author only.
 
 ---
 
-## Step 6.5: Create Treasury Object
+## Step 7: Create Treasury Object
 
 Create a Treasury object to aggregate signature service revenue (public funds for the author's operational distribution). The Treasury uses the same Permission as the Service (`three_body_permission`) — this ensures a single consistent permission organization governs both fund collection and service operations.
 
@@ -713,7 +719,7 @@ Create a Treasury object to aggregate signature service revenue (public funds fo
 
 ---
 
-## Step 6.6: Create Allocator Guard
+## Step 8: Create Allocator Guard
 
 Create a dedicated Guard for the order allocator that verifies the order belongs to this service. This is a **Level 3 scene-combined** Guard: no Signer binding is needed because the allocator uses `sharing.who=Entity(three_body_treasury)` — funds always flow to the fixed Treasury regardless of who triggers the allocation.
 
@@ -813,7 +819,7 @@ order.service == three_body_signature_service
 
 ---
 
-## Step 7: Configure Order Allocators
+## Step 9: Configure Order Allocators
 
 Set up fund allocation: 100% to the author's Treasury upon order completion.
 
@@ -854,7 +860,7 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 ```
 
 > **⚠️ Risk Elimination — Why this configuration is safe**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by `three_body_allocator_guard` (Step 6.6), which verifies `order.service == three_body_signature_service` before allocation proceeds.
+> - **R-C3-05 (Cross-service theft)**: Eliminated by `three_body_allocator_guard` (Step 8), which verifies `order.service == three_body_signature_service` before allocation proceeds.
 > - **R-C3-06 (Fund theft via Signer)**: Eliminated by `sharing.who = {"Entity": {"name_or_address": "three_body_treasury"}}` — funds always flow to the fixed Treasury address regardless of who triggers the allocation. An attacker cannot redirect funds to themselves even if they somehow bypass the Guard.
 > - **Previous unsafe pattern (DO NOT USE)**: The original design used `guard: "three_body_buy_guard"` (no `order.service` check) with `sharing.who = {"Signer": "signer"}` — this allowed anyone to trigger allocation of any order's funds to themselves.
 
@@ -885,7 +891,7 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 
 ---
 
-## Step 8: Add Sales and Publish Service
+## Step 10: Add Sales and Publish Service
 
 Add sales items and publish the service to make it available for orders.
 
@@ -902,7 +908,7 @@ Add sales items and publish the service to make it available for orders.
         "sales": [
           {
             "name": "Three-Body Book Signature",
-            "price": 888,
+            "price": "888WOW",
             "stock": 100,
             "suspension": false,
             "wip": "",
@@ -950,7 +956,7 @@ Add sales items and publish the service to make it available for orders.
 
 ---
 
-## Step 9: Unpause Service
+## Step 11: Unpause Service
 
 Unpause the service to allow order creation.
 
@@ -999,7 +1005,7 @@ Unpause the service to allow order creation.
 
 ---
 
-## Step 10: Verify Service Configuration
+## Step 12: Verify Service Configuration
 
 Query the service to verify all configurations.
 
@@ -1033,14 +1039,14 @@ Query the service to verify all configurations.
               "owner": {"Shared": {"initial_shared_version": "..."}},
               "version": "...",
               "previousTransaction": "...",
-              "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888.",
+              "description": "Three-Body author book signature service. Provide a message up to 10 characters, and the author will sign your book. Process: 1.Book Delivery 2.Signature Completion. Fee: 888 WOW.",
               "location": "",
               "sales": [
                 {
                   "name": "Three-Body Book Signature",
                   "stock": "100",
                   "suspension": false,
-                  "price": "888",
+                  "price": "888000000000",
                   "wip": "",
                   "wip_hash": ""
                 }
@@ -1091,10 +1097,11 @@ Query the service to verify all configurations.
 > **Field Reference**:
 > - **`buy_guard`**, **`machine`**, **`permission`**: Return **on-chain object IDs** (not names). The on-chain data stores raw object IDs; resolving them back to local mark names requires a separate reverse lookup that is not performed by `onchain_objects` queries.
 > - **`query_name`**: The original name string passed in the query request (here, `"three_body_signature_service"`). This is automatically populated by the SDK from the input `objects` array, so you can identify which queried name corresponds to which returned object.
-> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 6.6). This Guard verifies `order.service == three_body_signature_service` (R-C3-05 protection).
-> - **`order_allocators.allocators[].sharing[].who`**: `{"Entity": "0x..."}` indicates funds flow to the fixed Treasury object (`three_body_treasury` from Step 6.5). The address is the Treasury's on-chain object ID. This eliminates R-C3-06 (fund theft via Signer) because the recipient is fixed regardless of caller.
+> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 8). This Guard verifies `order.service == three_body_signature_service` (R-C3-05 protection).
+> - **`order_allocators.allocators[].sharing[].who`**: `{"Entity": "0x..."}` indicates funds flow to the fixed Treasury object (`three_body_treasury` from Step 7). The address is the Treasury's on-chain object ID. This eliminates R-C3-06 (fund theft via Signer) because the recipient is fixed regardless of caller.
 > - **`order_allocators.allocators[].sharing[].mode`**: `1` is the numeric enum for `Rate` mode (input accepts the string `"Rate"`, output returns the numeric `1`).
 > - **`order_allocators.allocators[].fix`** and **`max`**: Additional fields returned on-chain (default `"0"` and `null` respectively) that are not part of the input schema but are present in the on-chain data structure.
+> - **`sales[].price`**: Returns the on-chain smallest-unit value as a string (`"888000000000"` = 888 WOW; WOW has 9 decimals). The input accepts the display format `"888WOW"` (auto-converted by the Fund Processing Layer) or the raw smallest-unit integer `888000000000`.
 
 ---
 
@@ -1122,7 +1129,7 @@ The author (`three_body_author`) should be able to purchase the service.
             }
           ],
           "total_pay": {
-            "balance": 888
+            "balance": "888WOW"
           }
         },
         "namedNewOrder": {
@@ -1146,6 +1153,8 @@ The author (`three_body_author`) should be able to purchase the service.
   }
 }
 ```
+
+> **Amount Format**: `"888WOW"` is the display format — the Fund Processing Layer converts it to `888000000000` smallest units (WOW has 9 decimals) before submission. The raw integer `888000000000` is equally valid. The order pays exactly the sale price set in Step 10.
 
 **Expected Result**:
 ```json
@@ -1258,7 +1267,7 @@ Any other account attempting to purchase should fail with Buy Guard verification
             }
           ],
           "total_pay": {
-            "balance": 888
+            "balance": "888WOW"
           }
         }
       }
@@ -1294,7 +1303,7 @@ Transaction resolution failed: MoveAbort in 8th command, abort code: 7 (Verify f
 
 ## Workflow Execution
 
-After a successful purchase by the author, the order progresses through the Machine nodes:
+After a successful purchase by the author, the order progresses through the Machine nodes, and the payment is then released to the Treasury via the order allocator:
 
 ### Node 1: Book Delivered
 
@@ -1312,7 +1321,8 @@ The author confirms the book has been delivered.
         "operation": {
           "next_node_name": "Book Delivered",
           "forward": "Confirm Delivery"
-        }
+        },
+        "op": "next"
       }
     },
     "env": {
@@ -1377,7 +1387,8 @@ The author completes the signature.
         "operation": {
           "next_node_name": "Signature Completed",
           "forward": "Complete Signature"
-        }
+        },
+        "op": "next"
       }
     },
     "env": {
@@ -1422,6 +1433,241 @@ The author completes the signature.
 }
 ```
 
+### Fund Allocation: Release the 888 WOW Payment to the Treasury
+
+Once the Progress reaches the final node (`Signature Completed`), the order is fulfilled and the 888 WOW payment held by `three_body_allocation` can be distributed. The Service's `order_allocators` (Step 9) routes 100% to `three_body_treasury` when `three_body_allocator_guard` (Step 8) verifies `order.service == three_body_signature_service`.
+
+#### (a) Trigger the Allocation (`alloc_by_guard`)
+
+The allocator Guard's table item `0` has `b_submission: true` (the Order address is only known at runtime), so the call must carry a **top-level `submission` block** — at the SAME level as `data` and `env`, NOT inside `data.data`.
+
+**Request**:
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "allocation",
+    "data": {
+      "object": "three_body_allocation",
+      "alloc_by_guard": "three_body_allocator_guard"
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "three_body_allocator_guard",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "three_body_allocator_guard",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "three_body_order",
+              "name": "Order ID (submitted at runtime)"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+> **Two-Phase Reminder**: The ConfirmGate does not gate `allocation` operations, but treat fund distribution as irreversible in production — preview first (call without `confirmed`), then execute after user approval.
+
+**Expected Result**:
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Allocation",
+            "type_raw": "0x2::allocation::Allocation<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "Payment",
+            "type_raw": "0x2::payment::Payment<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": "Immutable",
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
+```
+
+> The immutable `Payment` object created by this call is the on-chain receipt of the distribution — its `payment` array records each recipient and amount (here: 100% of 888 WOW to `three_body_treasury`).
+
+#### (b) Verify the Pending CoinWrapper at the Treasury
+
+The Treasury does NOT receive spendable coins directly — each allocation recipient receives a `CoinWrapper` object that must be unwrapped before the funds enter its balance. Query the Treasury's received objects:
+
+**Request**:
+```json
+{
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_received",
+    "name_or_address": "three_body_treasury",
+    "network": "testnet"
+  }
+}
+```
+
+**Expected Result**:
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "query_type": "onchain_received",
+        "result": {
+          "balance": "888000000000",
+          "token_type": "0x2::wow::WOW",
+          "received": [
+            {
+              "id": "0x...",
+              "balance": "888000000000",
+              "payment": "0x..."
+            }
+          ]
+        }
+      }
+    }
+  },
+  "schema": null
+}
+```
+
+> The CoinWrapper holds the full 888 WOW (`888000000000` smallest units — Rate `10000` = 100% of the order payment) and references the `Payment` receipt created in step (a).
+
+#### (c) Unwrap into the Treasury Balance (`receive`)
+
+Deposit the pending CoinWrapper into the Treasury's balance. The literal `"recently"` auto-receives ALL recently received CoinWrappers:
+
+**Request**:
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "treasury",
+    "data": {
+      "object": "three_body_treasury",
+      "receive": "recently"
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet"
+    }
+  }
+}
+```
+
+**Expected Result**:
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Treasury",
+            "type_raw": "0x2::treasury::Treasury<0x2::wow::WOW>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "mutated"
+          },
+          {
+            "type": "TableItem_TreasuryHistory",
+            "type_raw": "0x2::dynamic_field::Field<address, 0x2::parent_linked_table::Node<address, 0x2::treasury::Record>>",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"ObjectOwner": "0x..."},
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
+```
+
+> **Permission**: The author passes as the Permission's admin (see Step 1). A non-admin operator would additionally need the built-in `TREASURY_RECEIVE` index (`253`).
+
+#### (d) Final Verification
+
+Query the Treasury to confirm the funds have landed in its balance:
+
+**Request**:
+```json
+{
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_objects",
+    "objects": ["three_body_treasury"],
+    "no_cache": true,
+    "network": "testnet"
+  }
+}
+```
+
+**Expected Result** (key fields):
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "query_type": "onchain_objects",
+        "result": {
+          "objects": [
+            {
+              "object": "0x...",
+              "type": "Treasury",
+              "type_raw": "0x2::treasury::Treasury<0x2::wow::WOW>",
+              "balance": "888000000000",
+              "inflow": "888000000000",
+              "outflow": "0",
+              "history_count": 1,
+              "query_name": "three_body_treasury"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "schema": null
+}
+```
+
+> The full 888 WOW order payment now sits in `three_body_treasury` (`balance` = `888000000000` = 888 WOW) — the Treasury-first fund flow (Step 7) executed end-to-end: Order → Allocation → Guard-verified distribution → Treasury.
+
 ---
 
 ## Summary
@@ -1433,6 +1679,7 @@ This example demonstrates:
 3. **WIP Files Optional**: Sales items can use WIP files or empty strings
 4. **Service Configuration**: Complete setup from creation to publication
 5. **Safe Fund Allocation**: Treasury-first design with Level 3 scene-combined allocator Guard — funds always flow to the fixed Treasury, eliminating R-C3-05 (cross-service theft) and R-C3-06 (fund theft via Signer)
+6. **Fund Allocation Execution**: `alloc_by_guard` distributes the completed order's 888 WOW payment to `three_body_treasury`, and the pending CoinWrapper is unwrapped via Treasury `receive` (see Workflow Execution → Fund Allocation)
 
 ### Key Objects
 
@@ -1498,9 +1745,9 @@ Each node transition requires the author's confirmation, ensuring accountability
 3. **Treasury-First Fund Flow**: Always route merchant revenue through a Treasury object using `sharing.who = {"Entity": {"name_or_address": "treasury_name"}}` instead of `{"Signer": "signer"}`. This eliminates R-C3-06 (critical fund theft via Signer) because funds flow to a fixed recipient regardless of who triggers the allocation. Combined with an allocator Guard that verifies `order.service == this_service` (R-C3-05 protection), the fund allocation becomes inherently safe.
 
 4. **Use `confirmed: true` for Irreversible/Destructive Operations**: The MCP server enforces a two-phase confirmation for safety. You MUST add `"confirmed": true` to the `env` for:
-   - Any operation using `replaceExistName: true` (unbinds existing names)
-   - Any `publish: true` operation (irreversible lock on Machine/Service)
-   Without `confirmed: true`, the server returns a `Confirmation required` warning and blocks the transaction.
+   - Any operation whose **top-level** `data.namedNew ?? data.object` sets `replaceExistName: true` (unbinds existing names). Note: ConfirmGate's default-value warnings only scan that top-level field — the NESTED naming fields inside `order_new` (`namedNewOrder`/`namedNewProgress`/`namedNewAllocation`) are NOT scanned, which is why Test 1 runs without `confirmed: true` despite its nested `replaceExistName: true` entries.
+   - Any `publish: true` operation (irreversible lock on Machine `nodes`/`pairs`/`forwards`, or Service `machine`/`order_allocators`)
+   Without `confirmed: true`, the server returns a `pending_confirmation` result and blocks the transaction until you re-call with `confirmed: true`.
 
 5. **Use `no_cache: true` for Sequential Operations**: When performing multiple operations on the same object in sequence (especially Progress workflow advancement), always set `no_cache: true` in the `env` to ensure the SDK reads the latest on-chain state.
 

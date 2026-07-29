@@ -127,8 +127,7 @@ Before starting, ensure you have:
     "transfer": {
       "name_or_address_to": "myshop_merchant",
       "amount": 1000000000,
-      "network": "mainnet",
-      "confirmed": true
+      "network": "mainnet"
     }
   }
 }
@@ -417,7 +416,7 @@ Create a Contact object to enable encrypted communication between customers and 
 
 ```json
 {
-  "tool": "messenger_operation",
+  "tool": "account_operation",
   "data": {
     "messenger": {
       "enabled": true,
@@ -494,7 +493,6 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
           "identifier": 0,
           "b_submission": true,
           "value_type": "Address",
-          "object_type": "Order",
           "name": "order_address (Order object submitted at runtime)"
         },
         {
@@ -620,7 +618,6 @@ Create a Guard for customer refunds when order is cancelled.
           "identifier": 0,
           "b_submission": true,
           "value_type": "Address",
-          "object_type": "Order",
           "name": "order_address (Order object submitted at runtime)"
         },
         {
@@ -916,8 +913,7 @@ Create a customer account:
     "transfer": {
       "name_or_address_to": "myshop_customer",
       "amount": 1000000000,
-      "network": "mainnet",
-      "confirmed": true
+      "network": "mainnet"
     }
   }
 }
@@ -1047,7 +1043,7 @@ After creating the order, the customer sends their shipping address and contact 
 
 ```json
 {
-  "tool": "messenger_operation",
+  "tool": "account_operation",
   "data": {
     "messenger": {
       "enabled": true,
@@ -1170,7 +1166,7 @@ Merchant advances the order from initial state to "Order Confirmation" node.
           "next_node_name": "Order Confirmation",
           "forward": "Confirm Order"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order confirmed by merchant"
       }
     },
@@ -1203,7 +1199,7 @@ Merchant ships the order and advances from "Order Confirmation" to "Shipping".
           "next_node_name": "Shipping",
           "forward": "Ship Goods"
         },
-        "hold": false,
+        "op": "next",
         "message": "Goods shipped via express delivery"
       }
     },
@@ -1236,7 +1232,7 @@ Merchant or delivery service confirms the order has been delivered.
           "next_node_name": "In Transit",
           "forward": "Confirm Delivery"
         },
-        "hold": false,
+        "op": "next",
         "message": "Goods delivered successfully"
       }
     },
@@ -1269,7 +1265,7 @@ Customer confirms receipt and completes the order.
           "next_node_name": "Completed",
           "forward": "Complete Order"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order received and completed"
       }
     },
@@ -1342,20 +1338,39 @@ First, activate the Allocation by submitting the Guard verification with the Ord
 
 > **Note**: Replace the Guard address `0x5af9...1074` and Order address `0xa6db...3d5` with your actual object addresses. Use the full 64-character addresses in actual operations.
 
-#### 7.2 Withdraw Funds from Service
+#### 7.2 Withdraw Funds (Unwrap the Merchant's CoinWrapper)
 
-After the Allocation is activated, withdraw the funds from the Service.
+The allocator's recipient is `{"Signer": "signer"}`, so the Allocation pays out via a **CoinWrapper transferred directly to the merchant account** (an owned object of the merchant EOA) — NOT to the Service object. Therefore `owner_receive` on the Service cannot collect this payout. Instead, find the CoinWrapper received by the merchant account and unwrap it into spendable coins.
 
-**Prompt**: Withdraw funds from service "myshop_service_v2" to the merchant account.
+**Step a**: Query the merchant account's received objects to find the payout CoinWrapper.
+
+**Prompt**: Query objects recently received by account "myshop_merchant" to find the allocation payout CoinWrapper.
+
+```json
+{
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "onchain_received",
+    "name_or_address": "myshop_merchant",
+    "type": "CoinWrapper",
+    "network": "mainnet"
+  }
+}
+```
+
+**Step b**: Unwrap the CoinWrapper into WOW coins in the merchant's wallet.
+
+**Prompt**: Merchant "myshop_merchant" unwraps the received CoinWrapper "0x1234...abcd" into WOW coins.
 
 ```json
 {
   "tool": "onchain_operations",
   "data": {
-    "operation_type": "service",
+    "operation_type": "payment",
     "data": {
-      "object": "myshop_service_v2",
-      "owner_receive": "recently"
+      "object": "0x1234...abcd",
+      "receive": true,
+      "type_parameter": "0x2::wow::WOW"
     },
     "env": {
       "account": "myshop_merchant",
@@ -1365,6 +1380,8 @@ After the Allocation is activated, withdraw the funds from the Service.
   }
 }
 ```
+
+> **Note**: Replace `0x1234...abcd` with the actual CoinWrapper object ID found in Step a (use the full 64-character address). The caller must be the CoinWrapper's owner — the allocation's `Signer` recipient (the merchant).
 
 ---
 
@@ -1388,7 +1405,7 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
           "next_node_name": "Order Confirmation",
           "forward": "Confirm Order"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order confirmed by merchant"
       }
     },
@@ -1417,7 +1434,7 @@ Customer can cancel the order after the merchant confirms it. The "Cancel Order"
           "next_node_name": "Cancelled",
           "forward": "Cancel Order"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order cancelled by customer"
       }
     },
@@ -1480,12 +1497,36 @@ After the order is cancelled, the customer can activate the refund allocation us
 
 > **Note**: Replace the Guard address `0x5792...5d2c` and Order address `0xa6db...3d5` with your actual object addresses.
 
+The refund Allocation escrows the refunded funds to the Order address. Finally, the customer claims them from the Order:
+
+**Prompt**: Customer "myshop_customer" claims the refunded funds from order "myshop_test_order".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "order",
+    "data": {
+      "object": "myshop_test_order",
+      "receive": "recently"
+    },
+    "env": {
+      "account": "myshop_customer",
+      "network": "mainnet",
+      "confirmed": true
+    }
+  }
+}
+```
+
+> **Note**: `receive: "recently"` unwraps all objects recently received by the Order (including the refund CoinWrapper) and transfers them to the order owner (the customer).
+
 ---
 
 ## Alternative Flow: Dispute and Arbitration
 
 This flow handles order disputes through a formal arbitration process. The arbitration state machine has these statuses:
-- 0: Principal_confirming (initial)
+- 0: Principal_confirming (after reset)
 - 1: Arbitrator_confirming (after dispute submitted)
 - 2: Voting (after materials confirmed)
 - 3: Arbitrated (after arbitration result provided)
@@ -1517,11 +1558,40 @@ The Service must have a compensation fund balance ≥ the arbitration indemnity 
 }
 ```
 
-### Step 2: Create Arbitration Object
+### Step 2: Create Independent Arbitration Permission
 
-Create an Arbitration object for handling order disputes.
+The on-chain contract REQUIRES the Arbitration's Permission to be DIFFERENT from the Service's Permission — binding an Arbitration that shares the Service's Permission aborts the transaction with E_ARBITRATION_PERMISSION_CONFLICT (error 33). Create a dedicated Permission object for arbitration first.
 
-**Prompt**: Create an Arbitration object named "myshop_arbitration_v2" with permission "myshop_permission_v2" for dispute resolution.
+**Prompt**: Create a Permission object named "myshop_arbitration_permission" for dispute arbitration.
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "myshop_arbitration_permission",
+        "tags": ["ecommerce", "dispute", "arbitration"],
+        "onChain": false,
+        "replaceExistName": true
+      },
+      "description": "Permission management for MyShop dispute arbitration"
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
+  }
+}
+```
+
+### Step 3: Create Arbitration Object
+
+Create an Arbitration object for handling order disputes. It MUST use the independent arbitration Permission created in Step 2 (NOT the Service's "myshop_permission_v2").
+
+**Prompt**: Create an Arbitration object named "myshop_arbitration_v2" with permission "myshop_arbitration_permission" for dispute resolution.
 
 ```json
 {
@@ -1532,7 +1602,7 @@ Create an Arbitration object for handling order disputes.
       "object": {
         "name": "myshop_arbitration_v2",
         "type_parameter": "0x2::wow::WOW",
-        "permission": "myshop_permission_v2",
+        "permission": "myshop_arbitration_permission",
         "tags": ["ecommerce", "dispute", "toys"],
         "onChain": false
       },
@@ -1551,7 +1621,7 @@ Create an Arbitration object for handling order disputes.
 
 > **Note**: New Arbitration objects are created with `bPaused: true` by default. You must unpause it in the next step before submitting disputes.
 
-### Step 3: Unpause the Arbitration Object
+### Step 4: Unpause the Arbitration Object
 
 The merchant unpauses the Arbitration object to enable dispute submissions.
 
@@ -1575,7 +1645,34 @@ The merchant unpauses the Arbitration object to enable dispute submissions.
 }
 ```
 
-### Step 4: Create a Dispute Order
+### Step 5: Bind Arbitration to the Service
+
+Bind the Arbitration object to the Service so that orders on this Service can be disputed through it. Adding arbitrations is an L3 operation — it remains allowed even after the Service is published (only remove/clear requires pause + lock duration).
+
+**Prompt**: Merchant binds arbitration "myshop_arbitration_v2" to service "myshop_service_v2".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "service",
+    "data": {
+      "object": "myshop_service_v2",
+      "arbitrations": {
+        "op": "add",
+        "objects": ["myshop_arbitration_v2"]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
+  }
+}
+```
+
+### Step 6: Create a Dispute Order
 
 Create a new order for testing the arbitration flow (if you don't have one already).
 
@@ -1615,7 +1712,7 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
 
 > **Note**: The `wip_hash` must be obtained from the Service query result (Step 1 of Part 2). It cannot be omitted or set to an empty string — the on-chain contract validates it against the Service's current `sale.wip_hash`.
 
-### Step 5: Customer Submits Dispute
+### Step 7: Customer Submits Dispute
 
 The customer submits a dispute against the order, creating an Arb object.
 
@@ -1647,11 +1744,11 @@ The customer submits a dispute against the order, creating an Arb object.
 
 > **Note**: The dispute fee (5000000 = 0.005 WOW) must be ≥ the Arbitration object's fee setting. The Arb object is created with status=1 (Arbitrator_confirming).
 
-### Step 6: Merchant Confirms Materials
+### Step 8: Merchant Confirms Materials
 
 The merchant confirms the dispute materials are valid and sets the voting deadline.
 
-**Prompt**: Merchant "myshop_merchant" confirms the dispute materials for Arb "myshop_arb_case" with no voting deadline (0 = no deadline).
+**Prompt**: Merchant "myshop_merchant" confirms the dispute materials for Arb "myshop_arb_case" with voting_deadline 0 (voting impossible — the arbitrator can provide the verdict immediately).
 
 ```json
 {
@@ -1674,9 +1771,9 @@ The merchant confirms the dispute materials are valid and sets the voting deadli
 }
 ```
 
-> **Note**: Use `0` for `voting_deadline` to indicate no deadline (immediate arbitration). The MCP tool does not accept `null` for this field. To set a specific deadline, use a Unix timestamp in milliseconds.
+> **Note**: `voting_deadline` accepts a Unix timestamp in **milliseconds**, `0`, or `null`. `0` (used here) sets the deadline in the past — voting is impossible, so the arbitrator can provide the verdict immediately. `null` means open-ended voting with no deadline — the verdict can also be provided at any time, but voting remains possible until then. To set a specific deadline, use a future Unix timestamp in milliseconds (e.g., `Date.now() + 86400000` for 24 hours).
 
-### Step 7: Merchant Provides Arbitration Result
+### Step 9: Merchant Provides Arbitration Result
 
 The merchant provides the final arbitration result with feedback and indemnity amount.
 
@@ -1706,7 +1803,7 @@ The merchant provides the final arbitration result with feedback and indemnity a
 
 > **Note**: The Arb status changes to 3 (Arbitrated). The indemnity amount must be ≤ the Service's compensation_fund balance.
 
-### Step 8: Customer Claims Compensation
+### Step 10: Customer Claims Compensation
 
 The customer claims the compensation from the Service's compensation fund.
 
@@ -1734,7 +1831,7 @@ The customer claims the compensation from the Service's compensation fund.
 
 > **Note**: The customer receives the indemnity amount (0.03 WOW) from the Service's compensation fund. The Arb status changes to 5 (Finished). The Order's `claimed_by` field is updated with the Arb address.
 
-### Step 9: Query Arbitration Status
+### Step 11: Query Arbitration Status
 
 Check the final status of the arbitration.
 
@@ -1805,7 +1902,7 @@ When advancing order workflows, use `operation_type: "progress"` with the `opera
           "next_node_name": "Target Node Name",
           "forward": "Forward Name"
         },
-        "hold": false,
+        "op": "next",
         "message": "Operation description"
       }
     },
@@ -1835,6 +1932,7 @@ The operator account depends on the forward definition:
 | Account | myshop_merchant | Store owner account |
 | Account | myshop_customer | Customer account |
 | Permission | myshop_permission_v2 | Access control management |
+| Permission | myshop_arbitration_permission | Arbitration access control (must differ from Service permission) |
 | Guard | myshop_withdraw_guard_v2 | Merchant withdrawal validation (order completed) |
 | Guard | myshop_refund_guard_v2 | Customer refund validation (order cancelled) |
 | Machine | myshop_machine_v2 | Order processing workflow |

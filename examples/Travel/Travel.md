@@ -1,6 +1,6 @@
 # Iceland Travel Service Example
 
-A complete example demonstrating how to create an Iceland travel service using WoWok protocol. This service integrates weather-dependent activities, insurance sub-orders, and multi-node workflow management.
+A complete example demonstrating how to create an Iceland travel service using WoWok protocol. This service integrates weather-dependent activities and multi-node workflow management. (Note: "Buy Insurance" is just the name of the first workflow node in this example — there is no real insurance sub-order mechanism.)
 
 ---
 
@@ -320,13 +320,46 @@ Create a Permission object to manage access control for the travel service. Add 
 }
 ```
 
-> **Note**: Permission indices 1000-1009 are used for different workflow forwards. Index 306 is a reserved administrative permission. The travel_provider account is granted all these permissions.
+> **Note**: Permission indices 1000-1009 are used for different workflow forwards. Index 306 is the built-in `SERVICE_MACHINE` permission — it governs binding or changing a Service's Machine (`service::machine_set`), and is required in Step 5 when the Service binds `travel_machine`. The travel_provider account is granted all these permissions.
+
+---
+
+## Step 1.5: Create Arbitration Permission
+
+Create a dedicated Permission object for the Arbitration. No special permission indices are needed — the creator (`travel_provider`) automatically becomes the admin of the new Permission.
+
+> **Why a separate Permission?** When a Service binds an Arbitration, the contract asserts `arbitration.permission != service.permission` (error `E_ARBITRATION_PERMISSION_CONFLICT`). If the Arbitration shared the Service's permission, the Service owner would control dispute resolution, breaking fairness. The Arbitration must therefore use an independent Permission object.
+
+**Prompt**: Create a Permission object named "travel_arbitration_permission" for the arbitration.
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "travel_arbitration_permission",
+        "tags": ["travel", "arbitration"],
+        "replaceExistName": true
+      },
+      "description": "Independent permission for travel arbitration (must differ from the Service permission)"
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
+  }
+}
+```
 
 ---
 
 ## Step 2: Create Arbitration Object
 
-Create an Arbitration object for dispute resolution.
+Create an Arbitration object for dispute resolution. It uses the independent `travel_arbitration_permission` created in Step 1.5.
 
 **Prompt**: Create an Arbitration named "travel_arbitration".
 
@@ -338,7 +371,7 @@ Create an Arbitration object for dispute resolution.
     "data": {
       "object": {
         "name": "travel_arbitration",
-        "permission": "travel_permission",
+        "permission": "travel_arbitration_permission",
         "replaceExistName": true
       },
       "description": "Arbitration for Iceland travel service disputes"
@@ -1063,7 +1096,7 @@ Create a Machine to define the travel service workflow with all nodes and forwar
 | Complete | Ice Scooting | complete_trip | 1002 | travel_complete_guard |
 | Cancel | Ice Scooting | cancel_trip | 1003 | travel_cancel_guard |
 
-> **Note**: The `prev_node` field uses an empty string `""` to denote the entry point. Each node defines how to enter it from a previous node. The `threshold` field (required) specifies the minimum forward weight needed to trigger node advancement.
+> **Note**: The `prev_node` field uses an empty string `""` to denote the entry point. Each node defines how to enter it from a previous node. The `threshold` field (optional, defaults to `0`) specifies the minimum forward weight needed to trigger node advancement.
 
 ---
 
@@ -1114,7 +1147,6 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
         "allocators": [
           {
             "guard": "merchant_victory_guard",
-            "fix": "0",
             "sharing": [
               {
                 "who": {"Entity": {"name_or_address": "travel_treasury"}},
@@ -1125,7 +1157,6 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
           },
           {
             "guard": "no_ice_scooting_guard",
-            "fix": "0",
             "sharing": [
               {
                 "who": {"Entity": {"name_or_address": "travel_treasury"}},
@@ -1141,7 +1172,6 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
           },
           {
             "guard": "no_spa_guard",
-            "fix": "0",
             "sharing": [
               {
                 "who": {"Entity": {"name_or_address": "travel_treasury"}},
@@ -1281,7 +1311,8 @@ Move from initial node ("") to "Buy Insurance" node.
         "operation": {
           "next_node_name": "Buy Insurance",
           "forward": "buy_insurance"
-        }
+        },
+        "op": "next"
       }
     },
     "env": {
@@ -1310,7 +1341,8 @@ Move from "Buy Insurance" to "SPA" node.
         "operation": {
           "next_node_name": "SPA",
           "forward": "go_spa"
-        }
+        },
+        "op": "next"
       }
     },
     "env": {
@@ -1339,7 +1371,8 @@ Move from "SPA" to "Ice Scooting" node. This forward has a Guard (`weather_check
         "operation": {
           "next_node_name": "Ice Scooting",
           "forward": "go_ice_scooting"
-        }
+        },
+        "op": "next"
       }
     },
     "submission": {
@@ -1395,7 +1428,8 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
         "operation": {
           "next_node_name": "Complete",
           "forward": "complete_trip"
-        }
+        },
+        "op": "next"
       }
     },
     "submission": {
@@ -1430,7 +1464,7 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
 }
 ```
 
-> **Note**: Replace `<ORDER_OBJECT_ID>` with the actual Order object ID (e.g., `0x7cc9f2228e130c2f6b585bb9c4666fd4d03252d38048355678f46e31b682eb38`). You can query the Progress object to find the `task` field which contains the Order ID.
+> **Note**: Replace `<ORDER_OBJECT_ID>` with the actual Order object ID (a 64-hex-character string starting with `0x`). You can query the Progress object to find the `task` field which contains the Order ID.
 >
 > **Key**: The `submission` field is at the **top level** of the input (alongside `data` and `env`), NOT inside `data`. The `impack: true` means the Guard verification result affects the final outcome.
 
@@ -1451,7 +1485,8 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
         "operation": {
           "next_node_name": "Cancel",
           "forward": "cancel_trip"
-        }
+        },
+        "op": "next"
       }
     },
     "submission": {
@@ -1487,6 +1522,7 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
 | `data.object` | string | Progress object name/ID |
 | `data.operate.operation.next_node_name` | string | Target node name to move to |
 | `data.operate.operation.forward` | string | Forward name defined in Machine |
+| `data.operate.op` | string | **Required.** Operation type: `"next"` (advance the forward), `"hold"`, `"unhold"`, or `"adminUnhold"` |
 | `submission` | object | Guard verification data (top-level, required when forward has Guard) |
 | `env.no_cache` | boolean | Set to `true` to avoid stale cache issues |
 
@@ -1524,7 +1560,7 @@ The allocation Guard requires the Order ID as a submission (identifier: 0). Quer
 
 ### 8.2 Execute Allocation (Merchant Victory Path)
 
-When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% of funds go to the Service object.
+When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% of funds go to the Treasury (`travel_treasury`).
 
 **Prompt**: Execute fund allocation with the merchant_victory_guard, submitting the Order ID.
 
@@ -1577,7 +1613,7 @@ When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% o
 
 For refund scenarios (Cancel or SPA), use the corresponding Guard. The same submission structure applies — the Order ID is submitted to identifier 0.
 
-**Cancel/Ice Scooting path** (80% Service, 20% Order):
+**Cancel/Ice Scooting path** (80% Treasury, 20% Order (escrow, claimable by the order owner)):
 
 ```json
 {
@@ -1601,7 +1637,7 @@ For refund scenarios (Cancel or SPA), use the corresponding Guard. The same subm
 }
 ```
 
-**SPA path** (5% Service, 95% Order):
+**SPA path** (5% Treasury, 95% Order (escrow, claimable by the order owner)):
 
 ```json
 {
@@ -1659,6 +1695,57 @@ After allocation, query the Allocation and Payment objects to verify the fund di
 | `env.no_cache` | boolean | Set to `true` to avoid stale cache issues |
 
 > **Important**: `alloc_by_guard` accepts Guard names (e.g., `"merchant_victory_guard"`) or Guard object IDs. The Guard must exist in the Allocation's `allocators` list. Only the first Guard that passes (first-Guard-wins) triggers fund distribution.
+
+### 8.5 Claim Allocated Funds (Unwrap CoinWrapper)
+
+Allocation does not deposit spendable coins directly. `alloc_by_guard` distributes **CoinWrapper objects** to each recipient address — these must be claimed/unwrapped before the funds are spendable:
+
+- **Treasury share** (`Entity` → `travel_treasury`): the CoinWrapper is sent to the Treasury object address. The travel provider deposits it into the Treasury balance via the Treasury `receive` operation.
+- **Customer share** (`GuardIdentifier: 0` → the Order object address submitted at runtime, i.e. escrow): the CoinWrapper is sent to the Order object address. The order owner (Alice) claims it via the Order `receive` operation, which unwraps it and transfers the coins to her wallet.
+
+**Prompt**: Alice claims the customer share escrowed to the Order (refund paths only).
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "order",
+    "data": {
+      "object": "alice_travel_order",
+      "receive": "recently"
+    },
+    "env": {
+      "account": "alice",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
+  }
+}
+```
+
+**Prompt**: The travel provider deposits the Treasury's share into the Treasury balance.
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "treasury",
+    "data": {
+      "object": "travel_treasury",
+      "receive": "recently"
+    },
+    "env": {
+      "account": "travel_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
+  }
+}
+```
+
+> **Note**: `"receive": "recently"` auto-queries and claims all recently received CoinWrapper objects. For the Order, `receive` unwraps them and transfers the coins to the order owner (Alice); for the Treasury, `receive` deposits the unwrapped coins into the Treasury's balance. In the merchant-victory path (100% to Treasury) only the Treasury claim is needed; the Order claim applies only to refund paths (8.3) where the customer has a share.
 
 ---
 

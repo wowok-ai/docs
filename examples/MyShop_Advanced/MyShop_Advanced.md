@@ -124,15 +124,15 @@ graph TD
     RC["Return Complete<br/>From Receipt: Dual-Sig (threshold=2)<br/>From Non-receipt: Merchant only (threshold=1)"]:::dualsig
 
     START --> OC
-    START --> OR
+    OC --> OR
     OC --> SH
     SH --> DC
-    SH --> WO
+    DC --> WO
     SH --> OC2
     SH --> LO
     
     DC --> OC3
-    DC --> NR
+    SH --> NR
     
     DC --> RR
     RR --> RF
@@ -150,6 +150,8 @@ graph TD
 - **Wonderful Node**: 10000 reward
 - **Lost Node**: 20000 compensation
 - **Shipping Timeout (>2 days)**: 20000 compensation
+
+> **⚠️ Units Note (BalanceType)**: The reward/compensation amounts above (and the `amount.value` numbers in Step 13) are **raw BalanceType values in the SMALLEST unit** of WOW. WOW has 9 decimals (1 WOW = 10⁹ smallest units), so 10000 = 0.00001 WOW and 20000 = 0.00002 WOW — far below gas cost. Treat them as **symbolic/test values** that keep the flow executable on any balance; for production amounts use either larger smallest-unit values (e.g. `20000000000` = 20 WOW) or the display format (e.g. `"20WOW"`), both accepted by `BalanceTypeSchema`. Note the different semantics of `"sharing": 10000, "mode": "Rate"` in the order_allocators (Step 10): that is **basis points (100.00%)**, not a WOW amount.
 
 ***
 
@@ -282,7 +284,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 | 3     | **Guards**           | Service Name         | Guards must verify that orders belong to the correct Service. They query Service name and Progress state.     |
 | 4     | **Machine**          | Permission, Guards   | Machine requires guards for node verification. Guards need Service name which is now available.               |
 | 5     | **Machine Binding**  | Service, Machine     | Bind Machine to Service before publishing. Once published, Machine cannot be bound.                           |
-| 6     | **Arbitration**      | None                 | Arbitration is independent but needs to be bound to Service. Create before Service update.                    |
+| 6     | **Arbitration**      | Own Permission       | Arbitration is independent but needs to be bound to Service. ⚠️ It MUST use a DIFFERENT Permission than the Service — the Service contract asserts `arbitration.permission != service.permission` when binding. Create before Service update. |
 | 7     | **Service (Update)** | Guards, Arb, Machine | Update Service with order\_allocators, sales, arbitrations, machine binding. Then publish.                     |
 | 8     | **Empty Reward**     | None                 | Create empty reward object first. This object is referenced by reward guards for double-claim protection.     |
 | 9     | **Reward Guards**    | Reward (by name)     | Create reward guards that reference the reward object by name. Guards verify order node + no prior claim.     |
@@ -323,9 +325,9 @@ Phase 2b: Treasury Creation
 Phase 3: Guard Creation (Machine Guards)
 └── 3. Create Machine Guards (4 guards)
     ├── machine_merkle_root_v2 (verify string length = 66)
-    ├── machine_service_order_v2 (verify order service + node)
-    ├── machine_time_10d_v2 (time >= 10 days)
-    └── machine_time_2d_v2 (time >= 2 days)
+    ├── machine_service_order_v2 (verify order service + node — illustrative variant, not wired into the Machine; see Step 4 note)
+    ├── machine_time_10d_v2 (on-chain time >= 10 days on current node)
+    └── machine_time_2d_v2 (on-chain time >= 2 days — illustrative variant, not wired into the Machine; see Step 4 note)
 
 Phase 3b: Service Guards
 └── 3b. Create Service Guards (2 guards)
@@ -680,7 +682,7 @@ Create Guards using the Service address. Guards verify order state and service o
 3. **Project binding** — `logic_equal[query("order.service", obj=order), identifier[2]]`: the submitted Order belongs to `three_body_signature_service_v2`. Suppresses R-C3-05 (cross-project bypass).
 
 **Generating the Proof (provider side, before submitting to the forward):**
-```json
+```text
 // SDK call: messenger.submitChainProof(env, peerAddress, description?)
 // - about_address is set to peerAddress (the customer's address)
 // - pass the order_id in description to associate the Proof with the order
@@ -695,6 +697,8 @@ Create Guards using the Service address. Guards verify order state and service o
 
 **Guard 2: machine_time_10d_v2** - Verify 10-day timeout (864000000 ms)
 
+> **Secure time-lock pattern**: identifier 0 is the **Progress object submitted at runtime (Address)** — the Guard reads its current-node entry timestamp on-chain via `query("progress.current_time")` (GUARDQUERY id 1272). NEVER declare the start time as a caller-submitted U64: a submitter could pass 0 and bypass the lock entirely. The threshold stays a creation-time constant (identifier 1).
+
 ```json
 {
   "tool": "onchain_operations",
@@ -705,9 +709,9 @@ Create Guards using the Service address. Guards verify order state and service o
         "name": "machine_time_10d_v2",
         "replaceExistName": true
       },
-      "description": "Verify time elapsed >= 10 days (864000000 ms)",
+      "description": "Verify time elapsed on the current node >= 10 days (864000000 ms): Clock - progress.current_time >= 864000000. The Progress object is submitted at runtime (Address identifier 0); the start time is read on-chain via query 1272, so the caller cannot forge it.",
       "table": [
-        {"identifier": 0, "b_submission": true, "value_type": "U64"},
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "progress_id"},
         {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "864000000"}
       ],
       "root": {
@@ -717,7 +721,7 @@ Create Guards using the Service address. Guards verify order state and service o
             "type": "calc_number_subtract",
             "nodes": [
               {"type": "context", "context": "Clock"},
-              {"type": "identifier", "identifier": 0}
+              {"type": "query", "query": "progress.current_time", "object": {"identifier": 0}, "parameters": []}
             ]
           },
           {"type": "identifier", "identifier": 1}
@@ -745,9 +749,9 @@ Create Guards using the Service address. Guards verify order state and service o
         "name": "machine_time_2d_v2",
         "replaceExistName": true
       },
-      "description": "Verify time elapsed >= 2 days (172800000 ms)",
+      "description": "Verify time elapsed on the current node >= 2 days (172800000 ms): Clock - progress.current_time >= 172800000. The Progress object is submitted at runtime (Address identifier 0); the start time is read on-chain via query 1272, so the caller cannot forge it.",
       "table": [
-        {"identifier": 0, "b_submission": true, "value_type": "U64"},
+        {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "progress_id"},
         {"identifier": 1, "b_submission": false, "value_type": "U64", "value": "172800000"}
       ],
       "root": {
@@ -757,7 +761,7 @@ Create Guards using the Service address. Guards verify order state and service o
             "type": "calc_number_subtract",
             "nodes": [
               {"type": "context", "context": "Clock"},
-              {"type": "identifier", "identifier": 0}
+              {"type": "query", "query": "progress.current_time", "object": {"identifier": 0}, "parameters": []}
             ]
           },
           {"type": "identifier", "identifier": 1}
@@ -772,6 +776,8 @@ Create Guards using the Service address. Guards verify order state and service o
   }
 }
 ```
+
+> **⚠️ Not wired into this Machine**: `machine_time_2d_v2` (and `machine_service_order_v2` below) are **illustrative/optional variants — no forward in `myshop_advanced_machine_v2` references them**. The "Shipping Timeout (>2 days) → 20000 compensation" path promised in [Reward Compensation](#reward-compensation) is NOT a Machine transition: the order must **remain at the Shipping node** for the claim to pass, so the 2-day condition is enforced inside the `reward_shipping_timeout_v2` Guard itself (Step 12, same Clock − `progress.current_time` pattern), not by a forward Guard. Keep these Guards for reference or adapt them in your own workflow; this example's flow does not depend on them.
 
 ***
 
@@ -1403,7 +1409,8 @@ Create Machine with all nodes and guards in a single operation.
 > {
 >   "tool": "machineNode2file",
 >   "data": {
->     "object": "myshop_advanced_machine_v2",
+>     "machine": "myshop_advanced_machine_v2",
+>     "file_path": ".trae/tmp/myshop_machine_export.json",
 >     "format": "json"
 >   }
 > }
@@ -1425,7 +1432,8 @@ Machine must be published before binding to Service.
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1482,7 +1490,36 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 
 **IMPORTANT**: Arbitration `voting_guard` must use object format with `op` and `guards` array.
 
-**Prompt**: Create arbitration object "myshop\_arbitration\_v2".
+#### Step 9.1: Create an Independent Permission for Arbitration
+
+> **WHY a separate Permission?** The Service contract (`service.move` → `arbitration_add_imp`) asserts `arbitration.permission != self.permission` when an Arbitration is bound to a Service. If the Arbitration shared the Service's Permission (`myshop_perm_v2`), the binding in Step 10 would abort with `E_ARBITRATION_PERMISSION_CONFLICT`. Create a dedicated Permission `myshop_arb_perm_v2` first.
+
+**Prompt**: Create permission object "myshop\_arb\_perm\_v2".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "permission",
+    "data": {
+      "object": {
+        "name": "myshop_arb_perm_v2",
+        "replaceExistName": true
+      },
+      "description": "Independent Permission for the MyShop Arbitration object. MUST differ from the Service Permission (myshop_perm_v2) — the Service contract asserts arbitration.permission != service.permission on binding."
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
+  }
+}
+```
+
+#### Step 9.2: Create the Arbitration Object
+
+**Prompt**: Create arbitration object "myshop\_arbitration\_v2" with permission "myshop\_arb\_perm\_v2".
 
 ```json
 {
@@ -1493,7 +1530,7 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
       "object": {
         "name": "myshop_arbitration_v2",
         "replaceExistName": true,
-        "permission": "myshop_perm_v2"
+        "permission": "myshop_arb_perm_v2"
       },
       "description": "Arbitration for MyShop Advanced - Final dispute resolution mechanism",
       "voting_guard": {
@@ -1526,14 +1563,14 @@ Create an Arbitration object as the final on-chain mechanism for protecting user
 
 Configure order_allocators to define fund distribution rules, then publish the Service.
 
-> **Pre-Publish Verification (Mandatory)**: Before publishing the Service, verify all bindings are correct: Machine, Arbitration, Rewards, and order_allocators. Once published, all bindings become immutable. Use `query_toolkit` to confirm the Service state:
+> **Pre-Publish Verification (Mandatory)**: Before publishing the Service, verify all bindings are correct: Machine, Arbitration, and order_allocators. Once published, the Machine and order_allocators become permanently immutable (L1-locked). Use `query_toolkit` to confirm the Service state:
 >
 > ```json
 > {
 >   "tool": "query_toolkit",
 >   "data": {
->     "query_type": "service",
->     "object": "three_body_signature_service_v2",
+>     "query_type": "onchain_objects",
+>     "objects": ["three_body_signature_service_v2"],
 >     "network": "mainnet",
 >     "no_cache": true
 >   }
@@ -1596,16 +1633,13 @@ Configure order_allocators to define fund distribution rules, then publish the S
         "op": "add",
         "objects": ["myshop_arbitration_v2"]
       },
-      "rewards": {
-        "op": "add",
-        "objects": ["myshop_reward_v2"]
-      },
       "publish": true
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1690,11 +1724,40 @@ Create an empty reward object first. This object will be referenced by reward gu
 
 ***
 
+### Step 11b: Bind Reward to Service (Post-Publish)
+
+The Reward object only exists now, so the `rewards` binding is done here — deliberately AFTER publish. `rewards add` is an **L3 operation** (remains mutable after publish; only remove/clear requires pause + lock), unlike `machine` and `order_allocators` which are L1-locked at publish. This ordering also avoids referencing a not-yet-created object during the Step 10 publish call.
+
+**Prompt**: Add reward "myshop\_reward\_v2" to service "three\_body\_signature\_service\_v2".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "service",
+    "data": {
+      "object": "three_body_signature_service_v2",
+      "rewards": {
+        "op": "add",
+        "objects": ["myshop_reward_v2"]
+      }
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "no_cache": true
+    }
+  }
+}
+```
+
+***
+
 ### Step 12: Create Reward Guards (Optional)
 
 Create guards for reward verification with double-claim protection:
 
-> **Note on `query_reward_record_exists`**: The guard uses `query_reward_record_exists` with `where.storeFromId` to prevent double-claiming. The MCP tool automatically generates an internal identifier (identifier 4, type VecU8) for this query's parameters. You only need to define identifiers 0–3 in the table; the tool handles the rest.
+> **Note on `query_reward_record_exists`**: The guard uses `query_reward_record_exists` with `where.storeFromId` to prevent double-claiming. The SDK automatically appends an internal table entry (type VecU8, using the **next free identifier**) for this query's parameters — you only define the business identifiers in the table (0–3 for Guards 7/8; 0–5 for Guard 9, which adds a time condition); the tool handles the rest.
 
 | # | Guard Name | Purpose | Reward Amount |
 |---|------------|---------|---------------|
@@ -1830,6 +1893,10 @@ Create guards for reward verification with double-claim protection:
 
 **Guard 9: reward_shipping_timeout_v2**
 
+> **Time condition included**: unlike Guards 7/8, this Guard ALSO verifies the order has been stuck at the Shipping node for ≥ 2 days (172800000 ms) — otherwise the customer could claim "timeout compensation" immediately after shipping. It uses the same secure pattern as Guard 2/3: the Progress object is submitted at runtime (Address identifier 4) and the start time is read on-chain via `query("progress.current_time")` (GUARDQUERY id 1272).
+>
+> **Claim submission contract**: claiming via this Guard requires TWO submissions — identifier 0 = Order address (as in Guards 7/8) AND identifier 4 = the order's Progress object address (e.g. `myshop_progress_v2`).
+
 ```json
 {
   "tool": "onchain_operations",
@@ -1840,12 +1907,14 @@ Create guards for reward verification with double-claim protection:
         "name": "reward_shipping_timeout_v2",
         "replaceExistName": true
       },
-      "description": "Verify order at Shipping node for timeout compensation, signer must be order owner, order belongs to this service, and not claimed before",
+      "description": "Verify order at Shipping node for timeout compensation: signer must be order owner, order belongs to this service, not claimed before, AND the order has been at the Shipping node for >= 2 days (Clock - progress.current_time >= 172800000 ms, progress submitted as Address identifier 4)",
       "table": [
         {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
         {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Shipping"},
         {"identifier": 2, "b_submission": false, "value_type": "Address", "value": "myshop_reward_v2", "name": "reward_object"},
-        {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"}
+        {"identifier": 3, "b_submission": false, "value_type": "Address", "value": "three_body_signature_service_v2", "name": "service_address"},
+        {"identifier": 4, "b_submission": true, "value_type": "Address", "name": "progress_id"},
+        {"identifier": 5, "b_submission": false, "value_type": "U64", "value": "172800000", "name": "timeout_ms"}
       ],
       "root": {
         "type": "logic_and",
@@ -1869,6 +1938,19 @@ Create guards for reward verification with double-claim protection:
             "nodes": [
               {"type": "query", "query": "order.service", "object": {"identifier": 0}, "parameters": []},
               {"type": "identifier", "identifier": 3}
+            ]
+          },
+          {
+            "type": "logic_as_u256_greater_or_equal",
+            "nodes": [
+              {
+                "type": "calc_number_subtract",
+                "nodes": [
+                  {"type": "context", "context": "Clock"},
+                  {"type": "query", "query": "progress.current_time", "object": {"identifier": 4}, "parameters": []}
+                ]
+              },
+              {"type": "identifier", "identifier": 5}
             ]
           },
           {
@@ -2040,6 +2122,7 @@ Merchant confirms the order. This step uses permission index 1000 (no Guard subm
           "next_node_name": "Order Confirmed",
           "forward": "Confirm Order"
         },
+        "op": "next",
         "message": "Order confirmed by merchant"
       }
     },
@@ -2072,35 +2155,36 @@ Merchant starts shipping after signature service is completed. The merchant subm
           "next_node_name": "Shipping",
           "forward": "Confirm Signature and Submit Merkle Root"
         },
+        "op": "next",
         "message": "Shipping started - signature completed and Merkle Root submitted"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_merkle_root_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_merkle_root_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "String",
-                "value": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_merkle_root_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_merkle_root_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2128,6 +2212,7 @@ Customer confirms receipt of goods.
           "next_node_name": "Delivery Complete",
           "forward": "Confirm Receipt"
         },
+        "op": "next",
         "message": "Delivery confirmed - goods received"
       }
     },
@@ -2160,6 +2245,7 @@ Alternatively, customer can rate as Wonderful (very satisfied).
           "next_node_name": "Wonderful",
           "forward": "Rate as Wonderful"
         },
+        "op": "next",
         "message": "Rated as Wonderful - very satisfied with the service"
       }
     },
@@ -2187,34 +2273,34 @@ Customer claims Wonderful reward from reward pool.
     "operation_type": "reward",
     "data": {
       "object": "myshop_reward_v2",
-      "claim": "reward_wonderful_v2",
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "reward_wonderful_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "reward_wonderful_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_order_v2"
-              }
-            ]
-          }
-        ]
-      }
+      "claim": "reward_wonderful_v2"
     },
     "env": {
       "account": "myshop_customer",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "reward_wonderful_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "reward_wonderful_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_order_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2224,9 +2310,9 @@ Customer claims Wonderful reward from reward pool.
 
 ### Step 7: Order Auto-Complete or Manual Complete
 
-Order can auto-complete after time thresholds or be manually completed.
+Order can auto-complete after a time threshold or be manually completed by the merchant.
 
-**From Shipping (10 days)**:
+**Auto-Complete from Shipping (10 days, guard: machine_time_10d_v2)**:
 
 ```json
 {
@@ -2240,42 +2326,44 @@ Order can auto-complete after time thresholds or be manually completed.
           "next_node_name": "Order Complete",
           "forward": "Auto Complete from Shipping"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order auto-completed after 10 days"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_time_10d_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_time_10d_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_progress_v2"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_time_10d_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_time_10d_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_progress_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
 ```
 
-**From Delivery Complete (2 days)**:
+**Manual Complete from Delivery Complete (no Guard)**:
+
+The "Complete Order" forward (Delivery Complete → Order Complete, permissionIndex 1001) has no Guard, so no `submission` is needed.
 
 ```json
 {
@@ -2287,32 +2375,10 @@ Order can auto-complete after time thresholds or be manually completed.
       "operate": {
         "operation": {
           "next_node_name": "Order Complete",
-          "forward": "Auto Complete from Delivery"
+          "forward": "Complete Order"
         },
-        "hold": false,
-        "message": "Order auto-completed after 2 days from delivery"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_time_2d_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_time_2d_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_progress_v2"
-              }
-            ]
-          }
-        ]
+        "op": "next",
+        "message": "Order manually completed by merchant after delivery"
       }
     },
     "env": {
@@ -2323,6 +2389,8 @@ Order can auto-complete after time thresholds or be manually completed.
   }
 }
 ```
+
+> **Note**: There is no "auto-complete from Delivery Complete" forward in this Machine — an earlier 2-day variant referenced a non-existent forward plus the illustrative `machine_time_2d_v2` Guard (see the Step 4 note). From Delivery Complete, the order finishes via "Complete Order" (above), "Rate as Wonderful" (Step 5), or a return path (Step 9).
 
 ***
 
@@ -2336,15 +2404,15 @@ If package is lost, customer reports and merchant confirms.
 {
   "tool": "onchain_operations",
   "data": {
-    "operation_type": "progress",
+    "operation_type": "order",
     "data": {
-      "object": "myshop_progress_v2",
-      "operate": {
+      "object": "myshop_order_v2",
+      "progress": {
         "operation": {
           "next_node_name": "Lost",
           "forward": "Report Lost"
         },
-        "hold": false,
+        "op": "next",
         "message": "Package reported as lost"
       }
     },
@@ -2371,36 +2439,36 @@ If package is lost, customer reports and merchant confirms.
           "next_node_name": "Lost",
           "forward": "Confirm Lost with Merkle Root"
         },
-        "hold": false,
+        "op": "next",
         "message": "Lost confirmed with Merkle Root"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_merkle_root_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_merkle_root_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "String",
-                "value": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_merkle_root_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_merkle_root_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2415,34 +2483,34 @@ If package is lost, customer reports and merchant confirms.
     "operation_type": "reward",
     "data": {
       "object": "myshop_reward_v2",
-      "claim": "reward_lost_v2",
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "reward_lost_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "reward_lost_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_order_v2"
-              }
-            ]
-          }
-        ]
-      }
+      "claim": "reward_lost_v2"
     },
     "env": {
       "account": "myshop_customer",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "reward_lost_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "reward_lost_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_order_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2460,15 +2528,15 @@ Customer requests return after delivery confirmation.
 {
   "tool": "onchain_operations",
   "data": {
-    "operation_type": "progress",
+    "operation_type": "order",
     "data": {
-      "object": "myshop_progress_v2",
-      "operate": {
+      "object": "myshop_order_v2",
+      "progress": {
         "operation": {
           "next_node_name": "Receipt Return",
           "forward": "Request Return with Receipt"
         },
-        "hold": false,
+        "op": "next",
         "message": "Return requested after delivery"
       }
     },
@@ -2495,36 +2563,36 @@ Customer requests return after delivery confirmation.
           "next_node_name": "Receipt Return",
           "forward": "Confirm Return Address with Merkle Root"
         },
-        "hold": false,
+        "op": "next",
         "message": "Return address confirmed with Merkle Root"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_merkle_root_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_merkle_root_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "String",
-                "value": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_merkle_root_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_merkle_root_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2536,44 +2604,44 @@ Customer requests return after delivery confirmation.
 {
   "tool": "onchain_operations",
   "data": {
-    "operation_type": "progress",
+    "operation_type": "order",
     "data": {
-      "object": "myshop_progress_v2",
-      "operate": {
+      "object": "myshop_order_v2",
+      "progress": {
         "operation": {
           "next_node_name": "Return Complete",
           "forward": "Submit Return Merkle Root"
         },
-        "hold": false,
+        "op": "next",
         "message": "Return shipping Merkle Root submitted"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_merkle_root_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_merkle_root_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "String",
-                "value": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_customer",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_merkle_root_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_merkle_root_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "String",
+              "value": "0xdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2593,7 +2661,7 @@ Customer requests return after delivery confirmation.
           "next_node_name": "Return Complete",
           "forward": "Confirm Return Received"
         },
-        "hold": false,
+        "op": "next",
         "message": "Return received and confirmed"
       }
     },
@@ -2624,7 +2692,7 @@ For the Non-receipt Return path, the customer never received the goods and has n
           "next_node_name": "Return Complete",
           "forward": "Confirm Goods Recovered"
         },
-        "hold": false,
+        "op": "next",
         "message": "Goods recovered by merchant - non-receipt return complete"
       }
     },
@@ -2657,36 +2725,36 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
           "next_node_name": "Return Fail",
           "forward": "Timeout Return Not Received"
         },
-        "hold": false,
+        "op": "next",
         "message": "Return failed - timeout"
-      },
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "machine_time_10d_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "machine_time_10d_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_progress_v2"
-              }
-            ]
-          }
-        ]
       }
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "machine_time_10d_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "machine_time_10d_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_progress_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2709,34 +2777,34 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
     "operation_type": "allocation",
     "data": {
       "object": "myshop_allocation_v2",
-      "alloc_by_guard": "service_merchant_win_v2",
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "service_merchant_win_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "service_merchant_win_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_order_v2"
-              }
-            ]
-          }
-        ]
-      }
+      "alloc_by_guard": "service_merchant_win_v2"
     },
     "env": {
       "account": "myshop_merchant",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "service_merchant_win_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "service_merchant_win_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_order_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2755,34 +2823,34 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
     "operation_type": "allocation",
     "data": {
       "object": "myshop_allocation_v2",
-      "alloc_by_guard": "service_customer_win_v2",
-      "submission": {
-        "type": "submission",
-        "guard": [
-          {
-            "object": "service_customer_win_v2",
-            "impack": true
-          }
-        ],
-        "submission": [
-          {
-            "guard": "service_customer_win_v2",
-            "submission": [
-              {
-                "identifier": 0,
-                "b_submission": true,
-                "value_type": "Address",
-                "value": "myshop_order_v2"
-              }
-            ]
-          }
-        ]
-      }
+      "alloc_by_guard": "service_customer_win_v2"
     },
     "env": {
       "account": "myshop_customer",
       "network": "mainnet",
       "no_cache": true
+    },
+    "submission": {
+      "type": "submission",
+      "guard": [
+        {
+          "object": "service_customer_win_v2",
+          "impack": true
+        }
+      ],
+      "submission": [
+        {
+          "guard": "service_customer_win_v2",
+          "submission": [
+            {
+              "identifier": 0,
+              "b_submission": true,
+              "value_type": "Address",
+              "value": "myshop_order_v2"
+            }
+          ]
+        }
+      ]
     }
   }
 }
@@ -2796,7 +2864,7 @@ This advanced e-commerce example demonstrates:
 
 1. **Multi-Path Workflow**: Orders can complete through normal delivery, wonderful rating, or various return paths
 2. **Dual-Signature Returns**: Receipt returns require confirmation from both parties (threshold=2); non-receipt returns require only merchant confirmation of goods recovery (threshold=1)
-3. **Time-Based Auto-Completion**: Orders auto-complete after time thresholds (10 days from shipping, 2 days from delivery)
+3. **Time-Based Auto-Completion**: Orders auto-complete from Shipping after a 10-day threshold (guard-verified); from Delivery Complete the merchant completes manually via the "Complete Order" forward
 4. **Guard-Based Verification**: All state transitions and fund allocations are protected by guards
 5. **Reward Incentive System**: Wonderful ratings receive rewards, lost packages and shipping delays receive compensation
 6. **Arbitration Support**: Service binds to Arbitration object for final on-chain dispute resolution
