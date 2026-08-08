@@ -179,7 +179,7 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
                 "symbol": "WBTC",
                 "evmAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
                 "evmDecimals": 8,
-                "wowTypeTag": "0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC",
+                "wowTypeTag": "0x184a37e507991cfc8ee32c536cb7f6839fc836c8d36f928274f4fada795c101a::btc::BTC",
                 "wowDecimals": 8,
                 "description": "Wrapped BTC (ERC20). Bitcoin price exposure on Ethereum; 1 WBTC = 1 BTC."
               },
@@ -188,7 +188,7 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
                 "symbol": "ETH",
                 "evmAddress": "0x0000000000000000000000000000000000000000",
                 "evmDecimals": 18,
-                "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+                "wowTypeTag": "0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH",
                 "wowDecimals": 8,
                 "description": "Native ETH. Calls bridgeETHV2{value}; vault auto-wraps to WETH internally. 18 decimals on EVM, 8 decimals on WOW."
               },
@@ -197,7 +197,7 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
                 "symbol": "WETH",
                 "evmAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
                 "evmDecimals": 18,
-                "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+                "wowTypeTag": "0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH",
                 "wowDecimals": 8,
                 "description": "Wrapped ETH (ERC20). Calls bridgeERC20V2; shares Token ID 2 and WOW type tag with native ETH."
               },
@@ -206,7 +206,7 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
                 "symbol": "USDC",
                 "evmAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
                 "evmDecimals": 6,
-                "wowTypeTag": "0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC",
+                "wowTypeTag": "0x694b2b1ee343434e921f87259ee959274ff250dc67990e93114022d55801d472::usdc::USDC",
                 "wowDecimals": 6,
                 "description": "USD Coin (USDC). Fully collateralized USD stablecoin; 6 decimals on both sides."
               },
@@ -215,7 +215,7 @@ Public EVM RPCs frequently hit **429 rate limit** or timeout. The bridge ships w
                 "symbol": "USDT",
                 "evmAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
                 "evmDecimals": 6,
-                "wowTypeTag": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT",
+                "wowTypeTag": "0x999f4614ee484a263e8e02b55d0ba1fd63c82fb796370e614ccb9e7343573c76::usdt::USDT",
                 "wowDecimals": 6,
                 "description": "Tether USD (USDT). Fiat-collateralized stablecoin; 6 decimals on both sides."
               }

@@ -841,7 +841,7 @@ The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important 
         {
           "tokenId": 1,
           "symbol": "WBTC",
-          "wowTypeTag": "0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC",
+          "wowTypeTag": "0x184a37e507991cfc8ee32c536cb7f6839fc836c8d36f928274f4fada795c101a::btc::BTC",
           "evmAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
           "evmDecimals": 8,
           "wowDecimals": 8,
@@ -851,7 +851,7 @@ The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important 
         {
           "tokenId": 2,
           "symbol": "ETH",
-          "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+          "wowTypeTag": "0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH",
           "evmAddress": "0x0000000000000000000000000000000000000000",
           "evmDecimals": 18,
           "wowDecimals": 8,
@@ -861,7 +861,7 @@ The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important 
         {
           "tokenId": 2,
           "symbol": "WETH",
-          "wowTypeTag": "0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH",
+          "wowTypeTag": "0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH",
           "evmAddress": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
           "evmDecimals": 18,
           "wowDecimals": 8,
@@ -871,7 +871,7 @@ The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important 
         {
           "tokenId": 3,
           "symbol": "USDC",
-          "wowTypeTag": "0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC",
+          "wowTypeTag": "0x694b2b1ee343434e921f87259ee959274ff250dc67990e93114022d55801d472::usdc::USDC",
           "evmAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
           "evmDecimals": 6,
           "wowDecimals": 6,
@@ -881,7 +881,7 @@ The `wowTypeTag` (format `{address}::{module}::{struct}`) is the most important 
         {
           "tokenId": 4,
           "symbol": "USDT",
-          "wowTypeTag": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT",
+          "wowTypeTag": "0x999f4614ee484a263e8e02b55d0ba1fd63c82fb796370e614ccb9e7343573c76::usdt::USDT",
           "evmAddress": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
           "evmDecimals": 6,
           "wowDecimals": 6,
@@ -909,7 +909,7 @@ The `wowTypeTag` values returned by this query can be used directly as the `type
     "data": {
       "object": {
         "name": "my_usdt_service",
-        "type_parameter": "0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT"
+        "type_parameter": "0x999f4614ee484a263e8e02b55d0ba1fd63c82fb796370e614ccb9e7343573c76::usdt::USDT"
       }
     }
   }
@@ -926,11 +926,11 @@ The following table lists all mainnet bridge tokens with their `wowTypeTag` valu
 
 | Symbol | Token ID | wowTypeTag (type_parameter) | EVM Address | EVM Decimals | WOW Decimals |
 |--------|----------|-----------------------------|-------------|--------------|--------------|
-| **WBTC** | 1 | `0x06c69f212cc7bef6ff730b42bc739be7786902c501f15e99dbce1b8b5c7eff58::btc::BTC` | 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 | 8 | 8 |
-| **ETH** | 2 | `0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH` | 0x0000000000000000000000000000000000000000 (native) | 18 | 8 |
-| **WETH** | 2 | `0xdb429818d697419e12a3481af1d21f32e603bff8716d45b0e964c2191db6604f::eth::ETH` | 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 | 18 | 8 |
-| **USDC** | 3 | `0xe70fcfd8ef984292b11346ee43880ea9d6fba9f270c90bd0432574db14af67bf::usdc::USDC` | 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 | 6 | 6 |
-| **USDT** | 4 | `0x4f160cf9a28ca8ac8bc0a46e13b02588dc05722148dd964807b9be89a0fcfe4d::usdt::USDT` | 0xdAC17F958D2ee523a2206206994597C13D831ec7 | 6 | 6 |
+| **WBTC** | 1 | `0x184a37e507991cfc8ee32c536cb7f6839fc836c8d36f928274f4fada795c101a::btc::BTC` | 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599 | 8 | 8 |
+| **ETH** | 2 | `0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH` | 0x0000000000000000000000000000000000000000 (native) | 18 | 8 |
+| **WETH** | 2 | `0x107c69d91b57f5f8b1b877bf9228101784bc7dfda6b63956a40f8d2bddb01bcb::eth::ETH` | 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2 | 18 | 8 |
+| **USDC** | 3 | `0x694b2b1ee343434e921f87259ee959274ff250dc67990e93114022d55801d472::usdc::USDC` | 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 | 6 | 6 |
+| **USDT** | 4 | `0x999f4614ee484a263e8e02b55d0ba1fd63c82fb796370e614ccb9e7343573c76::usdt::USDT` | 0xdAC17F958D2ee523a2206206994597C13D831ec7 | 6 | 6 |
 
 > **Note**: ETH and WETH share the same `wowTypeTag` because native ETH is auto-wrapped to WETH by the bridge vault. When using ETH/WETH as a payment type, use the shared `wowTypeTag`. The `decimals` difference (18 on EVM vs 8 on WOW for ETH/WBTC) is handled automatically by the bridge protocol.
 
