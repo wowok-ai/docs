@@ -71,7 +71,7 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 | `id` | `string` | **Yes** | Unique message identifier (format: `{fromShort}_{toShort}_{leafIndex}_{random}`) |
 | `from` | `string` | **Yes** | Sender address (hex-encoded, `0x` prefix) |
 | `to` | `string` | **Yes** | Recipient address (hex-encoded, `0x` prefix) |
-| `plaintext` | `string` | No | Decrypted message content. Omitted when `excludePlaintext` is `true` |
+| `plaintext` | `string` | No | Decrypted message content. For **reply (quote) messages** this stores the **wire format** `\u0000REPLY\u0000{messageId}\u0000{content}` (see [Reply Messages](#reply-messages)); for all other messages it is the plain text. Omitted when `excludePlaintext` is `true` |
 | `plaintextHash` | `string` | **Yes** | SHA-256 hash of the plaintext (hex-encoded, `0x` prefix) |
 | `clientTimestamp` | `number` | **Yes** | Client-side timestamp in milliseconds (Unix epoch) |
 | `timestamp` | `number` | **Yes** | Server-attested timestamp in milliseconds (Unix epoch) |
@@ -106,6 +106,24 @@ A WTS file serves as a **standalone evidence package** — anyone can independen
 | `fileHash` | `string` | **Yes** | SHA-256 hash of the file content |
 | `localCachePath` | `string` | No | Local cache path for the extracted file |
 | `downloadedAt` | `number` | No | Download timestamp in milliseconds |
+
+#### Reply Messages (Quotes)
+
+A reply message references a previous message in the same conversation. Because the server only stores ciphertext + `plaintextHash` and never sees plaintext, the quote relationship **must** travel inside the encrypted payload. It is therefore encoded directly in the wire-format plaintext:
+
+```
+\u0000REPLY\u0000{messageId}\u0000{content}
+```
+
+Rules:
+
+| Rule | Description |
+|------|-------------|
+| **Wire format in `plaintext`** | For a reply message, `payload.messages[].plaintext` stores the full wire format above (prefix included), **not** the bare content. `content` is the reply text itself. `\u0000` (NUL) is used as the field separator and never appears in normal chat text. |
+| **Hash covers the wire format** | `plaintextHash` is computed over the **wire-format** plaintext (including the `\u0000REPLY\u0000...` prefix). Verification (`verify_wts`) recomputes the hash from `plaintext` as stored — do **not** strip the prefix before hashing, or verification fails. |
+| **`messageId` uniqueness** | Only `messageId` is transmitted. The referenced message's sender and content are resolved by the reader from the same WTS `payload.messages[]` (by `id`), or from local storage when reading inside a client. |
+| **HTML display** | `wts2html` strips the wire prefix for display and renders a quote block with the referenced message's preview (looked up by `messageId` within the payload). If the referenced message is absent from the payload, it renders a "reply message ID not found" notice instead. |
+| **Referenced message absent** | If the quoted `messageId` is not present in the payload (e.g. out-of-range export), the reply's own `plaintextHash` still verifies independently; only the quoted preview is unavailable. |
 
 ---
 
