@@ -112,9 +112,74 @@ AI agents can think. They can reason. But they cannot yet do business with each 
 
 ### Quick Start
 
-#### 1. Configure MCP Server
+#### Step 1 — Install Skills + MCP (Personal Use)
 
-Add `@wowok/agent-mcp` to your AI client's MCP configuration:
+One command. Skills are copied to **all 9 supported AI clients** automatically.
+The MCP server (`@wowok/agent-mcp`) is installed, registered in each client's config,
+and restarted — no manual JSON editing needed.
+
+```bash
+npm install -g @wowok/skills
+```
+
+Restart your AI client. Then ask: *"Please list all available WoWok tools."*
+If a detailed list is returned, the setup is complete.
+
+> **Rarely needed**:
+> - Install only a subset of clients: `WOWOK_SKILLS_TARGETS=claude,trae npm install -g @wowok/skills`
+> - Skip MCP auto-management: `WOWOK_SKILLS_NO_MCP=1 npm install -g @wowok/skills`
+> - **Manual MCP config (fallback)** — if `npx -y @wowok/agent-mcp` does not work in your environment,
+>   add the wowok entry to your client's MCP settings JSON (see "Advanced: Manual MCP Setup" at the bottom).
+
+#### Step 2 — Install into Your Project (Team Sharing, Optional)
+
+Write skills to the repo itself. Commit to git — the whole team gets the same pack automatically.
+
+```bash
+npm install -g @wowok/skills   # skip if already done
+cd your-project
+
+# All clients (default, recommended):
+wowok-skills init
+
+# Single client only (omit to install all):
+wowok-skills init --target claude
+wowok-skills init --target cursor
+wowok-skills init --target trae
+wowok-skills init --target codex
+wowok-skills init --target windsurf
+wowok-skills init --target codebuddy
+wowok-skills init --target qoder
+wowok-skills init --target roo
+wowok-skills init --target copilot
+```
+
+**Supported AI clients (9 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
+Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, GitHub Copilot.
+
+**CLI commands:**
+
+| Command | Description |
+|---------|-------------|
+| `wowok-skills list` | List all available skills |
+| `wowok-skills get <name>` | Show skill details |
+| `wowok-skills role <customer\|provider\|arbitrator\|shared>` | List skills by role |
+| `wowok-skills recommend <intent>` | Recommend skills by user intent |
+| `wowok-skills init` | Install to project — all clients (default) |
+| `wowok-skills init --target <t>` | Install to project — one client only |
+| `wowok-skills uninit` | Remove from project — all clients (default) |
+| `wowok-skills referrer <addr\|name>` | Save airdrop referrer globally |
+
+---
+
+> 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
+
+---
+
+#### Advanced: Manual MCP Setup (Fallback)
+
+If the automatic MCP server registration in Step 1 does not apply to your environment,
+add `@wowok/agent-mcp` to your AI client's MCP configuration manually:
 
 ```json
 {
@@ -127,30 +192,8 @@ Add `@wowok/agent-mcp` to your AI client's MCP configuration:
 }
 ```
 
-After restarting, ask your AI: *"Please list all available WoWok tools."* If a detailed list is returned, the setup is complete.
-
-#### 2. Install Skills (Recommended)
-
-Skills help AI assistants use WoWok tools correctly — complex system building, tool usage, safety protocols.
-
-```bash
-# Personal (global) — available in all sessions:
-npm install -g @wowok/skills
-
-# Project (team sharing) — commit to git for collaboration:
-cd your-project
-wowok-skills init          # Claude Code (default)
-wowok-skills init --target agents    # Trae IDE
-wowok-skills init --target all       # All 6 supported clients
-```
-
-**Supported clients:** Claude Code, OpenAI Codex, Trae IDE, CodeBuddy, Cursor, GitHub Copilot.
-
-**CLI commands:** `wowok-skills list` (list all), `wowok-skills get <name>` (show details), `wowok-skills init` (install to project), `wowok-skills uninit` (remove from project).
-
----
-
-> 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
+Restart your AI client after saving. Then ask: *"Please list all available WoWok tools."*
+If a detailed list is returned, the setup is complete.
 
 ## 📚 Learning Path
 
