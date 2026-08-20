@@ -112,9 +112,11 @@ AI agents can think. They can reason. But they cannot yet do business with each 
 
 ### Quick Start
 
-#### Step 1 — Install Skills + MCP (Personal Use)
+Three paths — pick the one that fits. **Install Skills** for AI clients (recommended), **MCP Server** alone if you only want the protocol layer, or **Desktop Client** if you want a standalone workspace with no AI client at all.
 
-One command. Skills are copied to **all 9 supported AI clients** automatically.
+#### Path 1 — Install Skills (Recommended, for AI clients)
+
+One command. Skills are copied to **all 11 supported AI clients** automatically.
 The MCP server (`@wowok/agent-mcp`) is installed, registered in each client's config,
 and restarted — no manual JSON editing needed.
 
@@ -127,11 +129,42 @@ If a detailed list is returned, the setup is complete.
 
 > **Rarely needed**:
 > - Install only a subset of clients: `WOWOK_SKILLS_TARGETS=claude,trae npm install -g @wowok/skills`
-> - Skip MCP auto-management: `WOWOK_SKILLS_NO_MCP=1 npm install -g @wowok/skills`
+> - Skip MCP auto-management (skills only): `WOWOK_SKILLS_NO_MCP=1 npm install -g @wowok/skills`
 > - **Manual MCP config (fallback)** — if `npx -y @wowok/agent-mcp` does not work in your environment,
 >   add the wowok entry to your client's MCP settings JSON (see "Advanced: Manual MCP Setup" at the bottom).
 
-#### Step 2 — Install into Your Project (Team Sharing, Optional)
+#### Path 2 — Install MCP Server Only
+
+If you only need the MCP protocol layer (no skills), install the server standalone and
+register it manually:
+
+```bash
+npm install -g @wowok/agent-mcp
+```
+
+Then add it to your AI client's MCP configuration (see "Advanced: Manual MCP Setup"
+below). The skills layer is optional — you can add it later with Path 1.
+
+#### Path 3 — Desktop Client (No AI Client Required)
+
+A dedicated WoWok workspace with everything bundled — no AI client required. It includes
+capabilities beyond the MCP server's control: manage your account private keys, and set
+your account or business experience and skills.
+
+| Download | Link |
+|----------|------|
+| Windows x64 | [WoWok_x64-setup.exe](https://download.wowok.net/latest/WoWok_x64-setup.exe) |
+| Linux AppImage | [WoWok_amd64.AppImage](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
+| macOS | Coming soon |
+
+**Key features:**
+- Built-in MCP server + all 11 Skills — everything bundled
+- End-to-end encrypted Messenger
+- Local key management (never leaves your device)
+- Visual project & store management
+- Account & industry personas the system understands
+
+#### Project Install (Team Sharing, Optional)
 
 Write skills to the repo itself. Commit to git — the whole team gets the same pack automatically.
 
@@ -151,11 +184,13 @@ wowok-skills init --target windsurf
 wowok-skills init --target codebuddy
 wowok-skills init --target qoder
 wowok-skills init --target roo
+wowok-skills init --target cline
+wowok-skills init --target kilo
 wowok-skills init --target copilot
 ```
 
-**Supported AI clients (9 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
-Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, GitHub Copilot.
+**Supported AI clients (11 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
+Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, Cline, Kilo Code, GitHub Copilot.
 
 **CLI commands:**
 
@@ -194,6 +229,47 @@ add `@wowok/agent-mcp` to your AI client's MCP configuration manually:
 
 Restart your AI client after saving. Then ask: *"Please list all available WoWok tools."*
 If a detailed list is returned, the setup is complete.
+
+---
+
+## 🧭 Personalize Your Business
+
+WoWok isn't a one-size-fits-all platform — it is a **personalizable business carrier**. Every
+merchant knows their industry best, so you can teach the platform your playbook and your
+stance, and the AI runs your business the way you would. Two mechanisms make this possible:
+
+### 🧩 Industry Packs — inject your industry know-how (skills)
+
+An **industry pack** is a distributable, versionable unit of one industry's business
+intelligence: object shape, match rules, role personas, dispute/compliance/supply rules, and
+an operating playbook. Through the WoWok client (or `industry_pack_operation`), you:
+
+- **Inject** your experience and skills into your business system — your pricing, compliance,
+  dispute and negotiation rules become the AI's operating manual.
+- **Personalize** the built-in 6 industries (retail / freelance / rental / education / travel /
+  subscription) or scaffold a pack for a brand-new industry.
+- **Take effect instantly** — save a pack, the AI re-registers it, and the next chat turn
+  reasons against your rules. Reset any file or folder back to the pristine template anytime.
+
+**→ [View Industry Pack Documentation →](docs/industry-pack.md)**
+
+### 🎭 Business Personas — set your account's current & long-term stance
+
+A **persona** is the AI's understanding of who you are and how you operate: your long-term
+identity, preferences and red lines, plus your current strategy and requirements for each
+negotiation. You set it per account, per industry, per role:
+
+- `long_term` — who you are: identity, region, languages, stable preferences (user-driven).
+- `current` — how you play this round: strategy, requirements, rules, spec (also
+  smart-updated from conversation experience and account behavior).
+- Priority chain: `system < industry default < account`, and `long_term < current`.
+
+**→ [View Persona Documentation →](docs/persona.md)**
+
+> Both are local capabilities of the WoWok client / MCP server — they never touch the chain
+> by themselves. They shape how the AI negotiates, recommends, and executes on your behalf.
+
+---
 
 ## 📚 Learning Path
 
@@ -255,15 +331,17 @@ We have designed 10 learning stages and a large number of Prompt examples for yo
 
 ### 🛠️ Advanced Tools
 
-Beyond the 9 learning stages, WoWok provides three advanced tools for deployment workflow, runtime control, and trust assessment:
+Beyond the 9 learning stages, WoWok provides five advanced tools for deployment workflow, runtime control, trust assessment, and personalization:
 
 | Tool | Sub-tool | Description |
 |------|----------|-------------|
 | [Project](docs/project.md) | `project_operation` | 5-stage deployment workflow: analyze intent → aggregate risks → generate deployment doc → trace substeps. Maintains a local object dependency graph (DAG) for topologically correct deployment. |
 | [Config](docs/config.md) | `config_operation` | Runtime service toggles: enable/disable features like Safety Confirmation Gate, Harness Verify Loop, Semantic Enrichment, and more — without restarting the MCP server. |
 | [Trust Score](docs/trust-score.md) | `trust_score` | Proactive service trust & risk assessment: computes a 0-100 trust score across 5 dimensions (arbitration, reviews, fulfillment, fund_safety, transparency) and a 4-dimension risk score at deeper evaluation levels. |
+| [Persona](docs/persona.md) | `persona_operation` | Account & industry persona: set your long-term identity and current strategy so the AI negotiates with your stance (per account / industry / role). |
+| [Industry Pack](docs/industry-pack.md) | `industry_pack_operation` | Industry knowledge packs: scaffold / scan / register / edit / diff / reset. Inject your industry experience and skills; the AI uses them from the next turn. |
 
-> **Note**: These tools are optional and complement the core learning path. Use `trust_score` before purchasing from a service, `project_operation` for structured multi-object deployment, and `config_operation` for runtime feature control.
+> **Note**: These tools are optional and complement the core learning path. Use `trust_score` before purchasing from a service, `project_operation` for structured multi-object deployment, `config_operation` for runtime feature control — and `persona_operation` / `industry_pack_operation` to personalize how the AI runs your business.
 
 ---
 
@@ -348,6 +426,8 @@ Choose a stage to begin your WoWok journey:
 | [Config](docs/config.md) | System | - | Runtime service toggles (confirm_gate, harness, etc.) |
 | [Project](docs/project.md) | Workflow | - | 5-stage deployment workflow & object dependency graph |
 | [Trust Score](docs/trust-score.md) | Query | - | Service risk & trust assessment (0-100 score, 5 dimensions) |
+| [Persona](docs/persona.md) | Local | - | Account & industry personas — current strategy + long-term identity |
+| [Industry Pack](docs/industry-pack.md) | Local | - | Industry knowledge packs — inject your skills, AI-effective instantly |
 
 ---
 
