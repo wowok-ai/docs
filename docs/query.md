@@ -328,14 +328,17 @@ The `onchain_table_data` sub-tool is a dedicated sub-tool for querying dynamic t
 | 2 | `onchain_table_item_repository_data` | Repository | name + entity (address or number) | Query a record from a Repository's on-chain key-value database. Returns the stored data record with typed value. |
 | 3 | `onchain_table_item_permission_perm` | Permission | user address or Guard ID | Query a permission entry from a Permission object's access control table. Returns the permission list (perm[]) granted to that user/guard. |
 | 4 | `onchain_table_item_entity_registrar` | System EntityRegistrar | user address | Query an entity's registration record from the GLOBAL EntityRegistrar. Returns registration info: description, referrer, records, mark_object. |
-| 5 | `onchain_table_item_entity_linker` | System EntityLinker | entity address | Query community votes/endorsements for an entity from the GLOBAL EntityLinker. Returns vote records (likes/dislikes) showing community trust. |
-| 6 | `onchain_table_item_reward_record` | Reward | recipient address | Query a reward claim record from a Reward object's distribution table. Returns claim history: guard used, total claimed, per-claim details. |
-| 7 | `onchain_table_item_demand_presenter` | Demand | presenter address | Query a demand submission from a Demand object's presenter table. Returns submission details: recommendation, service, feedback, acceptance score. |
-| 8 | `onchain_table_item_treasury_history` | Treasury | payment ID (address) | Query a payment record from a Treasury's history table. Returns payment details: operation type, signer, amount, external guard. |
-| 9 | `onchain_table_item_machine_node` | Machine | node name (string) | Query a workflow node definition from a Machine object's node table. Returns node configuration: pairs, forwards, guards, thresholds. |
-| 10 | `onchain_table_item_progress_history` | Progress | sequence number (u64) | Query a progress step record from a Progress object's history table. Returns step details: node, next_node, session state, time. |
-| 11 | `onchain_table_item_address_mark` | AddressMark | address | Query a PUBLIC on-chain name/tag mark from an AddressMark object's table. Unlike local marks, these are published on-chain. Returns public labels: entity, name, tags[]. |
-| 12 | `onchain_table_item_generic` | Generic | key_type + key_value | Query a generic record by key from any object's on-chain data table. Use when the object type is unknown or unsupported. Returns the raw table item with typed key and object reference. |
+| 5 | `onchain_table_item_entity_linker` | System EntityLinker | entity address | Query community votes/endorsements for an entity from the GLOBAL EntityLinker. Returns vote records (likes/dislikes/favor) showing community trust. |
+| 6 | `onchain_table_item_entity_contact` | System EntityContact (0xaa9) | entity address | Query which customer-service Contacts an entity is a member of, from the GLOBAL EntityContact reverse index. Returns contact memberships (contact + time). |
+| 7 | `onchain_table_item_object_linker_core` | System ObjectLinkerCore (0xaae) | target address | Query which bounded core objects (Service/Machine/Treasury/Reward/Demand/Arbitration/Arb/Contact) bind to a target, from the GLOBAL ObjectLinkerCore reverse index. Lossless fixed; use for DEFAULT reverse lookups. |
+| 8 | `onchain_table_item_object_linker_tx` | System ObjectLinkerTx (0xaaf) | target address | Query which operational objects (Order/Progress/Payment/Allocation/Guard/Permission) bind to a target, from the GLOBAL ObjectLinkerTx reverse index. Lossy FIFO (recent only); use for ORDER/PROGRESS/operational reverse lookups. |
+| 9 | `onchain_table_item_reward_record` | Reward | recipient address | Query a reward claim record from a Reward object's distribution table. Returns claim history: guard used, total claimed, per-claim details. |
+| 10 | `onchain_table_item_demand_presenter` | Demand | presenter address | Query a demand submission from a Demand object's presenter table. Returns submission details: recommendation, service, feedback, acceptance score. |
+| 11 | `onchain_table_item_treasury_history` | Treasury | payment ID (address) | Query a payment record from a Treasury's history table. Returns payment details: operation type, signer, amount, external guard. |
+| 12 | `onchain_table_item_machine_node` | Machine | node name (string) | Query a workflow node definition from a Machine object's node table. Returns node configuration: pairs, forwards, guards, thresholds. |
+| 13 | `onchain_table_item_progress_history` | Progress | sequence number (u64) | Query a progress step record from a Progress object's history table. Returns step details: node, next_node, session state, time. |
+| 14 | `onchain_table_item_address_mark` | AddressMark | address | Query a PUBLIC on-chain name/tag mark from an AddressMark object's table. Unlike local marks, these are published on-chain. Returns public labels: entity, name, tags[]. |
+| 15 | `onchain_table_item_generic` | Generic | key_type + key_value | Query a generic record by key from any object's on-chain data table. Use when the object type is unknown or unsupported. Returns the raw table item with typed key and object reference. |
 
 ### Schema Tree
 
@@ -364,6 +367,18 @@ onchain_table_data (Table Data Query)
 │   │   ├── no_cache (optional, boolean)
 │   │   └── network (optional, "localnet" | "testnet" | "mainnet")
 │   ├── "onchain_table_item_entity_linker"
+│   │   ├── address (required, Address | string)
+│   │   ├── no_cache (optional, boolean)
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
+│   ├── "onchain_table_item_entity_contact"
+│   │   ├── address (required, Address | string)
+│   │   ├── no_cache (optional, boolean)
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
+│   ├── "onchain_table_item_object_linker_core"
+│   │   ├── address (required, Address | string)
+│   │   ├── no_cache (optional, boolean)
+│   │   └── network (optional, "localnet" | "testnet" | "mainnet")
+│   ├── "onchain_table_item_object_linker_tx"
 │   │   ├── address (required, Address | string)
 │   │   ├── no_cache (optional, boolean)
 │   │   └── network (optional, "localnet" | "testnet" | "mainnet")

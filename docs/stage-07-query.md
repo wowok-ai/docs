@@ -147,7 +147,7 @@ Query local names (account name and local mark name) for a list of addresses:
 
 This sub-tool was split from `query_toolkit` to handle the unique characteristics of dynamic table queries. On-chain objects have fixed size, but their table data (dynamic fields) can grow dynamically. The `onchain_table_data` sub-tool is specialized for querying these dynamic tables and their items.
 
-**Supported Query Types (12 total):**
+**Supported Query Types (15 total):**
 
 | # | query_type | Parent Object | Key | Meaning |
 |---|-----------|--------------|-----|---------|
@@ -155,14 +155,17 @@ This sub-tool was split from `query_toolkit` to handle the unique characteristic
 | 2 | `onchain_table_item_repository_data` | Repository | name + entity | Query a record from a Repository's key-value database |
 | 3 | `onchain_table_item_permission_perm` | Permission | user/Guard address | Query permission entries from access control table |
 | 4 | `onchain_table_item_entity_registrar` | System EntityRegistrar | user address | Query entity registration records |
-| 5 | `onchain_table_item_entity_linker` | System EntityLinker | entity address | Query community votes/endorsements |
-| 6 | `onchain_table_item_reward_record` | Reward | recipient address | Query reward claim records |
-| 7 | `onchain_table_item_demand_presenter` | Demand | presenter address | Query demand submissions |
-| 8 | `onchain_table_item_treasury_history` | Treasury | payment ID | Query treasury payment records |
-| 9 | `onchain_table_item_machine_node` | Machine | node name | Query workflow node definitions |
-| 10 | `onchain_table_item_progress_history` | Progress | sequence number | Query progress step records |
-| 11 | `onchain_table_item_address_mark` | AddressMark | address | Query PUBLIC on-chain name/tag marks |
-| 12 | `onchain_table_item_generic` | Any object | any key type | Query generic table item from ANY object (supports address, u64, string, object ID keys) |
+| 5 | `onchain_table_item_entity_linker` | System EntityLinker | entity address | Query community votes/endorsements (likes/dislikes/favor) |
+| 6 | `onchain_table_item_entity_contact` | System EntityContact (0xaa9) | entity address | Query which Contacts an entity is a member of (reverse membership) |
+| 7 | `onchain_table_item_object_linker_core` | System ObjectLinkerCore (0xaae) | target address | Query which bounded core objects bind to a target (lossless, default reverse lookup) |
+| 8 | `onchain_table_item_object_linker_tx` | System ObjectLinkerTx (0xaaf) | target address | Query which operational objects (Order/Progress/…) bind to a target (FIFO, recent only) |
+| 9 | `onchain_table_item_reward_record` | Reward | recipient address | Query reward claim records |
+| 10 | `onchain_table_item_demand_presenter` | Demand | presenter address | Query demand submissions |
+| 11 | `onchain_table_item_treasury_history` | Treasury | payment ID | Query treasury payment records |
+| 12 | `onchain_table_item_machine_node` | Machine | node name | Query workflow node definitions |
+| 13 | `onchain_table_item_progress_history` | Progress | sequence number | Query progress step records |
+| 14 | `onchain_table_item_address_mark` | AddressMark | address | Query PUBLIC on-chain name/tag marks |
+| 15 | `onchain_table_item_generic` | Any object | any key type | Query generic table item from ANY object (supports address, u64, string, object ID keys) |
 
 **→ [View onchain_table_data Detailed Documentation →](query.md#onchain_table_data-tool)**
 

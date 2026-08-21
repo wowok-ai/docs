@@ -67,13 +67,16 @@ Guards can query data from the following on-chain objects:
 | **Contact** | IM management | 8 | Check messenger configurations |
 | **Arb** | Arbitration voting and execution | 38 | Check voting records, execution state |
 | **Discount** | Discount and promotion management | 9 | Check discount rates, validity periods |
-| **EntityLinker** | Entity relationship management | 9 | Check entity links and associations |
+| **EntityLinker** | Community reputation votes | 9 | Check likes/dislikes/favor votes |
 | **EntityRegistrar** | Entity registration system | 11 | Check registered entities and their status |
+| **EntityContact** | Entity → Contacts membership reverse index | 3 | Check which Contacts an entity is a member of |
+| **ObjectLinkerCore** | Target → bounded core objects reverse index | 3 | Check which core objects bind to a target (lossless) |
+| **ObjectLinkerTx** | Target → operational objects reverse index | 3 | Check which orders/progress bind to a target (FIFO) |
 | **Passport** | Verified credentials and identities | 16 | Check passport validity, verified attributes |
 | **Proof** | Proof and verification records | 11 | Check proof existence, verification status |
 | **Resource** | Publicly available on-chain data of the account | 5 | Check resource availability, ownership |
 
-**Total: 409 query instructions across all object types**
+**Total: 418 query instructions across all object types**
 
 ### Query Node Syntax
 
@@ -1326,14 +1329,17 @@ Guards can access data from ANY on-chain object using `query` nodes! This is a p
 - `object.identifier`: References the object ID from the Guard table (identifier 0-255).
 - `object.convert_witness` (optional): **Critical for cross-object queries!** When specified, the query retrieves data from an associated object instead of the object itself.
 
-### Special System Addresses for Entity Queries
+### Special System Addresses for Entity & Linker Queries
 
-When querying **EntityLinker** or **EntityRegistrar** data, use these system addresses in the Guard table:
+When querying **EntityLinker**, **EntityRegistrar**, **EntityContact**, or **ObjectLinker** data, use these system addresses in the Guard table:
 
 | System Address | Value | Description |
 |----------------|-------|-------------|
-| `ENTITY_LINKER_ADDRESS` | `0xaaa` | Use for EntityLinker queries |
-| `ENTITY_REGISTRAR_ADDRESS` | `0xaab` | Use for EntityRegistrar queries |
+| `ENTITY_LINKER_ADDRESS` | `0xaaa` | Reputation votes (likes/dislikes/favor) |
+| `ENTITY_REGISTRAR_ADDRESS` | `0xaab` | Entity registration records |
+| `ENTITY_CONTACT_ADDRESS` | `0xaa9` | Entity → Contacts membership reverse index |
+| `OBJECT_LINKER_CORE_ADDRESS` | `0xaae` | Target → bounded core objects reverse index (lossless) |
+| `OBJECT_LINKER_TX_ADDRESS` | `0xaaf` | Target → operational objects reverse index (FIFO) |
 
 **Example**: To query entity registration data, set `object.identifier` to reference a Guard table entry containing `0xaaa` (for EntityLinker) or `0xaab` (for EntityRegistrar).
 
