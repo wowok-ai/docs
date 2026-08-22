@@ -265,7 +265,7 @@
       }
     },
     {
-      "name": "智谱 GLM",
+      "name": "Zhipu GLM",
       "type": "openai",
       "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
       "defaultModel": "glm-5-plus",
@@ -331,7 +331,7 @@
       }
     },
     {
-      "name": "月之暗面 Kimi",
+      "name": "Moonshot Kimi",
       "type": "openai",
       "baseUrl": "https://api.moonshot.cn/v1",
       "defaultModel": "kimi-k2.6",
@@ -383,7 +383,7 @@
       }
     },
     {
-      "name": "通义千问 Qwen",
+      "name": "Alibaba Qwen",
       "type": "openai",
       "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "defaultModel": "qwen3.7-max",
