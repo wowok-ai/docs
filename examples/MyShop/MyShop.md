@@ -8,7 +8,7 @@ A complete e-commerce example demonstrating how to build an online store using W
 
 > **Run the example in full every time (repeatable).** This example uses `replaceExistName: true` on all object creations — each run generates new objects with new addresses. If you skip build steps, operations may silently act on orphaned objects from previous runs, producing incorrect results. Old objects' configurations do not reflect the current document version.
 
-- **Execution order**: Part 1 (Merchant Setup, Steps 1–7) → Part 2 (Customer Flow, Steps 1–9). Run all build steps in sequence before testing any customer flow. Do not skip steps — each depends on objects created by prior steps.
+- **Execution order**: Part 1 (Merchant Setup, Steps 1–8) → Part 2 (Customer Flow, Steps 1–9). Run all build steps in sequence before testing any customer flow. Do not skip steps — each depends on objects created by prior steps.
 - **Prerequisites**: `myshop_merchant` with sufficient WOW for gas and order operations. All on-chain operations require `env.confirmed: true`.
 
 > **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
@@ -465,11 +465,53 @@ Create a Contact object to enable encrypted communication between customers and 
 
 ---
 
-### Step 5: Create Guards for Fund Allocation
+### Step 5: Create Service (Store) DRAFT
 
-Before creating the Service, create Guards that validate fund allocation conditions. These Guards ensure funds are only released when specific conditions are met.
+> **⚠️ Order matters — Service DRAFT must be created BEFORE the Guards.** The Guards in Step 6 reference the Service by name (`myshop_service_v2` as an Address table value). The SDK resolves the name to the on-chain address AT Guard creation time. If the Service does not exist yet, Guard creation aborts with:
+> ```
+> Error: invalid parameter:BCS serialization failed: ... failed to resolve string: myshop_service_v2. Address may not exist in local accounts or marks.
+> ```
+> Create the Service as an unpublished DRAFT here so the name resolves, then bind machine/allocators/sales and publish it in Step 7.
 
-#### 5.1 Create Withdraw Guard (Merchant Withdrawal)
+**Prompt**: Create an unpublished Service DRAFT named "myshop_service_v2" (no `publish` field — it stays a DRAFT so Guards can reference it and the mutable fields can still be configured).
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "service",
+    "data": {
+      "object": {
+        "name": "myshop_service_v2",
+        "type_parameter": "0x2::wow::WOW",
+        "permission": "myshop_permission_v2",
+        "tags": ["ecommerce", "toys", "store"],
+        "onChain": false,
+        "replaceExistName": true
+      },
+      "description": "MyShop - Top quality toys for children",
+      "location": "Online Store"
+    },
+    "env": {
+      "account": "myshop_merchant",
+      "network": "mainnet",
+      "confirmed": true
+    }
+  }
+}
+```
+
+> **Note**: After publishing, `machine`, `order_allocators`, and `arbitrations` become **immutable**. Creating the draft first lets the Guards resolve the Service name while the Service is still configurable.
+
+---
+
+### Step 6: Create Guards for Fund Allocation
+
+Before publishing the Service, create Guards that validate fund allocation conditions. These Guards ensure funds are only released when specific conditions are met. The Guards reference the Service DRAFT by name (`myshop_service_v2`), which now resolves to the draft's on-chain address (the address does NOT change when the draft is later published).
+
+> **Note**: Guard table item `name` must be ≤ 64 characters (`MAX_NAME_LENGTH`) and must NOT start with `0x`. Descriptive names with spaces/parentheses (e.g. `order_address (Order object submitted at runtime)`) exceed the limit and abort with `invalid parameter:table.name`. Use short identifiers like `order_address`.
+
+#### 6.1 Create Withdraw Guard (Merchant Withdrawal)
 
 Create a Guard that validates the order's Progress has reached the "Completed" node. This Guard uses `convert_witness: "OrderProgress"` (TypeOrderProgress) to query the Order's associated Progress object.
 
@@ -493,28 +535,28 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
           "identifier": 0,
           "b_submission": true,
           "value_type": "Address",
-          "name": "order_address (Order object submitted at runtime)"
+          "name": "order_address"
         },
         {
           "identifier": 1,
           "b_submission": false,
           "value_type": "String",
           "value": "Completed",
-          "name": "Expected Completed node name (case-sensitive)"
+          "name": "expected_node"
         },
         {
           "identifier": 2,
           "b_submission": false,
           "value_type": "Address",
           "value": "myshop_merchant",
-          "name": "Authorized merchant address (prevents fund theft by unauthorized callers)"
+          "name": "merchant_address"
         },
         {
           "identifier": 3,
           "b_submission": false,
           "value_type": "Address",
           "value": "myshop_service_v2",
-          "name": "Expected service address (prevents cross-service fund theft)"
+          "name": "service_address"
         }
       ],
       "root": {
@@ -594,7 +636,7 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
 >
 > **Note**: The Guard `root` field directly specifies the GuardNode (e.g., `type: "logic_and"`), not wrapped in a `type: "node"` object.
 
-#### 5.2 Create Refund Guard (Customer Refund)
+#### 6.2 Create Refund Guard (Customer Refund)
 
 Create a Guard for customer refunds when order is cancelled.
 
@@ -618,21 +660,21 @@ Create a Guard for customer refunds when order is cancelled.
           "identifier": 0,
           "b_submission": true,
           "value_type": "Address",
-          "name": "order_address (Order object submitted at runtime)"
+          "name": "order_address"
         },
         {
           "identifier": 1,
           "b_submission": false,
           "value_type": "String",
           "value": "Cancelled",
-          "name": "Expected Cancelled node name (case-sensitive)"
+          "name": "expected_node"
         },
         {
           "identifier": 2,
           "b_submission": false,
           "value_type": "Address",
           "value": "myshop_service_v2",
-          "name": "Expected service address (prevents cross-service fund theft)"
+          "name": "service_address"
         }
       ],
       "root": {
@@ -717,13 +759,13 @@ Create a Guard for customer refunds when order is cancelled.
 
 ---
 
-### Step 6: Create Service (Store)
+### Step 7: Publish Service (Store)
 
-Create the Service object that represents your online store with products. This step binds all previously created components together.
+Bind all previously created components (machine, Guards, products, after-sales contact) to the Service DRAFT created in Step 5, then publish it. The Service address stays the same as the DRAFT, so the Guards' `service_address` table values remain valid.
 
-> **Important**: For Service creation, provide a complete configuration including machine, order_allocators with Guards, and products. The Service will be created and published in a single transaction.
+> **Important**: Provide a complete configuration including machine, order_allocators with Guards, and products. The Service is published in a single transaction. After publish, `machine`, `order_allocators`, and `arbitrations` become immutable.
 
-#### 6.1 Understanding Order Allocators
+#### 7.1 Understanding Order Allocators
 
 The `order_allocators` configuration defines how order payments are distributed:
 
@@ -747,9 +789,9 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 > **Design Decision — Refund Recipient**: When using `{ "GuardIdentifier": 0 }` in the refund allocation, the refund is sent to the **Order object's on-chain address** (not the customer's wallet address). This is by design: the Order object acts as an escrow holding the refunded payment at its own address. The customer subsequently claims the refund from the Order object via a separate withdraw operation. This two-step design ensures the refund is traceable on-chain and tied to the specific order, providing better dispute resolution and audit trail.
 
-#### 6.2 Create and Publish Service
+#### 7.2 Publish Service (bind machine + allocators + sales + um)
 
-**Prompt**: Create and publish a Service named "myshop_service_v2" with machine "myshop_machine_v2", order allocation using Guards, after-sales contact, and toy products.
+**Prompt**: Publish the Service DRAFT "myshop_service_v2" (created in Step 5) by binding machine "myshop_machine_v2", order allocation using the Guards, after-sales contact, and toy products. Note `object` is now a STRING reference to the existing draft, and `publish: true` is set.
 
 ```json
 {
@@ -757,16 +799,7 @@ The `order_allocators` configuration defines how order payments are distributed:
   "data": {
     "operation_type": "service",
     "data": {
-      "object": {
-        "name": "myshop_service_v2",
-        "type_parameter": "0x2::wow::WOW",
-        "permission": "myshop_permission_v2",
-        "tags": ["ecommerce", "toys", "store"],
-        "onChain": false,
-        "replaceExistName": true
-      },
-      "description": "MyShop - Top quality toys for children",
-      "location": "Online Store",
+      "object": "myshop_service_v2",
       "machine": "myshop_machine_v2",
       "order_allocators": {
         "description": "Order revenue allocation - merchant withdraw after completion",
@@ -802,7 +835,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://wowok.net/test/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -810,7 +843,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 50,
             "suspension": false,
-            "wip": "https://wowok.net/test/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -818,7 +851,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 30000000,
             "stock": 75,
             "suspension": false,
-            "wip": "https://wowok.net/test/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
@@ -842,7 +875,7 @@ The `order_allocators` configuration defines how order payments are distributed:
 
 ---
 
-### Step 7: Update Product Pricing (Optional)
+### Step 8: Update Product Pricing (Optional)
 
 To offer promotional pricing, update product prices using the `sales` operation with `op: "set"`:
 
@@ -863,7 +896,7 @@ To offer promotional pricing, update product prices using the `sales` operation 
             "price": 40000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://wowok.net/test/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
@@ -963,7 +996,7 @@ Customer creates an order by purchasing products from the Service.
             {
               "name": "Play Purse Set 35PCS",
               "stock": 1,
-              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+              "wip_hash": "<wip_hash captured from Step 1 query>"
             }
           ],
           "total_pay": {
@@ -1691,7 +1724,7 @@ Create a new order for testing the arbitration flow (if you don't have one alrea
             {
               "name": "Tree House Building Set",
               "stock": 1,
-              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+              "wip_hash": "<wip_hash captured from Step 1 query>"
             }
           ],
           "total_pay": {"balance": 30000000}
