@@ -18,7 +18,7 @@ This example sets `env.confirmed: true` on irreversible operations (e.g., `publi
 1. **Phase 1 — Preview**: Call the tool **without** `env.confirmed`. The server returns `{ status: "pending_confirmation", confirmation_text: "..." }` containing the full operation summary, risk assessment, and irreversible-action warnings.
 2. **Phase 2 — Confirm**: Review `confirmation_text` with the user. Only after explicit user approval, call the tool again **with** `env.confirmed: true` to actually execute the on-chain transaction.
 
-> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the two `publish: true` steps in this doc: the Machine publish (**Step 3**), which irreversibly locks the workflow definition (`nodes`/`pairs`/`forwards`), and the Service publish (**Step 10**), which irreversibly locks the `machine` and `order_allocators` fields.
+> Skipping Phase 1 means the user never sees the risk summary before gas is spent. Always preview first, then confirm. This is especially critical for the two `publish: true` steps in this doc: the Machine publish (**Step 3**), which irreversibly locks the workflow definition (`nodes`/`pairs`/`forwards`), and the Service publish (**Step 11**), which irreversibly locks the `machine` and `order_allocators` fields.
 
 > **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. The AI calls `wowok({ tool: "<sub-tool>", data: {<params>} })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](../../docs/response-format.md) for details.
 >
@@ -719,7 +719,70 @@ Create a Treasury object to aggregate signature service revenue (public funds fo
 
 ---
 
-## Step 8: Create Allocator Guard
+## Step 8: Create Contact Object (Customer-Service Channel)
+
+Create a Contact object to serve as the Service's encrypted customer-service channel. **Whenever `customer_required` is set (e.g. phone/email/shipping address), a Contact MUST be bound via the `um` field** — the customer's private information is delivered exclusively through end-to-end encrypted Messenger, which routes messages to the Contact bound as `um`. Without `um`, there is no channel to receive the customer's privacy-sensitive input and the SDK blocks the call with an invalid parameter error. The Contact uses the same Permission as the Service (`three_body_permission`) for unified governance.
+
+**Request**:
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "contact",
+    "data": {
+      "object": {
+        "name": "three_body_contact",
+        "permission": "three_body_permission",
+        "replaceExistName": true
+      },
+      "description": "Contact for Three-Body signature service customer info — end-to-end encrypted Messenger channel for delivery of phone/email/shipping_address collected via customer_required."
+    },
+    "env": {
+      "account": "three_body_author",
+      "network": "testnet",
+      "confirmed": true
+    }
+  }
+}
+```
+
+> **Why a Contact is required with customer_required (SDK-enforced hard linkage)**:
+> - `customer_required` tells the order flow which private-info labels to collect from the buyer (phone, email, shipping_address, etc.)
+> - Those labels are delivered to the merchant ONLY through the end-to-end encrypted Messenger protocol
+> - Messenger routes messages to the Service's bound Contact object (the `um` field)
+> - Without `um`, the collected private information would be silently dropped — there is no other delivery path
+> - The SDK's `checkCustomerRequiredNeedsUm()` validator in `service.ts` (L1226) runs on EVERY service operation that touches `customer_required` AND on `publish: true`, so the constraint cannot be bypassed by splitting into two calls
+
+> **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
+
+**Expected Result**:
+```json
+{
+  "result": {
+    "status": "success",
+    "data": {
+      "result": {
+        "type": "transaction",
+        "objectChanges": [
+          {
+            "type": "Contact",
+            "type_raw": "0x2::contact::Contact",
+            "object": "0x...",
+            "version": "...",
+            "owner": {"Shared": {"initial_shared_version": "..."}},
+            "change": "created"
+          }
+        ]
+      }
+    }
+  },
+  "schema": null
+}
+```
+
+---
+
+## Step 9: Create Allocator Guard
 
 Create a dedicated Guard for the order allocator that verifies the order belongs to this service. This is a **Level 3 scene-combined** Guard: no Signer binding is needed because the allocator uses `sharing.who=Entity(three_body_treasury)` — funds always flow to the fixed Treasury regardless of who triggers the allocation.
 
@@ -819,9 +882,9 @@ order.service == three_body_signature_service
 
 ---
 
-## Step 9: Configure Order Allocators
+## Step 10: Configure Order Allocators
 
-Set up fund allocation: 100% to the author's Treasury upon order completion.
+Set up fund allocation: 100% to the author's Treasury upon order completion. Also bind the Contact (Step 8) as `um` to enable the `customer_required` private-info delivery channel — the SDK blocks `customer_required` without a matching `um` (see Step 8 for the rationale).
 
 **Request**:
 ```json
@@ -849,7 +912,8 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
           }
         ]
       },
-      "customer_required": ["phone", "email", "shipping_address"]
+      "customer_required": ["phone", "email", "shipping_address"],
+      "um": "three_body_contact"
     },
     "env": {
       "account": "three_body_author",
@@ -860,9 +924,10 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 ```
 
 > **⚠️ Risk Elimination — Why this configuration is safe**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by `three_body_allocator_guard` (Step 8), which verifies `order.service == three_body_signature_service` before allocation proceeds.
+> - **R-C3-05 (Cross-service theft)**: Eliminated by `three_body_allocator_guard` (Step 9), which verifies `order.service == three_body_signature_service` before allocation proceeds.
 > - **R-C3-06 (Fund theft via Signer)**: Eliminated by `sharing.who = {"Entity": {"name_or_address": "three_body_treasury"}}` — funds always flow to the fixed Treasury address regardless of who triggers the allocation. An attacker cannot redirect funds to themselves even if they somehow bypass the Guard.
 > - **Previous unsafe pattern (DO NOT USE)**: The original design used `guard: "three_body_buy_guard"` (no `order.service` check) with `sharing.who = {"Signer": "signer"}` — this allowed anyone to trigger allocation of any order's funds to themselves.
+> - **SDK-enforced constraint (customer_required ⟶ um)**: `"customer_required"` is set alongside `"um": "three_body_contact"` in the SAME call. The SDK validator `checkCustomerRequiredNeedsUm()` in `service.ts` L1226 also runs on publish (L314), so splitting into two calls (e.g. `customer_required` now, `um` later) would still fail at publish time — they are both required before the Service goes live.
 
 **Expected Result**:
 ```json
@@ -891,7 +956,7 @@ Set up fund allocation: 100% to the author's Treasury upon order completion.
 
 ---
 
-## Step 10: Add Sales and Publish Service
+## Step 11: Add Sales and Publish Service
 
 Add sales items and publish the service to make it available for orders.
 
@@ -956,7 +1021,7 @@ Add sales items and publish the service to make it available for orders.
 
 ---
 
-## Step 11: Unpause Service
+## Step 12: Unpause Service
 
 Unpause the service to allow order creation.
 
@@ -1005,7 +1070,7 @@ Unpause the service to allow order creation.
 
 ---
 
-## Step 12: Verify Service Configuration
+## Step 13: Verify Service Configuration
 
 Query the service to verify all configurations.
 
@@ -1080,7 +1145,7 @@ Query the service to verify all configurations.
                 ]
               },
               "rewards": [],
-              "um": null,
+              "um": "0x...",
               "permission": "0x...",
               "cache_expire": 1234567890,
               "query_name": "three_body_signature_service"
@@ -1095,9 +1160,10 @@ Query the service to verify all configurations.
 ```
 
 > **Field Reference**:
-> - **`buy_guard`**, **`machine`**, **`permission`**: Return **on-chain object IDs** (not names). The on-chain data stores raw object IDs; resolving them back to local mark names requires a separate reverse lookup that is not performed by `onchain_objects` queries.
+> - **`buy_guard`**, **`machine`**, **`permission`**, **`um`**: Return **on-chain object IDs** (not names). The on-chain data stores raw object IDs; resolving them back to local mark names requires a separate reverse lookup that is not performed by `onchain_objects` queries.
 > - **`query_name`**: The original name string passed in the query request (here, `"three_body_signature_service"`). This is automatically populated by the SDK from the input `objects` array, so you can identify which queried name corresponds to which returned object.
-> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 8). This Guard verifies `order.service == three_body_signature_service` (R-C3-05 protection).
+> - **`um`**: The on-chain object ID of `three_body_contact` (created in Step 8). The SDK validator `checkCustomerRequiredNeedsUm()` requires this whenever `customer_required` is non-empty — without a Contact the Service has no encrypted channel to receive customer private info.
+> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 9). This Guard verifies `order.service == three_body_signature_service` (R-C3-05 protection).
 > - **`order_allocators.allocators[].sharing[].who`**: `{"Entity": "0x..."}` indicates funds flow to the fixed Treasury object (`three_body_treasury` from Step 7). The address is the Treasury's on-chain object ID. This eliminates R-C3-06 (fund theft via Signer) because the recipient is fixed regardless of caller.
 > - **`order_allocators.allocators[].sharing[].mode`**: `1` is the numeric enum for `Rate` mode (input accepts the string `"Rate"`, output returns the numeric `1`).
 > - **`order_allocators.allocators[].fix`** and **`max`**: Additional fields returned on-chain (default `"0"` and `null` respectively) that are not part of the input schema but are present in the on-chain data structure.
@@ -1154,7 +1220,7 @@ The author (`three_body_author`) should be able to purchase the service.
 }
 ```
 
-> **Amount Format**: `"888WOW"` is the display format — the Fund Processing Layer converts it to `888000000000` smallest units (WOW has 9 decimals) before submission. The raw integer `888000000000` is equally valid. The order pays exactly the sale price set in Step 10.
+> **Amount Format**: `"888WOW"` is the display format — the Fund Processing Layer converts it to `888000000000` smallest units (WOW has 9 decimals) before submission. The raw integer `888000000000` is equally valid. The order pays exactly the sale price set in Step 11.
 
 **Expected Result**:
 ```json
@@ -1435,7 +1501,7 @@ The author completes the signature.
 
 ### Fund Allocation: Release the 888 WOW Payment to the Treasury
 
-Once the Progress reaches the final node (`Signature Completed`), the order is fulfilled and the 888 WOW payment held by `three_body_allocation` can be distributed. The Service's `order_allocators` (Step 9) routes 100% to `three_body_treasury` when `three_body_allocator_guard` (Step 8) verifies `order.service == three_body_signature_service`.
+Once the Progress reaches the final node (`Signature Completed`), the order is fulfilled and the 888 WOW payment held by `three_body_allocation` can be distributed. The Service's `order_allocators` (Step 10) routes 100% to `three_body_treasury` when `three_body_allocator_guard` (Step 9) verifies `order.service == three_body_signature_service`.
 
 #### (a) Trigger the Allocation (`alloc_by_guard`)
 
@@ -1690,6 +1756,7 @@ This example demonstrates:
 | Machine | three_body_machine |
 | Service | three_body_signature_service |
 | Treasury | three_body_treasury |
+| Contact (um) | three_body_contact (required for customer_required — SDK-enforced customer_required ⟶ um linkage) |
 | Allocator Guard | three_body_allocator_guard (Level 3 scene-combined, R-C3-05/R-C3-06 safe) |
 | Order | three_body_order |
 | Allocation | three_body_allocation |
@@ -1739,7 +1806,8 @@ Each node transition requires the author's confirmation, ensuring accountability
    - Service (unpublished)
    - Guards (Buy Guard for purchase control; Allocator Guard needs Service address for `order.service` verification)
    - Treasury (uses same Permission as Service for unified governance)
-   - Configure Service (add machine, buy_guard, order_allocators with allocator guard + Entity(Treasury))
+   - Contact (um) — REQUIRED before setting customer_required (SDK-enforced: customer_required ⟶ um hard linkage; validator also re-runs at publish time)
+   - Configure Service (add machine, buy_guard, order_allocators with allocator guard + Entity(Treasury); set customer_required **together with** um in the same or prior call)
    - Publish Service (LAST - once published, many changes are blocked)
 
 3. **Treasury-First Fund Flow**: Always route merchant revenue through a Treasury object using `sharing.who = {"Entity": {"name_or_address": "treasury_name"}}` instead of `{"Signer": "signer"}`. This eliminates R-C3-06 (critical fund theft via Signer) because funds flow to a fixed recipient regardless of who triggers the allocation. Combined with an allocator Guard that verifies `order.service == this_service` (R-C3-05 protection), the fund allocation becomes inherently safe.
@@ -1751,8 +1819,13 @@ Each node transition requires the author's confirmation, ensuring accountability
 
 5. **Use `no_cache: true` for Sequential Operations**: When performing multiple operations on the same object in sequence (especially Progress workflow advancement), always set `no_cache: true` in the `env` to ensure the SDK reads the latest on-chain state.
 
-6. **Query Toolkit is Your Best Friend**: Use queries constantly to verify objects exist, check configurations, debug issues, and confirm state changes.
+6. **customer_required ⟶ um (Contact) Hard Linkage (SDK-enforced)**: Whenever you set `customer_required` (e.g. `["phone", "email", "shipping_address"]`), you MUST also bind a Contact object via `um` in the SAME or a prior Service call. The SDK's `checkCustomerRequiredNeedsUm()` validator in `ts-sdk/packages/wowok/src/w/call/service.ts` (L1226) runs at TWO points:
+   - When `customer_required` is present in the current operation `data` (immediate block, L307)
+   - When `publish: true` is set (re-verifies against the accumulated Service state, L314)
+   This means splitting the two calls (set `customer_required` first, add `um` later) is NOT safe — the publish-time re-check would still block. Always create the Contact first, then set both `customer_required` and `um` together.
 
-7. **Object IDs vs Names in Responses**: On-chain query responses return **object IDs** (e.g., `0x8202...`) for cross-object references like `buy_guard`, `machine`, `permission`. The `query_name` field in the response echoes back the original query input name. To resolve object IDs back to local mark names, use `query_toolkit` with `query_type: "local_names"`.
+7. **Query Toolkit is Your Best Friend**: Use queries constantly to verify objects exist, check configurations, debug issues, and confirm state changes.
 
-8. **Information Injection in Transaction Responses**: Mutation/creation operations return ALL objects affected by the transaction (including side effects like `TableItem_EntityLinker` and `TableItem_ProgressHistory`), not just the primary target. This is a deliberate design for transparency. The return order reflects the transaction's execution order.
+8. **Object IDs vs Names in Responses**: On-chain query responses return **object IDs** (e.g., `0x8202...`) for cross-object references like `buy_guard`, `machine`, `permission`, `um`. The `query_name` field in the response echoes back the original query input name. To resolve object IDs back to local mark names, use `query_toolkit` with `query_type: "local_names"`.
+
+9. **Information Injection in Transaction Responses**: Mutation/creation operations return ALL objects affected by the transaction (including side effects like `TableItem_EntityLinker` and `TableItem_ProgressHistory`), not just the primary target. This is a deliberate design for transparency. The return order reflects the transaction's execution order.
