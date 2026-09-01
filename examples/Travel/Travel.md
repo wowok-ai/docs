@@ -225,7 +225,7 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
           {
             "name": "Condition",
             "description": "Weather condition policy for activity dates",
-            "write_guard": [],
+            "write_guard": [{ "guard": "weather_write_guard" }],
             "id_from": "None",
             "value_type": "String"
           }
@@ -243,6 +243,8 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
 ```
 
 > **Note**: `onChain: true` is required here because `weather_repo` is created by the `weather_provider` account, but its name will be referenced in the Guard table (Step 3.1) by the `travel_provider` account. Without `onChain: true`, the name is stored locally only on `weather_provider`'s device and cannot be resolved by `travel_provider`. When `onChain: true` is set, the name is published on-chain and becomes publicly visible, allowing cross-account name resolution.
+>
+> The `write_guard` in the "Condition" policy points to `weather_write_guard` (created above). Because `id_from: "None"` lets the writer choose data ids, the contract mandates a Guard to authorize writes. `data_add` in Step 0.4 needs no Guard submission — the Guard is always-true with no submission fields.
 
 ### 0.4 Add Weather Data
 
@@ -1117,11 +1119,7 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
   "data": {
     "operation_type": "service",
     "data": {
-      "object": {
-        "name": "travel_service",
-        "permission": "travel_permission",
-        "replaceExistName": true
-      },
+      "object": "travel_service",
       "description": "Iceland travel service: Blue Lagoon SPA + Glacier Ice Scooting.",
       "machine": "travel_machine",
       "sales": {
@@ -1199,6 +1197,8 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
   }
 }
 ```
+
+> **Note**: `object` uses a plain string reference (`"travel_service"`) so this call **configures the draft Service created in Step 2.5**. Passing a full object definition block (`{name, permission, replaceExistName}`) here would create a brand-new Service object instead — orders and allocator Guard bindings pointing at the old draft would then fail validation.
 
 **order_allocators Field Reference**:
 
@@ -1542,21 +1542,17 @@ The allocation Guard requires the Order ID as a submission (identifier: 0). Quer
 
 ```json
 {
-  "tool": "onchain_operations",
+  "tool": "query_toolkit",
   "data": {
-    "operation_type": "progress",
-    "data": {
-      "object": "alice_travel_progress"
-    },
-    "env": {
-      "network": "testnet",
-      "no_cache": true
-    }
+    "query_type": "onchain_objects",
+    "objects": ["alice_travel_progress"],
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
 
-> **Note**: The response includes a `task` field containing the Order object ID. Copy this value for the allocation submission.
+> **Note**: Use `query_toolkit` (not `onchain_operations`) for read-only lookups — queries consume no gas and never mutate state. The response includes a `task` field containing the Order object ID. Copy this value for the allocation submission.
 
 ### 8.2 Execute Allocation (Merchant Victory Path)
 
@@ -1669,16 +1665,12 @@ After allocation, query the Allocation and Payment objects to verify the fund di
 
 ```json
 {
-  "tool": "onchain_operations",
+  "tool": "query_toolkit",
   "data": {
-    "operation_type": "allocation",
-    "data": {
-      "object": "alice_travel_allocation"
-    },
-    "env": {
-      "network": "testnet",
-      "no_cache": true
-    }
+    "query_type": "onchain_objects",
+    "objects": ["alice_travel_allocation"],
+    "network": "testnet",
+    "no_cache": true
   }
 }
 ```
