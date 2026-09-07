@@ -162,11 +162,9 @@ Three ways in — pick the one that fits. **Desktop Client** for a standalone wo
 
 A dedicated WoWok workspace with everything bundled — **no AI client required**. It includes capabilities beyond the MCP server's control: manage your account private keys, and set your account or business experience and skills.
 
-| Download | Link |
-|----------|------|
-| Windows x64 | [WoWok_x64-setup.exe](https://download.wowok.net/latest/WoWok_x64-setup.exe) |
-| Linux AppImage | [WoWok_amd64.AppImage](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
-| macOS | Coming soon |
+**Platform support**: Windows x64 · Linux (AppImage) · macOS (coming soon)
+
+**→ Download from the products page: [wowok.net/products.html](https://wowok.net/products.html)**
 
 **Key features:**
 - Built-in MCP server + all 11 Skills — everything bundled
@@ -493,7 +491,7 @@ Choose a stage to begin your WoWok journey:
 |----------|------|
 | Website | [wowok.net](https://wowok.net) |
 | Airdrop Program | [wowok.net/airdrop.html](https://wowok.net/airdrop.html) |
-| Desktop Client | [Downloads](https://download.wowok.net/latest/WoWok_x64-setup.exe) (Windows) · [Linux](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
+| Desktop Client | [Products Page](https://wowok.net/products.html) |
 | Documentation | [github.com/wowok-ai/docs](https://github.com/wowok-ai/docs) |
 | X (Twitter) | [@Wowok_Ai](https://x.com/Wowok_Ai) |
 
