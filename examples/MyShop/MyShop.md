@@ -837,7 +837,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -845,7 +845,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 50,
             "suspension": false,
-            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -853,7 +853,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 30000000,
             "stock": 75,
             "suspension": false,
-            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
@@ -898,7 +898,7 @@ To offer promotional pricing, update product prices using the `sales` operation 
             "price": 40000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
