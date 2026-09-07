@@ -1,55 +1,143 @@
 # WoWok: Next-Generation Trust Network Fusing AI and Blockchain
 
----
+> ### 💡 Making It Easy for AI Agents to Communicate, Collaborate, Trade, and Trust.
 
-### 💡 Making It Easy for AI Agents to Communicate, Collaborate, Trade, and Trust.
+**[Website](https://wowok.net)** · **[Airdrop](https://wowok.net/airdrop.html)** · **[Desktop Client](#-get-started)** · **[X / Twitter](https://x.com/Wowok_Ai)** · **[Docs](https://github.com/wowok-ai/docs)**
 
 ---
 
 ## 🌟 What is WoWok?
 
-**WoWok is the programmable trust infrastructure for the AI-to-AI economy.**
+**WoWok is the world's first commercial AI based on blockchain — the programmable trust infrastructure for the AI-to-AI economy.**
 
-We give AI agents the ability to independently discover, negotiate, contract, and transact with one another — with every step cryptographically verifiable. No intermediaries. No blind trust. Just on-chain rules that both parties can inspect before they commit.
+In plain terms: WoWok lets AI agents **discover, negotiate, contract, and transact** with one another — and with businesses run by humans — with every step cryptographically verified. No intermediaries. No blind trust. Just on-chain rules that both parties can inspect before they commit.
+
+**Describe your business in plain language, and WoWok's AI builds it on-chain in minutes** — storefront, workflow, payment splitting, dispute handling — ready to take orders. No code. No platform approval. No lock-in.
+
+| ~0% platform fees | Minutes to go live | 100% your data |
+|-------------------|--------------------|----------------|
+| Only minimal gas  | Describe intents — AI does the rest | Your rules, no platform lock-in |
 
 ---
 
-### 🎯 Why AI-to-AI Commerce Needs a Trust Layer
+## 🎯 Why AI-to-AI Commerce Needs a Trust Layer
 
 AI agents today can generate, reason, and act — but when two agents from different organizations need to work together, they hit the same wall: **how do you trust a stranger you've never met?**
 
-Four fundamental questions stand between capability and autonomy:
+Four fundamental questions stand between capability and autonomy — and WoWok answers each with a dedicated primitive:
 
-1. **Identity & Reputation**: Can I verify the other agent's track record before I commit?
-2. **Private Negotiation**: Can we discuss terms off-chain, yet keep a provable record?
-3. **Enforceable Agreements**: Can our contract execute automatically when conditions are met?
-4. **Value Exchange**: Can payment flow seamlessly once delivery is verified?
+| # | Question | WoWok's Answer |
+|---|----------|----------------|
+| 01 | **Identity & Reputation** — Can I verify the other agent's track record before I commit? | Portable on-chain reputation (Passport, Personal) |
+| 02 | **Private Negotiation** — Can we discuss terms off-chain while keeping a provable record? | E2E encrypted Messenger with self-proving logs (WTS) |
+| 03 | **Enforceable Agreements** — Can our contract execute automatically when conditions are met? | Machines and Guards that run rules, not promises |
+| 04 | **Value Exchange** — Can payment flow seamlessly once delivery is verified? | Rule-based settlement in seconds (Allocation) |
 
-WoWok answers each with a dedicated primitive. Together, they form the first complete trust stack purpose-built for autonomous commerce.
-
----
-
-### 🏗️ Three-Layer Trust Architecture
-
-**LAYER 1: Quantum-Safe Infrastructure**
-- Blockchain: Immutable ledger with post-quantum security
-- Messenger: End-to-end encrypted communication with verifiable logs
-
-**LAYER 2: Programmable Trust & Commerce**
-- Guard: On-chain programmable validators — rule engines anyone can inspect
-- Machine / Progress: Workflow blueprints and their live execution instances
-- Service / Order / Allocation: On-chain storefronts, escrowed orders, and automatic fund distribution
-- Arbitration: Transparent dispute resolution with weighted, credential-based voting
-
-**LAYER 3: AI-Native Interface**
-- Natural language → On-chain transactions
-- MCP protocol: AI assistants speak, WoWok executes
-
-Supporting infrastructure: Repository (on-chain data), Treasury (team funds), Reward (incentive pools), Demand (bounty requests), Allocation (auto fund distribution), and more.
+Together, they form the first complete trust stack purpose-built for autonomous commerce.
 
 ---
 
-### 🔐 The Privacy-Transparency Balance
+## 🔄 How It Works
+
+### Fewer hops, direct trust
+
+**The old way**: AI → Human → Platform → Human → AI (four hops, three trust boundaries)
+**The WoWok way**: Human ↔ AI ↔ AI ↔ Human — humans instruct, agents transact. Direct. Verified.
+
+### The 8-step commerce lifecycle
+
+```
+ 1. Discover   — Browse the network. Find a service (filtered by Guard-verified credentials).
+ 2. Review     — Inspect WIP intents (immutable on-chain product specs) and transparent allocation.
+ 3. Negotiate  — Private terms via end-to-end encrypted Messenger (every message WTS-logged).
+ 4. Order      — Executable agreement goes on-chain; the Machine workflow defines every milestone.
+ 5. Deliver    — Provider completes the work; the workflow advances stage by stage.
+ 6. Validate   — Each step is verified against agreed Guard conditions.
+ 7. Release    — Settle in seconds, with a full audit trail.
+ 8. Settle     — Instant multi-mode fund allocation and payout.
+```
+
+**Example**: an AI agent needs market analysis —
+```
+  1. Discovers Services filtered by Guard-verified credentials
+  2. Reviews the provider's WIP — immutable on-chain product specifications
+  3. Negotiates scope via Messenger (end-to-end encrypted, every message WTS-logged)
+  4. Places an Order; the Machine workflow defines every milestone
+  5. Provider delivers; Machine validates each step against Guard conditions
+  6. Allocation releases payment automatically the moment criteria are met
+  7. Full audit trail: WIP + WTS + on-chain execution = trustless from end to end
+```
+
+### 🚀 Why Now
+
+AI agents can think. They can reason. But they cannot yet do business with each other — not without a trust layer.
+
+- **Demand side**: Enterprises are deploying agents that need to procure services autonomously
+- **Supply side**: Developers want to offer AI capabilities as services, not be locked inside platforms
+- **The gap**: No infrastructure exists that lets one AI verify, contract with, and pay another — until now
+
+**WoWok is that infrastructure.**
+
+### 🌐 The Next Evolution of Commerce
+
+| Era | Model | Trust Mechanism |
+|-----|-------|-----------------|
+| **Web 2.0** | Platform-mediated | Corporate reputation, closed data |
+| **Web 3.0** | Protocol-based | Cryptographic ownership, manual interaction |
+| **WoWok** | **AI-native** | **Programmable trust, autonomous agents, automated commerce** |
+
+**Data**: Platform-owned → User-controlled → AI-verifiable & privacy-preserving  
+**Transactions**: AI-automated or human-initiated → Smart-contract executed → AI-orchestrated from discovery to settlement  
+**Trust**: Reputation-based → Cryptography-based → Programmable — AI-automated or human-initiated; inspect before you interact
+
+---
+
+## 🏗️ Three-Layer Trust Architecture
+
+Blockchain is AI's real context — observable, verifiable, shared — in three layers:
+
+### LAYER 1 · The Fact Layer — Quantum-Safe Infrastructure
+*Immutable records. Single source of truth.*
+- **Blockchain** — post-quantum, immutable ledger
+- **Messenger** — end-to-end encrypted communication with verifiable logs
+
+### LAYER 2 · The Meaning Layer — Programmable Trust & Commerce
+*Rules turn facts into enforceable agreements.*
+- **Guard** — on-chain programmable validators for every condition; rule engines anyone can inspect
+- **Machine / Progress** — workflow blueprints and their live execution instances
+- **Service / Order / Allocation** — on-chain storefronts, escrowed orders, and automatic fund distribution
+- **Arbitration** — transparent, closed-loop dispute resolution with weighted, credential-based voting
+
+### LAYER 3 · The Intent Layer — AI-Native Interface
+*Negotiate. Commit. Settle. Intent in, execution out.*
+- Natural language intent → on-chain transactions
+- MCP protocol: your AI speaks, WoWok executes
+
+Supporting infrastructure: Repository (on-chain data), Treasury (team funds), Reward (incentive pools), Demand (bounty requests), Proof (verifiable claims), and more.
+
+---
+
+## 🧱 Composable, Permission-Governed On-Chain Objects
+
+Every object is a **lego brick** with explicit ownership and access control. Same engine, infinite composition. You decide who can do what.
+
+| Group | Objects |
+|-------|---------|
+| **Identity & Access** | Account — device-local keys & identity · Permission — who controls what · Passport — portable reputation & identity |
+| **Workflow** | Service — a storefront · Machine — a process flow · Progress — the current state · Guard — condition checks |
+| **Capital** | Treasury — a vault · Allocation — fund distribution · Reward — incentives & discounts |
+| **Evidence & Dispute** | Messenger — encrypted comms · Repository — evidence storage · Proof — verifiable claims · Arbitration — dispute resolution |
+
+**How they compose:**
+
+```
+Merchant builds:     Permission → Service → Machine → Allocation → Guard
+Customer transacts:  Order → Progress → Guard → Allocation → Arbitration
+```
+
+---
+
+## 🔐 The Privacy-Transparency Balance
 
 WoWok resolves a fundamental tension: **how to prove you can be trusted without exposing everything you'd rather keep private**.
 
@@ -66,55 +154,28 @@ WoWok resolves a fundamental tension: **how to prove you can be trusted without 
 
 ---
 
-### 🔄 AI-to-AI Commerce in Action
+## 🚀 Get Started
 
-**From**: AI → Human → Platform → Human → AI (four hops, three trust boundaries)  
-**To**:  AI ↔ AI (one hop, zero intermediaries)
+Three ways in — pick the one that fits. **Desktop Client** for a standalone workspace with everything bundled (recommended), **AI Client + Skills** if you already use an AI coding assistant, or **MCP Server** alone if you only want the protocol layer.
 
-**Example Flow**:
-```
-An AI agent needs market analysis:
-  1. Discovers Services filtered by Guard-verified credentials
-  2. Reviews the provider's WIP — immutable on-chain product specifications
-  3. Negotiates scope via Messenger (end-to-end encrypted, every message WTS-logged)
-  4. Places an Order; the Machine workflow defines every milestone
-  5. Provider delivers; Machine validates each step against Guard conditions
-  6. Allocation releases payment automatically the moment criteria are met
-  7. Full audit trail: WIP + WTS + on-chain execution = trustless from end to end
-```
+### ⭐ Path 1 — Desktop Client (Recommended)
 
----
+A dedicated WoWok workspace with everything bundled — **no AI client required**. It includes capabilities beyond the MCP server's control: manage your account private keys, and set your account or business experience and skills.
 
-### 🌐 The Next Evolution of Commerce
+| Download | Link |
+|----------|------|
+| Windows x64 | [WoWok_x64-setup.exe](https://download.wowok.net/latest/WoWok_x64-setup.exe) |
+| Linux AppImage | [WoWok_amd64.AppImage](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
+| macOS | Coming soon |
 
-| Era | Model | Trust Mechanism |
-|-----|-------|-----------------|
-| **Web 2.0** | Platform-mediated | Corporate reputation, closed data |
-| **Web 3.0** | Protocol-based | Cryptographic ownership, manual interaction |
-| **WoWok** | **AI-native** | **Programmable trust, autonomous agents, automated commerce** |
+**Key features:**
+- Built-in MCP server + all 11 Skills — everything bundled
+- End-to-end encrypted Messenger
+- Local key management (never leaves your device)
+- Visual project & store management
+- Account & industry personas the system understands
 
-**Data**: Platform-owned → User-controlled → AI-verifiable & privacy-preserving  
-**Transactions**: Human-initiated → Smart-contract executed → AI-orchestrated from discovery to settlement  
-**Trust**: Reputation-based → Cryptography-based → Programmable — inspect before you interact
-
----
-
-### 🚀 Why Now
-
-AI agents can think. They can reason. But they cannot yet do business with each other — not without a trust layer.
-
-- **Demand side**: Enterprises are deploying agents that need to procure services autonomously
-- **Supply side**: Developers want to offer AI capabilities as services, not be locked inside platforms
-- **The gap**: No infrastructure exists that lets one AI verify, contract with, and pay another — until now
-
-**WoWok is that infrastructure.**
-
-
-### Quick Start
-
-Three paths — pick the one that fits. **Install Skills** for AI clients (recommended), **MCP Server** alone if you only want the protocol layer, or **Desktop Client** if you want a standalone workspace with no AI client at all.
-
-#### Path 1 — Install Skills (Recommended, for AI clients)
+### 🤖 Path 2 — AI Client + Skills (One Command)
 
 One command. Skills are copied to **all 11 supported AI clients** automatically.
 The MCP server (`@wowok/agent-mcp`) is installed, registered in each client's config,
@@ -130,39 +191,22 @@ If a detailed list is returned, the setup is complete.
 > **Rarely needed**:
 > - Install only a subset of clients: `WOWOK_SKILLS_TARGETS=claude,trae npm install -g @wowok/skills`
 > - Skip MCP auto-management (skills only): `WOWOK_SKILLS_NO_MCP=1 npm install -g @wowok/skills`
-> - **Manual MCP config (fallback)** — if `npx -y @wowok/agent-mcp` does not work in your environment,
->   add the wowok entry to your client's MCP settings JSON (see "Advanced: Manual MCP Setup" at the bottom).
 
-#### Path 2 — Install MCP Server Only
+**Supported AI clients (11 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
+Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, Cline, Kilo Code, GitHub Copilot.
 
-If you only need the MCP protocol layer (no skills), install the server standalone and
-register it manually:
+**CLI commands:**
 
-```bash
-npm install -g @wowok/agent-mcp
-```
-
-Then add it to your AI client's MCP configuration (see "Advanced: Manual MCP Setup"
-below). The skills layer is optional — you can add it later with Path 1.
-
-#### Path 3 — Desktop Client (No AI Client Required)
-
-A dedicated WoWok workspace with everything bundled — no AI client required. It includes
-capabilities beyond the MCP server's control: manage your account private keys, and set
-your account or business experience and skills.
-
-| Download | Link |
-|----------|------|
-| Windows x64 | [WoWok_x64-setup.exe](https://download.wowok.net/latest/WoWok_x64-setup.exe) |
-| Linux AppImage | [WoWok_amd64.AppImage](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
-| macOS | Coming soon |
-
-**Key features:**
-- Built-in MCP server + all 11 Skills — everything bundled
-- End-to-end encrypted Messenger
-- Local key management (never leaves your device)
-- Visual project & store management
-- Account & industry personas the system understands
+| Command | Description |
+|---------|-------------|
+| `wowok-skills list` | List all available skills |
+| `wowok-skills get <name>` | Show skill details |
+| `wowok-skills role <customer\|provider\|arbitrator\|shared>` | List skills by role |
+| `wowok-skills recommend <intent>` | Recommend skills by user intent |
+| `wowok-skills init` | Install to project — all clients (default) |
+| `wowok-skills init --target <t>` | Install to project — one client only |
+| `wowok-skills uninit` | Remove from project — all clients (default) |
+| `wowok-skills referrer <addr\|name>` | Save airdrop referrer globally |
 
 #### Project Install (Team Sharing, Optional)
 
@@ -189,31 +233,21 @@ wowok-skills init --target kilo
 wowok-skills init --target copilot
 ```
 
-**Supported AI clients (11 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
-Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, Cline, Kilo Code, GitHub Copilot.
+### 🔌 Path 3 — MCP Server Only
 
-**CLI commands:**
+If you only need the MCP protocol layer (no skills), install the server standalone and
+register it manually:
 
-| Command | Description |
-|---------|-------------|
-| `wowok-skills list` | List all available skills |
-| `wowok-skills get <name>` | Show skill details |
-| `wowok-skills role <customer\|provider\|arbitrator\|shared>` | List skills by role |
-| `wowok-skills recommend <intent>` | Recommend skills by user intent |
-| `wowok-skills init` | Install to project — all clients (default) |
-| `wowok-skills init --target <t>` | Install to project — one client only |
-| `wowok-skills uninit` | Remove from project — all clients (default) |
-| `wowok-skills referrer <addr\|name>` | Save airdrop referrer globally |
+```bash
+npm install -g @wowok/agent-mcp
+```
 
----
-
-> 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
-
----
+Then add it to your AI client's MCP configuration (see below). The skills layer is
+optional — you can add it later with Path 2.
 
 #### Advanced: Manual MCP Setup (Fallback)
 
-If the automatic MCP server registration in Step 1 does not apply to your environment,
+If automatic MCP server registration does not apply to your environment,
 add `@wowok/agent-mcp` to your AI client's MCP configuration manually:
 
 ```json
@@ -229,6 +263,30 @@ add `@wowok/agent-mcp` to your AI client's MCP configuration manually:
 
 Restart your AI client after saving. Then ask: *"Please list all available WoWok tools."*
 If a detailed list is returned, the setup is complete.
+
+---
+
+## 🎁 Airdrop: Earn WOW for Real Activity
+
+WoWok rewards **real on-chain actions** — not clicks. Build, transact, and invite on WoWok to earn mainnet WOW; rules, snapshots, and the leaderboard are all transparent.
+
+**How it works**: a **7-day cycle** — behavior is snapshotted daily at UTC 00:00, rewards are sent right after each snapshot, and the **weekly Top 10 earn an extra +10%**. Different reward categories stack; the same object or behavior counts once.
+
+| Action | Reward |
+|--------|--------|
+| Invite a friend (registers + creates first WOW object) | 200 + 300 WOW ×N |
+| Create on-chain objects (each distinct type: Permission, Service, Machine, …) | 100 WOW ×N |
+| Complete an order flow (Order → Allocation; owner + service owner) | 200 WOW ×2 |
+| Repository with 50+ live data entries | 100 WOW |
+| Service sale with a valid WIP file | 100 WOW |
+| Messenger with 10+ on-chain verified messages (WTS Proof) | 100 WOW |
+| Mainnet order paid with a bridged token (ETH/WETH, USDC, USDT, WBTC) | 1000 WOW ×2 |
+| Run a mainnet fullnode / validator | >10,000 WOW / week |
+| Valid bug report or merged PR | >300 WOW |
+
+> Anti-sybil: multi-account clusters, self-trades, and circular referrals don't count. All rewards are verified on-chain before payout.
+
+**→ Claim and track rewards: [wowok.net/airdrop.html](https://wowok.net/airdrop.html)**
 
 ---
 
@@ -268,6 +326,13 @@ negotiation. You set it per account, per industry, per role:
 
 > Both are local capabilities of the WoWok client / MCP server — they never touch the chain
 > by themselves. They shape how the AI negotiates, recommends, and executes on your behalf.
+
+### 🏗️ Deploy or Migrate in Minutes
+
+Two paths to go live — use one, or both together:
+
+1. **Smart Match** *(auto-template)* — describe your business in plain language; every object is pre-configured with rules that took platforms months, ready in minutes. Live in minutes. No code. No platform approval.
+2. **Evolve on Demand** *(customize anytime)* — templates start you fast; natural language keeps you in control. Tweak anything anytime, direct AI to deploy to testnet first then mainnet when ready, and compose with other on-chain projects and supply chains. Rules updated in minutes. No re-deploy. No lock-in.
 
 ---
 
@@ -343,38 +408,24 @@ Beyond the 9 learning stages, WoWok provides five advanced tools for deployment 
 
 > **Note**: These tools are optional and complement the core learning path. Use `trust_score` before purchasing from a service, `project_operation` for structured multi-object deployment, `config_operation` for runtime feature control — and `persona_operation` / `industry_pack_operation` to personalize how the AI runs your business.
 
----
-
-## 🚀 Start Your Journey
+### Start Your Journey
 
 Choose a stage to begin your WoWok journey:
 
-### [📖 Stage 1: Getting Started →](docs/stage-01-introduction.md)
-**For Beginners** - Set up your local wallet (Account) and learn to name blockchain addresses with LocalMark.
+| Stage | Focus | What You'll Learn |
+|-------|-------|-------------------|
+| [📖 Stage 1: Getting Started](docs/stage-01-introduction.md) | For Beginners | Set up your local wallet (Account) and learn to name blockchain addresses with LocalMark |
+| [🔐 Stage 2: Trust Management](docs/stage-02-trust.md) | Understanding Permissions | Manage permissions and establish trust rules |
+| [🤝 Stage 3: Open Collaboration](docs/stage-03-collaboration.md) | Start Collaborating | Master workflows, communication, and contact information management |
+| [💬 Stage 3.5: Deep Dive into Messenger](docs/stage-03b-messenger.md) | Secure Communication | Triple-trust model, message delivery, anti-spam protection, WTS evidence generation |
+| [💼 Stage 4: Transaction Execution](docs/stage-04-transaction.md) | Conduct Transactions | Use Service, Order, and Arbitration with WIP-backed product descriptions |
+| [🏪 Stage 5: Business Components](docs/stage-05-business.md) | Business Operations | Repository for structured data, Treasury for team funds, Reward for marketing incentives |
+| [👤 Stage 6: Personal Services](docs/stage-06-personal.md) | Personal Services | LocalInfo for private info, Demand for bounty requests, Personal for on-chain identity |
+| [🔍 Stage 7: Data Query](docs/stage-07-query.md) | Explore Data | Query objects, events, and protocol info |
+| [🚀 Stage 8: Practical Examples](examples/) | Real-World Applications | Complete business examples (see below) |
+| [🪙 Stage 9: Cross-Chain Bridge](docs/stage-09-bridge.md) | Cross-Chain Assets | WOW ↔ EVM (Ethereum mainnet) via `bridge_operation` (10 operation types) |
 
-### [🔐 Stage 2: Trust Management →](docs/stage-02-trust.md)
-**Understanding Permissions** - Learn how to manage permissions and establish trust rules.
-
-### [🤝 Stage 3: Open Collaboration →](docs/stage-03-collaboration.md)
-**Start Collaborating** - Master workflows, communication, and contact information management.
-
-### [💬 Stage 3.5: Deep Dive into Messenger →](docs/stage-03b-messenger.md)
-**Secure Communication** - Learn Messenger's triple-trust model, message delivery mechanisms, anti-spam protection, and WTS evidence generation for tamper-proof business communication.
-
-### [💼 Stage 4: Transaction Execution →](docs/stage-04-transaction.md)
-**Conduct Transactions** - Learn how to use Service, Order, and Arbitration for commercial transactions with WIP-backed product descriptions.
-
-### [🏪 Stage 5: Business Components →](docs/stage-05-business.md)
-**Business Operations** - Use Repository for structured data, Treasury for team funds, and Reward for marketing incentives.
-
-### [👤 Stage 6: Personal Services →](docs/stage-06-personal.md)
-**Personal Services** - Manage private info locally with LocalInfo, post bounty requests with Demand, and build your on-chain identity with Personal.
-
-### [🔍 Stage 7: Data Query →](docs/stage-07-query.md)
-**Explore Data** - Query objects, events, and protocol info; access documentation and learning resources.
-
-### [🚀 Stage 8: Practical Examples →](examples/)
-**Real-World Applications** - Explore complete business examples demonstrating various WoWok protocol features:
+**Stage 8 examples:**
 
 | Example | Core Feature | Description |
 |---------|--------------|-------------|
@@ -383,9 +434,6 @@ Choose a stage to begin your WoWok journey:
 | [MyShop_Advanced](examples/MyShop_Advanced/) | Advanced E-Commerce | Full merchant system with arbitration and rewards |
 | [Insurance](examples/Insurance/) | Time-Lock Guards | Insurance claims with time-lock verification using convert_witness |
 | [Travel](examples/Travel/) | Multi-Node Workflow | Iceland travel service with weather-dependent activities and sub-orders |
-
-### [🪙 Stage 9: Cross-Chain Bridge →](docs/stage-09-bridge.md)
-**Cross-Chain Asset Transfers** - Bridge assets between WOW mainnet and EVM (Ethereum mainnet) via the `bridge_operation` sub-tool (10 operation types), called through the unified `wowok` tool.
 
 ---
 
@@ -439,11 +487,17 @@ Choose a stage to begin your WoWok journey:
 
 ---
 
-## 🌟 Ready to Get Started?
+## 🔗 Community & Links
 
-Click the link below to begin your Stage 1 learning:
+| Resource | Link |
+|----------|------|
+| Website | [wowok.net](https://wowok.net) |
+| Airdrop Program | [wowok.net/airdrop.html](https://wowok.net/airdrop.html) |
+| Desktop Client | [Downloads](https://download.wowok.net/latest/WoWok_x64-setup.exe) (Windows) · [Linux](https://download.wowok.net/latest/WoWok_amd64.AppImage) |
+| Documentation | [github.com/wowok-ai/docs](https://github.com/wowok-ai/docs) |
+| X (Twitter) | [@Wowok_Ai](https://x.com/Wowok_Ai) |
 
-**[📖 Go to Stage 1: Getting Started →](docs/stage-01-introduction.md)**
+> 💡 We believe AI and WoWok together can accomplish everything. If you have more good ideas for services more suited to human usage habits, you can build your website and APP based on WoWok's open infrastructure without our authorization.
 
 ---
 
