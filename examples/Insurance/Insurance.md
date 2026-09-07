@@ -314,10 +314,10 @@ clock > progress.current_time + 10000
 
 **Guard Table**:
 
-| identifier | b_submission | value_type | value | Purpose |
-|------------|-------------|-----------|-------|---------|
-| 0 | **true** | Address | (submitted at runtime) | Order ID submitted at runtime, converted to Progress via convert_witness |
-| 1 | false | U64 | 10000 | Time-lock duration in ms (10 seconds for testing) |
+| identifier | b_submission | value_type | value | name | Purpose |
+|------------|-------------|-----------|-------|------|---------|
+| 0 | **true** | Address | (submitted at runtime) | Order ID (submitted at runtime) | Order ID submitted at runtime, converted to Progress via convert_witness |
+| 1 | false | U64 | 10000 | lock_duration_ms | Time-lock duration in ms (10 seconds for testing) |
 
 > **Important**: `10000` ms (10 seconds) is for testing only. In production, set to a reasonable duration (e.g., 8 hours = 28800000 ms).
 
@@ -1107,7 +1107,78 @@ Fill in the `value` field with the Order ID (or Order name) and resubmit. The `s
 > - Replace `0xfb8bed2f...` with the actual `insurance_withdraw_guard_treasury_v1` address from your Phase 1 response.
 > - The `value` field accepts either an on-chain object ID or a named object reference (e.g., `"test_insurance_order_v1"`).
 > - The `sharing` configuration (`{"Entity": "insurance_treasury_v1"}` at 100% Rate) determines where funds flow. Funds go to the fixed Treasury address regardless of who calls the allocation — this is the safe Entity-sharing pattern that prevents fund theft.
-> - After a successful withdrawal, the Allocation `balance` becomes `0` and a Payment object is created as an immutable record.
+> - After a successful withdrawal, the Allocation `balance` becomes `0`, a Payment object is created as an immutable record, and the recipient receives the funds as a **CoinWrapper** object (owned but NOT yet spendable). Complete Step 12 to unwrap it into spendable balance.
+
+---
+
+## Step 12: Receive Funds (Unwrap CoinWrapper — Single Action)
+
+After `alloc_by_guard` distributes funds, each recipient receives a `CoinWrapper<T>` object — owned but not spendable. **The tool auto-unwraps in ONE action**: no need to query CoinWrapper IDs first, and no need to specify the coin type — received CoinWrappers are auto-enumerated and their inner token type (`CoinWrapper<T>`) is auto-derived on-chain.
+
+Choose the variant matching the recipient (Treasury approach → 12.1; personal approach → 12.2).
+
+### 12.1 Treasury Recipient (Approach 1)
+
+**Prompt**: Receive recently arrived funds into "insurance_treasury_v1".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "treasury",
+    "data": {
+      "object": "insurance_treasury_v1",
+      "receive": "recently"
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
+  }
+}
+```
+
+> **How it works**: `receive: "recently"` auto-queries every `CoinWrapper` received by the Treasury and deposits them into the Treasury balance in a single transaction. The Treasury's token type (`0x2::wow::WOW`) must match the CoinWrapper's inner type (validated automatically).
+
+### 12.2 Personal Recipient (Approach 2)
+
+**Prompt**: Unwrap all CoinWrappers owned by "insurance_provider_v1" into spendable balance.
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "payment",
+    "data": {
+      "receive": true
+    },
+    "env": {
+      "account": "insurance_provider_v1",
+      "network": "testnet"
+    }
+  }
+}
+```
+
+> **How it works (AUTO-RECEIVE)**: with `receive: true` and `object` omitted, the tool unwraps **every** CoinWrapper currently owned by the caller via `payment::unwrap_to_myself` in a single transaction, deleting the wrappers and transferring the underlying coins to the caller. The coin type is auto-derived from each wrapper's own on-chain type — `type_parameter` is only needed if auto-derivation fails.
+>
+> **Optional — unwrap a specific wrapper only**: pass `"object": "<coinwrapper_id_or_name>"` instead of omitting it.
+
+### Verify Funds Received
+
+```json
+{
+  "tool": "query_toolkit",
+  "data": {
+    "query_type": "account_balance",
+    "name_or_address": "insurance_treasury_v1",
+    "network": "testnet",
+    "no_cache": true
+  }
+}
+```
+
+The Treasury (or personal) balance should now include the withdrawn `100000000` MIST (0.1 WOW). For the personal approach, query `"insurance_provider_v1"` instead.
 
 ---
 
@@ -1171,3 +1242,4 @@ Published Machine nodes are immutable (`MoveAbort code: 3`). Create a new Machin
 - [ ] Step 10.2: Advance progress Initial -> Start
 - [ ] Step 10.3: Advance progress Start -> Complete with submission (wait 10s after Step 10.2)
 - [ ] Step 11: Withdraw funds via Allocation (alloc_by_guard with Treasury or personal withdraw guard)
+- [ ] Step 12: Receive funds (Treasury: `receive: "recently"` / Personal: `payment {receive: true}`) and verify balance

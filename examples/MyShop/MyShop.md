@@ -426,6 +426,8 @@ Create a Contact object to enable encrypted communication between customers and 
 }
 ```
 
+> **Note**: Enabling messenger now registers the account on the messenger server **immediately and synchronously** — each account registers itself (its own identity, its own keys). The result includes `registered: true` on success, or `registered: false` with `registerError` if the server is unreachable (the background refresh retries automatically every 60s). If the operation result shows `registered: false`, retry the enable operation before proceeding — otherwise the counterpart's first message will fail with "Recipient not registered".
+
 #### 4.2 Create After-Sales Contact Object
 
 **Prompt**: Create a Contact object named "myshop_aftersales_contact_v2" with permission "myshop_permission_v2" for after-sales support.
@@ -835,7 +837,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
+            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -843,7 +845,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 50000000,
             "stock": 50,
             "suspension": false,
-            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
+            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
             "wip_hash": ""
           },
           {
@@ -851,7 +853,7 @@ The `order_allocators` configuration defines how order payments are distributed:
             "price": 30000000,
             "stock": 75,
             "suspension": false,
-            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
+            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
@@ -896,7 +898,7 @@ To offer promotional pricing, update product prices using the `sales` operation 
             "price": 40000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
+            "wip": "https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip",
             "wip_hash": ""
           }
         ]
@@ -1085,6 +1087,8 @@ After creating the order, the customer sends their shipping address and contact 
   }
 }
 ```
+
+> **Note**: Same as merchant enable (Step 4.1): registration on the messenger server happens synchronously with the enable. Each party must enable messenger **in its own environment with its own account** — one side can never register the other.
 
 #### 2.1.2 Customer Sends Shipping Information
 
