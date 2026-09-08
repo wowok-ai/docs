@@ -162,7 +162,7 @@ Three ways in — pick the one that fits. **Desktop Client** for a standalone wo
 
 A dedicated WoWok workspace with everything bundled — **no AI client required**. It includes capabilities beyond the MCP server's control: manage your account private keys, and set your account or business experience and skills.
 
-**Platform support**: Windows x64 · Linux (AppImage) · macOS (coming soon)
+**Platform support**: Windows x64 · macOS (Intel & Apple Silicon) · Linux (AppImage)
 
 **→ Download from the products page: [wowok.net/products.html](https://wowok.net/products.html)**
 
