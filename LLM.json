@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-07-22",
+  "lastUpdated": "2026-09-10",
   "providers": [
     {
       "name": "OpenAI",
@@ -430,6 +430,94 @@
             "inputCacheMiss": 0.8,
             "inputCacheHit": 0.16,
             "output": 2.4
+          }
+        }
+      }
+    },
+    {
+      "name": "Tencent Hunyuan",
+      "type": "openai",
+      "baseUrl": "https://api.hunyuan.cloud.tencent.com/v1",
+      "defaultModel": "hunyuan-turbos-latest",
+      "region": "cn",
+      "models": [
+        "hunyuan-turbos-latest",
+        "hunyuan-t1-latest",
+        "hunyuan-pro",
+        "hunyuan-standard",
+        "hunyuan-lite"
+      ],
+      "modelSpecs": {
+        "hunyuan-turbos-latest": {
+          "displayName": "Hunyuan Turbo S",
+          "contextWindow": 256000,
+          "maxOutput": 16000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true
+        },
+        "hunyuan-t1-latest": {
+          "displayName": "Hunyuan T1",
+          "contextWindow": 256000,
+          "maxOutput": 64000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true
+        },
+        "hunyuan-pro": {
+          "displayName": "Hunyuan Pro",
+          "contextWindow": 32000,
+          "maxOutput": 4096,
+          "toolCalls": true,
+          "jsonOutput": true
+        },
+        "hunyuan-standard": {
+          "displayName": "Hunyuan Standard",
+          "contextWindow": 32000,
+          "maxOutput": 2048
+        },
+        "hunyuan-lite": {
+          "displayName": "Hunyuan Lite (free tier)",
+          "contextWindow": 32000,
+          "maxOutput": 2048
+        }
+      }
+    },
+    {
+      "name": "Xiaomi MiMo",
+      "type": "openai",
+      "baseUrl": "https://api.xiaomimimo.com/v1",
+      "defaultModel": "mimo-v2.5-pro",
+      "region": "cn",
+      "models": [
+        "mimo-v2.5-pro",
+        "mimo-v2.5"
+      ],
+      "modelSpecs": {
+        "mimo-v2.5-pro": {
+          "displayName": "MiMo V2.5 Pro",
+          "contextWindow": 1000000,
+          "maxOutput": 128000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true,
+          "pricing": {
+            "inputCacheMiss": 0.435,
+            "inputCacheHit": 0.0036,
+            "output": 0.87
+          }
+        },
+        "mimo-v2.5": {
+          "displayName": "MiMo V2.5",
+          "contextWindow": 1000000,
+          "maxOutput": 128000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true,
+          "pricing": {
+            "inputCacheMiss": 0.14,
+            "inputCacheHit": 0.0028,
+            "output": 0.28
           }
         }
       }
