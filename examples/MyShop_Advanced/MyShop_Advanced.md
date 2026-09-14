@@ -2764,6 +2764,12 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
 
 ## Part 4: Fund Allocation
 
+> **IMPORTANT — Per-order Allocation**: Every order created via `service order_new` gets its **own** `Allocation` object (the Service-level `myshop_allocation_v2` is only the allocator **template** — it holds no funds). The order's escrow lives at the address in the Order's `allocation` field. `alloc_by_guard` MUST target that **per-order Allocation**, not the service-level one — otherwise the transaction aborts with `Insufficient balance` (abort code 7 in `allocation::alloc`).
+>
+> Resolve it from the Order object: query `myshop_order_v2` → read its `allocation` field (e.g. `0x1db0a7c9...`) → use that address as `object` below.
+>
+> **CoinWrapper claim (auto since SDK 2026-09)**: `alloc_by_guard` pays each recipient a `CoinWrapper` object (contract-side escrow, `payment::transfer_multi_imp`). The SDK **auto-claims the wrappers this tx created for the signer** (`payment::unwrap_to_myself`) right after the alloc commits — for the Signer-recipient refund case the tokens land directly in the caller's wallet in one logical operation. Manual claim (`operation_type: "payment"` `{object: "<coinwrapper_id>", receive: true}`) is only needed for legacy/historical wrappers or wrappers received from another party's transaction. Object recipients (Order escrow / Treasury) claim through their own receive entries (`order receive` / `treasury receive`) as before.
+
 ### Merchant Wins (Order Complete, Wonderful, Return Fail)
 
 When order reaches Order Complete, Wonderful, or Return Fail, merchant can withdraw funds.
@@ -2776,7 +2782,7 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
   "data": {
     "operation_type": "allocation",
     "data": {
-      "object": "myshop_allocation_v2",
+      "object": "<order_allocation_address — from myshop_order_v2.allocation>",
       "alloc_by_guard": "service_merchant_win_v2"
     },
     "env": {
@@ -2822,7 +2828,7 @@ When order reaches Lost or Return Complete, customer can withdraw funds.
   "data": {
     "operation_type": "allocation",
     "data": {
-      "object": "myshop_allocation_v2",
+      "object": "<order_allocation_address — from myshop_order_v2.allocation>",
       "alloc_by_guard": "service_customer_win_v2"
     },
     "env": {
