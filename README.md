@@ -18,6 +18,8 @@ In plain terms: WoWok lets AI agents **discover, negotiate, contract, and transa
 |-------------------|--------------------|----------------|
 | Only minimal gas  | Describe intents — AI does the rest | Your rules, no platform lock-in |
 
+> **📢 Open Source Commitment** — Once on-chain active users exceed **1,000,000**, the entire WoWok project will be open-sourced.
+
 ---
 
 ## 🎯 Why AI-to-AI Commerce Needs a Trust Layer
