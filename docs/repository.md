@@ -57,14 +57,19 @@ repository (Repository Object)
 │   │       └── PolicyRule structure (when op is "add" or "set"):
 │   │           ├── name (string) - policy rule name
 │   │           ├── description (string) - policy rule description
-│   │           ├── write_guard (array of PolicyWriteGuard) - guards for write verification
+│   │           ├── write_guard (array of PolicyWriteGuard) - write-verification guards.
+│   │           │     REQUIRED (non-empty) when id_from = 0 (None); optional for Clock/Signer.
+│   │           │     On-chain rule (repository.move): id_from=None with an empty write_guard
+│   │           │     aborts with 22 (E_POLICY_WRITE_GUARD_REQUIRED).
 │   │           │   └── PolicyWriteGuard structure:
 │   │           │       ├── guard (string) - Guard object ID or name
-│   │           │       ├── id_from_submission (number, 0-255, optional) - Guard table index for data ID
+│   │           │       ├── id_from_submission (number, 0-255, optional) - Guard table index for data ID.
+│   │           │       │     Allowed ONLY when id_from = 0 (None); setting it for Clock/Signer
+│   │           │       │     aborts with 23 (E_POLICY_ID_FROM_SUBMISSION_FORBIDDEN).
 │   │           │       └── data_from_submission (number, 0-255, optional) - Guard table index for data value
 │   │           ├── quote_guard (string or null, optional) - Guard for on-chain quote verification
 │   │           ├── id_from (number 0-2 or string) - source of data ID
-│   │           │   ├── 0 / "None" / "none" - user must specify ID
+│   │           │   ├── 0 / "None" / "none" - user supplies every ID; write_guard is MANDATORY at both policy and item level
 │   │           │   ├── 1 / "Clock" / "clock" - use current timestamp as ID
 │   │           │   └── 2 / "Signer" / "signer" - use signer ID as data ID
 │   │           └── value_type (number or string) - data value type
@@ -81,7 +86,7 @@ repository (Repository Object)
 │   ├── data_add (add data items, optional)
 │   │   ├── Option 1: SignerOrClock structure (when id_from is Clock or Signer)
 │   │   │   ├── name (string) - data item name (must match PolicyRule name)
-│   │   │   ├── write_guard (string, optional) - Guard ID for write permission
+│   │   │   ├── write_guard (string, optional) - Guard ID for write permission (optional for Clock/Signer)
 │   │   │   └── data (any) - data value (must match PolicyRule value_type)
 │   │   └── Option 2: DataAddWithItems structure (when id_from is None)
 │   │       ├── name (string) - data item name (must match PolicyRule name)
@@ -91,17 +96,19 @@ repository (Repository Object)
 │   │               │   └── KeyData structure:
 │   │               │       ├── id (number or string) - data item ID
 │   │               │       └── data (any) - data value
-│   │               └── write_guard (string, optional) - Guard ID for this data item
+│   │               └── write_guard (string, REQUIRED when id_from=None) - Guard ID for this data item;
+│   │                   must be one of the PolicyRule.write_guard guards (omitting it aborts on chain with 22)
 │   ├── data_remove (remove data items, optional)
 │   │   ├── Option 1: SignerOrClockBase structure (when id_from is Clock or Signer)
 │   │   │   ├── name (string) - data item name
-│   │   │   └── write_guard (string, optional) - Guard ID for delete permission
+│   │   │   └── write_guard (string, optional) - Guard ID for delete permission (optional for Clock/Signer)
 │   │   └── Option 2: DataRemoveWithItems structure (when id_from is None)
 │   │       ├── name (string) - data item name
 │   │       └── items (array of DataRemoveItem) - list of data items to remove
 │   │           └── DataRemoveItem structure:
 │   │               ├── id (array of number|string) - data item IDs to remove
-│   │               └── write_guard (string, optional) - Guard ID for delete permission
+│   │               └── write_guard (string, REQUIRED when id_from=None) - Guard ID for delete permission;
+│   │                   must be one of the PolicyRule.write_guard guards (omitting it aborts on chain with 22)
 │   ├── rewards (reward objects, optional, ObjectsOp)
 │   │   ├── op: "add" | "set"
 │   │   │   └── objects (array of strings) - Reward object names or IDs to bind
@@ -434,7 +441,7 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 | ------------- | -------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
 | `name`        | string         | Yes      | Policy rule name                                                                                             |
 | `description` | string         | Yes      | Policy rule description                                                                                      |
-| `write_guard` | array          | Yes      | Guard object list for write verification                                                                     |
+| `write_guard` | array          | Conditional | Guard object list for write verification. **Required (non-empty) when `id_from` is 0/None** — the chain aborts with code 22 (E_POLICY_WRITE_GUARD_REQUIRED) otherwise; may be empty only for Clock/Signer. Additionally, `id_from_submission` must not be set for Clock/Signer rules (abort 23). |
 | `quote_guard` | string or null | No       | Guard for on-chain reference verification                                                                    |
 | `id_from`     | enum or number | Yes      | ID source: can be string ("None", "Clock", "Signer", case-insensitive) or number (0=None, 1=Clock, 2=Signer) |
 | `value_type`  | enum           | Yes      | Value type: "string", "number", "boolean", etc.                                                              |
@@ -764,6 +771,13 @@ Add data items to the repository, following policy rules for ID source and value
 
 1. **SignerOrClock**: `{ name: "...", write_guard: "...", data: value }`
 2. **DataAddWithItems**: `{ name: "...", items: [{ data: [{ id, data }], write_guard: "..." }] }`
+
+> **write_guard requirement**: which form is used follows the policy's `id_from`.
+> - `id_from` = Clock/Signer: item-level `write_guard` is optional.
+> - `id_from` = None: EVERY entry in `items[]` MUST carry `write_guard`, and it must
+>   reference one of that policy's `write_guard` guards; the policy-level guard list
+>   must also be non-empty. Violations abort on chain with code 22
+>   (E_POLICY_WRITE_GUARD_REQUIRED). The same rule applies to `data_remove.items[].write_guard`.
 
 ***
 
