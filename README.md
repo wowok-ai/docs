@@ -169,7 +169,7 @@ A dedicated WoWok workspace with everything bundled — **no AI client required*
 **→ Download from the products page: [wowok.net/products.html](https://wowok.net/products.html)**
 
 **Key features:**
-- Built-in MCP server + all 11 Skills — everything bundled
+- Built-in MCP server + all 13 Skills — everything bundled
 - End-to-end encrypted Messenger
 - Local key management (never leaves your device)
 - Visual project & store management
@@ -177,9 +177,9 @@ A dedicated WoWok workspace with everything bundled — **no AI client required*
 
 ### 🤖 Path 2 — AI Client + Skills (One Command)
 
-One command. Skills are copied to **all 11 supported AI clients** automatically.
-The MCP server (`@wowok/agent-mcp`) is installed, registered in each client's config,
-and restarted — no manual JSON editing needed.
+One command. Skills are copied to **all 16 supported AI clients** automatically.
+The MCP server (`@wowok/agent-mcp`) is installed and registered in each client's
+config — no manual JSON editing needed.
 
 ```bash
 npm install -g @wowok/skills
@@ -192,8 +192,9 @@ If a detailed list is returned, the setup is complete.
 > - Install only a subset of clients: `WOWOK_SKILLS_TARGETS=claude,trae npm install -g @wowok/skills`
 > - Skip MCP auto-management (skills only): `WOWOK_SKILLS_NO_MCP=1 npm install -g @wowok/skills`
 
-**Supported AI clients (11 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
-Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, Cline, Kilo Code, GitHub Copilot.
+**Supported AI clients (16 total):** Claude Code, OpenAI Codex / ChatGPT Desktop (Codex Mode),
+Gemini CLI, Qwen Code, Grok Build (xAI), OpenCode, Google Antigravity (skills + MCP),
+Trae IDE, CodeBuddy, WorkBuddy (Tencent), Cursor IDE, Devin Desktop (formerly Windsurf), Qoder, Cline, Kilo Code, GitHub Copilot.
 
 **CLI commands:**
 
@@ -201,7 +202,7 @@ Trae IDE, CodeBuddy, Cursor IDE, Windsurf (Codeium), Qoder, Roo Code, Cline, Kil
 |---------|-------------|
 | `wowok-skills list` | List all available skills |
 | `wowok-skills get <name>` | Show skill details |
-| `wowok-skills role <customer\|provider\|arbitrator\|shared>` | List skills by role |
+| `wowok-skills role <customer\|provider\|supplier\|collaborator\|arbitrator\|shared>` | List skills by role |
 | `wowok-skills recommend <intent>` | Recommend skills by user intent |
 | `wowok-skills init` | Install to project — all clients (default) |
 | `wowok-skills init --target <t>` | Install to project — one client only |
@@ -226,12 +227,15 @@ wowok-skills init --target trae
 wowok-skills init --target codex
 wowok-skills init --target windsurf
 wowok-skills init --target codebuddy
+wowok-skills init --target workbuddy
 wowok-skills init --target qoder
-wowok-skills init --target roo
 wowok-skills init --target cline
 wowok-skills init --target kilo
 wowok-skills init --target copilot
 ```
+
+> The full target id list is in the [`@wowok/skills` README](https://www.npmjs.com/package/@wowok/skills)
+> (`wowok-skills targets` prints it).
 
 ### 🔌 Path 3 — MCP Server Only
 
@@ -396,7 +400,7 @@ We have designed 10 learning stages and a large number of Prompt examples for yo
 
 ### 🛠️ Advanced Tools
 
-Beyond the 9 learning stages, WoWok provides five advanced tools for deployment workflow, runtime control, trust assessment, and personalization:
+Beyond the 9 learning stages, WoWok provides six advanced tools for deployment workflow, runtime control, trust assessment, and personalization:
 
 | Tool | Sub-tool | Description |
 |------|----------|-------------|
