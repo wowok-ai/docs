@@ -122,7 +122,8 @@ wowok({ tool: "persona_operation", data: { action: "<action>", ... } })
 | `list` | List stored personas + all industry default personas. |
 | `set` | Set a persona layer (the ONLY action that may write `long_term`, user-driven). |
 | `analyze` | Analyze a conversation context and return persona suggestions. |
-| `apply` | Apply conversation experience into the `current` layer (smart-merge, never touches `long_term`). |
+| `apply` | Apply free-text conversation experience into the `current` layer (smart-merge, never touches `long_term`). Input is `context: string` — not a structured delta. |
+| `apply_delta` | Merge a **structured** machine-generated delta (e.g. a confirmed strategy-review proposal) into `current` only. Server-guarded: `policy`/`overrides` are rejected, `long_term` is never written, arrays union with existing values; the merged record is fully re-validated. |
 | `sync` | Merge account behavior (experience layer) into `current`. |
 | `remove` | Delete a persona (account scope or system scope). |
 | `strategy` | Resolve strategy statements → infrastructure levers (producer-side concept; merchant role only). |
@@ -180,6 +181,26 @@ wowok({ tool: "persona_operation", data: { action: "<action>", ... } })
   "data": { "action": "apply", "scope": "account", "account": "london_guide", "context": "The customer asked for a discount on a multi-day booking..." }
 }
 ```
+
+### Apply a confirmed structured delta into current (server-guarded merge)
+
+```json
+{
+  "tool": "persona_operation",
+  "data": {
+    "action": "apply_delta",
+    "scope": "account",
+    "account": "london_guide",
+    "delta": {
+      "profiles": { "merchant": { "merchant": { "posture": "margin" } } }
+    }
+  }
+}
+```
+
+The response carries the full post-merge `persona`, the resolved `effective`
+persona, and the `applied` delta. A delta containing `policy` or `overrides`
+is rejected outright; only the `current` layer changes.
 
 ---
 

@@ -101,8 +101,14 @@ Each scored metric returns `{ id, label, status, value, weight, score, delta }`:
 - `delta` — `{ id, from, to, change, direction: "up"|"down"|"flat", improved: boolean|null }`
   against the previous snapshot (`null` when there is no history).
 
-The scorecard's `overall` is the 0–100 renormalized total, or `null` when no scorable
-metric has evidence — shown as `n/a`, never as zero.
+The scorecard's `overall` is the 0–100 renormalized total, or `null` when no
+scorable metric has evidence — shown as `n/a`, never as zero. It is also
+`null` unless at least one available anchored metric is **shop-performance
+evidence** (`order_count`, `completion_rate`, `repeat_customer_rate`,
+`dispute_rate`, `dd_to_order_rate`, `arbitration_trust_score`):
+market-environment signals alone (order flow, supply/demand, competitor
+density, attention backlog) report a market temperature, not a grade of the
+shop, so a shop with no observed orders can never read 100/100.
 
 ### Evidence sources (fail-soft fetchers)
 
@@ -142,10 +148,19 @@ premium/protection-oriented for `margin`), 1–3 next moves driven by lifecycle 
 metrics (cold start / dispute >5% / repeat <25% beyond cold start), the competitor-watch
 rhythm, and the first hard guardrail of the chosen posture playbook.
 
-`proposals` contains **0–2** persona deltas. Every proposal has
-`target_layer: "current"` and `apply_via: { tool: "persona_operation", action: "apply" }`,
-and each delta is asserted current-safe (`policy` / `overrides` are forbidden — see
-[Persona](persona.md) safety policy).
+`proposals` contains **0–2** persona deltas. Evidence-driven proposals (risk
+gates, retention) take priority; the cosmetic `adopt_posture` nudge is emitted
+last so the two-proposal cap never drops a risk/retention signal. Every
+proposal has `target_layer: "current"` and
+`apply_via: { tool: "persona_operation", action: "apply_delta" }`. Approval
+calls `persona_operation` with `action: "apply_delta"`, `scope: "account"`,
+`account`, and the structured `delta`: the MCP server performs the guarded
+CURRENT-layer merge itself (arrays union, objects deep-merge, scalars
+overwrite), re-validates the whole record, and never touches `long_term`.
+Each delta is asserted current-safe (`policy` / `overrides` are rejected — see
+[Persona](persona.md) safety policy). Note this is **not** the free-text
+`apply` action: passing a structured delta to `apply` (which expects
+`context: string`) is a schema error.
 
 | Proposal id | Trigger | Delta |
 |-------------|---------|-------|
@@ -217,7 +232,7 @@ Result (abridged):
       "proposals": [
         { "id": "adopt_posture", "rationale": "…", "target_layer": "current",
           "delta": { "profiles": { "merchant": { "merchant": { "posture": "volume" } } } },
-          "apply_via": { "tool": "persona_operation", "action": "apply", "note": "…" } }
+          "apply_via": { "tool": "persona_operation", "action": "apply_delta", "note": "…" } }
       ],
       "unavailable": ["competitor_count"]
     }
