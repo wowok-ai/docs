@@ -14,8 +14,10 @@ business. It makes WoWok a personalizable business carrier: instead of a one-siz
 platform, you teach the AI your long-term identity and your current negotiation stance, and
 it negotiates, recommends, and executes **your way**.
 
-A persona is scoped by **account × industry × role** (merchant / customer / supplier /
-collaborator / arbitrator / prospect) and has two layers:
+A persona is scoped by **account × industry × role** and has two layers.
+There are **seven role slots** — `merchant`, `customer`, `supplier`,
+`collaborator`, `arbitrator`, `demander` (RFP issuer), and `prospect`
+(pre-purchase due diligence) — and one identity can hold several of them at once.
 
 | Layer | Meaning | Who can write |
 |-------|---------|---------------|
@@ -28,6 +30,77 @@ collaborator / arbitrator / prospect) and has two layers:
 > **Note**: Personas shape AI behavior locally — they never touch the chain by themselves.
 > Industry-level default personas come from the industry pack's `personae` layer (see
 > [Industry Pack](industry-pack.md)).
+
+---
+
+## 🎭 Role Slots (`profiles`) — One Identity, Seven Lenses
+
+Every persona layer (`long_term` **and** `current`) may carry a `profiles` map with one
+**RoleProfile** per role slot. Only the profile of the conversation's **active role** is
+injected into the AI context — switching roles swaps the whole behavioral lens, not just a
+label:
+
+| Slot | Who plays it | Structured sections used |
+|------|--------------|--------------------------|
+| `merchant` | Service store owner / seller | `merchant` (`posture`: `volume`/`balanced`/`margin`, `pricing_style`, `service_style`, `communication`, `growth_focus`) |
+| `customer` | Buyer who places orders | `tastes` (`materials`/`colors`/`styles`/`tags`/`brands`/`avoid`), `consumption` (`frequency`, `price_band`, `decision_speed`, `channels`, `repeat_orientation`, `avg_order_range`, `notes`) |
+| `prospect` | Potential buyer in pre-order due diligence | same buyer sections as `customer` |
+| `supplier` | Sub-order provider fulfilling a Demand | `supplier` (`min_order`, `lead_time`, `settlement_terms`, `categories`, `capacity`) |
+| `collaborator` | Staff / named operator advancing workflows | `collaborator` (`scope_discipline`, `notifications`, `working_hours`, `advance_style`) |
+| `arbitrator` | Dispute adjudicator | `arbitrator` (`case_types`, `response_speed`, `ruling_style`) |
+| `demander` | RFP / Demand issuer | `demander` (`award_weights`, `pilot_budget`, `rfp_openness`, `decision_basis`) |
+
+Every slot also accepts a free-form `preferences` extension bag. Unknown sections are
+preserved on read-modify-write, so pack- or user-specific data is never lost.
+
+### Built-in curated personalities
+
+Even with an **empty** `profiles` map, each role carries a code-canonical curated
+personality (`archetype`, motivations, communication tone, executable `value_levers`,
+typical `game_moves` with hard taboos, path preferences, win/loss signals). Curated moves
+may only bind to real MCP sub-tools or on-chain mechanisms — a test asserts the catalog can
+never drift into unexecutable advice. Your stored profile **refines** the curated
+personality; it does not disable its taboos.
+
+### Merge semantics
+
+`profiles` merge like the rest of the persona — **arrays union-dedup, nested objects
+deep-merge, scalars are overridden by the higher-priority layer** — but, unlike `policy`,
+profiles do **not** participate in the tighten-only lattice: they are cheaply correctable
+preferences, so a `current`-layer profile may freely adjust a `long_term` one.
+
+### Active role — persona role vs. session override
+
+- The persona's own role (`role` field on the record) is what `get` resolves by default and
+  what the curated personality + active profile are injected for.
+- A `get` call may pass `role` to view the same identity **through another slot's lens**
+  without rewriting the stored persona. The desktop client uses this for its per-conversation
+  role switcher ("Follow persona" vs. an explicit role), persisted on the conversation row.
+- Editing a slot never switches the active role; the two are independent controls.
+
+```json
+{
+  "long_term": {
+    "profiles": {
+      "merchant": {
+        "merchant": {
+          "posture": "balanced",
+          "pricing_style": "value"
+        }
+      },
+      "customer": {
+        "tastes": { "materials": ["titanium"], "colors": ["black"] },
+        "consumption": { "frequency": "regular", "price_band": "premium" }
+      }
+    }
+  }
+}
+```
+
+> The merchant strategic **`posture`** (`volume` / `balanced` / `margin`) doubles as the
+> weighting input for the [Strategy Review](strategy-review.md) scorecard. The safety floor
+> (never price below cost, keep compensation funded, …) is non-negotiable at every posture —
+> posture only reweights metrics above that floor.
 
 ---
 
@@ -171,7 +244,14 @@ relaxed in any mode**.
   can only be disabled). The system persona's `long_term` remains the user's durable default.
 - The AI write paths (`analyze` / `apply` / `sync` / `distill`) never emit `policy` or
   `overrides` — they are user-driven values, edited via `set`, the client Settings screen,
-  or the in-chat persona JSON editor.
+  or the in-chat persona JSON editor. A current-layer delta carrying either key is rejected
+  outright (`AI_DELTA_FORBIDDEN_KEYS`), including the persona `profiles.merchant.merchant.posture`
+  proposal emitted by the [Strategy Review](strategy-review.md) card: the review itself
+  stores nothing, and its proposal is merged into `current` only after an explicit per-card
+  approval; declining writes nothing.
+- `set` **replaces the whole stored record** — every structured writer must read the stored
+  persona first and send `role` / `industries` / `long_term` / `current` back together, or
+  untouched slices are lost. `apply` is the only smart-merge path and targets `current` only.
 - Legacy SQLite keys (`rules.confirm_mode`, audit, daily budget, allowlist) are migrated into
   the system persona once (missing fields only) and kept as read fallback.
 
@@ -180,6 +260,7 @@ relaxed in any mode**.
 ## 🔗 Related
 
 - [Industry Pack](industry-pack.md) — industry-level default personas via the `personae` layer
+- [Strategy Review](strategy-review.md) — chain-signal scorecard whose approved proposals merge into the persona `current` layer
 - [Stage 1: Account](stage-01-introduction.md) — local wallet & account identity
 - [Personal](personal.md) — on-chain personal portal (public profile, likes/dislikes)
 

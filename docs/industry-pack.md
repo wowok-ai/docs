@@ -38,6 +38,45 @@ Each pack lives in its own folder under the industry root
 | `rules` | Declarative machine-checked rules (`{ id, when, then, message }`) compiled into the evaluation engine. |
 | `mode` | Deep IndustryMode shape (machine_shape / guards / allocator) — scaffolded separately when needed. |
 
+### Strategy knowledge — two channels
+
+Commercial strategy for the six built-in industries (`education`, `rental`,
+`freelance`, `subscription`, `travel`, `retail`) ships through **two deliberately separate
+channels**:
+
+| Channel | What it carries | Where it lives |
+|---------|-----------------|----------------|
+| **Structured strategy catalog** (code-canonical) | Pricing models (`wowok_levers` whitelist-checked to real objects), `volume`/`balanced`/`margin` posture playbooks with hard guardrails, competitor-watch dimensions + review cadence, acquisition channels, unit-economics formulas with sourced anchors, curated success patterns, red lines | MCP package constants (`INDUSTRY_STRATEGIES`) — zero filesystem dependency; packs/programs may replace an entry through `registerIndustryStrategy()` (pack entry wins, built-ins are never mutated) |
+| **Long-form tactical manual** | The full English handbook narrative for the industry — rationale, scripts, campaign calendars | Released to `<industry>/strategy-manual.md` (see sentinel rules below); readable in the client Industry drawer |
+
+`strategy-manual.md` is a **third file you will see inside a built-in pack folder**, but it
+is not part of the editable two-file pack contract. It is released by the runtime on every
+scan with a versioned sentinel header:
+
+```
+<!-- builtin:strategy-manual:v<n>:<sha16> -->
+```
+
+Release rules (your edits always win):
+
+- file missing → released copy is written;
+- sentinel present, body unmodified → auto-updated when the built-in version bumps;
+- sentinel present **and** body edited → never overwritten (you own it);
+- no sentinel at all → treated as your own file, never touched.
+
+`playbook.md` remains **your** strategy layer; `strategy-manual.md` is curated baseline
+reading. When the file is absent (read-only disk, deleted, standalone MCP), tools fall back
+to the code constants — the released file is an edit surface and convenience, never the
+source of truth.
+
+The structured catalog feeds the deterministic strategy advisor (lifecycle stage from
+order count: 0/5/20/50 → cold_start/growing/mature/optimization) and the
+[Strategy Review](strategy-review.md) scorecard (cadence, posture weights, proposals).
+From the client Industry drawer you can also **Adopt strategy to my persona** on a
+top-level pack folder: it unions the industry into the persona's `industries`, records the
+merchant `posture` in `long_term.profiles.merchant.merchant.posture`, and leaves a dated
+adoption marker in the `current` layer.
+
 ---
 
 ## 📞 Call Format
@@ -135,6 +174,7 @@ Edit (Industry drawer / FileEditor) → Save to disk
 ## 🔗 Related
 
 - [Persona](persona.md) — the `personae` layer of a pack supplies industry-level default personas
+- [Strategy Review](strategy-review.md) — chain-signal scorecard + current-layer proposals powered by the strategy catalog
 - [Stage 5: Business Components](stage-05-business.md) — business objects you configure
 - [Project](project.md) — deploy the objects you configure with your pack rules
 
