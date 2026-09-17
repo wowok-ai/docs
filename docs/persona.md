@@ -110,6 +110,73 @@ wowok({ tool: "persona_operation", data: { action: "<action>", ... } })
 
 ---
 
+## 🛡️ Safety Policy (the first user defaults in persona)
+
+Confirmation posture and other safety defaults live **inside the persona** instead of
+hard-coded client settings, so they are readable, editable, comparable across accounts,
+and merged with the same priority chain as the rest of the persona. Two layer fields
+carry them (both optional, both user-driven on `long_term`):
+
+```json
+"long_term": {
+  "policy": {
+    "confirm": {
+      "mode": "streamlined",
+      "batch_standard": false,
+      "session_remember": ["account_switch"],
+      "intent_bypass": true
+    },
+    "budget": { "daily_wow": "1000" },
+    "allowlist": ["0x…"],
+    "audit": true
+  },
+  "overrides": {
+    "client.account_switch": "prompt",
+    "confirm.default_values": "auto"
+  }
+}
+```
+
+### `policy.confirm.mode` — the three confirmation postures
+
+| Mode | Behavior |
+|------|----------|
+| `full` | Confirm every matched safety rule. |
+| `streamlined` | **Default.** Only risky / irreversible actions interrupt; routine (`standard`) rules pass. |
+| `quiet` | Like `streamlined`, plus an approved **account switch is remembered once per session**. |
+
+- `batch_standard` — when several **independent routine** tool calls run in one turn,
+  present them as a single merged confirmation card. Fail-closed operations are never batched.
+- `session_remember` — rule ids whose approval is remembered for the session (currently `account_switch`).
+- `intent_bypass` — an explicit in-message instruction ("yes, do it") satisfies a routine prompt.
+- `budget.daily_wow` — daily spend ceiling as a string; `null` means no ceiling.
+- `allowlist` — addresses always treated as trusted.
+- `audit` — keep the safety audit trail.
+
+### `overrides` — tune a single rule
+
+A map of **rule id → value**: `auto` (silent) · `warn` (allow with notice) · `prompt` (ask
+every time) · `block` (always refuse). Only whitelisted ids are accepted; `get` returns the
+catalog and the current values under `controls.overrides` (with each rule's `default` and
+`allowed` values), plus `controls.locked_rules` — the fail-closed rules that **cannot be
+relaxed in any mode**.
+
+### Hard floor & merge semantics
+
+- The policy can never reach the fail-closed floor: **amount / publish / irreversible**
+  confirmations always prompt (except the explicitly user-tunable publish override), and the
+  small-amount fund-approval policy and the global confirm-gate kill switch are untouched.
+- `current`-layer policy may only **tighten** `long_term` (quieter → stricter, override
+  severity can only rise, budgets can only shrink, audit can only be enabled, intent bypass
+  can only be disabled). The system persona's `long_term` remains the user's durable default.
+- The AI write paths (`analyze` / `apply` / `sync` / `distill`) never emit `policy` or
+  `overrides` — they are user-driven values, edited via `set`, the client Settings screen,
+  or the in-chat persona JSON editor.
+- Legacy SQLite keys (`rules.confirm_mode`, audit, daily budget, allowlist) are migrated into
+  the system persona once (missing fields only) and kept as read fallback.
+
+---
+
 ## 🔗 Related
 
 - [Industry Pack](industry-pack.md) — industry-level default personas via the `personae` layer
