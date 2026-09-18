@@ -115,18 +115,26 @@ A **stranger** is any address not in the recipient's friends list:
 
 **Business Rationale**: Prevents spam while allowing legitimate first contact. The one-message limit forces quality opening messages.
 
-#### Guard Message Flow (Spam-Bypass Path)
+#### Guard Message Flow (Passport-Verified Path)
 
-When recipient blocks strangers, use guard verification:
+Guard verification is the ONLY entry for non-friends when the recipient has
+configured a guard list — with guards configured there is NO free
+stranger-message quota:
 
 1. Provide `guardAddress` + `passportAddress` + `network` with message
-2. Server validates addresses and checks pending queue limits
-3. Message stored as `pending` with TTL
-4. Background worker verifies passport against guard rules on the specified `network`
-5. **Confirmed**: Signed into Merkle tree, delivered
-6. **Rejected**: Status updated, sender notified
+2. The guard MUST be in the recipient's guard list — the server rejects
+   unknown guards at submission time
+3. Server validates addresses and checks pending queue limits
+4. Message stored as `pending` with TTL
+5. Background worker verifies the passport on the specified `network`:
+   passport valid (`result == true`), guard ∈ passport `impack` list, and the
+   passport is still within the validity configured for that guard
+6. **Confirmed**: Signed into Merkle tree, delivered
+7. **Rejected**: Status updated, sender notified with the reason
 
-**When to Use**: When rejected due to stranger settings, obtain a passport from recipient's guard list and retry.
+**When to Use**: Only when the recipient has guards configured — obtain a
+passport issued via one of THEIR guards and retry. If the recipient has no
+guards and blocks strangers, there is no way to reach them.
 
 > **Important**: `network` is REQUIRED when `guardAddress` + `passportAddress` are provided. Guard messages and regular messages are independent data systems residing on different networks — the `network` parameter selects which network's RPC to use for Guard verification.
 
@@ -142,7 +150,7 @@ Incoming Message
        ▼
 ┌─ Blacklist Check ─────────────────────────────────────────────┐
 │  Is sender in recipient's blacklist?                          │
-│  YES → Reject immediately                                     │
+│  YES → Reject immediately (no path around this)               │
 │  NO  → Continue                                               │
 └───────────────────────────────────────────────────────────────┘
        │
@@ -154,16 +162,24 @@ Incoming Message
 └───────────────────────────────────────────────────────────────┘
        │
        ▼
-┌─ Guard Message Check ─────────────────────────────────────────┐
-│  Did sender provide guardAddress + passportAddress?           │
-│  YES → Route to guard verification queue                      │
-│  NO  → Continue                                               │
+┌─ Guard List Check ────────────────────────────────────────────┐
+│  Does the recipient have guards configured?                   │
+│  YES → Guard pathway is the ONLY entry for non-friends:       │
+│        • No guardAddress provided? → Reject                   │
+│          ("Guard address required")                           │
+│        • guardAddress must be in the recipient's guard list   │
+│          (unknown guards rejected at submission); the message │
+│          then enters async passport verification:             │
+│          passport valid + guard ∈ passport impack + within    │
+│          the guard's configured validity                      │
+│  NO  → Continue to stranger check (a guardAddress sent here   │
+│        is IGNORED — it cannot bypass stranger rules)          │
 └───────────────────────────────────────────────────────────────┘
        │
        ▼
-┌─ Stranger Message Check ──────────────────────────────────────┐
+┌─ Stranger Message Check (only when NO guards configured) ─────┐
 │  Is allowStrangerMessages enabled?                            │
-│  NO  → Reject with guard_list (enables guard retry)           │
+│  NO  → Reject (no retry path — recipient is unreachable)      │
 │  YES → Has sender already sent a stranger message?            │
 │        YES → Reject ("one stranger message only")             │
 │        NO  → Accept, set stranger key with TTL                │
@@ -176,7 +192,7 @@ Incoming Message
 |------|---------|------------|
 | **Blacklist** | Block addresses completely | `add`, `remove`, `clear`, `get`, `exist` |
 | **Friends List** | Trusted contacts bypass checks | `add`, `remove`, `clear`, `get`, `exist` |
-| **Guard List** | Guards that can verify strangers | `add`, `remove`, `get` |
+| **Guard List** | Passport gateway for non-friends (allowlist of trusted guards) | `add`, `remove`, `get` |
 
 **Guard List Configuration:**
 - `guard`: On-chain Guard object ID or name (defines validation rules)
@@ -184,7 +200,7 @@ Incoming Message
 
 #### Settings Control
 
-- **`allowStrangerMessages`**: Toggle stranger message acceptance
+- **`allowStrangerMessages`**: Toggle stranger message acceptance (effective only while NO guards are configured — with guards, the passport pathway is the only non-friend entry)
 - **`maxInboxSize`**: Maximum server-staged messages (FIFO eviction)
 
 ---
