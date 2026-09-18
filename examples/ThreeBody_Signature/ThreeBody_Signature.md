@@ -160,17 +160,7 @@ If the accounts do not exist locally, generate them first.
         "name_or_address": "three_body_author",
         "result": [
           {
-            "amount": 1000000000,
-            "id": "0x...",
-            "transferTxDigest": "..."
-          },
-          {
-            "amount": 1000000000,
-            "id": "0x...",
-            "transferTxDigest": "..."
-          },
-          {
-            "amount": 1000000000,
+            "amount": 5000000000,
             "id": "0x...",
             "transferTxDigest": "..."
           }
@@ -185,9 +175,9 @@ If the accounts do not exist locally, generate them first.
 
 > **Note**: Each faucet result item includes a `transferTxDigest` field representing the on-chain transaction digest for the faucet transfer. This is useful for tracking and verifying the faucet transaction on a block explorer.
 >
-> **Amount Note**: Each faucet request distributes 3 WOW (3 × 1 WOW; WOW has 9 decimals, so 1 WOW = 1,000,000,000 smallest units). Since the sale price in this example is 888 WOW, repeat the faucet request until each account holds ≥ 1000 WOW (price + gas).
-
-> **Important**: Repeat the faucet request for `three_body_customer` as well, since Test 2 requires a funded non-author account to attempt the blocked purchase.
+> **Amount Note**: Each faucet request distributes **5 WOW** (one coin of `5,000,000,000` smallest units; WOW has 9 decimals, so 1 WOW = 1,000,000,000 smallest units). The amount is decided by the faucet server — the client request (`FixedAmountRequest`) carries no amount field, so it cannot be customized. The faucet is also rate-limited (HTTP 429 on repeated rapid requests), so accumulating large balances via the faucet is impractical (the 888 WOW sale price would need ~178 requests). Fund the accounts from an existing wallet/transfer instead, and use the faucet only for small top-ups.
+>
+> **Important**: Fund `three_body_customer` as well, since Test 2 requires a funded non-author account to attempt the blocked purchase.
 
 ---
 
@@ -1596,6 +1586,7 @@ The Treasury does NOT receive spendable coins directly — each allocation recip
   "data": {
     "query_type": "onchain_received",
     "name_or_address": "three_body_treasury",
+    "type": "CoinWrapper",
     "network": "testnet"
   }
 }
@@ -1628,6 +1619,8 @@ The Treasury does NOT receive spendable coins directly — each allocation recip
 ```
 
 > The CoinWrapper holds the full 888 WOW (`888000000000` smallest units — Rate `10000` = 100% of the order payment) and references the `Payment` receipt created in step (a).
+>
+> **Return-shape note**: `onchain_received` returns the wrapped `{balance, token_type, received[]}` object ONLY when `"type": "CoinWrapper"` is passed (as in this example). Without `type` (all-types mode) or with a custom StructType filter, it returns a bare array of `[{id, type, content_raw, version, digest}]`.
 
 #### (c) Unwrap into the Treasury Balance (`receive`)
 

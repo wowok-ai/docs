@@ -202,6 +202,50 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
 }
 ```
 
+### 0.2.5 Create Weather Write Guard
+
+The Repository's "Condition" policy (Step 0.3) uses `id_from: "None"`, which lets the writer choose data ids. The contract mandates a Guard to authorize such writes (otherwise the chain aborts with `E_POLICY_WRITE_GUARD_REQUIRED`), so create an always-true Guard named `weather_write_guard` now. It requires no runtime submission values.
+
+**Prompt**: Create an always-true Guard named "weather_write_guard".
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "guard",
+    "data": {
+      "namedNew": {
+        "name": "weather_write_guard",
+        "tags": ["weather", "write"],
+        "replaceExistName": true
+      },
+      "description": "Always-true write guard for the weather repository Condition policy.",
+      "table": [
+        {
+          "identifier": 0,
+          "b_submission": false,
+          "value_type": "Bool",
+          "value": true,
+          "name": "Always true"
+        }
+      ],
+      "root": {
+        "type": "identifier",
+        "identifier": 0
+      }
+    },
+    "env": {
+      "account": "weather_provider",
+      "network": "testnet",
+      "no_cache": true,
+      "confirmed": true
+    }
+  }
+}
+```
+
+> **Note**: The Guard is created by `weather_provider` — the same account that creates `weather_repo` (Step 0.3) and adds data (Step 0.4), so the local name resolves without `onChain: true`.
+
 ### 0.3 Create Weather Repository with Policies
 
 **Prompt**: Create a Repository named "weather_repo" with "Condition" policy.
@@ -244,7 +288,7 @@ Day 5: 1783900800000 (2026-07-13T00:00:00.000Z)
 
 > **Note**: `onChain: true` is required here because `weather_repo` is created by the `weather_provider` account, but its name will be referenced in the Guard table (Step 3.1) by the `travel_provider` account. Without `onChain: true`, the name is stored locally only on `weather_provider`'s device and cannot be resolved by `travel_provider`. When `onChain: true` is set, the name is published on-chain and becomes publicly visible, allowing cross-account name resolution.
 >
-> The `write_guard` in the "Condition" policy points to `weather_write_guard` (created above). Because `id_from: "None"` lets the writer choose data ids, the contract mandates a Guard to authorize writes. `data_add` in Step 0.4 needs no Guard submission — the Guard is always-true with no submission fields.
+> The `write_guard` in the "Condition" policy points to `weather_write_guard` (created in Step 0.2.5). Because `id_from: "None"` lets the writer choose data ids, the contract mandates a Guard to authorize writes. `data_add` in Step 0.4 must include this `write_guard` on each item — the chain aborts with `E_POLICY_WRITE_GUARD_REQUIRED` otherwise — but no runtime submission values are needed since the Guard is always-true.
 
 ### 0.4 Add Weather Data
 
@@ -263,6 +307,7 @@ Add 5 days of weather data. The `weather_check_guard` (Step 3.1) only verifies t
         "name": "Condition",
         "items": [
           {
+            "write_guard": "weather_write_guard",
             "data": [
               {"id": <DAY1_TIMESTAMP>, "data": "sunny"},
               {"id": <DAY2_TIMESTAMP>, "data": "sunny"},
@@ -1293,6 +1338,8 @@ The customer (Alice) purchases the travel package. This creates an Order, a Prog
 The service provider advances the Progress through the workflow nodes. Each operation moves the Progress from the current node to the next node via a specified forward.
 
 > **Important**: Add `"no_cache": true` to the `env` field for all Progress operations to avoid stale cache issues.
+>
+> **Warning (known MCP issue)**: The workflow receipt may report `node migrated: no` (with a stale `current` node and zero accumulated weight) even when the forward **did** migrate on-chain. Do not re-execute the same forward based on the receipt alone — first verify the real node via `query_toolkit` with `query_type: "object_panorama"` on the Progress object ID (returns fresh state), then proceed to the next step.
 
 ### 7.1 Progress to Buy Insurance
 
@@ -1318,7 +1365,8 @@ Move from initial node ("") to "Buy Insurance" node.
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1348,7 +1396,8 @@ Move from "Buy Insurance" to "SPA" node.
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1401,7 +1450,8 @@ Move from "SPA" to "Ice Scooting" node. This forward has a Guard (`weather_check
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1458,7 +1508,8 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1507,7 +1558,8 @@ Move from "Ice Scooting" to "Complete" node. This forward has a Guard (`travel_c
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1545,14 +1597,14 @@ The allocation Guard requires the Order ID as a submission (identifier: 0). Quer
   "tool": "query_toolkit",
   "data": {
     "query_type": "onchain_objects",
-    "objects": ["alice_travel_progress"],
+    "objects": ["<PROGRESS_OBJECT_ID>"],
     "network": "testnet",
     "no_cache": true
   }
 }
 ```
 
-> **Note**: Use `query_toolkit` (not `onchain_operations`) for read-only lookups — queries consume no gas and never mutate state. The response includes a `task` field containing the Order object ID. Copy this value for the allocation submission.
+> **Note**: Use `query_toolkit` (not `onchain_operations`) for read-only lookups — queries consume no gas and never mutate state. `objects` accepts object IDs (addresses) only — local names (e.g. `"alice_travel_progress"`) return an empty result. Use the Progress object ID from Step 6's transaction output. The response includes a `task` field containing the Order object ID. Copy this value for the allocation submission.
 
 ### 8.2 Execute Allocation (Merchant Victory Path)
 
@@ -1595,7 +1647,8 @@ When the Progress is "Complete", the `merchant_victory_guard` passes, and 100% o
     "env": {
       "account": "travel_provider",
       "network": "testnet",
-      "no_cache": true
+      "no_cache": true,
+      "confirmed": true
     }
   }
 }
@@ -1676,6 +1729,8 @@ After allocation, query the Allocation and Payment objects to verify the fund di
 ```
 
 > **Expected result**: The Allocation `balance` should be 0 (all funds distributed), and the `payment` array should contain the Payment object ID(s) created by the allocation.
+>
+> **If the result looks stale (known MCP issue)**: `onchain_objects` may return an outdated cached snapshot even with `no_cache: true`. Cross-check via `query_toolkit` with `query_type: "onchain_object_history"` on the Allocation/Order/Treasury address, or verify the recipient's `account_balance` (refund paths) to confirm the funds actually moved.
 
 **Allocation Operation Structure**:
 
