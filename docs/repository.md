@@ -344,11 +344,8 @@ Create a new Repository object for storing structured data.
 >       "description": "Always true guard for repository testing",
 >       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
 >       "root": {
->         "type": "node",
->         "node": {
->           "type": "logic_equal",
->           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
->         }
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
 >       }
 >     },
 >     "env": {"network": "testnet"}
@@ -473,11 +470,8 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 >       "description": "Guard for profile policy",
 >       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
 >       "root": {
->         "type": "node",
->         "node": {
->           "type": "logic_equal",
->           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
->         }
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
 >       }
 >     },
 >     "env": {"network": "testnet"}
@@ -556,11 +550,8 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 >       "description": "Guard for order policy",
 >       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
 >       "root": {
->         "type": "node",
->         "node": {
->           "type": "logic_equal",
->           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
->         }
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
 >       }
 >     },
 >     "env": {"network": "testnet"}
@@ -578,11 +569,8 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 >       "description": "Guard for feedback policy",
 >       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
 >       "root": {
->         "type": "node",
->         "node": {
->           "type": "logic_equal",
->           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
->         }
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
 >       }
 >     },
 >     "env": {"network": "testnet"}

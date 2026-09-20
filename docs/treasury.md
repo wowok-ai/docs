@@ -193,7 +193,7 @@ When using external Guards for deposit/withdrawal:
        "data": {
          "namedNew": { "name": "my_guard" },
          "table": [{ "identifier": 0, "b_submission": false, "value_type": "U64", "value": 1000000000 }],
-         "root": { "type": "node", "node": { "type": "logic_as_u256_greater_or_equal", "nodes": [...] } }
+         "root": { "type": "logic_as_u256_greater_or_equal", "nodes": [...] }
        }
      }
    }

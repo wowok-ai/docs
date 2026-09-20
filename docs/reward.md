@@ -292,11 +292,8 @@ Create a new Reward object for managing rewards.
 >       "description": "New user reward guard",
 >       "table": [{"identifier": 0, "value_type": "bool", "b_submission": false, "value": true}],
 >       "root": {
->         "type": "node",
->         "node": {
->           "type": "logic_equal",
->           "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
->         }
+>         "type": "logic_equal",
+>         "nodes": [{"type": "identifier", "identifier": 0}, {"type": "identifier", "identifier": 0}]
 >       }
 >     },
 >     "env": {"network": "testnet"}

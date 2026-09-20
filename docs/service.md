@@ -307,11 +307,8 @@ For testing or simple services where funds should always be allocated:
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "identifier",
-          "identifier": 0
-        }
+        "type": "identifier",
+        "identifier": 0
       }
     },
     "env": {
@@ -353,25 +350,22 @@ For production services, create Guards that verify order status before allowing 
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": 1253,
-              "object": {
-                "identifier": 0,
-                "convert_witness": 100
-              },
-              "parameters": []
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
             },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
-        }
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
       }
     },
     "env": {

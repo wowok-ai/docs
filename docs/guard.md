@@ -15,7 +15,7 @@ The Guard component creates immutable programmable validation rules that return 
 
 | Function Name | Purpose | Usage Scenario | Significance |
 |---------------|---------|----------------|--------------|
-| **Create Guard with Direct Nodes** | Create a Guard by directly providing a GuardNode computation tree through `root.type: "node"` | Quick creation of simple to moderately complex Guards; no external file needed | Core function for Guard creation; enables immediate validation logic definition |
+| **Create Guard with Direct Nodes** | Create a Guard by directly providing a GuardNode computation tree as `root` (the node's own `type` field selects the node kind) | Quick creation of simple to moderately complex Guards; no external file needed | Core function for Guard creation; enables immediate validation logic definition |
 | **Create Guard from File** | Load a Guard definition from a JSON or Markdown file through `root.type: "file"` | Reusing existing Guard definitions; editing Guards in external files; version control of Guard logic | Enables Guard templates and reusability; simplifies complex Guard management |
 | **Name Guard** | Assign a name and optional tags to a new Guard using `namedNew` | Identifying Guards by meaningful names; categorizing Guards with tags; sharing Guards publicly | Essential for Guard discoverability and organization; enables public on-chain identities |
 | **Set Guard Description** | Add a description to explain the Guard's purpose | Documenting what the Guard validates; helping other users understand Guard usage | Improves Guard usability and maintainability |
@@ -249,10 +249,10 @@ Guard operations use the following top-level structure:
 
 ---
 
-## Sub-feature 1: Create Guard with Direct Nodes (type: "node")
+## Sub-feature 1: Create Guard with Direct Nodes
 
 ### Feature Description
-Create a Guard by directly providing a GuardNode computation tree through `root.type: "node"`, without requiring an external file.
+Create a Guard by directly providing a GuardNode computation tree as `root` — the root IS the node itself (its `type` field selects the node kind, e.g. `"logic_and"`, `"identifier"`, `"query"`); do NOT wrap it in `{ "type": "node", "node": {...} }`. Only the file-loading alternative uses `root.type: "file"`.
 
 ### Parameter Description
 
@@ -335,11 +335,8 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "identifier",
-          "identifier": 0
-        }
+        "type": "identifier",
+        "identifier": 0
       }
     },
     "env": {
@@ -403,14 +400,11 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_as_u256_greater_or_equal",
-          "nodes": [
-            { "type": "identifier", "identifier": 0 },
-            { "type": "identifier", "identifier": 1 }
-          ]
-        }
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          { "type": "identifier", "identifier": 0 },
+          { "type": "identifier", "identifier": 1 }
+        ]
       }
     },
     "env": {
@@ -454,14 +448,11 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_as_u256_greater_or_equal",
-          "nodes": [
-            { "type": "identifier", "identifier": 0 },
-            { "type": "identifier", "identifier": 1 }
-          ]
-        }
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          { "type": "identifier", "identifier": 0 },
+          { "type": "identifier", "identifier": 1 }
+        ]
       }
     },
     "env": {
@@ -511,26 +502,23 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_and",
-          "nodes": [
-            {
-              "type": "logic_as_u256_greater",
-              "nodes": [
-                { "type": "identifier", "identifier": 0 },
-                { "type": "identifier", "identifier": 1 }
-              ]
-            },
-            {
-              "type": "logic_as_u256_lesser_or_equal",
-              "nodes": [
-                { "type": "identifier", "identifier": 0 },
-                { "type": "identifier", "identifier": 2 }
-              ]
-            }
-          ]
-        }
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_as_u256_greater",
+            "nodes": [
+              { "type": "identifier", "identifier": 0 },
+              { "type": "identifier", "identifier": 1 }
+            ]
+          },
+          {
+            "type": "logic_as_u256_lesser_or_equal",
+            "nodes": [
+              { "type": "identifier", "identifier": 0 },
+              { "type": "identifier", "identifier": 2 }
+            ]
+          }
+        ]
       }
     },
     "env": {
@@ -572,14 +560,11 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_as_u256_greater_or_equal",
-          "nodes": [
-            { "type": "identifier", "identifier": 0 },
-            { "type": "identifier", "identifier": 1 }
-          ]
-        }
+        "type": "logic_as_u256_greater_or_equal",
+        "nodes": [
+          { "type": "identifier", "identifier": 0 },
+          { "type": "identifier", "identifier": 1 }
+        ]
       },
       "rely": {
         "guards": ["order_validation", "public_age_check"],
@@ -625,14 +610,11 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_as_u256_equal",
-          "nodes": [
-            { "type": "identifier", "identifier": 0 },
-            { "type": "identifier", "identifier": 1 }
-          ]
-        }
+        "type": "logic_as_u256_equal",
+        "nodes": [
+          { "type": "identifier", "identifier": 0 },
+          { "type": "identifier", "identifier": 1 }
+        ]
       },
       "rely": {
         "guards": ["order_validation", "public_age_check"],
@@ -695,26 +677,23 @@ All examples in this document use the **testnet** network and **default account*
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_and",
-          "nodes": [
-            {
-              "type": "logic_string_contains",
-              "nodes": [
-                { "type": "identifier", "identifier": 0 },
-                { "type": "identifier", "identifier": 2 }
-              ]
-            },
-            {
-              "type": "logic_as_u256_greater_or_equal",
-              "nodes": [
-                { "type": "identifier", "identifier": 1 },
-                { "type": "identifier", "identifier": 3 }
-              ]
-            }
-          ]
-        }
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_string_contains",
+            "nodes": [
+              { "type": "identifier", "identifier": 0 },
+              { "type": "identifier", "identifier": 2 }
+            ]
+          },
+          {
+            "type": "logic_as_u256_greater_or_equal",
+            "nodes": [
+              { "type": "identifier", "identifier": 1 },
+              { "type": "identifier", "identifier": 3 }
+            ]
+          }
+        ]
       },
       "rely": {
         "guards": ["public_age_check"],
@@ -1371,7 +1350,7 @@ When querying Progress objects (directly or via witness), these instructions are
 | 1272 | `progress.current_time` | U64 | Timestamp of the most recent forward (set at every session migration) | None |
 | 1273 | `progress.history count` | U64 | Number of history records | None |
 
-> **⚠️ Session-only queries (1270, 1271)**: `progress.session.forward.accomplished` (1270) and `progress.session.forward.time` (1271) read the Progress' **active session** only. Once the session migrates into `history` — which happens on any subsequent forward — both queries abort with `W_FIELD_NOT_FOUND` and the Guard permanently fails. Never use 1270/1271 to validate terminal or long-lived states (e.g. "completed more than N days ago"); use `progress.current_time` (1272) or the history queries (1274-1279) instead.
+> **⚠️ Session-only queries (1260-1271)**: the whole `progress.session.*` family (1260-1271) reads the Progress' **active session** only — the operation records from the current node to the next node. Once the session migrates into `history` — which happens on any subsequent forward — these queries no longer see the migrated records (count/has queries return 0/false; record lookups such as 1265 `who`, 1268 `retained_submission.value`, 1269 `msg`, 1270 `accomplished`, 1271 `time` abort with `W_FIELD_NOT_FOUND`), permanently failing any Guard that relies on them. Never use them to validate terminal or long-lived states (e.g. "completed more than N days ago"); use `progress.current_time` (1272) or the history queries (1274-1279) instead.
 
 ### Session and History Query Instructions (ID 1270-1279)
 
@@ -1418,25 +1397,22 @@ When querying Progress objects (directly or via witness), these instructions are
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_equal",
-          "nodes": [
-            {
-              "type": "query",
-              "query": 1253,
-              "object": {
-                "identifier": 0,
-                "convert_witness": 100
-              },
-              "parameters": []
+        "type": "logic_equal",
+        "nodes": [
+          {
+            "type": "query",
+            "query": 1253,
+            "object": {
+              "identifier": 0,
+              "convert_witness": 100
             },
-            {
-              "type": "identifier",
-              "identifier": 1
-            }
-          ]
-        }
+            "parameters": []
+          },
+          {
+            "type": "identifier",
+            "identifier": 1
+          }
+        ]
       }
     },
     "env": {
@@ -1490,57 +1466,54 @@ When querying Progress objects (directly or via witness), these instructions are
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_and",
-          "nodes": [
-            {
-              "type": "logic_equal",
-              "nodes": [
-                {
-                  "type": "query",
-                  "query": 1253,
-                  "object": {
-                    "identifier": 0,
-                    "convert_witness": 100
-                  },
-                  "parameters": []
+        "type": "logic_and",
+        "nodes": [
+          {
+            "type": "logic_equal",
+            "nodes": [
+              {
+                "type": "query",
+                "query": 1253,
+                "object": {
+                  "identifier": 0,
+                  "convert_witness": 100
                 },
-                {
-                  "type": "identifier",
-                  "identifier": 1
-                }
-              ]
-            },
-            {
-              "type": "logic_as_u256_greater_or_equal",
-              "nodes": [
-                {
-                  "type": "context",
-                  "context": "Clock"
-                },
-                {
-                  "type": "calc_number_add",
-                  "nodes": [
-                    {
-                      "type": "query",
-                      "query": 1272,
-                      "object": {
-                        "identifier": 0,
-                        "convert_witness": 100
-                      },
-                      "parameters": []
+                "parameters": []
+              },
+              {
+                "type": "identifier",
+                "identifier": 1
+              }
+            ]
+          },
+          {
+            "type": "logic_as_u256_greater_or_equal",
+            "nodes": [
+              {
+                "type": "context",
+                "context": "Clock"
+              },
+              {
+                "type": "calc_number_add",
+                "nodes": [
+                  {
+                    "type": "query",
+                    "query": 1272,
+                    "object": {
+                      "identifier": 0,
+                      "convert_witness": 100
                     },
-                    {
-                      "type": "identifier",
-                      "identifier": 2
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
+                    "parameters": []
+                  },
+                  {
+                    "type": "identifier",
+                    "identifier": 2
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     "env": {

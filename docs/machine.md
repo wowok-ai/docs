@@ -2164,14 +2164,11 @@ Create an always-true Guard for workflow transitions:
         }
       ],
       "root": {
-        "type": "node",
-        "node": {
-          "type": "logic_equal",
-          "nodes": [
-            {"type": "identifier", "identifier": 0},
-            {"type": "identifier", "identifier": 0}
-          ]
-        }
+        "type": "logic_equal",
+        "nodes": [
+          {"type": "identifier", "identifier": 0},
+          {"type": "identifier", "identifier": 0}
+        ]
       }
     },
     "env": {
