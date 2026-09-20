@@ -112,7 +112,7 @@ arbitration (Arbitration Object)
 │   │   └── voting_deadline (number | null, required) - new voting deadline in milliseconds
 │   ├── vote (Vote object, optional) - vote on propositions
 │   │   ├── arb (string, required) - Arb object ID or name
-│   │   ├── votes (array of number, required) - vote list, each value 0-255
+│   │   ├── votes (array of number, required) - 0-based indices of the propositions the voter agrees with; each value must be < the Arb's proposition count
 │   │   └── voting_guard (string, optional) - voting Guard object ID/name
 │   ├── feedback (Feedback object, optional) - provide arbitration feedback
 │   │   ├── arb (string, required) - Arb object ID or name
@@ -539,7 +539,7 @@ Vote on user propositions.
 | `operation_type` | string | Yes | Operation type | Fixed value "arbitration" |
 | `data.object` | string | Yes | Reference existing Arbitration | Arbitration name or ID |
 | `data.vote.arb` | string | Yes | Arb object ID or name | |
-| `data.vote.votes` | array | Yes | Vote list | Each value 0-255 |
+| `data.vote.votes` | array | Yes | 0-based indices of the propositions the voter agrees with | Each value must be < the Arb's proposition count (e.g. 3 propositions accept only `0`, `1`, `2`); out-of-range values abort with "Proposition not found" |
 | `data.vote.voting_guard` | string | No | Voting Guard object ID/name | |
 
 ---
@@ -548,7 +548,7 @@ Vote on user propositions.
 
 #### Example 5.1: Vote on Propositions
 
-**Prompt**: For "service_arbitration", vote on "order_123_dispute" with votes [200, 100, 50] using "senior_judge" guard.
+**Prompt**: For "service_arbitration", vote on "order_123_dispute" agreeing with propositions 0 and 1 ("Full refund" and "Partial refund 50%") using "senior_judge" guard.
 
 ```json
 {
@@ -559,13 +559,15 @@ Vote on user propositions.
       "object": "service_arbitration",
       "vote": {
         "arb": "order_123_dispute",
-        "votes": [200, 100, 50],
+        "votes": [0, 1],
         "voting_guard": "senior_judge"
       }
     }
   }
 }
 ```
+
+> **Votes are indices, not weights**: each element is the 0-based index of a proposition listed when the dispute was filed (`dispute.proposition`). The vote WEIGHT comes from the voting Guard's `vote_weight` config — never encode weights in `votes`.
 
 ---
 

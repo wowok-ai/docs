@@ -242,7 +242,7 @@ Collaboration requires contact information. Contact manages public contact infor
           "next_node_name": "designing",
           "forward": "start_design"
         },
-        "hold": false,
+        "op": "next",
         "message": "Start design work"
       }
     }

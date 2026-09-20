@@ -446,7 +446,7 @@ Every conversation has a deterministic session ID: `sorted(addrA, addrB)`
 }
 ```
 
-**Note**: File is automatically compressed as ZIP before sending. Options include: `fileName` (custom name), `contentType` ("wts"/"wip"/"zip" hint), `guardAddress`, `passportAddress`, `network` (REQUIRED when guardAddress + passportAddress are provided — Guard messages are an independent data system), `force` (bypass pending checks), `new_messenger_name` (for recipient).
+**Note**: File is automatically compressed as ZIP before sending. Options include: `fileName` (custom name), `contentType` ("wts"/"wip"/"zip" hint), `guardAddress`, `passportAddress`, `network` (REQUIRED when guardAddress + passportAddress are provided — Guard verification is mainnet-only), `force` (bypass pending checks), `enable_messenger` (auto-enable messenger for the sender account).
 
 ---
 

@@ -76,8 +76,7 @@ progress (Operate Existing Progress)
 │       ├── operation (object, required)
 │   │   ├── next_node_name (string) - Target node name to advance to (max 64 bcs characters)
 │   │   └── forward (string) - Forward operation name defined in Machine (max 64 bcs characters)
-│       ├── hold (boolean, optional) - Lock operation permission
-│       ├── adminUnhold (boolean, optional) - Admin force unlock (only when hold=true)
+│       ├── op (string, optional) - "next" (default) | "hold" | "unhold" | "adminUnhold" — advance the forward / set hold to block it / self-release hold / force-release via 224 permission
 │       └── message (string, optional) - Operation result message
 ├── env (optional)
 │   ├── account (string, optional) - Account name or address, empty string for default
@@ -224,8 +223,8 @@ Progress instances are created from published Machine objects using `operation_t
 ### Feature Description
 
 Advance Progress to the next node by executing node transition operations. There are two modes:
-- **Hold mode** (`hold: true`): Lock operation permission to avoid competition
-- **Accomplish mode** (`hold: false`): Submit operation result and advance
+- **Hold mode** (`op: "hold"`): Lock operation permission to avoid competition
+- **Accomplish mode** (`op: "next"` or omitted): Submit operation result and advance
 
 ### Parameter Description
 
@@ -233,8 +232,7 @@ Advance Progress to the next node by executing node transition operations. There
 |------|------|------|------|
 | `operate.operation.next_node_name` | string | Yes | Target node name |
 | `operate.operation.forward` | string | Yes | Forward operation name |
-| `operate.hold` | boolean | No | Whether to hold at current node. When true, locks permission; when false or omitted, submits result directly |
-| `operate.adminUnhold` | boolean | No | Allow admin to force unlock (only when hold=true) |
+| `operate.op` | string | No | Operation on the forward: "next" (default, submit result and advance), "hold" (lock permission), "unhold" (self-release hold), "adminUnhold" (force-release via 224 permission) |
 | `operate.message` | string | No | Operation message |
 
 ### Important Notes
@@ -277,7 +275,7 @@ Advance Progress to the next node by executing node transition operations. There
 }
 ```
 
-> **💡 Tip**: The `hold` parameter is optional. When omitted or set to false, the operation submits the result directly and advances to the next node. Set `hold: true` only when you need to lock the operation permission.
+> **💡 Tip**: The `op` parameter is optional. When omitted (or set to "next"), the operation submits the result directly and advances to the next node. Set `op: "hold"` only when you need to lock the operation permission.
 
 **Prerequisites**:
 1. Machine must have a node "requirement" with `prev_node: ""` and forward "start_project"
@@ -408,7 +406,7 @@ Advance Progress to the next node by executing node transition operations. There
           "next_node_name": "development",
           "forward": "start_development"
         },
-        "hold": true,
+        "op": "hold",
         "message": "Design completed, awaiting architect approval"
       }
     },
@@ -421,7 +419,7 @@ Advance Progress to the next node by executing node transition operations. There
 }
 ```
 
-> **💡 Tip**: When `hold: true`, the operation locks the permission at the current node, preventing other operators from executing competing operations. Use `adminUnhold: true` to allow admin override.
+> **💡 Tip**: When `op: "hold"`, the operation locks the permission at the current node, preventing other operators from executing competing operations. Use `op: "adminUnhold"` to allow admin override.
 
 **Execution Result**:
 ```json
@@ -480,8 +478,7 @@ Advance Progress to the next node by executing node transition operations. There
           "next_node_name": "code_review",
           "forward": "submit_code"
         },
-        "hold": true,
-        "adminUnhold": true,
+        "op": "adminUnhold",
         "message": "Design approved by admin, proceeding to development"
       }
     },
@@ -494,7 +491,7 @@ Advance Progress to the next node by executing node transition operations. There
 }
 ```
 
-> **💡 Tip**: Use `adminUnhold: true` when you need to override a held operation. This requires admin privileges and should be used for emergency interventions or when the original operator is unavailable.
+> **💡 Tip**: Use `op: "adminUnhold"` when you need to force-release a held operation. This requires 224 permission (PROGRESS_UNHOLD) and should be used for emergency interventions or when the original operator is unavailable.
 
 **Execution Result**:
 ```json
@@ -553,7 +550,7 @@ Advance Progress to the next node by executing node transition operations. There
           "next_node_name": "testing",
           "forward": "submit_code"
         },
-        "hold": false,
+        "op": "next",
         "message": "Code submitted for review"
       }
     },
@@ -988,7 +985,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
 
 #### Example 5.1: Complete Progress Workflow with All Features
 
-**Prompt**: For "project_alpha": 1) Set task "mobile_app_order_001", 2) Add "project_alpha_deliverables" repository, 3) Add "test_lead_dave" to "reviewers" namespace, 4) Advance to "testing" node with forward "approve_code", hold=false, message "Code review passed, moving to testing phase".
+**Prompt**: For "project_alpha": 1) Set task "mobile_app_order_001", 2) Add "project_alpha_deliverables" repository, 3) Add "test_lead_dave" to "reviewers" namespace, 4) Advance to "testing" node with forward "approve_code" (no hold), message "Code review passed, moving to testing phase".
 
 ```json
 {
@@ -1017,7 +1014,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
           "next_node_name": "testing",
           "forward": "approve_code"
         },
-        "hold": false,
+        "op": "next",
         "message": "Code review passed, moving to testing phase"
       }
     },
@@ -1080,7 +1077,7 @@ Execute multiple operations in one call to the Progress object. This is useful f
           "next_node_name": "uat",
           "forward": "pass_testing"
         },
-        "hold": true,
+        "op": "hold",
         "message": "Testing completed, awaiting UAT approval"
       }
     },
@@ -1255,7 +1252,7 @@ Execute the first forward to move from init node to "requirement" node:
           "next_node_name": "requirement",
           "forward": "start_project"
         },
-        "hold": false,
+        "op": "next",
         "message": "Starting Project Alpha - Mobile e-commerce app development"
       }
     },
@@ -1367,7 +1364,7 @@ Product Manager approves requirements and advances to design phase:
           "next_node_name": "design",
           "forward": "submit_design"
         },
-        "hold": false,
+        "op": "next",
         "message": "Requirements approved. Scope: Mobile e-commerce app with payment integration. Budget: $50,000. Timeline: 3 months."
       }
     },
@@ -1420,7 +1417,7 @@ Architect reviews design and approves proceeding to development:
           "next_node_name": "development",
           "forward": "start_development"
         },
-        "hold": false,
+        "op": "next",
         "message": "Architecture design approved. Tech stack: React Native + Node.js + PostgreSQL. Microservices architecture with 3 services."
       }
     },
@@ -1503,7 +1500,7 @@ Developer submits code for review using namedOperator:
           "next_node_name": "code_review",
           "forward": "submit_code"
         },
-        "hold": true,
+        "op": "hold",
         "message": "Initial implementation complete. Features: User auth, product catalog, shopping cart. 85% test coverage."
       }
     },
@@ -1557,7 +1554,7 @@ Development lead reviews and approves code:
           "next_node_name": "testing",
           "forward": "approve_code"
         },
-        "hold": false,
+        "op": "next",
         "message": "Code review passed. All critical issues resolved. Ready for QA testing."
       }
     },
@@ -1614,7 +1611,7 @@ QA testing complete, move to User Acceptance Testing:
           "next_node_name": "uat",
           "forward": "pass_testing"
         },
-        "hold": false,
+        "op": "next",
         "message": "QA testing complete. 47 test cases passed, 0 critical bugs, 2 minor UI issues documented."
       }
     },
@@ -1667,7 +1664,7 @@ Customer approves UAT and authorizes deployment:
           "next_node_name": "deployment",
           "forward": "approve_uat"
         },
-        "hold": false,
+        "op": "next",
         "message": "UAT approved. All acceptance criteria met. Payment flow verified with test transactions. Ready for production."
       }
     },
@@ -1724,7 +1721,7 @@ Final deployment to production:
           "next_node_name": "completed",
           "forward": "deploy_production"
         },
-        "hold": false,
+        "op": "next",
         "message": "Successfully deployed to production. App Store: v1.0.0 live. Play Store: v1.0.0 live. Monitoring active."
       }
     },
@@ -1866,7 +1863,7 @@ Before starting, ensure you have:
           "next_node_name": "first_node",
           "forward": "start"
         },
-        "hold": false,
+        "op": "next",
         "message": "Starting workflow"
       }
     },
@@ -1904,7 +1901,7 @@ Repeat the operate operation for each subsequent node transition.
 
 ⚠️ **Hold mode locks operation permission to avoid competition**.
 
-⚠️ **AdminUnhold allows admin to force unlock (requires admin privileges)**.
+⚠️ **`op: "adminUnhold"` allows admin to force unlock (requires 224 permission / admin privileges)**.
 
 ---
 

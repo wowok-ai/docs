@@ -209,25 +209,16 @@ permission (Permission Object)
 │   ├── permission_guard (array of strings, optional) - permission guard IDs
 │   ├── no_cache (boolean, optional) - disable cache
 │   └── referrer (string, optional) - referrer ID
-└── submission (optional)
-    ├── type: "submission" (fixed value)
-    ├── guard: [{ object: string, impack: boolean }]
-    └── submission: [{ guard: string, submission: [{ identifier, b_submission, value_type, value, name }] }]
+└── (no submission field — the permission operation schema does not accept Guard submissions)
 ```
 
 ---
 
 ### ⚠️ Important Note About Submission
 
-If the execution returns a `submission` field in the response, it indicates that additional Guard verification data is required. You must:
+The `permission` operation schema does **not** accept a `submission` field (unlike most other onchain_operations). If an execution response ever indicates that Guard verification data is required, you cannot attach the submission to a permission call — resolve the Guard requirement first (e.g. generate a Passport via `operation_type: "gen_passport"`), then retry the permission operation.
 
-1. Complete all required submission data within the `submission` structure
-2. Resubmit the operation with the completed submission data
-3. **Do not modify any other parts of the structure** - only fill in the required submission values
-
-The submission structure will specify which Guard objects need verification and what data needs to be provided for each Guard table item.
-
-**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data.
+**Query Value Types**: Use the `wowok_buildin_info` sub-tool with `{ "info": "value types" }` to query all supported value types with their numeric and string representations. This helps you understand what `value_type` values are valid for submission data used by Guard-verified operations.
 
 ---
 

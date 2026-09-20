@@ -64,17 +64,17 @@ proof (Proof Object Creation)
 ├── operation_type: "proof" (fixed value)
 ├── data (Proof data definition)
 │   ├── namedNew (optional, NamedObject) - Name for the new Proof object
-│   │   ├── name (required, string)
-│   │   ├── tag (optional, string)
+│   │   ├── name (optional, string)
+│   │   ├── tags (optional, array of string)
 │   │   ├── onChain (optional, boolean)
 │   │   └── replaceExistName (optional, boolean)
-│   ├── description (optional, string) - Description of the proof
+│   ├── description (required, string) - Human-readable description of the proof
 │   ├── proof (required, string) - Proof content, e.g. merkle tree root (max 10240 chars)
 │   ├── server_pubkey (required, string) - Server public key (max 2048 chars)
 │   ├── server_signature (required, string) - Server signature (max 40480 chars)
 │   ├── proof_type (required, number|string) - Proof type (1 = WTS proof; 1-100 reserved)
 │   ├── item_count (optional, number|string|null) - Item count, e.g. number of items in merkle tree
-│   └── about_address (optional, string|NameOrAddress|null) - Address of the entity being proved
+│   └── about_address (optional, 0x address|null) - Address of the entity being proved; must be a raw 0x-prefixed address (NOT a name)
 ├── env (optional, execution environment)
 │   ├── account (string, optional)
 │   ├── network (string, optional) - "localnet", "testnet", or "mainnet"
@@ -93,9 +93,9 @@ gen_proof (Generate Proof Shortcut)
 ├── server_pubkey (required, string) - Server public key (max 2048 chars)
 ├── server_signature (required, string) - Server signature (max 40480 chars)
 ├── proof_type (required, number|string) - Proof type (1 = WTS proof; 1-100 reserved)
-├── description (optional, string) - Description of the proof
+├── description (required, string) - Human-readable description of the proof
 ├── item_count (optional, number|string|null) - Item count
-├── about_address (optional, string|NameOrAddress|null) - About address
+├── about_address (optional, 0x address|null) - About address; must be a raw 0x-prefixed address (NOT a name)
 └── env (optional, execution environment)
     ├── account (string, optional)
     ├── network (string, optional)
@@ -168,4 +168,4 @@ gen_proof (Generate Proof Shortcut)
 
 ⚠️ **Size limits** - proof content max 10240 chars, server public key max 2048 chars, server signature max 40480 chars.
 
-⚠️ **about_address supports names** - can be an address (0x...) or a local mark name that will be resolved automatically.
+⚠️ **about_address must be a raw 0x address** - when provided, it must be a 0x-prefixed address (NOT a name). Omit it or pass `null` to leave the proof untargeted (Move `Option::none`).

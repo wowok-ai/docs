@@ -72,8 +72,11 @@ messenger_operation (Messenger Operations)
 │   │       ├── guardAddress (optional, string) - REQUIRED for Guard-verified messages
 │   │       ├── passportAddress (optional, string) - REQUIRED for Guard-verified messages
 │   │       ├── force (optional, boolean)
-│   │       ├── new_messenger_name (optional, string)
-│   │       └── network (optional, "localnet"/"testnet"/"mainnet") - REQUIRED when guardAddress + passportAddress are provided (Guard messages and regular messages are independent data systems on different networks)
+│   │       ├── enable_messenger (optional, boolean) - Auto-enable messenger for the sender account
+│   │       ├── replyTo (optional, object) - Quote/reply to a previous message in the SAME conversation
+│   │       ├── smart (optional, boolean) - Smart send (default true): silent guard verification via local Passport
+│   │       ├── authorize (optional, boolean) - One-click guard authorization: create a fresh Passport and resend automatically
+│   │       └── network (optional, "localnet"/"testnet"/"mainnet") - REQUIRED when guardAddress + passportAddress are provided (Guard messages and regular messages are independent data systems on different networks; Guard verification is MAINNET-ONLY)
 │   ├── "send_file"
 │   │   ├── from (optional, string)
 │   │   ├── to (required, string | Address/Name) - Recipient can be simple string (name/address) or full object
@@ -81,10 +84,15 @@ messenger_operation (Messenger Operations)
 │   │   └── options (optional, SendFileOptions)
 │   │       ├── fileName (optional, string)
 │   │       ├── contentType (optional, "wts"/"wip"/"zip")
+│   │       ├── kind (optional, string) - Attachment business type for the recipient's UI (image/video/audio/file/voice)
+│   │       ├── mimeType (optional, string) - Explicit MIME type override
+│   │       ├── caption (optional, string) - Caption text stored inside the E2EE envelope manifest
+│   │       ├── durationMs (optional, number) - Audio/video duration in milliseconds
+│   │       ├── width (optional, number) / height (optional, number) - Media dimensions
 │   │       ├── guardAddress (optional, string) - REQUIRED for Guard-verified files
 │   │       ├── passportAddress (optional, string) - REQUIRED for Guard-verified files
 │   │       ├── force (optional, boolean)
-│   │       ├── new_messenger_name (optional, string)
+│   │       ├── enable_messenger (optional, boolean) - Auto-enable messenger for the sender account
 │   │       └── network (optional, "localnet"/"testnet"/"mainnet") - REQUIRED when guardAddress + passportAddress are provided (Guard messages and regular messages are independent data systems on different networks)
 │   ├── "watch_messages"
 │   │   └── filter (optional, MessageFilter)
@@ -125,10 +133,11 @@ messenger_operation (Messenger Operations)
 │   │       ├── viewedAtStart (optional, number) - Filter by viewed timestamp start (ms)
 │   │       ├── viewedAtEnd (optional, number) - Filter by viewed timestamp end (ms)
 │   │       └── skipAutoMarkViewed (optional, boolean) - Skip auto-marking messages as viewed
-│   ├── "extract_zip_messages"
-│   │   ├── account (optional, string)
-│   │   ├── messages (required, string[] | Message[]) - Array of message IDs or Message objects
-│   │   └── outputDir (required, string)
+│   ├── "save_attachment"
+│   │   ├── account (optional, string) - Account owning the message (default account if omitted)
+│   │   ├── messageId (required, string) - Attachment message ID (a message with attachment/zipMetadata, e.g. found via watch_messages)
+│   │   ├── outputDir (optional, string) - Target directory (defaults to the workspace/attachments directory)
+│   │   └── saveAs (optional, string) - Override file name (basename only; collisions get a ' (1)' suffix)
 │   ├── "generate_wts"
 │   │   └── params (required, WtsGenerationParams)
 │   │       ├── myAccount (required, string) - Account name or address
@@ -457,7 +466,7 @@ Send encrypted text message to specified recipient.
 
 #### Example 2.2: Send with Sender and Options
 
-**Prompt**: Send message from "my_account" to "bob", use Guard "message_guard" with Passport "my_passport" for verification on testnet, set new messenger name "my_messenger".
+**Prompt**: Send message from "my_account" to "bob", use Guard "message_guard" with Passport "my_passport" for Guard verification (mainnet), auto-enable messenger for the sender.
 
 ```json
 {
@@ -473,14 +482,14 @@ Send encrypted text message to specified recipient.
     "options": {
       "guardAddress": "message_guard",
       "passportAddress": "my_passport",
-      "network": "testnet",
-      "new_messenger_name": "my_messenger"
+      "network": "mainnet",
+      "enable_messenger": true
     }
   }
 }
 ```
 
-> **Note**: When `guardAddress` and `passportAddress` are provided, `network` is REQUIRED. Guard messages and regular messages are independent data systems residing on different networks — the `network` parameter selects which network's RPC to use for Guard verification.
+> **Note**: When `guardAddress` and `passportAddress` are provided, `network` is REQUIRED and MUST be `mainnet` — Guard verification is mainnet-only. Guard messages and regular messages are independent data systems residing on different networks.
 
 ---
 
@@ -593,7 +602,7 @@ Send file to specified recipient. Files are compressed to ZIP format before send
 - File automatically compressed to ZIP format
 - Message ID: 012d6212_58f9dbc0_6_c72e
 - Status: confirmed with Merkle proof
-- Receiver can extract file using extract_zip_messages operation
+- Receiver can save the file using the save_attachment operation
 
 ---
 
@@ -1075,31 +1084,31 @@ This section demonstrates practical filtering combinations for `watch_messages` 
 
 ---
 
-## Example 6: Extract ZIP Messages
+## Example 6: Save Attachment
 
 ### Feature Description
 
-Extract and decompress ZIP format message files.
+Save a message attachment (zip-transported file) to the local workspace. The attachment envelope is decompressed and the original file name/type is restored via the encrypted manifest.
 
 ### Examples
 
-#### Example 6.1: Extract Single Message
+#### Example 6.1: Save a Single Attachment
 
-**Prompt**: Extract ZIP file from message "012d6212_58f9dbc0_6_c72e", save to "./extracted/".
+**Prompt**: Save the attachment of message "012d6212_58f9dbc0_6_c72e" to "./extracted/" using account "mcp_test_bob_3k5".
 
 ```json
 {
   "tool": "messenger_operation",
   "data": {
-    "operation": "extract_zip_messages",
+    "operation": "save_attachment",
     "account": "mcp_test_bob_3k5",
-    "messages": ["012d6212_58f9dbc0_6_c72e"],
+    "messageId": "012d6212_58f9dbc0_6_c72e",
     "outputDir": "./extracted/"
   }
 }
 ```
 
-**Response**: Returns array of extracted file paths.
+**Response**: Returns the absolute path of the saved attachment file.
 
 ```json
 {
@@ -1107,10 +1116,8 @@ Extract and decompress ZIP format message files.
     "status": "success",
     "data": {
       "result": {
-        "operation": "extract_zip_messages",
-        "result": [
-          "./extracted_files/test_message_file.txt"
-        ]
+        "operation": "save_attachment",
+        "result": "./extracted_files/test_message_file.txt"
       }
     }
   },
@@ -1125,18 +1132,18 @@ Extract and decompress ZIP format message files.
 
 ---
 
-#### Example 6.2: Extract Multiple Messages
+#### Example 6.2: Save an Attachment with a Custom File Name
 
-**Prompt**: Extract ZIP files from messages "msg_002", "msg_003", and "msg_004", using account "my_account".
+**Prompt**: Save the attachment of message "msg_002" using account "my_account", naming the file "evidence_chat.txt".
 
 ```json
 {
   "tool": "messenger_operation",
   "data": {
-    "operation": "extract_zip_messages",
+    "operation": "save_attachment",
     "account": "my_account",
-    "messages": ["msg_002", "msg_003", "msg_004"],
-    "outputDir": "./extracted/"
+    "messageId": "msg_002",
+    "saveAs": "evidence_chat.txt"
   }
 }
 ```
@@ -2525,7 +2532,7 @@ Actively pull new messages from the messenger server for the specified account. 
 | **watch_messages** | ✅ PASS | All messages retrieved with full details |
 | **send_message** | ✅ PASS | Messages sent with Merkle proof |
 | **send_file** | ✅ PASS | File sent and compressed to ZIP |
-| **extract_zip_messages** | ✅ PASS | File extracted successfully |
+| **save_attachment** | ✅ PASS | File extracted successfully |
 | **generate_wts** | ✅ PASS | WTS file generated with 7 messages |
 | **verify_wts** | ✅ PASS | WTS verification passed |
 | **sign_wts** | ✅ PASS | WTS signed successfully |

@@ -1448,7 +1448,9 @@ Create and issue a new discount coupon for the Service.
 
 #### Example 9.2: Fixed Amount Discount
 
-**Prompt**: Issue a fixed discount named "holiday_50off" with 50 WOW off (discount_value=50000000000), transferable, and eligible for everyone. Note: Fixed discount uses smallest token unit (not 50, but 50000000000 for 50 WOW with 9 decimals). Use discount_type=1 for fixed discounts.
+**Prompt**: Issue a fixed discount named "holiday_50off" with 50 WOW off (discount_value=50000000000), transferable, and eligible for recipients alice and carol. Note: Fixed discount uses smallest token unit (not 50, but 50000000000 for 50 WOW with 9 decimals). Use discount_type=1 for fixed discounts.
+
+> ⚠️ `recipient.entities` MUST contain at least one recipient — an empty array aborts on-chain with `E_DISCOUNT_RECEIVER_EMPTY` (error 11). There is no "everyone" wildcard; list recipients explicitly.
 
 ```json
 {
@@ -1464,7 +1466,10 @@ Create and issue a new discount coupon for the Service.
         "time_ms_end": 1738368000000,
         "count": 500,
         "recipient": {
-          "entities": []
+          "entities": [
+            { "name_or_address": "alice" },
+            { "name_or_address": "carol" }
+          ]
         },
         "transferable": true
       }

@@ -2,126 +2,27 @@
 
 ---
 
-> **💡 Call Format**: All WoWok operations go through a single unified `wowok` tool. Call `wowok({ tool: "project_operation", data: { action: "<action>", project: "<prefix>", version: "<version>", ... } })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
+> **⚠️ Migration Notice**: The `project_operation` tool has been REMOVED from the MCP. Its capabilities were redistributed:
+>
+> | Former capability | Where it lives now |
+> |---|---|
+> | `analyze_intent` (Stage 2) | `goal_operation` action=`analyze_intent` (C1) |
+> | `aggregate_risks` (Stage 3) | `goal_operation` action=`aggregate_risks` (C2) |
+> | `trace_substeps` (Stage 5) | `goal_operation` action=`trace_substeps` (C3) |
+> | `get_project_status` | `goal_operation` action=`get` (+ `process_summary` for attached TaskProcesses) |
+> | Graph / panorama queries (`list_projects`, `list_objects`, `shareable`, `dependencies`, `referenced_by`, `cross_project_refs`, `graph_stats`) | `query_toolkit` query types: `service_panorama`, `machine_panorama`, `object_panorama`, `onchain_topology`, `relationship_profile`, `reverse_map`, `participation_radar`, `review_pack`, `assemble_context`, `workspace_lists`, `marks_of_account` |
+> | `save_graph` / `load_graph` | `workspace_operation` actions `write` / `read` |
+> | `generate_deployment_doc` (D-01..D-18 scanner) | REMOVED — deployment-doc generation no longer exists; coherence is verified by C3 `trace_substeps` (D-10 verdict) and the Harness deploy-time checks |
+>
+> Call `goal_operation({ action: "analyze_intent", intent: "...", project: "<prefix>", version: "<version>" })`. If parameters don't match the schema, the response includes the correct schema for self-correction. See [Response Format](response-format.md) for details.
 
 ## Component Overview
 
-The Project component manages the local object dependency graph (DAG) AND guides users through the 5-stage project deployment workflow. All data comes from local marks tagged `project:<prefix>` (auto-injected by the ProjectService when enabled, default ON).
-
-The 5-stage workflow ensures safe, risk-calibrated, and topologically correct deployment of WoWok services:
-
-1. **Project Naming** — Name the project using `project` + `version` params
-2. **Business Puzzle** (analyze_intent) — Parse user intent into an Object Dependency Graph (ODG)
-3. **Risk Calibration** (aggregate_risks) — Evaluate risks and determine if deployment can proceed
-4. **Deployment Doc** (generate_deployment_doc) — Generate a deployment document with scanner checks
-5. **Substep Trace** (trace_substeps) — Verify substep coherence and execute deployment
+The Project component manages the deployment workflow for multi-object WoWok services: parse a business intent into an Object Dependency Graph (ODG), calibrate deployment risks, trace substep coherence, and execute the creation plan through `onchain_operations`. Pipeline state is keyed by a `project` prefix + `version` (stage cache), and deterministic planning outputs (puzzles, findings, topological order) feed each next stage.
 
 ---
 
-## Function List
-
-| Function Name | Purpose | Usage Scenario | Significance |
-|---------------|---------|----------------|-------------|
-| **Analyze Intent** | Parse business intent into ODG | Start of deployment workflow | Creates object dependency graph from natural language |
-| **Aggregate Risks** | Evaluate deployment risks | Before generating deployment doc | Identifies CRITICAL/HIGH/MEDIUM/LOW risks |
-| **Generate Deployment Doc** | Create deployment plan | After risk calibration passes | Produces markdown doc with D-01..D-18 scanner checks |
-| **Trace Substeps** | Verify substep coherence | Before executing deployment | Checks D-10 substep linkage and coherence |
-| **Get Project Status** | Query current stage | Anytime during workflow | Shows current stage (1-5) and next action |
-| **List Projects** | List all discovered projects | Browse existing projects | Shows project prefixes with object counts |
-| **List Objects** | List objects in a project | Inspect project contents | Shows all objects tagged with a project prefix |
-| **Shareable Objects** | Find cross-project reusable objects | Reuse existing components | Common Permission, 3rd-party Arbitration |
-| **Dependencies** | Trace forward dependencies | Impact analysis | BFS traversal + dangling reference detection |
-| **Referenced By** | Reverse dependency query | Backward tracing | Who references this object? |
-| **Pre-Publish Check** | Sanity check before publishing | Before publish operations | Dangling deps + cycle detection |
-| **Cross-Project Refs** | Find cross-project edges | Boundary analysis | Edges crossing project boundaries |
-| **Graph Stats** | Graph statistics | Overview | Node/edge counts, cycles, dangling deps |
-| **Save/Load Graph** | Persist graph to/from file | Backup and restore | Save to ~/.wowok/project-graph.json |
-
----
-
-## Complete Tool Call Structure
-
-```json
-{
-  "tool": "project_operation",
-  "data": {
-    "action": "analyze_intent | aggregate_risks | generate_deployment_doc | trace_substeps | get_project_status | list_projects | list_objects | shareable | dependencies | referenced_by | pre_publish_check | cross_project_refs | graph_stats | save_graph | load_graph",
-    "project": "myshop",
-    "version": "v1",
-    "user_intent": "I want to build an online retail shop...",
-    "industry": "retail",
-    "puzzles": { ... },
-    "objects": [ ... ],
-    "edges": [ ... ],
-    "steps": [ ... ],
-    "substeps": [ ... ],
-    "network": "testnet"
-  }
-}
-```
-
----
-
-## Schema Tree
-
-```
-project_operation (5-Stage Deployment & Object Graph)
-├── action (required)
-│   ├── Graph Query (10 actions)
-│   │   ├── "list_projects"
-│   │   ├── "list_objects" (requires project)
-│   │   ├── "shareable"
-│   │   ├── "dependencies" (requires object)
-│   │   ├── "referenced_by" (requires object)
-│   │   ├── "pre_publish_check" (requires object)
-│   │   ├── "cross_project_refs"
-│   │   ├── "graph_stats"
-│   │   ├── "save_graph"
-│   │   └── "load_graph"
-│   └── Deployment Workflow (5 actions)
-│       ├── "analyze_intent" (Stage 2)
-│       ├── "aggregate_risks" (Stage 3)
-│       ├── "generate_deployment_doc" (Stage 4)
-│       ├── "trace_substeps" (Stage 5)
-│       └── "get_project_status"
-├── project (optional) — Project prefix (e.g. "myshop")
-├── version (optional) — Project version (e.g. "v1", regex: ^v\d+$)
-├── object (optional) — Object name/address for dependencies/referenced_by
-│
-├── Stage 2: analyze_intent inputs
-│   ├── user_intent (required for analyze_intent) — Natural language business intent (1-2000 chars)
-│   ├── industry (optional) — "general" | "retail" | "service" | "rental" | "freelance" | "education" | "travel" | "subscription" | "custom"
-│   └── target_objects (optional) — Explicit target object IDs or types
-│
-├── Stage 3: aggregate_risks inputs
-│   ├── puzzles (required) — Per-object puzzle snapshots keyed by object_type
-│   ├── severity_threshold (optional) — "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO"
-│   └── user_confirmed_high_risks (optional) — IDs of confirmed HIGH risks to suppress
-│
-├── Stage 4: generate_deployment_doc inputs
-│   ├── business_intent (required) — One-line description (1-500 chars)
-│   ├── author (optional) — Author name for doc meta
-│   ├── objects (required) — Deployment objects array
-│   ├── edges (required) — Dependency graph edges array
-│   ├── steps (required) — Topological execution plan
-│   ├── scenarios (optional) — Business scenarios for §7
-│   ├── risk_status (optional) — From aggregate_risks
-│   ├── risk_critical_count (optional) — From aggregate_risks
-│   ├── risk_high_count (optional) — From aggregate_risks
-│   └── run_scanner (optional, default true) — Run deployment-scanner validation
-│
-├── Stage 5: trace_substeps inputs
-│   ├── network (optional) — "testnet" | "mainnet"
-│   └── substeps (required) — Substep records array
-│
-└── get_project_status inputs
-    ├── project (required)
-    └── version (required)
-```
-
----
-
-## 5-Stage Deployment Workflow
+## Deployment Workflow
 
 ### Correct Object Creation Order (Topological)
 
@@ -136,22 +37,64 @@ All objects created as draft (`publish=false`) first; publish Machine before Ser
 ```
 Stage 1: Project Naming (project + version params)
     ↓
-Stage 2: analyze_intent → ODG + puzzles + next_action
+Stage 2: goal_operation analyze_intent (C1) → ODG + puzzles + creation order
     ↓ (fill missing fields if needed)
-Stage 3: aggregate_risks → findings + can_proceed
+Stage 3: goal_operation aggregate_risks (C2) → findings + can_proceed
     ↓ (fix CRITICAL risks if any)
-Stage 4: generate_deployment_doc → markdown + D-checks + can_proceed
-    ↓ (fix D-errors if any)
-Stage 5: trace_substeps → coherence + D-10 + can_proceed
-    ↓ (execute substeps via onchain_operations)
+Stage 4: Execute the creation plan via onchain_operations
+    ↓ (record each executed substep)
+Stage 5: goal_operation trace_substeps (C3) → coherence + D-10 verdict
+    ↓ (fix dangling inputs / cycles if any)
 Done
 ```
 
-Each stage's output includes `next_action` telling you which action to call next, and `can_proceed` indicating whether you can move to the next stage.
+The optional 10-step `merchant_guide` wizard covers the same ground from the merchant's perspective (intent → industry confirmation → module adoption → SemanticObjectGraph blueprint → evaluation preview → harness check → creation plan) — see below.
 
 ---
 
-## Example 1: Analyze Intent (Stage 2)
+## Planning Pipeline Schema (goal_operation actions)
+
+```
+goal_operation (planning actions)
+├── action: "analyze_intent" (C1)
+│   ├── intent (optional) — business intent text, max 2000 chars
+│   ├── project_name (optional) — business name (intent fallback)
+│   ├── project_description (optional) — business description (intent fallback)
+│   ├── project_industry (optional) — "general" | "retail" | "retail_d2c" | "service" | "rental" | "freelance" | "education" | "travel" | "subscription" | "custom"
+│   ├── target_objects (optional) — explicit target entry_ids or object_type names
+│   ├── project (optional) — project prefix (e.g. "myshop"); keys the stage cache
+│   ├── version (optional) — project version (regex ^v\d+$, default "v1")
+│   └── network (optional) — "testnet" | "mainnet"
+│
+├── action: "aggregate_risks" (C2)
+│   ├── project (required in practice) — project prefix for the stage cache
+│   ├── version (optional) — regex ^v\d+$, default "v1"
+│   ├── puzzles (optional) — per-object snapshots { puzzle, completeness, missing_dimensions } keyed by object_type; pass UNCHANGED from C1
+│   ├── intent / project_name / project_description / project_industry (optional) — when puzzles is omitted and intent is present, C1 runs automatically first (C1→C2 in one call)
+│   ├── severity_threshold (optional) — "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO" (default "HIGH")
+│   ├── user_confirmed_high_risks (optional) — IDs of HIGH risks confirmed in a prior round
+│   ├── planned_objects (optional) — [{ object_type, is_new, name? }] for the OBJECT_REUSE check
+│   ├── planned_operations (optional) — [{ object_type, trigger: "create"|"publish", name? }] for the IMMUTABILITY check
+│   └── network (optional) — "testnet" | "mainnet"
+│
+├── action: "trace_substeps" (C3)
+│   ├── project (required in practice) — project prefix for the stage cache
+│   ├── version (optional) — regex ^v\d+$, default "v1"
+│   ├── substeps (required) — execution records: [{ step_id "T<step>.<sub>", parent_step "T<step>", object_type, entry_id, operation_type, network, input: { data, input_refs }, output?: { object_id?, tx_digest? }, timestamp, status: "PENDING"|"SUCCESS"|"FAILED"|"SKIPPED", failure_reason?, dependencies: { input_refs, output_refs: [{ substep_id, field_path }] }, retry_info? }]
+│   ├── substep_edges (optional) — [{ source, target, field_path }]; derived from input_refs when omitted
+│   └── network (optional) — "testnet" | "mainnet"
+│
+└── action: "merchant_guide"
+    ├── intent / project_name / project_description / project_industry (optional)
+    ├── guide_state (optional) — wizard state from a prior result; pass back UNCHANGED
+    └── guide_confirm (optional) — merchant decisions for the current step (industry / currency / deliverables / payment / trust / adopted_module_ids)
+```
+
+> **Note**: `analyze_intent` without `project` is a pure analysis call (no stage-cache state). C2 and C3 key their stage cache by `project:version` and warn when called out of sequence (e.g. `aggregate_risks` before `analyze_intent`).
+
+---
+
+## Example 1: Analyze Intent (Stage 2, C1)
 
 ### Feature Description
 
@@ -165,13 +108,13 @@ Parse natural-language business intent into an Object Dependency Graph (ODG). Pr
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "goal_operation",
   "data": {
     "action": "analyze_intent",
     "project": "myshop",
     "version": "v1",
-    "user_intent": "Build an online retail shop with product selling service, order processing machine workflow, and dispute resolution arbitration",
-    "industry": "retail"
+    "intent": "Build an online retail shop with product selling service, order processing machine workflow, and dispute resolution arbitration",
+    "project_industry": "retail"
   }
 }
 ```
@@ -251,7 +194,6 @@ Parse natural-language business intent into an Object Dependency Graph (ODG). Pr
         "overall_completeness": "partial",
         "next_step": "Fill missing fields: service.sales, service.machine, service.buy_guard, machine.nodes",
         "recommended_creation_order": ["permission", "guard", "machine", "service", "arb"],
-        "next_action": "none",
         "warnings": []
       }
     }
@@ -260,29 +202,30 @@ Parse natural-language business intent into an Object Dependency Graph (ODG). Pr
 }
 ```
 
-> **Note**: `next_action: "none"` means you must fill missing fields before proceeding. Once all puzzles are complete, `next_action` will become `"aggregate_risks"`.
+> **Note**: Pass the `puzzles` object UNCHANGED to `aggregate_risks` in the next stage. Fill missing fields before proceeding so risk calibration sees complete puzzles.
 
 ---
 
-## Example 2: Aggregate Risks (Stage 3)
+## Example 2: Aggregate Risks (Stage 3, C2)
 
 ### Feature Description
 
-Evaluate deployment risks from puzzle data. CRITICAL risks block deployment; HIGH/MEDIUM/LOW only warn.
+Evaluate deployment risks from puzzle data. CRITICAL risks (or risks at/above `severity_threshold`) block deployment (status `RISK_BLOCKED`); HIGH risks without confirmation yield `RISK_PENDING_CONFIRM`; lower severities only warn.
 
 ### Examples
 
-#### Example 2.1: Check Risks
+#### Example 2.1: Check Risks (C1→C2 in one call)
 
 **Prompt**: Run risk assessment for myshop v1. Here are the completed puzzles.
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "goal_operation",
   "data": {
     "action": "aggregate_risks",
     "project": "myshop",
     "version": "v1",
+    "project_industry": "retail",
     "puzzles": {
       "service": {
         "puzzle": { "name": "myshop_service", "sales": [{"price": "1000000000"}], "machine": "myshop_workflow", "buy_guard": "myshop_guard" },
@@ -366,10 +309,7 @@ Evaluate deployment risks from puzzle data. CRITICAL risks block deployment; HIG
           ]
         },
         "calibrated_at": 1784673600000,
-        "warnings": [],
-        "can_proceed": true,
-        "next_action": "generate_deployment_doc",
-        "user_action_required": "No CRITICAL risks found. You may proceed to generate the deployment document. Consider addressing the HIGH/MEDIUM findings for better safety."
+        "warnings": []
       }
     }
   },
@@ -377,461 +317,191 @@ Evaluate deployment risks from puzzle data. CRITICAL risks block deployment; HIG
 }
 ```
 
-> **Note**: `can_proceed: true` because there are 0 CRITICAL risks. The HIGH risk (no compensation fund) and MEDIUM risk (no arbitration) are warnings only. `next_action: "generate_deployment_doc"` indicates you can proceed to Stage 4.
+> **Note**: `status: "RISK_PASSED"` because no risk reached the MEDIUM threshold as blocking (0 CRITICAL). Address the HIGH/MEDIUM findings for better safety. A `RISK_PENDING_CONFIRM` status lists `pending_confirmations` — resolve them via `user_confirmed_high_risks` on a follow-up call.
 
 ---
 
-## Example 3: Generate Deployment Doc (Stage 4)
+## Example 3: Trace Substeps (Stage 5, C3)
 
 ### Feature Description
 
-Generate a markdown deployment document with D-01..D-18 scanner checks. 0 D-errors required before Stage 5.
+Verify substep execution coherence after deployment: dangling inputs, circular references, missing outputs, cross-step breaks, topological order, and the D-10 substep-linkage verdict.
 
 ### Examples
 
-#### Example 3.1: Generate Deployment Doc
+#### Example 3.1: Trace a Completed Deployment
 
-**Prompt**: Generate the deployment document for myshop v1.
+**Prompt**: Verify substep coherence for myshop v1 — these are the executed substeps.
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "goal_operation",
   "data": {
-    "action": "generate_deployment_doc",
+    "action": "trace_substeps",
     "project": "myshop",
     "version": "v1",
-    "business_intent": "Online retail shop with product selling and order processing",
-    "objects": [
+    "network": "testnet",
+    "substeps": [
       {
-        "entry_id": "permission:myshop_perm",
+        "step_id": "T1.1",
+        "parent_step": "T1",
         "object_type": "permission",
-        "name": "myshop_perm",
-        "publish_required": false
-      },
-      {
-        "entry_id": "guard:myshop_guard",
-        "object_type": "guard",
-        "name": "myshop_guard",
-        "publish_required": false
-      },
-      {
-        "entry_id": "machine:myshop_workflow",
-        "object_type": "machine",
-        "name": "myshop_workflow",
-        "publish_required": true
-      },
-      {
-        "entry_id": "service:myshop_service",
-        "object_type": "service",
-        "name": "myshop_service",
-        "publish_required": true
-      }
-    ],
-    "edges": [
-      {
-        "from": "service:myshop_service",
-        "to": "machine:myshop_workflow",
-        "edge_kind": "machine",
-        "field_path": "data.machine",
-        "required_at_publish": true
-      },
-      {
-        "from": "service:myshop_service",
-        "to": "guard:myshop_guard",
-        "edge_kind": "buy_guard",
-        "field_path": "data.buy_guard",
-        "required_at_publish": false
-      }
-    ],
-    "steps": [
-      {
-        "step": 1,
-        "object_type": "permission",
-        "operation": "create permission myshop_perm",
-        "substep_count": 1,
-        "depends_on": [],
         "entry_id": "permission:myshop_perm",
-        "network_phase": "testnet"
+        "operation_type": "permission",
+        "network": "testnet",
+        "input": { "data": { "object": { "name": "myshop_perm" } }, "input_refs": [] },
+        "output": { "object_id": "0x…" },
+        "timestamp": 1784673600000,
+        "status": "SUCCESS",
+        "dependencies": { "input_refs": [], "output_refs": [{ "substep_id": "T2.1", "field_path": "permission_address" }] }
       },
       {
-        "step": 2,
-        "object_type": "guard",
-        "operation": "create guard myshop_guard",
-        "substep_count": 1,
-        "depends_on": [1],
-        "entry_id": "guard:myshop_guard",
-        "network_phase": "testnet"
-      },
-      {
-        "step": 3,
-        "object_type": "machine",
-        "operation": "create machine myshop_workflow",
-        "substep_count": 3,
-        "depends_on": [1],
-        "entry_id": "machine:myshop_workflow",
-        "network_phase": "testnet"
-      },
-      {
-        "step": 4,
+        "step_id": "T2.1",
+        "parent_step": "T2",
         "object_type": "service",
-        "operation": "create service myshop_service",
-        "substep_count": 2,
-        "depends_on": [2, 3],
         "entry_id": "service:myshop_service",
-        "network_phase": "testnet"
+        "operation_type": "service",
+        "network": "testnet",
+        "input": { "data": { "object": { "name": "myshop_service" }, "permission": "0x…" }, "input_refs": ["T1.1"] },
+        "output": { "object_id": "0x…" },
+        "timestamp": 1784673700000,
+        "status": "SUCCESS",
+        "dependencies": { "input_refs": ["T1.1"], "output_refs": [] }
       }
-    ],
-    "risk_status": "RISK_PASSED",
-    "risk_critical_count": 0,
-    "risk_high_count": 1
+    ]
   }
 }
 ```
 
-**Execution Result**:
+**Response highlights**:
 ```json
 {
   "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "generate_deployment_doc",
-        "markdown": "# Deployment Document: myshop v1\n\n## §0 Meta\n- Project: myshop\n- Version: v1\n- Generated: 2026-07-22T...\n- Objects: 4\n- Steps: 4\n\n## §1 Objects\n...\n## §2 Dependency Graph\n...\n## §3 Execution Plan\n...\n## §4 Risk Status\n...\n## §5 Scanner Checks\n...\n## §6 Gas Estimate\n...\n## §7 Scenarios\n...",
-        "meta": {
-          "project_prefix": "myshop",
-          "version": "v1",
-          "generated_at": "2026-07-22T12:00:00.000Z",
-          "object_count": 4,
-          "step_count": 4
-        },
-        "validation": {
-          "valid": true,
-          "checks": [
-            {
-              "check_id": "D-01",
-              "description": "All required objects have names",
-              "status": "PASS"
-            },
-            {
-              "check_id": "D-02",
-              "description": "All edges reference existing objects",
-              "status": "PASS"
-            },
-            {
-              "check_id": "D-10",
-              "description": "Substep linkage is coherent",
-              "status": "PASS"
-            },
-            {
-              "check_id": "D-16",
-              "description": "Risk status is not blocked",
-              "status": "PASS",
-              "notes": "RISK_PASSED with 0 CRITICAL, 1 HIGH"
-            }
-          ],
-          "errors": []
-        },
-        "estimated_gas": {
-          "total_gas_mist": 25000000,
-          "per_object": [
-            {
-              "entry_id": "permission:myshop_perm",
-              "object_type": "permission",
-              "create_gas_mist": 3000000,
-              "publish_gas_mist": 0
-            },
-            {
-              "entry_id": "guard:myshop_guard",
-              "object_type": "guard",
-              "create_gas_mist": 5000000,
-              "publish_gas_mist": 0
-            },
-            {
-              "entry_id": "machine:myshop_workflow",
-              "object_type": "machine",
-              "create_gas_mist": 7000000,
-              "publish_gas_mist": 2000000
-            },
-            {
-              "entry_id": "service:myshop_service",
-              "object_type": "service",
-              "create_gas_mist": 6000000,
-              "publish_gas_mist": 2000000
-            }
-          ],
-          "publish_gas_mist": 4000000
-        },
-        "can_proceed": true,
-        "next_action": "trace_substeps",
-        "user_action_required": "Deployment doc generated with 0 D-errors. Proceed to trace substeps for execution verification."
-      }
-    }
-  },
-  "schema": null
+    "action": "trace_substeps",
+    "namespace": { "prefix": "myshop", "version": "v1" },
+    "network": "testnet",
+    "coherent": true,
+    "dangling_inputs": [],
+    "circular_refs": [],
+    "missing_outputs": [],
+    "cross_step_breaks": [],
+    "topological_order": ["T1.1", "T2.1"],
+    "d10_check": { "check_id": "D-10", "description": "Substep linkage completeness", "status": "PASS", "notes": [] }
+  }
 }
 ```
 
-> **Note**: `can_proceed: true` because there are 0 D-errors. The `estimated_gas` field shows gas cost estimates in MIST (1 WOW = 10^9 MIST). `next_action: "trace_substeps"` indicates you can proceed to Stage 5.
+> **Note**: `coherent: true` + `D-10: PASS` means the execution trace is deployment-ready. Fix `dangling_inputs` / `circular_refs` / `missing_outputs` / `cross_step_breaks` before publishing.
 
 ---
 
-## Example 4: Get Project Status
+## Example 4: Merchant Onboarding Wizard (Optional Path)
 
 ### Feature Description
 
-Query the current stage (1-5) of a project. Can be called anytime to check progress.
+`goal_operation` action=`merchant_guide` is a stateless 10-step wizard: intent text → BusinessIntent → industry confirmation → module adoption → SemanticObjectGraph blueprint → evaluation preview → harness check → creation plan. It NEVER executes on-chain operations; materialize the plan via `onchain_operations`.
 
 ### Examples
 
-#### Example 4.1: Check Project Status
+#### Example 4.1: Start the Wizard
 
-**Prompt**: What stage is myshop v1 currently in?
+**Prompt**: I rent cameras to photographers with a deposit and damage inspection. Guide me through building this service.
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "goal_operation",
   "data": {
-    "action": "get_project_status",
-    "project": "myshop",
-    "version": "v1"
+    "action": "merchant_guide",
+    "intent": "I rent cameras to photographers with deposit and damage inspection"
   }
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "get_project_status",
-        "project": "myshop",
-        "version": "v1",
-        "stage": 4,
-        "stage_name": "Deployment Doc Generated",
-        "stage_description": "Deployment document has been generated with 0 D-errors. Ready for substep tracing.",
-        "next_action": "trace_substeps",
-        "can_proceed": true,
-        "last_updated": 1784673600000,
-        "risk_status": "RISK_PASSED",
-        "risk_can_proceed": true,
-        "doc_generated": true,
-        "trace_coherent": null
-      }
-    }
-  },
-  "schema": null
-}
-```
-
-> **Note**: Stage 4 means the deployment doc has been generated. `trace_coherent: null` indicates Stage 5 has not been run yet.
+Pass the returned `guide_state` back UNCHANGED on every subsequent call, adding `guide_confirm` decisions (industry → deliverables → currency/payment → trust → module adoption) until `current_step` reaches 10 and `creation_plan` is returned.
 
 ---
 
-## Example 5: Graph Query Actions
+## Graph & Business-Intelligence Queries (query_toolkit)
 
-### Feature Description
+The former graph-query actions are served by `query_toolkit` query types. All are read-only and accept `context_network` ("testnet" | "mainnet" | "localnet"):
 
-Query the local object dependency graph for analysis and debugging.
+| query_type | Purpose |
+|---|---|
+| `service_panorama` | ONE-CALL full Service BI context (base data + workflow graph + guards + supply chain + trust + BusinessReport + recent orders) |
+| `machine_panorama` | Machine counterpart (head + fields + workflow graph + Progress list) |
+| `object_panorama` | Detail-page panorama for Progress / Demand / Order / Arb / Repository |
+| `onchain_topology` | Expand the object graph outward from a seed address/name with semantic intents (full_map, fund_flow, workflow, counterparty, supply_chain, …) + analyzer findings (risk/arbitrage/opportunity/game) — replaces dependencies/referenced_by/graph_stats |
+| `relationship_profile` | ONE account's full relationship web (employment, agency, supply, arbitration delegation, value flows, contact membership) |
+| `reverse_map` | Deterministic L4→L1 business report from on-chain objects |
+| `participation_radar` | In-flight order participation analysis for ONE account |
+| `review_pack` | Typed ReviewPack for generic detail renderers |
+| `assemble_context` | Semantic context assembly from on-chain objects |
+| `workspace_lists` | ONE-CALL workspace object lists for one account (or all local accounts) |
+| `marks_of_account` | LocalMark registry entries (registrar votes) keyed by account |
 
-### Examples
-
-#### Example 5.1: List All Projects
-
-**Prompt**: Show me all discovered projects.
+#### Example: Service Panorama
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "query_toolkit",
   "data": {
-    "action": "list_projects"
+    "query_type": "service_panorama",
+    "service_address": "myshop_service",
+    "context_network": "testnet"
   }
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "list_projects",
-        "items": [
-          {
-            "prefix": "myshop",
-            "versions": ["v1"],
-            "object_count": 4,
-            "edge_count": 2
-          },
-          {
-            "prefix": "marketplace",
-            "versions": ["v1", "v2"],
-            "object_count": 8,
-            "edge_count": 5
-          }
-        ]
-      }
-    }
-  },
-  "schema": null
-}
-```
-
-#### Example 5.2: List Objects in a Project
-
-**Prompt**: Show me all objects in the myshop project.
+#### Example: Topology from a Service Seed
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "query_toolkit",
   "data": {
-    "action": "list_objects",
-    "project": "myshop"
+    "query_type": "onchain_topology",
+    "focus": "myshop_service",
+    "intent": "full_map",
+    "context_network": "testnet"
   }
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "list_objects",
-        "items": [
-          {
-            "entry_id": "permission:myshop_perm",
-            "object_type": "permission",
-            "name": "myshop_perm",
-            "address": "0xabc123...def"
-          },
-          {
-            "entry_id": "guard:myshop_guard",
-            "object_type": "guard",
-            "name": "myshop_guard",
-            "address": "0xghi456...jkl"
-          },
-          {
-            "entry_id": "machine:myshop_workflow",
-            "object_type": "machine",
-            "name": "myshop_workflow",
-            "address": "0xmno789...pqr"
-          },
-          {
-            "entry_id": "service:myshop_service",
-            "object_type": "service",
-            "name": "myshop_service",
-            "address": null
-          }
-        ]
-      }
-    }
-  },
-  "schema": null
-}
-```
+---
 
-#### Example 5.3: Graph Statistics
+## Graph Persistence (workspace_operation)
 
-**Prompt**: Give me statistics about the object dependency graph.
+`save_graph` / `load_graph` are replaced by explicit workspace files:
 
 ```json
 {
-  "tool": "project_operation",
+  "tool": "workspace_operation",
   "data": {
-    "action": "graph_stats"
+    "action": "write",
+    "path": "myshop-v1-graph.json",
+    "content": "{ ... serialized object graph ... }"
   }
 }
 ```
 
-**Execution Result**:
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "graph_stats",
-        "stats": {
-          "total_nodes": 12,
-          "total_edges": 7,
-          "projects": 2,
-          "cycles": 0,
-          "dangling_deps": 1,
-          "published_objects": 3,
-          "draft_objects": 9
-        }
-      }
-    }
-  },
-  "schema": null
-}
-```
-
-#### Example 5.4: Pre-Publish Check
-
-**Prompt**: Run a pre-publish sanity check on the myshop_service object.
-
-```json
-{
-  "tool": "project_operation",
-  "data": {
-    "action": "pre_publish_check",
-    "object": "myshop_service"
-  }
-}
-```
-
-**Execution Result**:
-```json
-{
-  "result": {
-    "status": "success",
-    "data": {
-      "result": {
-        "action": "pre_publish_check",
-        "warnings": [
-          "Service depends on machine 'myshop_workflow' which is not yet published."
-        ]
-      }
-    }
-  },
-  "schema": null
-}
-```
-
-> **Note**: Empty `warnings` array means no issues detected. Non-empty array lists specific problems to fix before publishing.
+Read it back with `action: "read"` and the same `path`. List workspace files with `action: "list"`.
 
 ---
 
 ## Important Notes
 
-⚠️ **5-stage workflow must be followed in order**: Stage 1 → 2 → 3 → 4 → 5. Each stage's `next_action` field tells you the next step.
+⚠️ **`project_operation` no longer exists** — calls to it fail at tool dispatch. Use the mapping table at the top of this document.
 
-⚠️ **CRITICAL risks block deployment**: Only CRITICAL severity risks prevent proceeding from Stage 3 to Stage 4. HIGH/MEDIUM/LOW are warnings only.
+⚠️ **Stage sequencing is enforced by advisory warnings** — C2/C3 key the stage cache by `project:version` and recommend completing prior stages first, but never block.
 
-⚠️ **0 D-errors required**: The deployment doc scanner (D-01..D-18) must have 0 errors before proceeding to Stage 5. Warnings (WARN) are acceptable.
-
-⚠️ **Version format**: Must match `^v\d+$` (e.g., `v1`, `v2`, `v10`). Not `version1` or `v1.0`.
-
-⚠️ **Object creation order**: Always follow topological order — Permission → Allocation → Guard → Machine → Service. All objects created as draft first; publish Machine before Service.
-
-⚠️ **Graph queries are read-only**: The 10 graph query actions do not modify state. Only C1-C4 deployment actions (Stages 2-5) and save_graph/load_graph modify state.
-
-⚠️ **ProjectService must be enabled**: The `project_service` config toggle must be ON (default) for auto-tagging and graph maintenance. Use [config_operation](config.md) to check/toggle.
+⚠️ **Planning actions are deterministic and read-only** — no LLM in the compute path, no chain mutation. Execution happens only through `onchain_operations`.
 
 ---
 
 ## Related Components
 
-| Component | Description |
-|-----------|-------------|
-| **[Service](service.md)** | Service objects — typically the primary object in a deployment |
-| **[Machine](machine.md)** | Machine workflow — order processing automation |
-| **[Permission](permission.md)** | Permission — access control for all objects |
-| **[Guard](guard.md)** | Guard — trust verification rules |
-| **[Config](config.md)** | Runtime toggles — controls ProjectService enable/disable |
-| **[Response Format](response-format.md)** | Response structure for all WoWok operations |
+- [Service](service.md) — the primary publishable object of most projects
+- [Machine](machine.md) — workflow definition consumed by Service
+- [Guard](guard.md) — verification conditions (buy_guard, usage_guard)
+- [Permission](permission.md) — operation authority, created first in the topology
+- [Arbitration](arbitration.md) — dispute resolution attached to services
+- [Query](query.md) — query_toolkit reference for the BI query types above

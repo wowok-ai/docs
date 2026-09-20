@@ -51,8 +51,7 @@ order (Order Object)
 │   │   ├── operation (ProgressNext, required)
 │   │   │   ├── next_node_name (string, required) - Target node name
 │   │   │   └── forward (string, required) - Forward transition name
-│   │   ├── hold (boolean, optional) - Lock operation permission
-│   │   ├── adminUnhold (boolean, optional) - Allow admin unlock
+│   │   ├── op (string, optional) - "next" (default) | "hold" | "unhold" | "adminUnhold" — advance the forward / set hold to block it / self-release hold / force-release via 224 permission
 │   │   └── message (string, optional) - Operation result message
 │   ├── arb_confirm (ArbConfirmSchema, optional) - Submit arbitration request
 │   │   ├── arb (NameOrAddress, required) - Arb object ID or name
@@ -351,16 +350,15 @@ Advance the order's Progress workflow, moving from current node to next node.
 | `data.progress.operation` | object | Yes | Operation definition |
 | `data.progress.operation.next_node_name` | string | Yes | Next node name (defined in Machine) |
 | `data.progress.operation.forward` | string | Yes | Forward direction (defined in Machine) |
-| `data.progress.hold` | boolean | No | Whether to lock (true=lock, false=submit). Defaults to false if omitted |
-| `data.progress.adminUnhold` | boolean | No | Allow admin unlock (when hold=true) |
+| `data.progress.op` | string | No | Operation on the forward: "next" (default, submit result and advance), "hold" (lock permission), "unhold" (self-release hold), "adminUnhold" (force-release via 224 permission) |
 | `data.progress.message` | string | No | Operation result message |
 | `env` | object | No | Execution environment |
 
 ### Important Notes
 
-⚠️ **hold field determines operation type!**
-- **`hold: true`**: Lock operation permissions to prevent race conditions
-- **`hold: false`**: Submit operation result and advance to next node
+⚠️ **op field determines operation type!**
+- **`op: "hold"`**: Lock operation permissions to prevent race conditions
+- **`op: "next"` (default)**: Submit operation result and advance to next node
 
 ⚠️ **next_node_name and forward must be valid values defined in Machine!** Ensure node and transition names are correct.
 
@@ -388,7 +386,7 @@ Returns transaction block information (WowTransactionBlockSchema).
           "next_node_name": "in_review",
           "forward": "submit_review"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order submitted for review successfully"
       }
     }
@@ -414,8 +412,7 @@ Returns transaction block information (WowTransactionBlockSchema).
           "next_node_name": "processing",
           "forward": "start_process"
         },
-        "hold": true,
-        "adminUnhold": true,
+        "op": "hold",
         "message": "Locking for exclusive processing"
       }
     }
@@ -441,7 +438,7 @@ Returns transaction block information (WowTransactionBlockSchema).
           "next_node_name": "completed",
           "forward": "finish"
         },
-        "hold": false
+        "op": "next"
       }
     }
   }
@@ -795,7 +792,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
           "next_node_name": "active",
           "forward": "activate"
         },
-        "hold": false
+        "op": "next"
       }
     }
   }
@@ -847,7 +844,7 @@ Execute multiple Order operations in one transaction, such as setting agents and
           "next_node_name": "delivered",
           "forward": "confirm_delivery"
         },
-        "hold": false,
+        "op": "next",
         "message": "Order delivery confirmed"
       },
       "receive": {
@@ -1040,8 +1037,7 @@ Day 14: Process complete, received funds
 
 ⚠️ **progress field uses OperateSchema structure!**
 - `operation`: Contains `next_node_name` and `forward` specifying next node and direction
-- `hold`: true = lock operation permission, false = submit operation result
-- `adminUnhold`: Optional when hold=true, allows admin force unlock
+- `op`: "next" (default, submit result and advance), "hold" (lock permission), "unhold" (self-release hold), "adminUnhold" (force-release via 224 permission)
 - `message`: Optional operation result message
 
 ⚠️ **next_node_name and forward must be valid values defined in Machine!**
