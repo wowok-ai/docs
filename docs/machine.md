@@ -215,6 +215,16 @@ A Machine consists of nodes and their connections:
   - Use other names for custom operator namespaces
 - `permissionIndex`: Permission index (shared across all Progress objects)
 
+**Forward Guard Security Rules:**
+
+1. **Attach Guards to permissioned (provider-side) forwards only.** A forward with `namedOperator: ""` is executable by the order owner (customer) and their agents. If such a forward also carries a `guard`, the customer controls when the Guard is exercised, and every value the customer submits enters the workflow under the Guard's table. Only do this when customer-controlled advancement with those inputs is explicitly intended; most business flows should keep customer forwards Guard-free and let the provider advance guarded steps via `permissionIndex`.
+
+2. **Understand `retained_submission` — it selects what is persisted AFTER Guard verification.** For a Guard-attached forward, the runtime behavior is independent of whether `retained_submission` is empty:
+   - The Guard's full verification logic is **ALWAYS executed**: the passport must carry a verified, passing result for the forward's Guard, regardless of the `retained_submission` list.
+   - `retained_submission: []` (default): nothing extra is recorded; the forward completes with no retained submissions.
+   - `retained_submission` listing Guard table identifiers: after the Guard has passed, the values the caller submitted for those identifiers are copied into the Progress history as the permanent record of this forward. The values are still bounded by what the Guard validated — they are read from the same verified passport, never substituted for verification.
+   - Consequence: treat retained values as *Guard-verified inputs the caller chose to persist*, useful for audit and downstream queries (e.g. a procured sub-service / sub-order address). They do not relax any Guard condition.
+
 ### Permission Index Guide for Forward Operations
 
 When defining forward operations in Machine nodes, the `permissionIndex` field specifies who can execute that forward. **Important**: The permission index for forward operations is NOT the same as Machine management permissions (200-208).
@@ -2493,6 +2503,8 @@ The exported file contains the complete node array:
   // ... more nodes
 ]
 ```
+
+> **Security note**: `retained_submission: []` is the default. Guard verification is **always enforced**, whether or not identifiers are listed — a non-empty list only records the caller's Guard-verified submissions into the Progress history after the Guard has passed (see Forward Guard Security Rules above).
 
 ---
 

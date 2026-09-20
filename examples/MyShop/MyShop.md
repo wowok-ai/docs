@@ -531,7 +531,7 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
         "onChain": false,
         "replaceExistName": true
       },
-      "description": "Verify order progress is at Completed node for merchant withdrawal. RISK ELIMINATION: Three-fold verification - (1) order at Completed node, (2) signer is myshop_merchant (prevents fund theft), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
+      "description": "Verify order progress is at the Completed node for merchant withdrawal, the order belongs to myshop_service_v2, and the transaction caller is myshop_merchant. The allocator pays the Signer, so restricting it to the merchant address is what makes the withdrawal safe.",
       "table": [
         {
           "identifier": 0,
@@ -630,11 +630,11 @@ Create a Guard that validates the order's Progress has reached the "Completed" n
 - **Table Item 2**: Constant address `myshop_merchant` (authorized merchant)
 - **Table Item 3**: Constant address `myshop_service_v2` (this service's on-chain address)
 - **Condition 1 — Order Completed**: `logic_equal[query("progress.current", witness="OrderProgress"), identifier[1]]` — queries the submitted Order's Progress (via witness "OrderProgress") and verifies the current node is "Completed"
-- **Condition 2 — Signer is Merchant**: `logic_equal[context(Signer), identifier[2]]` — verifies the transaction caller is `myshop_merchant`, **preventing fund theft by unauthorized callers** (R-C3-01/R-C3-06)
-- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — queries the submitted Order's `service` field and verifies it equals `myshop_service_v2`, **preventing cross-service theft** where someone submits another service's Completed order (R-C3-05)
+- **Condition 2 — Signer is Merchant**: `logic_equal[context(Signer), identifier[2]]` — verifies the transaction caller is `myshop_merchant`, preventing withdrawal by anyone else
+- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — queries the submitted Order's `service` field and verifies it equals `myshop_service_v2`, preventing submission of another service's Completed order
 - **root**: `logic_and` of all three conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-06)**: The allocator uses `"who": {"Signer": "signer"}` (funds go to the caller). This is safe ONLY because Condition 2 binds the Signer to `myshop_merchant`. Without this binding, anyone could submit any Completed order and steal 100% of funds. The three-fold verification ensures only the authorized merchant can trigger withdrawal.
+> **Why the Signer recipient is safe here**: the allocator uses `"who": {"Signer": "signer"}` (funds go to the caller). Condition 2 binds the Signer to `myshop_merchant`, so only the authorized merchant can trigger the withdrawal and receive the funds.
 >
 > **Note**: The Guard `root` field directly specifies the GuardNode (e.g., `type: "logic_and"`), not wrapped in a `type: "node"` object.
 
@@ -652,11 +652,11 @@ Create a Guard for customer refunds when order is cancelled.
     "data": {
       "namedNew": {
         "name": "myshop_refund_guard_v2",
-        "tags": ["order", "cancelled", "refund", "signer-bound"],
+        "tags": ["order", "cancelled", "refund"],
         "onChain": false,
         "replaceExistName": true
       },
-      "description": "Verify order progress is at Cancelled node for customer refund. RISK ELIMINATION: Three-fold verification - (1) order at Cancelled node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to myshop_service_v2 (prevents cross-service theft).",
+      "description": "Verify order progress is at Cancelled node for customer refund, and the order belongs to myshop_service_v2. The refund is delivered to the submitted Order as escrow and received by its owner; no Signer constraint is needed because the funds never go to the caller.",
       "table": [
         {
           "identifier": 0,
@@ -704,23 +704,6 @@ Create a Guard for customer refunds when order is cancelled.
             "type": "logic_equal",
             "nodes": [
               {
-                "type": "context",
-                "context": "Signer"
-              },
-              {
-                "type": "query",
-                "query": "order.owner",
-                "object": {
-                  "identifier": 0
-                },
-                "parameters": []
-              }
-            ]
-          },
-          {
-            "type": "logic_equal",
-            "nodes": [
-              {
                 "type": "query",
                 "query": "order.service",
                 "object": {
@@ -746,18 +729,21 @@ Create a Guard for customer refunds when order is cancelled.
 }
 ```
 
-**Guard Explanation (Three-fold Verification):**
+**Guard Explanation:**
 - **Table Item 0**: Order address (submitted at runtime, typed as Order object)
 - **Table Item 1**: Constant string "Cancelled" (the target node name)
 - **Table Item 2**: Constant address `myshop_service_v2` (this service's on-chain address)
 - **Condition 1 — Order Cancelled**: `logic_equal[query("progress.current", witness="OrderProgress"), identifier[1]]` — queries the submitted Order's Progress (via witness "OrderProgress") and verifies the current node is "Cancelled"
-- **Condition 2 — Signer is Order Owner**: `logic_equal[context(Signer), query("order.owner")]` — verifies the transaction caller is the Order's owner (dynamic query, not a fixed address), **preventing fund theft by unauthorized callers** (R-C3-01/R-C3-06). Only the customer who placed the order can trigger their own refund.
-- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — queries the submitted Order's `service` field and verifies it equals `myshop_service_v2`, **preventing cross-service theft** (R-C3-05)
-- **root**: `logic_and` of all three conditions — all must pass for refund allocation to proceed
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — queries the submitted Order's `service` field and verifies it equals `myshop_service_v2`, so only an order of this service can qualify
+- **root**: `logic_and` of both conditions — all must pass for refund allocation to proceed
 
-> **Risk Elimination (R-C3-06)**: Unlike the withdraw Guard (which binds Signer to a fixed merchant address), the refund Guard binds Signer to `order.owner` via a **dynamic query** (query 1562). This is because refunds flow to the customer, and each order has a different customer. Only the order's rightful owner can trigger the refund — an attacker cannot submit another customer's Cancelled order.
+> **No Signer constraint needed**: the recipient is the submitted Order itself (see below), not the transaction caller. Whoever initiates, the funds only ever reach a qualifying order and can be received only by that order's owner — constraining the initiator adds no fund safety, so this Guard leaves allocation permissionless. A Signer binding (e.g. `signer == order.owner`) is an optional business policy when only the order owner should be allowed to initiate.
 >
-> **Refund Recipient Design**: The allocator uses `"who": {"GuardIdentifier": 0}` (funds go to the Order object's address, not the caller's wallet). This creates an escrow pattern: the refund is held at the Order object's address, and the customer subsequently claims it via a separate withdraw operation. This ensures traceability and audit trail.
+> **Refund recipient — the submitted Order**: the allocator uses `"who": {"GuardIdentifier": 0}`. Funds are delivered to the submitted Order object's address, not to the caller's wallet, creating an escrow the customer subsequently claims.
+>
+> **Order receipt is owner receipt**: funds delivered to an order are owned by that Order object. Extracting them goes through `order::owner_receive`, which requires the order as a mutable input — under Sui ownership rules only the order's current owner can submit it — and the coins then transfer to that owner. Whatever address is submitted, the funds can only ever land at an order and be received by that order's owner; unrelated addresses cannot intercept.
+>
+> This two-step delivery (escrow at the order, then owner claim) keeps the refund traceable on-chain and tied to the specific order, which also gives dispute resolution a clean audit trail.
 
 ---
 
@@ -779,17 +765,17 @@ The `order_allocators` configuration defines how order payments are distributed:
 | **Threshold** | Minimum amount to trigger allocation |
 
 **Recipient Types:**
-- `{ "Signer": "signer" }` - Transaction sender (caller). **⚠️ R-C3-06 Risk**: If the Guard does NOT bind the Signer to an authorized address, anyone who passes the Guard can steal 100% of funds. Safe ONLY when the Guard includes a `logic_equal[context(Signer), <authorized_address>]` check.
-- `{ "Entity": { "name_or_address": "..." } }` - Specific address or account name (safest — funds go to a fixed address regardless of caller)
-- `{ "GuardIdentifier": 0 }` - Address from Guard table (e.g., the submitted Order object's address)
+- `{ "Signer": "signer" }` - Transaction sender (caller). Safe only when the Guard binds the Signer to an authorized address (e.g. a fixed merchant address or `order.owner`), so a passing Guard cannot pay an arbitrary caller.
+- `{ "Entity": { "name_or_address": "..." } }` - Specific address or account name — funds go to a fixed address regardless of who calls
+- `{ "GuardIdentifier": 0 }` - Address from a Guard table entry — e.g. the submitted Order object's address. Funds are delivered to that object (as a CoinWrapper) and can be extracted by its owner through its owner-receive entry, never redirected to an unrelated address.
 
-> **R-C3-06 Risk Elimination — Guard + Sharing Coupling**: The `order_allocators` scene couples Guard verification (WHO can trigger) with sharing recipient (WHERE funds go). This example uses two risk-elimination strategies:
-> - **Withdraw allocator** (`sharing.who = Signer`): Safe because `myshop_withdraw_guard_v2` binds `context(Signer)` to `myshop_merchant` (identifier 2). Only the merchant can pass the Guard, so funds correctly flow to the merchant.
-> - **Refund allocator** (`sharing.who = GuardIdentifier 0`): Funds go to the Order object's address (escrow), not to the caller. The Guard additionally binds `context(Signer)` to `order.owner` (dynamic query 1562), ensuring only the order's rightful owner can trigger the refund.
+> **Guard + Sharing Coupling**: the `order_allocators` scene couples Guard verification (which submitted objects qualify) with the sharing recipient (where funds go). This example uses two strategies:
+> - **Withdraw allocator** (`sharing.who = Signer`): safe because `myshop_withdraw_guard_v2` binds `context(Signer)` to `myshop_merchant` (identifier 2). Only the merchant can pass the Guard, so funds flow to the merchant.
+> - **Refund allocator** (`sharing.who = GuardIdentifier 0`): funds are delivered to the submitted Order object's address as escrow, not to the caller's wallet. No Signer constraint is needed — whoever initiates, the escrowed funds can be received only by that order's owner.
 >
-> **Alternative approach**: Instead of Signer binding in the Guard, you can use `sharing.who = Entity` to send funds to a fixed Treasury or personal address. This is even more robust because funds are directed regardless of who passes the Guard. See the Insurance example for this pattern.
+> **Alternative approach**: you can also use `sharing.who = Entity` to send funds to a fixed Treasury or personal address. This is even more straightforward because the destination is fixed regardless of who passes the Guard. See the Insurance example for this pattern.
 
-> **Design Decision — Refund Recipient**: When using `{ "GuardIdentifier": 0 }` in the refund allocation, the refund is sent to the **Order object's on-chain address** (not the customer's wallet address). This is by design: the Order object acts as an escrow holding the refunded payment at its own address. The customer subsequently claims the refund from the Order object via a separate withdraw operation. This two-step design ensures the refund is traceable on-chain and tied to the specific order, providing better dispute resolution and audit trail.
+> **Design Decision — Refund Recipient**: When using `{ "GuardIdentifier": 0 }` in the refund allocation, the refund is sent to the Order object's on-chain address (not the customer's wallet address) by design: the Order object acts as an escrow, and the customer subsequently claims the refund through the order's owner-receive entry. This two-step design keeps the refund traceable on-chain and tied to the specific order, providing better dispute resolution and an audit trail.
 
 #### 7.2 Publish Service (bind machine + allocators + sales + um)
 

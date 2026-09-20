@@ -1366,26 +1366,27 @@ When querying Progress objects (directly or via witness), these instructions are
 | ID | Name | Return Type | Description | Parameters |
 |----|------|-------------|-------------|------------|
 | 1253 | `progress.current` | String | Current node name | None |
-| 1271 | `progress.session.forward.time` | U64 | Timestamp of specific operation | [next_node_name, forward_name] |
 | 1254 | `progress.task some` | Bool | Whether task object is set | None |
 | 1255 | `progress.task` | Address | Task object ID | None |
-| 1272 | `progress.history count` | U64 | Number of history records | None |
+| 1272 | `progress.current_time` | U64 | Timestamp of the most recent forward (set at every session migration) | None |
+| 1273 | `progress.history count` | U64 | Number of history records | None |
 
-### New BCS Query Instructions (ID 1270-1276)
+> **⚠️ Session-only queries (1270, 1271)**: `progress.session.forward.accomplished` (1270) and `progress.session.forward.time` (1271) read the Progress' **active session** only. Once the session migrates into `history` — which happens on any subsequent forward — both queries abort with `W_FIELD_NOT_FOUND` and the Guard permanently fails. Never use 1270/1271 to validate terminal or long-lived states (e.g. "completed more than N days ago"); use `progress.current_time` (1272) or the history queries (1274-1279) instead.
 
-These instructions use BCS serialization for efficient querying:
+### Session and History Query Instructions (ID 1270-1279)
 
-| ID | Name | Return Type | Description | Query Parameters (BCS encoded) |
-|----|------|-------------|-------------|-------------------------------|
-| 1270 | `progress.history.find` | U64 | Find history index by conditions | `HistoryFindConditions`: `{ node?, next_node?, time_min?, time_max?, index_min?, index_max?, find }` |
-| 1271 | `progress.session.forward.time` | U64 | Get forward operation timestamp | `[next_node_name, forward_name]` |
-| 1275 | `progress.history.session.find` | U64 | Find session index in history | `SessionFindConditions`: `{ next_node?, find }` |
-| 1276 | `progress.history.session.forward.find` | U64 | Find forward operation index | `ForwardFindConditions`: `{ who?, operation?, accomplished?, time_min?, time_max?, find }` |
-| 1277 | `progress.history.session.count` | U64 | Count sessions in history | None |
-| 1278 | `progress.history.session.forward.count` | U64 | Count forward operations | None |
-| 1279 | `progress.history.session.forward.retained_submission.count` | U64 | Count retained submissions | None |
+| ID | Name | Return Type | Description | Parameters |
+|----|------|-------------|-------------|------------|
+| 1270 | `progress.session.forward.accomplished` | Bool | Whether a forward exists in the ACTIVE session (session-only, see warning above) | `[next_node_name, forward_name]` |
+| 1271 | `progress.session.forward.time` | U64 | Timestamp of a forward in the ACTIVE session (session-only, see warning above) | `[next_node_name, forward_name]` |
+| 1274 | `progress.history.find` | U64 | Find history index by conditions | `HistoryFindConditions`: `{ node?, next_node?, time_min?, time_max?, index_min?, index_max?, find }` (BCS encoded) |
+| 1275 | `progress.history.session.find` | U64 | Find session index in history | `SessionFindConditions`: `{ next_node?, find }` (BCS encoded) |
+| 1276 | `progress.history.session.forward.find` | U64 | Find forward operation index | `ForwardFindConditions`: `{ who?, operation?, accomplished?, time_min?, time_max?, find }` (BCS encoded) |
+| 1277 | `progress.history.session.count` | U64 | Count sessions of a history record | `[history_index]` |
+| 1278 | `progress.history.session.forward.count` | U64 | Count forwards of a session | `[history_index, session_index]` |
+| 1279 | `progress.history.session.forward.retained_submission.count` | U64 | Count retained submissions of a forward | `[history_index, session_index, forward_index]` |
 
-**Note**: For query instructions 1270, 1275, and 1276, use the corresponding Guard node types (`query_progress_history_find`, `query_progress_history_session_find`, `query_progress_history_session_forward_find`) which automatically handle BCS serialization.
+**Note**: For query instructions 1274, 1275, and 1276, use the corresponding Guard node types (`query_progress_history_find`, `query_progress_history_session_find`, `query_progress_history_session_forward_find`) which automatically handle BCS serialization.
 
 ### Example: Query Order's Progress Status
 
@@ -1483,13 +1484,6 @@ These instructions use BCS serialization for efficient querying:
         {
           "identifier": 2,
           "b_submission": false,
-          "value_type": "String",
-          "value": "Complete Order",
-          "name": "forward_name"
-        },
-        {
-          "identifier": 3,
-          "b_submission": false,
           "value_type": "U64",
           "value": "1296000000",
           "name": "15_days_ms"
@@ -1530,25 +1524,16 @@ These instructions use BCS serialization for efficient querying:
                   "nodes": [
                     {
                       "type": "query",
-                      "query": 1271,
+                      "query": 1272,
                       "object": {
                         "identifier": 0,
                         "convert_witness": 100
                       },
-                      "parameters": [
-                        {
-                          "type": "identifier",
-                          "identifier": 1
-                        },
-                        {
-                          "type": "identifier",
-                          "identifier": 2
-                        }
-                      ]
+                      "parameters": []
                     },
                     {
                       "type": "identifier",
-                      "identifier": 3
+                      "identifier": 2
                     }
                   ]
                 }
@@ -1567,6 +1552,10 @@ These instructions use BCS serialization for efficient querying:
 ```
 
 **Note**: The `context` node with `"Clock"` returns the current on-chain timestamp (U64).
+
+**Why query `1272` (`progress.current_time`) instead of `1271` (`progress.session.forward.time`)**: queries 1270/1271 read the Progress' **active session** only. Once the "Completed" forward executes, the session migrates into `history` — and any later forward on the order (e.g. a review or follow-up node) makes 1270/1271 abort with `W_FIELD_NOT_FOUND`, permanently failing this Guard and blocking the withdrawal. Query `1272` returns the timestamp of the most recent forward and never aborts.
+
+**Caveat**: `1272` reflects the *most recent* forward. This pattern is safe when the measured node is terminal — no further forwards happen after it (as with "Completed" here). If you must timestamp a mid-flow forward, locate the record with the history queries (1274-1279) instead — never rely on 1271, which breaks as soon as the session migrates.
 
 ---
 

@@ -296,7 +296,7 @@ Understanding the correct order for creating WoWok objects is crucial for a succ
 1. **Permission First**: Every major object (Machine, Service) requires a permission object. Create this first.
 2. **Permission Indexes**: Grant permission indexes 1000 and 1001 to merchant account. These are used in Machine node forwards.
 3. **Service Before Guards**: Create Service without publishing to get its name. Guards use Service name to verify orders belong to the correct service.
-3b. **Treasury for Fund Aggregation**: Create Treasury with the same Permission as the Service. Merchant revenue flows to the Treasury (not the Service address), making allocators inherently safe (R-C3-06) and aggregating public funds for operational distribution.
+3b. **Treasury for Fund Aggregation**: Create Treasury with the same Permission as the Service. Merchant revenue flows to the Treasury (not the Service address), making allocators pay a fixed destination regardless of caller and aggregating public funds for operational distribution.
 4. **Guards Before Machine**: Machine nodes reference guards for verification. Create all guards first, then create Machine with guard references.
 5. **Machine Binding Before Publish**: Bind Machine to Service before publishing. Once published, Machine cannot be bound.
 6. **Arbitration Before Service Update**: Arbitration must be created before Service update so it can be bound to Service.
@@ -554,7 +554,7 @@ Create a Treasury object to aggregate merchant revenue. The Treasury uses the **
 
 > **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance example, merchant revenue flows to `myshop_treasury_v2` (not directly to the Service address). This:
 > 1. **Aggregates public funds** for operational distribution and accounting
-> 2. **Makes allocators inherently safe** (R-C3-06) — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the Guard
+> 2. **Makes allocators pay a fixed destination** — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the Guard
 > 3. **Uses permission consistency** — Treasury and Service share `myshop_perm_v2`, ensuring unified governance
 
 ***
@@ -677,9 +677,9 @@ Create Guards using the Service address. Guards verify order state and service o
 ```
 
 **Three conditions (logic_and):**
-1. **Submitter accountability** — `logic_equal[context(Signer), query("proof.signer", obj=proof)]`: the transaction signer must be the Proof's signer (the party who generated the Proof via `submitChainProof`). Suppresses R-C3-01.
+1. **Submitter accountability** — `logic_equal[context(Signer), query("proof.signer", obj=proof)]`: the transaction signer must be the Proof's signer (the party who generated the Proof via `submitChainProof`).
 2. **Freshness** — `logic_as_u256_greater[query("proof.time", obj=proof), query("order.time", obj=order)]`: the Proof was created after the order, preventing stale-proof replay. (`proof.time` has invariant `clock_derived`, always > 0.)
-3. **Project binding** — `logic_equal[query("order.service", obj=order), identifier[2]]`: the submitted Order belongs to `three_body_signature_service_v2`. Suppresses R-C3-05 (cross-project bypass).
+3. **Project binding** — `logic_equal[query("order.service", obj=order), identifier[2]]`: the submitted Order belongs to `three_body_signature_service_v2`, so orders of other services cannot qualify.
 
 **Generating the Proof (provider side, before submitting to the forward):**
 ```text
@@ -791,10 +791,10 @@ Create Guards using the Service address. Guards verify order state and service o
     "data": {
       "namedNew": {
         "name": "service_merchant_win_v2",
-        "tags": ["order", "merchant-win", "level3-scene-combined"],
+        "tags": ["order", "merchant-win"],
         "replaceExistName": true
       },
-      "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (myshop_treasury_v2) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at merchant win node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. No Signer binding is needed because the allocator uses sharing.who=Entity(myshop_treasury_v2) — funds always flow to the Treasury regardless of caller. Two-fold verification: (1) order at a merchant win node, (2) order belongs to this service.",
       "table": [
         {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
         {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Order Complete"},
@@ -850,15 +850,15 @@ Create Guards using the Service address. Guards verify order state and service o
 }
 ```
 
-**Guard Explanation (Two-fold Verification — Level 3 Scene-Combined):**
+**Guard Explanation (Two-fold Verification):**
 - **Table Item 0**: Order address (submitted at runtime)
 - **Table Items 1-3**: Constant strings "Order Complete", "Wonderful", "Return Fail" (merchant win node names)
 - **Table Item 4**: Constant address `three_body_signature_service_v2` (this service's on-chain address)
 - **Condition 1 — Merchant Win Node**: `logic_or` of three `logic_string_nocase_equal` checks against `query("progress.current", witness="OrderProgress")` — verifies the order is at one of the merchant win nodes
-- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[4]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, **preventing cross-service theft** where someone submits another service's order (R-C3-05)
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[4]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, so orders of another service cannot qualify
 - **root**: `logic_and` of both conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-06) — Level 3 Scene-Combined Design**: The allocator uses `"who": {"Entity": {"name_or_address": "myshop_treasury_v2"}}` (funds flow to the fixed Treasury address). This is inherently safe because funds go to a fixed recipient regardless of caller — **no Signer binding is needed**. The scene itself (Entity sharing to Treasury) ensures fund-flow safety, which is the Level 3 scene-combined pattern. Removing the Signer binding also eliminates R-C4-04 (Level 1 strict binding convenience warning) and avoids the lock-in risk of binding to a fixed merchant address.
+> **Fixed recipient design**: the allocator uses `"who": {"Entity": {"name_or_address": "myshop_treasury_v2"}}` — funds flow to the fixed Treasury address regardless of caller, so no Signer binding is needed and there is no lock-in to a fixed merchant address.
 ```
 
 **Guard 4 — Alternative Shorthand Form (VecString + vec_contains_string_nocase)**
@@ -873,7 +873,7 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
     "data": {
       "namedNew": {
         "name": "service_merchant_win_v2",
-        "tags": ["order", "merchant-win", "level3-scene-combined"],
+        "tags": ["order", "merchant-win"],
         "replaceExistName": true
       },
       "description": "Verify order at merchant win nodes (Order Complete, Wonderful, Return Fail) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses three String constants + logic_or[logic_string_nocase_equal x 3] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence' tests).",
@@ -919,18 +919,18 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
 | Condition 1 node | `logic_or` of 3 × `logic_string_nocase_equal` | `vec_contains_string_nocase` (single node) |
 | Condition 2 node | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
 | `root` type | `logic_and` | `logic_and` (identical) |
-| Risk diagnostics (R-C3-*) | identical | identical (security-equivalent) |
-| Lint diagnostics (LE-04, SG-01, SG-03) | identical | identical |
-| SH-03 warnings (missing `name`) | 3 (the 3 unnamed String constants) | 0 (the VecString is named `merchant_win_nodes`) |
-| Total warnings | 5 | 2 (3 fewer — the eliminated SH-03s) |
+| Risk diagnostics | identical | identical (security-equivalent) |
+| Lint diagnostics | identical | identical |
+| Missing-name warnings | 3 (the 3 unnamed String constants) | 0 (the VecString is named `merchant_win_nodes`) |
+| Total warnings | 5 | 2 (3 fewer) |
 
 **Why the shorthand is preferred:**
 - **Fewer table entries**: 3 vs 5 (40% reduction). Adding a new merchant-win node is a one-line edit to the `value` array instead of a new identifier + new `logic_string_nocase_equal` branch.
-- **No SH-03 nits**: The single `VecString` entry is naturally named (`merchant_win_nodes`), eliminating the 3 missing-name warnings.
+- **No missing-name nits**: The single `VecString` entry is naturally named (`merchant_win_nodes`), eliminating the 3 missing-name warnings.
 - **Linear scaling**: For N candidate nodes, the original grows as O(N) identifiers + O(N) `logic_string_nocase_equal` branches under one `logic_or` (capped at 8 children). The shorthand stays at 1 identifier + 1 `vec_contains_string_nocase` node regardless of N.
-- **Same security posture**: Risk-layer diagnostics are byte-identical (R-C3-05, R-C3-06, etc. all evaluate the same), so the Level 3 scene-combined design and R-C3-06 suppression are preserved.
+- **Same security posture**: risk-layer diagnostics are identical, so the fixed-Treasury design without a Signer binding is preserved.
 
-**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Shorthand vs Original (VecString + vec_contains_string_nocase)"`. The 8-test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk diagnostic codes, identical lint diagnostic codes (excluding SH-03), fewer SH-03 warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
+**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Shorthand vs Original (VecString + vec_contains_string_nocase)"`. The test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk diagnostics, identical lint diagnostics apart from the missing-name warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
 
 **Guard 5: machine_service_order_v2** - Verify order belongs to this Service
 
@@ -986,10 +986,10 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
     "data": {
       "namedNew": {
         "name": "service_customer_win_v2",
-        "tags": ["order", "customer-win", "level2-dynamic-binding"],
+        "tags": ["order", "customer-win"],
         "replaceExistName": true
       },
-      "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. VERIFIER CONSTRAINT LEVEL 2 (dynamic identity binding): Signer bound to query('order.owner') — only the order's rightful owner can trigger the refund. RISK ELIMINATION: Three-fold verification - (1) order at customer win node, (2) signer is order.owner (dynamic query, prevents fund theft - only order owner can trigger their own refund), (3) order belongs to three_body_signature_service_v2 (prevents cross-service theft).",
+      "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2, and restrict initiation to the order's owner. The allocator delivers the refund to the submitted order as escrow, which only that order's owner can receive.",
       "table": [
         {"identifier": 0, "b_submission": true, "value_type": "Address", "name": "order_id"},
         {"identifier": 1, "b_submission": false, "value_type": "String", "value": "Lost"},
@@ -1044,16 +1044,18 @@ The `logic_or` of three `logic_string_nocase_equal` checks above can be collapse
 }
 ```
 
-**Guard Explanation (Three-fold Verification — Level 2 Dynamic Binding):**
+**Guard Explanation:**
 - **Table Item 0**: Order address (submitted at runtime)
 - **Table Items 1-2**: Constant strings "Lost", "Return Complete" (customer win node names)
 - **Table Item 3**: Constant address `three_body_signature_service_v2` (this service's on-chain address)
 - **Condition 1 — Customer Win Node**: `logic_or` of two `logic_string_nocase_equal` checks against `query("progress.current", witness="OrderProgress")` — verifies the order is at one of the customer win nodes
-- **Condition 2 — Signer is Order Owner (Level 2 Dynamic)**: `logic_equal[query("order.owner"), context(Signer)]` — verifies the transaction caller is the order's owner (dynamic query, not a fixed address). This is the **Level 2 dynamic identity binding** pattern: the Signer is bound to a query result (not a fixed address), so it survives personnel changes and avoids the R-C4-04 lock-in risk. **Prevents fund theft by unauthorized callers** (R-C3-01/R-C3-06). Only the customer who placed the order can trigger the refund.
-- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, **preventing cross-service theft** where someone submits another service's order (R-C3-05)
+- **Condition 2 — Signer is Order Owner (optional initiation restriction)**: `logic_equal[query("order.owner"), context(Signer)]` — verifies the transaction caller is the order's owner. This condition is not required for fund safety because the recipient is the submitted order itself; it is a business policy ensuring only the customer initiates their own refund. It uses a dynamic query, so it does not lock the design to one fixed address.
+- **Condition 3 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — verifies the submitted Order's `service` field equals `three_body_signature_service_v2`, so orders of another service cannot qualify
 - **root**: `logic_and` of all three conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-06) — CRITICAL — Level 2 Dynamic Binding**: The allocator uses `"who": {"Signer": "signer"}` (funds go to the caller). This is safe ONLY because Condition 2 binds the Signer to `query("order.owner")` (dynamic query — Level 2). Without this binding, anyone could submit any Lost/Return Complete order and steal 100% of funds. The dynamic query pattern ensures funds always flow to the order's rightful owner, regardless of who calls the transaction. Unlike Level 1 (fixed address), Level 2 dynamic binding does NOT trigger R-C4-04 because the bound identity is a query result, not an immutable address constant.
+> **Submitted-order recipient**: the allocator uses `"who": {"GuardIdentifier": 0}` — the refund is delivered to the submitted order as escrow, not to the caller's wallet. The Signer restriction in Condition 2 is an optional policy here; even without it, the funds can be received only by the order's owner.
+>
+> **Order receipt is owner receipt**: the escrowed funds are owned by the submitted Order object. They can subsequently be received only through the order's owner-receive entry, which requires the order as a mutable input — only its current owner can provide that — and then transfers the coins to that owner. Unrelated addresses cannot intercept, and the delivery stays traceable on-chain and tied to the specific order.
 ```
 
 **Guard 6 — Alternative Shorthand Form (VecString + vec_contains_string_nocase)**
@@ -1068,7 +1070,7 @@ The `logic_or` of two `logic_string_nocase_equal` checks above can be collapsed 
     "data": {
       "namedNew": {
         "name": "service_customer_win_v2",
-        "tags": ["order", "customer-win", "level2-dynamic-binding"],
+        "tags": ["order", "customer-win"],
         "replaceExistName": true
       },
       "description": "Verify order at customer win nodes (Lost, Return Complete) AND order belongs to three_body_signature_service_v2. SHORTHAND: collapses two String constants + logic_or[logic_string_nocase_equal x 2] into a single VecString + vec_contains_string_nocase. Semantically equivalent to the original form (see guard-examples-lint 'Semantic Equivalence — Guard 6 Shorthand' tests).",
@@ -1119,17 +1121,17 @@ The `logic_or` of two `logic_string_nocase_equal` checks above can be collapsed 
 |---|---|---|
 | `table` count | 4 entries (1 Address + 2 String + 1 Address) | 3 entries (1 Address + 1 VecString + 1 Address) |
 | Condition 1 node | `logic_or` of 2 × `logic_string_nocase_equal` | `vec_contains_string_nocase` (single node) |
-| Condition 2 node (Signer binding) | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
+| Condition 2 node (Signer restriction) | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
 | Condition 3 node (Service ownership) | `logic_equal` (unchanged) | `logic_equal` (unchanged) |
 | `root` type | `logic_and` | `logic_and` (identical) |
-| Risk diagnostics (R-C3-*) | identical | identical (security-equivalent) |
-| Lint diagnostics (LE-04, SG-01, SG-03) | identical | identical |
-| SH-03 warnings (missing `name`) | 2 (the 2 unnamed String constants) | 0 (the VecString is named `customer_win_nodes`) |
-| Total warnings | 4 | 2 (2 fewer — the eliminated SH-03s) |
+| Risk diagnostics | identical | identical (security-equivalent) |
+| Lint diagnostics | identical | identical |
+| Missing-name warnings | 2 (the 2 unnamed String constants) | 0 (the VecString is named `customer_win_nodes`) |
+| Total warnings | 4 | 2 (2 fewer) |
 
 **Case-sensitivity note (critical)**: The source uses `logic_string_nocase_equal` (case-insensitive), so the target is `vec_contains_string_nocase` (case-insensitive). If the source had used `logic_equal` on String (case-sensitive — "Lost" ≠ "lost"), the target would have to be `vec_contains_string` (case-sensitive) to preserve semantics. **Mixing case-sensitive and case-insensitive operators in the same `logic_or` is NOT convertible** — the original `logic_or` must be kept because there is no single `vec_contains_*` variant that captures both behaviors. This is a fundamental limitation of the contains shorthand: it is syntactic sugar, not a universal replacement.
 
-**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Guard 6 Shorthand (service_customer_win_v2: VecString + vec_contains_string_nocase)"`. The 8-test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk diagnostic codes, identical lint diagnostic codes (excluding SH-03), fewer SH-03 warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
+**Equivalence verification**: See `d:\wowok\agent\mcp\src\knowledge\__tests__\guard-examples-lint.spec.ts` → describe block `"Semantic Equivalence — Guard 6 Shorthand (service_customer_win_v2: VecString + vec_contains_string_nocase)"`. The test suite verifies: identical `root_type`, identical `errors`/`ready`, identical risk and lint diagnostics apart from missing-name warnings, reduced `table_count`, no SDK syntax errors, and complete `risk_assessment`.
 
 ***
 
@@ -1621,7 +1623,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
             "guard": "service_customer_win_v2",
             "sharing": [
               {
-                "who": {"Signer": "signer"},
+                "who": {"GuardIdentifier": 0},
                 "sharing": 10000,
                 "mode": "Rate"
               }
@@ -1647,50 +1649,44 @@ Configure order_allocators to define fund distribution rules, then publish the S
 
 **Fund Allocation Rules:**
 
-| Guard | Condition | Recipient | Amount | Verifier Level |
-|-------|-----------|-----------|--------|----------------|
-| service_merchant_win_v2 | Node is Order Complete / Wonderful / Return Fail | Treasury (merchant revenue aggregation) | 100% | Level 3 (no Signer binding) |
-| service_customer_win_v2 | Node is Lost / Return Complete | Order owner (customer, via Signer) | 100% | Level 2 dynamic (Signer == order.owner) |
+| Guard | Condition | Recipient | Amount |
+|-------|-----------|-----------|--------|
+| service_merchant_win_v2 | Node is Order Complete / Wonderful / Return Fail | Treasury (merchant revenue aggregation) | 100% |
+| service_customer_win_v2 | Node is Lost / Return Complete | Submitted Order (customer escrow) | 100% |
 
 **Recipient Types:**
-- `{ "Entity": { "name_or_address": "myshop_treasury_v2" } }` - Funds flow to the fixed Treasury address (merchant revenue aggregation). Safest — funds go to a fixed recipient regardless of caller. Uses the same Permission as the Service for governance consistency. **No Signer binding needed in the Guard** (R-C3-06 safe, Level 3 scene-combined).
-- `{ "Signer": "signer" }` - Transaction sender (caller). **⚠️ R-C3-06 Risk**: If the Guard does NOT bind the Signer to an authorized address, anyone who passes the Guard can steal 100% of funds. Safe ONLY when the Guard includes a `logic_equal[context(Signer), <authorized_address_or_query>]` check. This example uses Level 2 dynamic binding (`query("order.owner")`) — funds flow to the order's rightful owner.
+- `{ "Entity": { "name_or_address": "myshop_treasury_v2" } }` - Funds flow to the fixed Treasury address regardless of caller; it uses the same Permission as the Service for governance consistency, and the Guard needs no Signer restriction.
+- `{ "Signer": "signer" }` - Transaction sender; safe only when the Guard binds the Signer to an authorized address (`logic_equal[context(Signer), <authorized_address_or_query>]`), otherwise anyone who passes the Guard takes the funds. Customer-win refunds do not use Signer delivery — they are delivered to the submitted order via `GuardIdentifier 0`, so the funds are received only by that order's owner.
 
-> **R-C3-06 Risk Elimination — Guard + Sharing Coupling**: The `order_allocators` scene couples Guard verification (WHO can trigger) with sharing recipient (WHERE funds go). This example uses two verifier constraint levels:
-> - **Merchant win allocator** (`sharing.who = Entity → myshop_treasury_v2`, **Level 3 scene-combined**): Funds flow to the fixed Treasury address. Inherently safe — funds go to a fixed recipient regardless of caller. The `service_merchant_win_v2` Guard does NOT bind `context(Signer)` — the scene itself (Entity sharing to Treasury) ensures fund-flow safety. This is the recommended Level 3 pattern: no Signer binding, no R-C4-04 lock-in risk, no inconvenience.
-> - **Customer win allocator** (`sharing.who = Signer`, **Level 2 dynamic binding**): Funds flow to the caller. Safe ONLY because `service_customer_win_v2` Guard binds `context(Signer)` to `query("order.owner")` (dynamic query — Level 2). This ensures funds always flow to the order's rightful owner — only the customer who placed the order can receive the refund.
+> **Guard + Sharing Coupling**:
+> - **Merchant win allocator** (`sharing.who = Entity → myshop_treasury_v2`): funds flow to the fixed Treasury address regardless of caller, so `service_merchant_win_v2` does not restrict the Signer — node state and the `order.service` binding fully determine which orders qualify.
+> - **Customer win allocator** (`sharing.who = GuardIdentifier 0`): funds are delivered to the submitted order as escrow, not to the caller's wallet. This variant additionally restricts initiation with `context(Signer) == query("order.owner")` — an optional business policy; the escrowed funds are received only by the order's owner either way.
 >
-> **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance example, merchant revenue flows to `myshop_treasury_v2` (not the Service address). This aggregates public funds for operational distribution and makes the allocator inherently safe (R-C3-06). The Treasury uses the same Permission as the Service (`myshop_perm_v2`) for governance consistency.
+> **Treasury-First Rule**: merchant revenue flows to `myshop_treasury_v2` (not the Service address), aggregating public funds for operational distribution; the Treasury uses the same Permission as the Service (`myshop_perm_v2`) for governance consistency.
 ```
 
-### Verifier Constraint Design Notes
+### Guard Design Notes
 
-This example demonstrates all three verifier constraint levels across its Guards. The verifier constraint level classifies how strictly the Signer identity is constrained, trading off security against convenience.
+Signer restrictions across this example follow one rule — they are needed only when the recipient is the Signer itself; when the recipient is a fixed Entity or the submitted order, constraining the caller adds no fund safety.
 
-| Guard | Level | Pattern | Why |
-|-------|-------|---------|-----|
-| Guard 1-3 (machine_merkle_root_v2, machine_service_order_v2, machine_time_*) | Level 3 | No Signer binding | Machine forward's `permissionIndex` already verifies operator identity — Signer binding is redundant |
-| Guard 4 (service_merchant_win_v2) | Level 3 | No Signer binding | Allocator uses `sharing.who=Entity` (myshop_treasury_v2) — funds flow to fixed Treasury regardless of caller (R-C3-06 safe). Two-fold verification: node + order.service binding |
-| Guard 5 (machine_service_order_v2) | Level 3 | No Signer binding | Project-binding only (order.service check); machine forward verifies operator |
-| Guard 6 (service_customer_win_v2) | Level 2 dynamic | Signer == query("order.owner") | Allocator uses `sharing.who=Signer` — funds flow to caller, must bind to order owner to prevent theft |
-| Reward guards (reward_wonderful_v2, reward_lost_v2, reward_shipping_timeout_v2) | Level 3 | No Signer binding | One-time claim via record count; funds flow to fixed reward pool recipient |
+| Guard | Pattern | Why |
+|-------|---------|-----|
+| Guard 1-3 (machine_merkle_root_v2, machine_service_order_v2, machine_time_*) | No Signer restriction | Machine forward's `permissionIndex` already verifies operator identity |
+| Guard 4 (service_merchant_win_v2) | No Signer restriction | Allocator pays the fixed Treasury regardless of caller; node state plus `order.service` binding determine qualification |
+| Guard 5 (machine_service_order_v2) | No Signer restriction | Service binding only (`order.service`); the machine forward verifies the operator |
+| Guard 6 (service_customer_win_v2) | Optional `signer == order.owner` restriction | Allocator pays the submitted order as escrow, received only by that order's owner; the Signer restriction additionally ensures only the customer initiates it |
+| Reward guards (reward_wonderful_v2, reward_lost_v2, reward_shipping_timeout_v2) | `signer == order.owner` | Their recipient IS the Signer; together with node state, `order.service`, and the no-prior-claim record, only the owner of a qualifying unclaimed order can claim, once |
 
 **Key design decisions**:
 
-1. **Merchant funds → Treasury (not Service)**: Following the Treasury-first rule, merchant revenue flows to `myshop_treasury_v2` (created with the same Permission as the Service). This aggregates public funds for operations and distribution, and makes the allocator inherently safe (R-C3-06) — no Signer binding needed (Level 3).
+1. **Merchant funds → Treasury (not Service)**: merchant revenue flows to `myshop_treasury_v2` (created with the same Permission as the Service), aggregating public funds for operations and distribution; no Signer restriction is needed.
 
-2. **Customer refunds → order.owner (dynamic)**: Customer refunds must go to the actual customer who placed the order. The Level 2 dynamic binding (`query("order.owner")`) ensures only the rightful owner receives the refund, regardless of who calls the transaction. Unlike Level 1 (fixed address), this survives customer account changes.
-
-3. **No Level 1 strict binding anywhere**: No Guard uses `logic_equal[context(Signer), fixed_address]` because:
-   - The merchant role may change (personnel rotation) — Level 1 would lock the Guard to one address permanently
-   - The Treasury pattern makes Signer binding unnecessary for the merchant allocator (Level 3)
-   - The dynamic `order.owner` query is more appropriate for customer refunds (Level 2 dynamic)
-   - Level 1 would trigger R-C4-04 (convenience warning) and create operational risk
+2. **Customer refunds → submitted order escrow**: refunds are delivered to the submitted order rather than straight to a wallet. The escrowed funds are owned by the order and received only by its owner through the order's owner-receive entry. The optional `signer == order.owner` condition restricts who initiates; it reads a dynamic query, so it survives customer account changes instead of locking the design to one fixed address.
 
 **Alternative designs considered**:
-- **Guard 4 could use Level 2 identity-set** (merchant OR admin via permission.owner OR has admin) — **rejected** because Treasury (Entity sharing) already makes Signer binding redundant. Adding Level 2 would add complexity without safety benefit.
-- **Guard 6 could use Level 2 identity-set** (order.owner OR order.agent via 1562 OR 1567) — **viable** if agents should be able to trigger refunds on behalf of customers. The current single-customer design (Level 2 dynamic, `order.owner` only) is simpler and sufficient for this example. See `tpl_allocator_identity_set_order_holder` template for the identity-set construction pattern.
-- **Guard 4 could use Level 2 dynamic permission** (permission.owner OR has admin, with dynamic permission via 1488) — **viable** for scenarios where the Service may rotate its permission. See `tpl_allocator_identity_set_service_provider_dynamic` template for this pattern. Rejected here because the Treasury pattern already provides fund-flow safety without Signer binding.
+- **Guard 4 could add an identity-set condition** (merchant OR admin via permission.owner OR has admin) — rejected because the fixed Treasury recipient already makes the Signer restriction redundant.
+- **Guard 6 could use an identity-set** (order.owner OR order.agent) — viable if agents should trigger refunds on behalf of customers; the current `order.owner` form is simpler and sufficient for this example. See `tpl_allocator_identity_set_order_holder` for the identity-set construction.
+- **Guard 4 could use a dynamic permission condition** (permission.owner OR has admin, with dynamic permission) — viable if the Service may rotate its Permission. See `tpl_allocator_identity_set_service_provider_dynamic`; rejected here for simplicity.
 
 ***
 
@@ -2768,7 +2764,7 @@ If customer doesn't return within 10 days, merchant can mark as Return Fail.
 >
 > Resolve it from the Order object: query `myshop_order_v2` → read its `allocation` field (e.g. `0x1db0a7c9...`) → use that address as `object` below.
 >
-> **CoinWrapper claim (auto since SDK 2026-09)**: `alloc_by_guard` pays each recipient a `CoinWrapper` object (contract-side escrow, `payment::transfer_multi_imp`). The SDK **auto-claims the wrappers this tx created for the signer** (`payment::unwrap_to_myself`) right after the alloc commits — for the Signer-recipient refund case the tokens land directly in the caller's wallet in one logical operation. Manual claim (`operation_type: "payment"` `{object: "<coinwrapper_id>", receive: true}`) is only needed for legacy/historical wrappers or wrappers received from another party's transaction. Object recipients (Order escrow / Treasury) claim through their own receive entries (`order receive` / `treasury receive`) as before.
+> **CoinWrapper claim (auto since SDK 2026-09)**: `alloc_by_guard` pays each recipient a `CoinWrapper` object (contract-side escrow, `payment::transfer_multi_imp`). The SDK **auto-claims the wrappers this tx created for the signer** (`payment::unwrap_to_myself`) right after the alloc commit — for a Signer recipient the tokens land directly in the caller's wallet in one logical operation. Manual claim (`operation_type: "payment"` `{object: "<coinwrapper_id>", receive: true}`) is only needed for legacy/historical wrappers or wrappers received from another party's transaction. Object recipients (Order escrow / Treasury) claim through their own receive entries (`order receive` / `treasury receive`) as before.
 
 ### Merchant Wins (Order Complete, Wonderful, Return Fail)
 
@@ -2818,9 +2814,9 @@ When order reaches Order Complete, Wonderful, or Return Fail, merchant can withd
 
 ### Customer Wins (Lost, Return Complete)
 
-When order reaches Lost or Return Complete, customer can withdraw funds.
+When the order reaches Lost or Return Complete, the refund is delivered to the customer's order as escrow; the customer then receives it through the order's owner-receive entry.
 
-**Prompt**: Customer withdraws funds when winning condition is met.
+**Prompt**: Customer triggers the refund when the winning condition is met, then claims the escrowed coins from the order.
 
 ```json
 {

@@ -487,7 +487,7 @@ logic_and[
         "tags": ["insurance", "withdraw", "treasury"],
         "replaceExistName": true
       },
-      "description": "Allow fund allocation to Treasury after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1 (prevents cross-service theft). Funds flow to fixed Treasury Entity (safe — no Signer binding needed).",
+      "description": "Allow fund allocation to the Treasury after the order is completed: the order must be at the Complete node and belong to insurance_service_v1. Funds flow to the fixed Treasury address regardless of caller, so no Signer restriction is needed.",
       "table": [
         {
           "identifier": 0,
@@ -574,7 +574,7 @@ logic_and[
         "tags": ["insurance", "withdraw", "personal"],
         "replaceExistName": true
       },
-      "description": "Allow fund allocation to personal collection address after order is completed. RISK ELIMINATION: order must be at Complete node AND belong to insurance_service_v1. Funds flow to fixed personal Entity (safe — no Signer binding needed).",
+      "description": "Allow fund allocation to the personal collection address after the order is completed: the order must be at the Complete node and belong to insurance_service_v1. Funds flow to the fixed personal address regardless of caller, so no Signer restriction is needed.",
       "table": [
         {
           "identifier": 0,
@@ -714,7 +714,7 @@ Update `insurance_service_v1` to add the `order_allocators` (2 alternative merch
 
 > **Important — Fund Allocation Safety**: 
 > - `mode: "Rate"` represents Rate allocation mode (valid values: `"Amount"`, `"Rate"`, `"Surplus"`)
-> - `who: {"Entity": {"name_or_address": "..."}}` — funds flow to a FIXED address (Treasury or personal). This is the SAFE pattern: even if the Guard is somehow bypassed or an attacker submits a forged Order, funds still go to the fixed Entity — the attacker cannot redirect funds to themselves.
+> - `who: {"Entity": {"name_or_address": "..."}}` — funds flow to a FIXED address (Treasury or personal), so the destination never depends on who calls the allocation. Allocation calls are permissionless: any keeper can trigger a settlement once the Guard's conditions are satisfiable — with an Entity recipient this affects only the timing of settlement, never the destination. With order-scoped recipients (`GuardIdentifier` carrying an Order address), the funds are delivered to the submitted order and can be received only by that order's owner.
 > - **NEVER use `who: {"Signer": "signer"}` for merchant collection** — this means funds flow to whoever calls the allocation. Combined with a Guard that only checks order status (no Signer binding), anyone can submit any completed Order and steal 100% of funds.
 > - **2 allocators = 2 alternative approaches**: first-match-wins means only the FIRST allocator whose Guard passes will execute. In production, pick ONE approach (Treasury OR personal) and delete the other. Listing both here illustrates the 2 design options.
 > - **Permission consistency**: the Treasury uses `insurance_permission_v1` (same as Service) — keep Permissions consistent unless you have a specific reason to separate them.

@@ -437,7 +437,7 @@ Create an Arbitration object for dispute resolution. It uses the independent `tr
 
 ## Step 2.5: Create Service (Unpublished)
 
-Create the Service without publishing to obtain its address for Guard creation. The Service address is required by the allocator Guards (Step 3.4–3.6) to verify `order.service == travel_service` (R-C3-05 cross-service theft protection).
+Create the Service without publishing to obtain its address for Guard creation. The Service address is required by the allocator Guards (Step 3.4–3.6) to verify `order.service == travel_service` (cross-service order protection).
 
 **Prompt**: Create Service "travel_service" with permission "travel_permission", do not publish.
 
@@ -501,7 +501,7 @@ Create a Treasury object to aggregate merchant revenue. The Treasury uses the **
 
 > **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance and MyShop_Advanced examples, merchant revenue flows to `travel_treasury` (not directly to the Service address). This:
 > 1. **Aggregates public funds** for operational distribution and accounting
-> 2. **Makes allocators inherently safe** (R-C3-06) — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the Guard
+> 2. **Makes allocators inherently safe** — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the Guard
 > 3. **Uses permission consistency** — Treasury and Service share `travel_permission`, ensuring unified governance
 
 ---
@@ -510,7 +510,7 @@ Create a Treasury object to aggregate merchant revenue. The Treasury uses the **
 
 Create all Guards needed for the workflow and fund allocation. Guards are immutable once created, so create them before the Machine and Service.
 
-> **Prerequisite**: The Service must be created (unpublished) in Step 2.5 first, because the allocator Guards (3.4–3.6) reference the Service address to verify `order.service == travel_service` (R-C3-05 cross-service theft protection).
+> **Prerequisite**: The Service must be created (unpublished) in Step 2.5 first, because the allocator Guards (3.4–3.6) reference the Service address to verify `order.service == travel_service` (cross-service order protection).
 
 ### 3.1 Weather Check Guard
 
@@ -721,10 +721,10 @@ Checks if order progress current node is "Complete" AND order belongs to this se
     "data": {
       "namedNew": {
         "name": "merchant_victory_guard",
-        "tags": ["merchant", "victory", "complete", "level3-scene-combined"],
+        "tags": ["merchant", "victory", "complete"],
         "replaceExistName": true
       },
-      "description": "Guard for merchant victory: checks if order progress current node is Complete AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe). Two-fold verification: (1) order at Complete node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "description": "Guard for merchant victory: checks if order progress current node is Complete AND order belongs to travel_service. No Signer binding is needed because the allocator uses sharing.who=Entity(travel_treasury) — funds always flow to the Treasury regardless of caller. Two-fold verification: (1) order at the Complete node, (2) order belongs to this service.",
       "table": [
         {
           "identifier": 0,
@@ -782,17 +782,17 @@ Checks if order progress current node is "Complete" AND order belongs to this se
 }
 ```
 
-**Guard Explanation (Two-fold Verification — Level 3 Scene-Combined):**
+**Guard Explanation (Two-fold Verification):**
 - **Table Item 0**: Order address (submitted at runtime)
 - **Table Item 1**: Constant string "Complete" (merchant win node name)
 - **Table Item 2**: Constant address `travel_service` (this service's on-chain address)
 - **Condition 1 — Complete Node**: `logic_equal[query(progress.current, witness="OrderProgress"), identifier[1]]` — verifies the order is at the Complete node
-- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — verifies the submitted Order's `service` field equals `travel_service`, **preventing cross-service theft** where someone submits another service's order (R-C3-05)
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — verifies the submitted Order's `service` field equals `travel_service`, so only an order of this service can qualify
 - **root**: `logic_and` of both conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-05 + R-C3-06) — Level 3 Scene-Combined Design**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by the Service Ownership check (Condition 2). An attacker cannot submit another service's order because `order.service` won't match `travel_service`.
-> - **R-C3-06 (Fund theft via Signer)**: Eliminated by the scene itself — the allocator uses `"who": {"Entity": {"name_or_address": "travel_treasury"}}` (funds flow to the fixed Treasury address). Funds go to a fixed recipient regardless of caller, so **no Signer binding is needed**. This is the Level 3 scene-combined pattern.
+> **Scene-combined design**:
+> - The Service Ownership check ensures an order of another service cannot qualify, because `order.service` won't match `travel_service`.
+> - The allocator uses `"who": {"Entity": {"name_or_address": "travel_treasury"}}` — funds flow to the fixed Treasury address regardless of caller, so no Signer binding is needed.
 
 ### 3.5 No Ice Scooting Guard (80% Treasury, 20% Refund)
 
@@ -808,10 +808,10 @@ Checks if progress current is "Cancel" or "Ice Scooting" AND order belongs to th
     "data": {
       "namedNew": {
         "name": "no_ice_scooting_guard",
-        "tags": ["user", "cancel", "ice_scooting", "level3-scene-combined"],
+        "tags": ["user", "cancel", "ice_scooting"],
         "replaceExistName": true
       },
-      "description": "Guard for user not participating in ice scooting: checks if progress current is Cancel or Ice Scooting AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at Cancel/Ice Scooting node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "description": "Guard for user not participating in ice scooting: checks if progress current is Cancel or Ice Scooting AND order belongs to travel_service. No Signer binding is needed: the allocator uses sharing.who=Entity(travel_treasury) for the merchant portion and sharing.who=GuardIdentifier(0) for the customer refund (escrow to the submitted order). Two-fold verification: (1) order at the Cancel/Ice Scooting node, (2) order belongs to this service.",
       "table": [
         {
           "identifier": 0,
@@ -893,17 +893,17 @@ Checks if progress current is "Cancel" or "Ice Scooting" AND order belongs to th
 }
 ```
 
-**Guard Explanation (Two-fold Verification — Level 3 Scene-Combined):**
+**Guard Explanation (Two-fold Verification):**
 - **Table Item 0**: Order address (submitted at runtime)
 - **Table Items 1-2**: Constant strings "Cancel" and "Ice Scooting" (node names)
 - **Table Item 3**: Constant address `travel_service` (this service's on-chain address)
 - **Condition 1 — Cancel/Ice Scooting Node**: `logic_or` of two `logic_equal` checks against `query(progress.current, witness="OrderProgress")` — verifies the order is at Cancel or Ice Scooting node
-- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — verifies the submitted Order's `service` field equals `travel_service`, **preventing cross-service theft** (R-C3-05)
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[3]]` — verifies the submitted Order's `service` field equals `travel_service`, so only an order of this service can qualify
 - **root**: `logic_and` of both conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-05 + R-C3-06) — Level 3 Scene-Combined Design**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by the Service Ownership check (Condition 2). An attacker cannot submit another service's order because `order.service` won't match `travel_service`.
-> - **R-C3-06 (Fund theft via Signer)**: Eliminated by the scene itself — the merchant portion uses `"who": {"Entity": {"name_or_address": "travel_treasury"}}` (funds flow to the fixed Treasury address), and the customer refund uses `"who": {"GuardIdentifier": 0}` (funds flow to the Order object's address as escrow). Neither portion flows to the caller's wallet, so **no Signer binding is needed**.
+> **Scene-combined design**:
+> - The Service Ownership check ensures an order of another service cannot qualify, because `order.service` won't match `travel_service`.
+> - The merchant portion routes to a fixed address, `"who": {"Entity": {"name_or_address": "travel_treasury"}}`, regardless of caller. The customer refund portion uses `"who": {"GuardIdentifier": 0}` — funds are delivered to the submitted order as escrow, not to the caller's wallet; the escrowed funds are owned by that Order object and received only by its owner through `order::owner_receive`. No Signer binding is needed and unrelated addresses cannot intercept.
 
 ### 3.6 No SPA Guard (5% Treasury, 95% Refund)
 
@@ -919,10 +919,10 @@ Checks if progress current is "SPA" AND order belongs to this service. If passed
     "data": {
       "namedNew": {
         "name": "no_spa_guard",
-        "tags": ["user", "cancel", "spa", "level3-scene-combined"],
+        "tags": ["user", "cancel", "spa"],
         "replaceExistName": true
       },
-      "description": "Guard for user not participating in SPA: checks if progress current is SPA AND order belongs to travel_service. VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity (travel_treasury) for merchant portion and sharing.who=GuardIdentifier(0) for customer refund (escrow to Order address). Two-fold verification: (1) order at SPA node, (2) order belongs to this service (prevents cross-service theft, R-C3-05).",
+      "description": "Guard for user not participating in SPA: checks if progress current is SPA AND order belongs to travel_service. No Signer binding is needed: the allocator uses sharing.who=Entity(travel_treasury) for the merchant portion and sharing.who=GuardIdentifier(0) for the customer refund (escrow to the submitted order). Two-fold verification: (1) order at the SPA node, (2) order belongs to this service.",
       "table": [
         {
           "identifier": 0,
@@ -980,17 +980,17 @@ Checks if progress current is "SPA" AND order belongs to this service. If passed
 }
 ```
 
-**Guard Explanation (Two-fold Verification — Level 3 Scene-Combined):**
+**Guard Explanation (Two-fold Verification):**
 - **Table Item 0**: Order address (submitted at runtime)
 - **Table Item 1**: Constant string "SPA" (node name)
 - **Table Item 2**: Constant address `travel_service` (this service's on-chain address)
 - **Condition 1 — SPA Node**: `logic_equal[query(progress.current, witness="OrderProgress"), identifier[1]]` — verifies the order is at the SPA node
-- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — verifies the submitted Order's `service` field equals `travel_service`, **preventing cross-service theft** (R-C3-05)
+- **Condition 2 — Service Ownership**: `logic_equal[query("order.service"), identifier[2]]` — verifies the submitted Order's `service` field equals `travel_service`, so only an order of this service can qualify
 - **root**: `logic_and` of both conditions — all must pass for allocation to proceed
 
-> **Risk Elimination (R-C3-05 + R-C3-06) — Level 3 Scene-Combined Design**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by the Service Ownership check (Condition 2). An attacker cannot submit another service's order because `order.service` won't match `travel_service`.
-> - **R-C3-06 (Fund theft via Signer)**: Eliminated by the scene itself — the merchant portion uses `"who": {"Entity": {"name_or_address": "travel_treasury"}}` (funds flow to the fixed Treasury address), and the customer refund uses `"who": {"GuardIdentifier": 0}` (funds flow to the Order object's address as escrow). Neither portion flows to the caller's wallet, so **no Signer binding is needed**.
+> **Scene-combined design**:
+> - The Service Ownership check ensures an order of another service cannot qualify, because `order.service` won't match `travel_service`.
+> - The merchant portion routes to a fixed address, `"who": {"Entity": {"name_or_address": "travel_treasury"}}`, regardless of caller. The customer refund portion uses `"who": {"GuardIdentifier": 0}` — funds are delivered to the submitted order as escrow, not to the caller's wallet; the escrowed funds are owned by that Order object and received only by its owner through `order::owner_receive`. No Signer binding is needed and unrelated addresses cannot intercept.
 
 ---
 
@@ -1265,19 +1265,19 @@ Configure the travel service (created unpublished in Step 2.5) with all bindings
 |------|--------|-------------|----------|
 | `Entity` | `{"Entity": {"name_or_address": "travel_treasury"}}` | The named Treasury address | Merchant receipts (Treasury object — Treasury-first rule) |
 | `GuardIdentifier` | `{"GuardIdentifier": 0}` | Address from Guard table index 0 (submitted at runtime) | Customer refunds (Order ID submitted to Guard) |
-| `Signer` | `{"Signer": "signer"}` | The caller of `alloc_by_guard` | When caller should receive all funds (**⚠️ R-C3-06 Risk**: unsafe without Guard Signer binding) |
+| `Signer` | `{"Signer": "signer"}` | The caller of `alloc_by_guard` | When the caller should receive funds — requires the Guard to bind the Signer to an authorized address |
 
 > **Important**: All allocation Guards (merchant_victory_guard, no_ice_scooting_guard, no_spa_guard) have `identifier: 0` as a submission field accepting the Order ID at runtime. `{"GuardIdentifier": 0}` resolves to this submitted Order ID, so funds are sent to the Order object — the customer (Order builder) can then withdraw.
 
-> **Treasury-First Rule**: Merchant funds flow to `travel_treasury` (not `travel_service`) following the fund-flow design pattern. This makes all allocators inherently safe (R-C3-06) — funds go to a fixed Treasury regardless of caller, so no Signer binding is needed in the Guards. Combined with the R-C3-05 service ownership check in each Guard, the allocators are protected against both cross-service theft and fund theft via Signer.
+> **Treasury-First Rule**: Merchant funds flow to `travel_treasury` (not `travel_service`), so funds go to a fixed Treasury regardless of caller and no Signer binding is needed in the Guards. Together with the service-ownership check (`order.service`) in each Guard, the allocators are protected against both cross-service orders and arbitrary callers.
 
 **Allocation Logic**:
 
-| Guard | Condition | Treasury Receives | Customer Receives | Verifier Level |
-|-------|-----------|-------------------|-------------------|----------------|
-| merchant_victory_guard | Progress is "Complete" + order.service verified | 100% (Entity → travel_treasury) | 0% | Level 3 (scene-combined) |
-| no_ice_scooting_guard | Progress is "Cancel" or "Ice Scooting" + order.service verified | 80% (Entity → travel_treasury) | 20% (GuardIdentifier: 0 → Order) | Level 3 (scene-combined) |
-| no_spa_guard | Progress is "SPA" + order.service verified | 5% (Entity → travel_treasury) | 95% (GuardIdentifier: 0 → Order) | Level 3 (scene-combined) |
+| Guard | Condition | Treasury Receives | Customer Receives |
+|-------|-----------|-------------------|-------------------|
+| merchant_victory_guard | Progress is "Complete" + order.service verified | 100% (Entity → travel_treasury) | 0% |
+| no_ice_scooting_guard | Progress is "Cancel" or "Ice Scooting" + order.service verified | 80% (Entity → travel_treasury) | 20% (GuardIdentifier: 0 → Order) |
+| no_spa_guard | Progress is "SPA" + order.service verified | 5% (Entity → travel_treasury) | 95% (GuardIdentifier: 0 → Order) |
 
 ---
 

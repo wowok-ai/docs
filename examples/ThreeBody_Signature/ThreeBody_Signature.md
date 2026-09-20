@@ -270,10 +270,10 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
     "data": {
       "namedNew": {
         "name": "three_body_buy_guard",
-        "tags": ["signature", "book", "buy-guard", "level1-strict"],
+        "tags": ["signature", "book", "buy-guard"],
         "replaceExistName": true
       },
-      "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service. VERIFIER CONSTRAINT LEVEL 1 (strict single-identity binding): The author role is permanently tied to a single address. The designer explicitly accepts the lock-in risk because (a) the author is the sole service operator in this minimal example, and (b) Guard immutability guarantees the buyer whitelist cannot be tampered with. R-C4-04 (info): if the author address is lost or rotated, the Guard must be rebuilt and the Service's buy_guard must be re-bound.",
+      "description": "Verify buyer is the service creator (three_body_author). Only the author can purchase this signature service. The author role is tied to a single fixed address, which the designer accepts because (a) the author is the sole service operator in this minimal example, and (b) Guard immutability guarantees the buyer whitelist cannot be tampered with. If the author address is lost or rotated, the Guard must be rebuilt and the Service's buy_guard re-bound.",
       "table": [
         {
           "identifier": 0,
@@ -308,7 +308,7 @@ Create a Guard that verifies the buyer is the service creator (author). This ens
 
 > **Note**: The Guard uses a `table` to define constant values with identifiers, then references them in the `root` logic using `identifier` node type. The `root` is a direct GuardNode (no wrapper).
 
-> **⚠️ Level 1 — Strict Single-Identity Binding (R-C4-04)**: This Guard uses `logic_equal[context(Signer), identifier[0](three_body_author)]` — the strictest verifier constraint level. Only the single fixed author address can pass. The lock-in risk is acceptable here because: (1) the author is the sole operator of this signature service, (2) Guard immutability guarantees the whitelist cannot be tampered with, and (3) the buy_guard can be re-bound on the Service if the author address ever needs rotation (the old Guard is abandoned and a new one is created). For multi-operator scenarios, prefer Level 2 (identity-set binding) instead.
+> **Strict single-identity binding**: This Guard uses `logic_equal[context(Signer), identifier[0](three_body_author)]` — only the single fixed author address can pass. This is acceptable here because: (1) the author is the sole operator of this signature service, (2) Guard immutability guarantees the whitelist cannot be tampered with, and (3) the buy_guard can be re-bound on the Service if the author address ever needs rotation (the old Guard is abandoned and a new one is created). For multi-operator scenarios, prefer an identity-set binding instead.
 
 > **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
 
@@ -669,7 +669,7 @@ Create a Treasury object to aggregate signature service revenue (public funds fo
 
 > **Treasury-First Rule**: Following the fund-flow design pattern established in the Insurance, MyShop_Advanced, and Travel examples, merchant revenue flows to `three_body_treasury` (not directly to the author's address or the Service address). This:
 > 1. **Aggregates public funds** for the author's operational distribution and accounting
-> 2. **Makes allocators inherently safe** (R-C3-06) — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the allocator Guard
+> 2. **Makes allocators inherently safe** — funds always flow to the fixed Treasury regardless of caller, so no Signer binding is needed in the allocator Guard
 > 3. **Uses permission consistency** — Treasury and Service share `three_body_permission`, ensuring unified governance
 
 > **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
@@ -774,7 +774,7 @@ Create a Contact object to serve as the Service's encrypted customer-service cha
 
 ## Step 9: Create Allocator Guard
 
-Create a dedicated Guard for the order allocator that verifies the order belongs to this service. This is a **Level 3 scene-combined** Guard: no Signer binding is needed because the allocator uses `sharing.who=Entity(three_body_treasury)` — funds always flow to the fixed Treasury regardless of who triggers the allocation.
+Create a dedicated Guard for the order allocator that verifies the order belongs to this service. No Signer restriction is needed: the allocator uses `sharing.who=Entity(three_body_treasury)`, so funds flow to the fixed Treasury regardless of who triggers the allocation.
 
 **Guard Logic**:
 ```
@@ -790,10 +790,10 @@ order.service == three_body_signature_service
     "data": {
       "namedNew": {
         "name": "three_body_allocator_guard",
-        "tags": ["signature", "book", "allocator", "level3-scene-combined"],
+        "tags": ["signature", "book", "allocator"],
         "replaceExistName": true
       },
-      "description": "Allocator guard for Three-Body signature service: verifies order.service == three_body_signature_service to prevent cross-service theft (R-C3-05). VERIFIER CONSTRAINT LEVEL 3 (scene-combined): No Signer binding needed because the allocator uses sharing.who=Entity(three_body_treasury) — funds always flow to the Treasury regardless of caller (R-C3-06 safe).",
+      "description": "Allocator guard for Three-Body signature service: verifies order.service == three_body_signature_service, so only an order of this service can qualify. No Signer binding is needed because the allocator uses sharing.who=Entity(three_body_treasury) — funds always flow to the Treasury regardless of caller.",
       "table": [
         {
           "identifier": 0,
@@ -834,14 +834,14 @@ order.service == three_body_signature_service
 }
 ```
 
-**Guard Explanation (Service Ownership Check — Level 3 Scene-Combined):**
+**Guard Explanation (Service Ownership Check):**
 - **Table Item 0**: Order address (submitted at runtime, `b_submission: true`) — the order being allocated
 - **Table Item 1**: Constant address `three_body_signature_service` (this service's on-chain address)
 - **Root**: `logic_equal[query("order.service"), identifier[1]]` — verifies the submitted Order's `service` field equals `three_body_signature_service`
 
-> **Risk Elimination (R-C3-05 + R-C3-06) — Level 3 Scene-Combined Design**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by the Service Ownership check. An attacker cannot submit another service's order because `order.service` won't match `three_body_signature_service`.
-> - **R-C3-06 (Fund theft via Signer)**: Eliminated by the scene itself — the allocator uses `"who": {"Entity": {"name_or_address": "three_body_treasury"}}` (funds flow to the fixed Treasury address). Funds go to a fixed recipient regardless of caller, so **no Signer binding is needed**. This is the Level 3 scene-combined pattern.
+> **Scene-combined design**:
+> - **Cross-service orders**: the Service Ownership check ensures an order of another service cannot qualify, because `order.service` won't match `three_body_signature_service`.
+> - **Fixed recipient**: the allocator uses `"who": {"Entity": {"name_or_address": "three_body_treasury"}}` — funds flow to the fixed Treasury address regardless of caller, so no Signer binding is needed.
 
 > **Important**: `env.confirmed: true` is required because `replaceExistName: true` triggers a confirmation prompt.
 
@@ -913,10 +913,10 @@ Set up fund allocation: 100% to the author's Treasury upon order completion. Als
 }
 ```
 
-> **⚠️ Risk Elimination — Why this configuration is safe**:
-> - **R-C3-05 (Cross-service theft)**: Eliminated by `three_body_allocator_guard` (Step 9), which verifies `order.service == three_body_signature_service` before allocation proceeds.
-> - **R-C3-06 (Fund theft via Signer)**: Eliminated by `sharing.who = {"Entity": {"name_or_address": "three_body_treasury"}}` — funds always flow to the fixed Treasury address regardless of who triggers the allocation. An attacker cannot redirect funds to themselves even if they somehow bypass the Guard.
-> - **Previous unsafe pattern (DO NOT USE)**: The original design used `guard: "three_body_buy_guard"` (no `order.service` check) with `sharing.who = {"Signer": "signer"}` — this allowed anyone to trigger allocation of any order's funds to themselves.
+> **Why this configuration is safe**:
+> - The allocator Guard verifies `order.service == three_body_signature_service` before allocation proceeds, so an order of another service cannot qualify.
+> - The allocator pays `{"Entity": {"name_or_address": "three_body_treasury"}}` — funds always flow to the fixed Treasury address regardless of who triggers the allocation, so the caller cannot redirect funds to themselves.
+> - **Previous unsafe pattern (DO NOT USE)**: The original design used `guard: "three_body_buy_guard"` (no `order.service` check) with `sharing.who = {"Signer": "signer"}` — this allowed any passing caller to receive the funds.
 > - **SDK-enforced constraint (customer_required ⟶ um)**: `"customer_required"` is set alongside `"um": "three_body_contact"` in the SAME call. The SDK validator `checkCustomerRequiredNeedsUm()` in `service.ts` L1226 also runs on publish (L314), so splitting into two calls (e.g. `customer_required` now, `um` later) would still fail at publish time — they are both required before the Service goes live.
 
 **Expected Result**:
@@ -1153,8 +1153,8 @@ Query the service to verify all configurations.
 > - **`buy_guard`**, **`machine`**, **`permission`**, **`um`**: Return **on-chain object IDs** (not names). The on-chain data stores raw object IDs; resolving them back to local mark names requires a separate reverse lookup that is not performed by `onchain_objects` queries.
 > - **`query_name`**: The original name string passed in the query request (here, `"three_body_signature_service"`). This is automatically populated by the SDK from the input `objects` array, so you can identify which queried name corresponds to which returned object.
 > - **`um`**: The on-chain object ID of `three_body_contact` (created in Step 8). The SDK validator `checkCustomerRequiredNeedsUm()` requires this whenever `customer_required` is non-empty — without a Contact the Service has no encrypted channel to receive customer private info.
-> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 9). This Guard verifies `order.service == three_body_signature_service` (R-C3-05 protection).
-> - **`order_allocators.allocators[].sharing[].who`**: `{"Entity": "0x..."}` indicates funds flow to the fixed Treasury object (`three_body_treasury` from Step 7). The address is the Treasury's on-chain object ID. This eliminates R-C3-06 (fund theft via Signer) because the recipient is fixed regardless of caller.
+> - **`order_allocators.allocators[].guard`**: Returns the on-chain object ID of `three_body_allocator_guard` (created in Step 9). This Guard verifies `order.service == three_body_signature_service`.
+> - **`order_allocators.allocators[].sharing[].who`**: `{"Entity": "0x..."}` indicates funds flow to the fixed Treasury object (`three_body_treasury` from Step 7). The address is the Treasury's on-chain object ID; the recipient is fixed regardless of caller.
 > - **`order_allocators.allocators[].sharing[].mode`**: `1` is the numeric enum for `Rate` mode (input accepts the string `"Rate"`, output returns the numeric `1`).
 > - **`order_allocators.allocators[].fix`** and **`max`**: Additional fields returned on-chain (default `"0"` and `null` respectively) that are not part of the input schema but are present in the on-chain data structure.
 > - **`sales[].price`**: Returns the on-chain smallest-unit value as a string (`"888000000000"` = 888 WOW; WOW has 9 decimals). The input accepts the display format `"888WOW"` (auto-converted by the Fund Processing Layer) or the raw smallest-unit integer `888000000000`.
@@ -1733,11 +1733,11 @@ Query the Treasury to confirm the funds have landed in its balance:
 
 This example demonstrates:
 
-1. **Buy Guard Implementation**: Restricts service purchases to specific accounts (Level 1 strict single-identity binding)
+1. **Buy Guard Implementation**: Restricts service purchases to the fixed author address
 2. **Machine Workflow**: Two-node process for service delivery tracking
 3. **WIP Files Optional**: Sales items can use WIP files or empty strings
 4. **Service Configuration**: Complete setup from creation to publication
-5. **Safe Fund Allocation**: Treasury-first design with Level 3 scene-combined allocator Guard — funds always flow to the fixed Treasury, eliminating R-C3-05 (cross-service theft) and R-C3-06 (fund theft via Signer)
+5. **Safe Fund Allocation**: Treasury-first design — funds always flow to the fixed Treasury, and the allocator Guard restricts qualification to orders of this service
 6. **Fund Allocation Execution**: `alloc_by_guard` distributes the completed order's 888 WOW payment to `three_body_treasury`, and the pending CoinWrapper is unwrapped via Treasury `receive` (see Workflow Execution → Fund Allocation)
 
 ### Key Objects
@@ -1745,23 +1745,23 @@ This example demonstrates:
 | Object | Name |
 |--------|------|
 | Permission | three_body_permission |
-| Buy Guard | three_body_buy_guard (Level 1 strict, R-C4-04) |
+| Buy Guard | three_body_buy_guard (fixed-address binding to the author) |
 | Machine | three_body_machine |
 | Service | three_body_signature_service |
 | Treasury | three_body_treasury |
 | Contact (um) | three_body_contact (required for customer_required — SDK-enforced customer_required ⟶ um linkage) |
-| Allocator Guard | three_body_allocator_guard (Level 3 scene-combined, R-C3-05/R-C3-06 safe) |
+| Allocator Guard | three_body_allocator_guard (verifies order.service; pays the fixed Treasury) |
 | Order | three_body_order |
 | Allocation | three_body_allocation |
 | Progress | three_body_progress |
 
-### Risk Mitigation Summary
+### Safety Summary
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| **R-C3-05** (Cross-service theft) | High | `three_body_allocator_guard` verifies `order.service == three_body_signature_service` before allocation |
-| **R-C3-06** (Fund theft via Signer) | Critical | `sharing.who = {"Entity": {"name_or_address": "three_body_treasury"}}` — funds flow to fixed Treasury, no Signer binding needed |
-| **R-C4-04** (Level 1 lock-in) | Info | Buy Guard uses Level 1 strict binding (justified: sole-operator service, buy_guard can be re-bound if author rotates) |
+| Concern | Mitigation |
+|------|------------|
+| Cross-service orders | `three_body_allocator_guard` verifies `order.service == three_body_signature_service` before allocation |
+| Funds paid to an arbitrary caller | `sharing.who = {"Entity": {"name_or_address": "three_body_treasury"}}` — funds flow to the fixed Treasury, no Signer binding needed |
+| Fixed author address | accepted here because the author is the sole operator; the buy_guard can be re-bound on the Service if the author rotates |
 
 ---
 
@@ -1803,7 +1803,7 @@ Each node transition requires the author's confirmation, ensuring accountability
    - Configure Service (add machine, buy_guard, order_allocators with allocator guard + Entity(Treasury); set customer_required **together with** um in the same or prior call)
    - Publish Service (LAST - once published, many changes are blocked)
 
-3. **Treasury-First Fund Flow**: Always route merchant revenue through a Treasury object using `sharing.who = {"Entity": {"name_or_address": "treasury_name"}}` instead of `{"Signer": "signer"}`. This eliminates R-C3-06 (critical fund theft via Signer) because funds flow to a fixed recipient regardless of who triggers the allocation. Combined with an allocator Guard that verifies `order.service == this_service` (R-C3-05 protection), the fund allocation becomes inherently safe.
+3. **Treasury-First Fund Flow**: Route merchant revenue through a Treasury object using `sharing.who = {"Entity": {"name_or_address": "treasury_name"}}` rather than a Signer recipient, because funds then flow to a fixed recipient regardless of who triggers the allocation. Combined with an allocator Guard that verifies `order.service == this_service`, the fund allocation is safe against both cross-service orders and arbitrary callers.
 
 4. **Use `confirmed: true` for Irreversible/Destructive Operations**: The MCP server enforces a two-phase confirmation for safety. You MUST add `"confirmed": true` to the `env` for:
    - Any operation whose **top-level** `data.namedNew ?? data.object` sets `replaceExistName: true` (unbinds existing names). Note: ConfirmGate's default-value warnings only scan that top-level field — the NESTED naming fields inside `order_new` (`namedNewOrder`/`namedNewProgress`/`namedNewAllocation`) are NOT scanned, which is why Test 1 runs without `confirmed: true` despite its nested `replaceExistName: true` entries.
