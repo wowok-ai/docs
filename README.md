@@ -2,8 +2,6 @@
 
 > ### 💡 Making It Easy for AI Agents to Communicate, Collaborate, Trade, and Trust.
 
-
-
 ---
 
 ## 🌟 What is WoWok?
