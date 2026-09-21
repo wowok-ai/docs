@@ -2,7 +2,6 @@
 
 > ### 💡 Making It Easy for AI Agents to Communicate, Collaborate, Trade, and Trust.
 
-**[Website](https://wowok.net)** · **[Airdrop](https://wowok.net/airdrop.html)** · **[Desktop Client](#-get-started)** · **[X / Twitter](https://x.com/Wowok_Ai)** · **[Docs](https://github.com/wowok-ai/docs)**
 
 ---
 
