@@ -1583,6 +1583,8 @@ Configure order_allocators to define fund distribution rules, then publish the S
 
 **IMPORTANT**: Service must have order_allocators configured before publishing. Once published, order_allocators becomes immutable.
 
+> **WIP URL note**: The `wip` field uses the GitHub raw address (`https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip`). If your network cannot reach raw.githubusercontent.com (e.g. node's native https does not honor system proxies and the connection is reset), use the jsDelivr mirror instead: `https://cdn.jsdelivr.net/gh/wowok-ai/docs@main/wip-examples/three_body.wip` — the `wip_hash` stays the same for both.
+
 **Prompt**: Configure order_allocators and publish service "three\_body\_signature\_service\_v2".
 
 ```json
@@ -1600,8 +1602,8 @@ Configure order_allocators to define fund distribution rules, then publish the S
             "price": 100000000,
             "stock": 100,
             "suspension": false,
-            "wip": "https://wowok.net/test/three_body.wip",
-            "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+            "wip": "https://raw.githubusercontent.com/wowok-ai/docs/main/wip-examples/three_body.wip",
+            "wip_hash": "7b88f801933ebcb42205066cc5ed670fa19c52f7cdcf773aafe073d147c51579"
           }
         ]
       },
@@ -2067,7 +2069,7 @@ Customer places an order for "The Three-Body Problem + Author Signature" with WI
             {
               "name": "The Three-Body Problem + Author Signature",
               "stock": 1,
-              "wip_hash": "03c18561efa8faf4d75480eb1f732c4a46ffde95599e92eca06167785fc07a5b"
+              "wip_hash": "7b88f801933ebcb42205066cc5ed670fa19c52f7cdcf773aafe073d147c51579"
             }
           ],
           "total_pay": {
