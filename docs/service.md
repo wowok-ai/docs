@@ -1959,7 +1959,7 @@ Unwrap CoinWrapper and other objects received by the Service and send them to th
 | **[Allocation](allocation.md)** | Automatic fund distribution |
 | **[Order](order.md)** | Order management |
 | **[Payment](payment.md)** | Direct coin transfers |
-| **[Trust Score](trust-score.md)** | Service trust & risk assessment — use before purchasing |
+| **[Trust Evaluation](project.md)** | `onchain_topology` graph evaluation — service trust & risk assessment; use before purchasing |
 
 ---
 
