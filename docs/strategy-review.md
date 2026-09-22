@@ -272,7 +272,7 @@ Result (abridged):
 
 - [Persona](persona.md) — where approved proposals land (`current` layer), and where the merchant posture lives
 - [Industry Pack](industry-pack.md) — the six-industry strategy catalog, posture playbooks, cadence, and long-form tactical manuals
-- [Trust Score](trust-score.md) — per-service trust/risk assessment (a complementary, pre-purchase read)
+- `onchain_topology` graph evaluation ([Project](project.md)) — per-service trust/risk assessment (a complementary, pre-purchase read)
 - [Response Format](response-format.md) — MCP result envelope and error classification
 
 ---

@@ -41,7 +41,7 @@ WoWok provides seven specialized query sub-tools (all dispatched via the unified
 
 **⚠️ Important Note**: Messenger message queries do not go through the above sub-tools; you need to use the **messenger_operation** sub-tool with the appropriate parameters.
 
-> **💡 Related Tool**: The [`trust_score`](trust-score.md) sub-tool provides proactive service trust & risk assessment. While not a generic query tool, it queries on-chain Service data to compute a 0-100 trust score (5 dimensions) and an optional 4-dimension risk score. Use it before purchasing from a service for due diligence.
+> **💡 Related Tool**: The `query_toolkit` sub-tool's `onchain_topology` query type provides proactive service trust & risk assessment — a graph evaluation of one object (trust + risk 0-100 totals, completeness, coverage, unverified rules). Use it before purchasing from a service for due diligence. See [Project](project.md) for the query surface.
 
 ---
 

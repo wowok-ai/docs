@@ -398,18 +398,17 @@ We have designed 10 learning stages and a large number of Prompt examples for yo
 
 ### 🛠️ Advanced Tools
 
-Beyond the 9 learning stages, WoWok provides six advanced tools for deployment workflow, runtime control, trust assessment, and personalization:
+Beyond the 9 learning stages, WoWok provides five advanced tools for deployment workflow, runtime control, and personalization:
 
 | Tool | Sub-tool | Description |
 |------|----------|-------------|
 | [Project](docs/project.md) | `project_operation` | 5-stage deployment workflow: analyze intent → aggregate risks → generate deployment doc → trace substeps. Maintains a local object dependency graph (DAG) for topologically correct deployment. |
 | [Config](docs/config.md) | `config_operation` | Runtime service toggles: enable/disable features like Safety Confirmation Gate, Harness Verify Loop, Semantic Enrichment, and more — without restarting the MCP server. |
-| [Trust Score](docs/trust-score.md) | `trust_score` | Proactive service trust & risk assessment: computes a 0-100 trust score across 5 dimensions (arbitration, reviews, fulfillment, fund_safety, transparency) and a 4-dimension risk score at deeper evaluation levels. |
 | [Persona](docs/persona.md) | `persona_operation` | Account & industry persona: set your long-term identity and current strategy so the AI negotiates with your stance (per account / industry / role). |
 | [Industry Pack](docs/industry-pack.md) | `industry_pack_operation` | Industry knowledge packs: scaffold / scan / register / edit / diff / reset. Inject your industry experience and skills; the AI uses them from the next turn. |
 | [Strategy Review](docs/strategy-review.md) | `strategy_review_operation` | Chain-signal scorecard (13 metrics, posture-weighted, period deltas), fail-safe evidence collection, and review proposals that merge into the persona `current` layer only after explicit approval. |
 
-> **Note**: These tools are optional and complement the core learning path. Use `trust_score` before purchasing from a service, `project_operation` for structured multi-object deployment, `config_operation` for runtime feature control — and `persona_operation` / `industry_pack_operation` to personalize how the AI runs your business.
+> **Note**: These tools are optional and complement the core learning path. Use the `query_toolkit` `onchain_topology` graph evaluation before purchasing from a service, `project_operation` for structured multi-object deployment, `config_operation` for runtime feature control — and `persona_operation` / `industry_pack_operation` to personalize how the AI runs your business.
 
 ### Start Your Journey
 
@@ -476,7 +475,6 @@ Choose a stage to begin your WoWok journey:
 | [Bridge](docs/bridge.md) | Cross-Chain | 9 | WOW ↔ EVM (Ethereum mainnet) cross-chain asset transfers |
 | [Config](docs/config.md) | System | - | Runtime service toggles (confirm_gate, harness, etc.) |
 | [Project](docs/project.md) | Workflow | - | 5-stage deployment workflow & object dependency graph |
-| [Trust Score](docs/trust-score.md) | Query | - | Service risk & trust assessment (0-100 score, 5 dimensions) |
 | [Persona](docs/persona.md) | Local | - | Account & industry personas — current strategy + long-term identity |
 | [Industry Pack](docs/industry-pack.md) | Local | - | Industry knowledge packs — inject your skills, AI-effective instantly |
 | [Strategy Review](docs/strategy-review.md) | Local+Query | - | Chain-signal scorecard & posture-weighted strategy reviews — current-layer proposals, approval-gated |

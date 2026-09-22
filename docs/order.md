@@ -1062,4 +1062,4 @@ Day 14: Process complete, received funds
 | **[Arbitration](arbitration.md)** | Dispute resolution |
 | **[Contact](contact.md)** | Public contact information for secure communication |
 | **[Messenger](messenger.md)** | End-to-end encrypted messaging for private information exchange |
-| **[Trust Score](trust-score.md)** | Service trust & risk assessment — check before placing an order |
+| **[Trust Evaluation](project.md)** | `onchain_topology` graph evaluation — service trust & risk assessment; check before placing an order |
