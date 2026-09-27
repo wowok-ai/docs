@@ -91,8 +91,8 @@ treasury (Treasury Object)
 │   ├── withdraw (withdrawal, optional)
 │   │   ├── amount (amount, required)
 │   │   │   ├── Option 1: { fixed: number|string } - Fixed withdrawal amount (Permission only)
-│   │   │   └── Option 2: { by_external_withdraw_guard: string } - Guard-verified withdrawal
-│   │   ├── recipient (AccountOrMark_Address object, required) - Recipient ID
+│   │   │   └── Option 2: { by_external_withdraw_guard: string } - Guard-verified withdrawal (pays ONLY the transaction sender — recipient MUST equal the signer, abort 10 otherwise)
+│   │   ├── recipient (AccountOrMark_Address object, required) - Recipient ID (MUST be the transaction sender on the by_external_withdraw_guard path)
 │   │   ├── payment_info (required)
 │   │   │   ├── for_object (string or null, optional) - Payment for a specific object ID
 │   │   │   ├── for_guard (string or null, optional) - Payment to satisfy verification of a Guard object
@@ -586,7 +586,7 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 | `operation_type` | string | Yes | Operation type | Fixed value "treasury" |
 | `data.object` | string | Yes | Treasury name or ID | |
 | `data.withdraw.amount` | object | Yes | Withdrawal amount | { fixed: number } or { by_external_withdraw_guard: string } |
-| `data.withdraw.recipient` | object | Yes | Recipient | AccountOrMark_Address object |
+| `data.withdraw.recipient` | object | Yes | Recipient | AccountOrMark_Address object. On the `by_external_withdraw_guard` path this MUST equal the transaction sender — external_withdraw pays only the sender (abort code 10, `E_EXTERNAL_RECIPIENT_NOT_SIGNER`); use `amount.fixed` to pay another address |
 | `data.withdraw.payment_info` | object | Yes | Payment information | |
 | `data.withdraw.namedNewPayment` | object | No | Create new Payment object | |
 
@@ -679,7 +679,9 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
 
 #### Example 3.2: Withdrawal through External Guard
 
-**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard_u64", send to bob, simultaneously create Payment object.
+**Prompt**: Withdraw from "community_fund", verify through external Guard "withdraw_guard_u64", **send to the transaction sender's own account** (the only allowed destination on this path — see note below), simultaneously create Payment object.
+
+> **Recipient rule**: a `by_external_withdraw_guard` withdrawal ALWAYS pays the transaction sender — the Guard authorizes how much to release but cannot constrain the destination (on-chain this aborts with code 10, `E_EXTERNAL_RECIPIENT_NOT_SIGNER`, if the recipient is anyone else). To pay a different address (e.g. bob), use `amount.fixed` (permissioned withdraw) instead.
 
 ```json
 {
@@ -693,7 +695,7 @@ Withdraw assets from Treasury, supports fixed amount withdrawal through Permissi
           "by_external_withdraw_guard": "withdraw_guard_u64"
         },
         "recipient": {
-          "name_or_address": "bob"
+          "name_or_address": ""
         },
         "payment_info": {
           "remark": "treasury operation",
