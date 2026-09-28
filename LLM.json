@@ -1,31 +1,11 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-09-28",
+  "lastUpdated": "2026-09-29",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
   "providers": [
-    {
-      "name": "Pollinations Free",
-      "type": "openai",
-      "baseUrl": "https://text.pollinations.ai/openai",
-      "defaultModel": "openai-fast",
-      "region": "global",
-      "auth": "anonymous",
-      "models": [
-        "openai-fast"
-      ],
-      "modelSpecs": {
-        "openai-fast": {
-          "displayName": "GPT-OSS 20B",
-          "contextWindow": 131072,
-          "toolCalls": true,
-          "jsonOutput": true,
-          "reasoning": true
-        }
-      }
-    },
     {
       "name": "OVH Free",
       "type": "openai",
@@ -52,6 +32,10 @@
           "stable-diffusion",
           "guard",
           "bge-"
+        ],
+        "reasoningPatterns": [
+          "Qwen3.5-397B",
+          "gpt-oss"
         ]
       }
     },
