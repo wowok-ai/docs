@@ -1,11 +1,59 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-09-16",
+  "lastUpdated": "2026-09-28",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
   "providers": [
+    {
+      "name": "OVH Free",
+      "type": "openai",
+      "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+      "defaultModel": "Qwen3.5-397B-A17B",
+      "region": "global",
+      "auth": "anonymous",
+      "bootstrap": {
+        "group": "wowok-default",
+        "priority": 10
+      },
+      "models": [
+        "Qwen3.5-397B-A17B",
+        "gpt-oss-120b",
+        "Meta-Llama-3_3-70B-Instruct",
+        "Qwen3-Coder-30B-A3B-Instruct"
+      ]
+    },
+    {
+      "name": "GitHub Models",
+      "type": "openai",
+      "baseUrl": "https://models.inference.ai.azure.com",
+      "defaultModel": "gpt-4.1",
+      "region": "global",
+      "auth": "oauth",
+      "models": [
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-5",
+        "gpt-5-mini",
+        "Llama-3.3-70B-Instruct",
+        "DeepSeek-V3.1"
+      ]
+    },
+    {
+      "name": "OpenRouter",
+      "type": "openai",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "defaultModel": "openai/gpt-oss-120b:free",
+      "region": "global",
+      "auth": "oauth",
+      "models": [
+        "openai/gpt-oss-120b:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
+        "google/gemini-2.5-flash:free"
+      ]
+    },
     {
       "name": "OpenAI",
       "type": "openai",
