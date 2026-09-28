@@ -52,7 +52,28 @@
       "baseUrl": "https://openrouter.ai/api/v1",
       "defaultModel": "nvidia/nemotron-3.5-lightning:free",
       "region": "global",
-      "auth": "oauth"
+      "auth": "oauth",
+      "models": [
+        "stealth/space-bunny-alpha",
+        "inclusionai/ling-3.0-flash-sante:free",
+        "inclusionai/ling-3.0-flash-fin:free",
+        "qwen/qwen3.8-27b:free",
+        "dots-studio/dots-3-note-preview:free",
+        "liquid/lfm-2.5-2.6b:free",
+        "nvidia/nemotron-3.5-lightning:free",
+        "thinkingmachines/inkling-small:free",
+        "poolside/laguna-s-2.1:free",
+        "thinkingmachines/inkling:free",
+        "poolside/laguna-xs-2.1:free",
+        "cohere/north-mini-code:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "google/gemma-4-26b-a4b-it:free",
+        "google/gemma-4-31b-it:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "openrouter/free",
+        "nvidia/nemotron-3.5-content-safety:free"
+      ]
     },
     {
       "name": "OpenAI",
@@ -75,9 +96,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 10.0,
-            "inputCacheHit": 1.0,
-            "output": 50.0
+            "inputCacheMiss": 10,
+            "inputCacheHit": 1,
+            "output": 50
           }
         },
         "gpt-5.6-sol": {
@@ -88,9 +109,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 4.0,
+            "inputCacheMiss": 4,
             "inputCacheHit": 0.4,
-            "output": 20.0
+            "output": 20
           }
         },
         "gpt-5.6-terra": {
@@ -101,9 +122,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 2.0,
+            "inputCacheMiss": 2,
             "inputCacheHit": 0.2,
-            "output": 12.0
+            "output": 12
           }
         },
         "gpt-5.6-luna": {
@@ -141,9 +162,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 10.0,
+            "inputCacheMiss": 10,
             "inputCacheHit": 0.25,
-            "output": 50.0
+            "output": 50
           }
         },
         "claude-opus-5": {
@@ -154,9 +175,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 5.0,
+            "inputCacheMiss": 5,
             "inputCacheHit": 0.5,
-            "output": 25.0
+            "output": 25
           }
         },
         "claude-sonnet-5": {
@@ -167,9 +188,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 2.0,
+            "inputCacheMiss": 2,
             "inputCacheHit": 0.2,
-            "output": 10.0
+            "output": 10
           }
         },
         "claude-haiku-4-5": {
@@ -180,9 +201,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 1.0,
+            "inputCacheMiss": 1,
             "inputCacheHit": 0.1,
-            "output": 5.0
+            "output": 5
           }
         }
       }
@@ -254,9 +275,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 2.0,
+            "inputCacheMiss": 2,
             "inputCacheHit": 0.5,
-            "output": 6.0
+            "output": 6
           }
         },
         "grok-4.5": {
@@ -266,9 +287,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 2.0,
+            "inputCacheMiss": 2,
             "inputCacheHit": 0.3,
-            "output": 6.0
+            "output": 6
           }
         },
         "grok-4.3": {
@@ -391,9 +412,9 @@
           "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 3.0,
+            "inputCacheMiss": 3,
             "inputCacheHit": 0.3,
-            "output": 15.0
+            "output": 15
           }
         },
         "kimi-k2.6": {
