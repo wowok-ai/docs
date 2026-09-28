@@ -13,10 +13,6 @@
       "defaultModel": "openai-fast",
       "region": "global",
       "auth": "anonymous",
-      "bootstrap": {
-        "group": "wowok-default",
-        "priority": 10
-      },
       "models": [
         "openai-fast"
       ],
@@ -39,8 +35,12 @@
       "auth": "anonymous",
       "bootstrap": {
         "group": "wowok-default",
-        "priority": 20
-      }
+        "priority": 10
+      },
+      "models": [
+        "Qwen3-Coder-30B-A3B-Instruct",
+        "Qwen3.5-397B-A17B"
+      ]
     },
     {
       "name": "GitHub Models",
