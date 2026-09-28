@@ -31,22 +31,6 @@
       }
     },
     {
-      "name": "OVH Free",
-      "type": "openai",
-      "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-      "defaultModel": "Qwen3.5-397B-A17B",
-      "region": "global",
-      "auth": "anonymous",
-      "bootstrap": {
-        "group": "wowok-default",
-        "priority": 20
-      },
-      "models": [
-        "Qwen3.5-397B-A17B",
-        "gpt-oss-120b"
-      ]
-    },
-    {
       "name": "GitHub Models",
       "type": "openai",
       "baseUrl": "https://models.inference.ai.azure.com",
@@ -68,17 +52,7 @@
       "baseUrl": "https://openrouter.ai/api/v1",
       "defaultModel": "nvidia/nemotron-3.5-lightning:free",
       "region": "global",
-      "auth": "oauth",
-      "models": [
-        "nvidia/nemotron-3.5-lightning:free",
-        "stealth/space-bunny-alpha",
-        "thinkingmachines/inkling-small:free",
-        "thinkingmachines/inkling:free",
-        "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "qwen/qwen3.8-27b:free",
-        "inclusionai/ling-3.0-flash-fin:free",
-        "dots-studio/dots-3-note-preview:free"
-      ]
+      "auth": "oauth"
     },
     {
       "name": "OpenAI",
