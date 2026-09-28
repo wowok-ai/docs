@@ -1,0 +1,50 @@
+name: Free Models Sync
+
+# Watch free-tier providers and publish the refreshed catalog to LLM.json.
+# No self-hosted server: GitHub Actions runs this on a schedule, commits the
+# change, and clients pick it up through their remote-preset sync.
+on:
+  schedule:
+    # Every 6 hours (UTC). GitHub event delivery can be delayed under load;
+    # the client-side direct adapters cover freshness in between runs.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Avoid overlapping runs if a previous run is slow on smoke probes.
+concurrency:
+  group: free-models-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Discover free models
+        id: discover
+        run: |
+          node scripts/discover-free-models.mjs | tee discovery.log
+          if grep -q "changed=yes" discovery.log; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit updated LLM.json
+        if: steps.discover.outputs.changed == 'true'
+        run: |
+          git config user.name "wowok-bot"
+          git config user.email "bot@wowok.net"
+          git add LLM.json
+          git commit -m "chore(llm): auto-refresh free model catalog"
+          git push
