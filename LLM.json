@@ -10,7 +10,7 @@
       "name": "OVH Free",
       "type": "openai",
       "baseUrl": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-      "defaultModel": "Qwen3-Coder-30B-A3B-Instruct",
+      "defaultModel": "Qwen3.5-397B-A17B",
       "region": "global",
       "auth": "anonymous",
       "bootstrap": {
@@ -18,8 +18,8 @@
         "priority": 10
       },
       "models": [
-        "Qwen3-Coder-30B-A3B-Instruct",
-        "Qwen3.5-397B-A17B"
+        "Qwen3.5-397B-A17B",
+        "Qwen3-Coder-30B-A3B-Instruct"
       ],
       "discovery": {
         "kind": "openai-models",
