@@ -382,23 +382,26 @@ Recommend a Service to the Demand object.
 }
 ```
 
-**Execution Result**:
+**Execution Result** (current envelope: `outcome` is `"executed"` or `"failed"` — a failed dry run carries the classified error plus recovery guidance):
 ```json
 {
+  "outcome": "failed",
+  "message": "Transaction failed: Dry run failed: MoveAbort in command 0",
   "result": {
-    "status": "success",
-    "data": {
-      "message": "Transaction failed: Dry run failed: MoveAbort in command 0",
-      "result": {
-        "type": "error",
-        "error": "Dry run failed: MoveAbort in command 0",
-        "error_code": "move_abort",
-        "retryable": false,
-        "recovery_hint": "Check input parameters and on-chain state"
-      }
-    }
+    "type": "error",
+    "error": "Dry run failed: MoveAbort in command 0",
+    "error_code": "move_abort",
+    "retryable": false,
+    "recovery_hint": "Check input parameters and on-chain state"
   },
-  "schema": null
+  "recovery": {
+    "strategy": "escalate_human",
+    "should_retry": false,
+    "max_attempts": 1,
+    "current_attempt": 1,
+    "user_prompt": "An unclassified error occurred. Please review the error details and contact support if needed.",
+    "detail": "1. Report full error context to the user 2. Escalate to human intervention 3. Flag for error-classification rule addition"
+  }
 }
 ```
 

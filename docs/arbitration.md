@@ -730,7 +730,7 @@ User applies to resubmit materials and restart arbitration.
 
 ### Feature Description
 
-Withdraw arbitration fees from the Arb object.
+Withdraw arbitration fees from the Arb object. The dispute fee is never returned to the winning side: it is retained in the Arbitration object, and after the final result (`arbitration`) the arbitrator extracts it via `arb_withdraw`.
 
 ### Parameter Description
 
