@@ -163,6 +163,7 @@ Create a new Allocation object with predefined distribution rules. Newly created
 | `data.payment_info.index` | number or string | Yes | Payment record index | |
 | `data.payment_info.for_object` | string or null | No | Payment for specific object | |
 | `data.payment_info.for_guard` | string or null | No | Payment for specific guard | |
+| `data.allow_unanchored` | boolean | No | Explicitly allow an unanchored (for_object not set) Allocation with GuardIdentifier recipients | Default: blocked (docs#11) |
 
 ### Important Notes
 
@@ -175,6 +176,10 @@ Create a new Allocation object with predefined distribution rules. Newly created
 ⚠️ **Threshold Check**: For Amount mode allocations, the sum of all amounts must be greater than or equal to the threshold. For Rate mode allocations, the threshold check is performed during execution based on the actual balance.
 
 ⚠️ **type_parameter (Payment Token)**: Defaults to `0x2::wow::WOW` (native WOW gas token). You can also use **mainnet bridge tokens** (USDT, USDC, ETH, WBTC, WETH) as the Allocation's coin type — query `wowok_buildin_info` with `info: "mainnet bridge tokens"` to get their `wowTypeTag` values, then use the `wowTypeTag` directly as `type_parameter`. See [Mainnet Bridge Token Reference](wowok_buildin_info.md#mainnet-bridge-token-reference) for the complete list.
+
+⚠️ **Signer recipient semantics**: a `{ "Signer": "signer" }` sharing row means "whoever calls alloc receives the Signer share" — the transaction sender of the distribution call gets that share, first caller first served. Use it only when caller-is-recipient is the intended design.
+
+⚠️ **Unanchored Allocation with GuardIdentifier recipients (docs#11)**: creating an Allocation whose `payment_info.for_object` is not set while any sharing row uses a `{ GuardIdentifier: n }` recipient is blocked by default (SDK and MCP). An unanchored Allocation lets any guard-passing caller redirect the submitted payout address to an arbitrary address — anchor it with `payment_info.for_object`, or pass `allow_unanchored: true` to proceed explicitly after accepting that risk.
 
 ---
 
