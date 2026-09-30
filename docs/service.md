@@ -11,7 +11,7 @@ The Service component is WoWok protocol's service/product publishing and sales m
 
 **Critical Integration with WIP**: Service sales items can optionally include a WIP (Witness Immutable Promise) file that provides immutable, verifiable product/service descriptions. 
 
-- **With WIP**: Set `wip` to a local file path or HTTPS URL. The hash is automatically extracted, and customers must provide matching `wip_hash` when purchasing.
+- **With WIP**: Set `wip` to a PUBLIC HTTPS URL (GitHub Pages / IPFS / your own website). The URL is stored on-chain and every customer fetches it at order time — a local file path, localhost URL, or LAN address is unreachable by customers and makes `order_new` abort 100%. The hash (the `meta.hash` field inside the WIP file) is automatically extracted, and customers must provide matching `wip_hash` when purchasing.
 - **Without WIP**: Set `wip` to empty string `""` for simple products where WIP verification is not needed.
 
 See the [WIP section in Step-by-Step Guide](#step-4-configure-wip-files-for-products-optional-but-recommended) and [Messenger](messenger.md) for details on generating, verifying, and signing WIP files.
@@ -139,14 +139,14 @@ service (Service Object)
 │   ├── description (string, optional) - service description
 │   ├── location (string, optional) - service location
 │   ├── sales (Sales, optional) - manage products
-│   │   ├── op (enum, required) - "add"|"set"|"remove"|"clear"
+│   │   ├── op (enum, required) - "add"|"set"|"remove"|"clear" (⚠️ "set" REPLACES the entire sales list — products not included are removed; resend the FULL list to change one product)
 │   │   ├── sales (ServiceSale[], optional for add/set)
 │   │   │   ├── name (string, required) - product name
 │   │   │   ├── price (number/string, required) - price
-│   │   │   ├── stock (number/string, required) - inventory
+│   │   │   ├── stock (number/string, required) - current REMAINING stock (decremented per order; writing SETS it, does not add)
 │   │   │   ├── suspension (boolean, required) - paused status
-│   │   │   ├── wip (string, required) - WIP URL/path
-│   │   │   └── wip_hash (string, required) - WIP hash, empty string "" means auto-use hash from WIP file
+│   │   │   ├── wip (string, required) - public WIP file URL (local paths abort customer orders)
+│   │   │   └── wip_hash (string, required) - WIP content hash (the meta.hash field inside the WIP file, not the SHA-256 of the file bytes); empty string "" means auto-use hash from WIP file
 │   │   └── sales_name (string[], optional for remove) - names to remove
 │   ├── repositories (ObjectsOp, optional) - manage repositories
 │   ├── rewards (ObjectsOp, optional) - manage rewards
@@ -1157,9 +1157,9 @@ Add, set, remove, or clear sales products/services from the Service. Each sales 
 | `data.sales.sales` | array | No | Sales items list | Required for add/set |
 | `data.sales.sales[].name` | string | Yes | Product/service name | Max 64 characters |
 | `data.sales.sales[].price` | number/string | Yes | Price in smallest token units | No decimals |
-| `data.sales.sales[].stock` | number/string | Yes | Inventory quantity | No decimals |
-| `data.sales.sales[].wip` | string | Yes | WIP file URL or local path | Empty string "" for no WIP |
-| `data.sales.sales[].wip_hash` | string | Yes | WIP file hash | Empty string "" means auto-use hash from WIP file |
+| `data.sales.sales[].stock` | number/string | Yes | Current REMAINING inventory quantity (decremented per order; writing SETS it, does not add) | No decimals |
+| `data.sales.sales[].wip` | string | Yes | Public WIP file URL (GitHub Pages / IPFS / own website — local paths are unreachable by customers and abort `order_new`) | Empty string "" for no WIP |
+| `data.sales.sales[].wip_hash` | string | Yes | WIP content hash — the `meta.hash` field inside the WIP file (NOT the SHA-256 of the file bytes) | Empty string "" means auto-use hash from WIP file |
 | `data.sales.sales[].suspension` | boolean | Yes | Whether sale is suspended | |
 | `data.sales.sales_name` | string[] | No | Names to remove | Required for remove |
 
@@ -1395,10 +1395,10 @@ Create and issue a new discount coupon for the Service.
 | `data.discount.name` | string | Yes | Discount name | |
 | `data.discount.discount_type` | number | Yes | Discount type | 0 (RATES) or 1 (FIXED) |
 | `data.discount.discount_value` | number/string | Yes | Discount value | Rate: 0-10000 (e.g., 1000 means 10% discount); Fixed: amount in smallest token unit |
-| `data.discount.benchmark` | number/string | No | Minimum amount threshold | In smallest token unit |
+| `data.discount.benchmark` | number/string | No | Minimum order total for the discount to apply (smallest token unit) — discount applies only when the order total ≥ this value. ⚠️ OMITTING it means the discount NEVER applies (the coupon is still consumed with no effect); pass 0 to always apply | In smallest token unit |
 | `data.discount.time_ms_start` | number | No | Start time (ms timestamp) | |
 | `data.discount.time_ms_end` | number | Yes | End time (ms timestamp) | |
-| `data.discount.count` | number | Yes | Usage count limit | |
+| `data.discount.count` | number | Yes | Number of SEPARATE single-use coupon objects minted (total = count × recipients; NOT a per-coupon reuse count) | |
 | `data.discount.recipient.entities` | AccountOrMark_Address[] | Yes | Eligible recipients | Array of {name_or_address: string} objects |
 | `data.discount.transferable` | boolean | Yes | Whether transferable | |
 

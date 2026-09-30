@@ -44,7 +44,7 @@ The following diagram illustrates the complete lifecycle of an Arb (Arbitration 
 **Key Flows**:
 - **Standard**: (1) → confirm → (2) → arbitration → (3) → arb_claim_compensation → (5) → withdraw → (6)
 - **With Revision**: (1) → reset → (0) → arb_confirm → (1) → confirm → (2) → ...
-- **With Objection**: ... → (3) → arb_objection → (4) → reset → (0) → ...
+- **With Objection**: ... → (3) → arb_objection → (4) → reset → (0) → ... (after a reset the customer must call `order.arb_confirm` again; the case cannot advance while it sits in state 0)
 
 ---
 
@@ -1690,17 +1690,19 @@ This example demonstrates the **complete arbitration process** from dispute crea
 
 ```mermaid
 stateDiagram-v2
-  [*] --> PrincipalConfirming : create dispute
+  [*] --> ArbitratorConfirming : create dispute
   PrincipalConfirming --> ArbitratorConfirming : principal_confirm
   ArbitratorConfirming --> Voting : arbitrator_confirm
   Voting --> Arbitrated : arbitration
   Arbitrated --> Finished : arb_claim_compensation
   Arbitrated --> Objectionable : objection
+  ArbitratorConfirming --> PrincipalConfirming : reset
   Objectionable --> PrincipalConfirming : reset
 
   note right of PrincipalConfirming
       Status: 0
-      Buyer confirms dispute
+      Buyer re-confirms the dispute
+      (mandatory after a reset)
   end note
 
   note right of ArbitratorConfirming
@@ -1735,12 +1737,18 @@ stateDiagram-v2
 
 | From | To | Trigger | Time/Amount Condition |
 |------|-----|---------|----------------------|
-| 0 → 1 | Principal_confirming → Arbitrator_confirming | `principal_confirm` | None |
+| — → 1 | (filing) → Arbitrator_confirming | `dispute` | None — a filed case lands directly in state 1; the customer does NOT confirm at filing time |
+| 0 → 1 | Principal_confirming → Arbitrator_confirming | `principal_confirm` (customer `order.arb_confirm`) | None |
 | 1 → 2 | Arbitrator_confirming → Voting | `arbitrator_confirm` | voting_deadline set (optional) |
 | 2 → 3 | Voting → Arbitrated | `arbitration` | **Must pass voting_deadline** if set |
 | 3 → 5 | Arbitrated → Finished | `arb_claim_compensation` | None |
 | 3 → 4 | Arbitrated → Objectionable | `objection` | Within objection period |
-| 4 → 0 | Objectionable → Principal_confirming | `reset` | None |
+| 1 → 0 | Arbitrator_confirming → Principal_confirming | `reset` (arbitrator only) | None — after a reset the customer must call `order.arb_confirm` again to reach state 1 |
+| 4 → 0 | Objectionable → Principal_confirming | `reset` (arbitrator only) | None — same re-confirm requirement |
+| 5 → 6 | Finished → Withdrawn | `arb_withdraw` | None (arbitrator fee available immediately) |
+| 3/4 → 6 | Arbitrated/Objectionable → Withdrawn | `arb_withdraw` | Only after 30 days from the ruling time (`indemnity.time`) |
+
+> **After a reset**: the case returns to state 0 (Principal_confirming) with the indemnity cleared, and **only the customer** can move it forward — via `order.arb_confirm` (the customer-side operation; the arbitration object's own `confirm` is the arbitrator tool and fails with `Missing permissions 361` for a customer). State 0 has no timeout and no withdraw path: the fee stays locked until the customer re-confirms.
 
 ### 💰 Financial Flow
 
@@ -1783,13 +1791,13 @@ flowchart LR
 
 | Operation | Status Required | Actor | Additional Requirements |
 |-----------|-----------------|-------|------------------------|
-| `dispute` | - | Buyer | Order owner, arbitration unpaused |
-| `principal_confirm` | 0 | Buyer | Must be dispute initiator |
+| `dispute` | - | Buyer | Order owner, arbitration unpaused; the case lands directly in state 1 |
+| `principal_confirm` | 0 | Buyer | Must be dispute initiator (`order.arb_confirm`); mandatory after a reset |
 | `arbitrator_confirm` | 1 | Arbitrator | Must be designated arbitrator |
 | `arbitration` | 2 | Arbitrator | `voting_deadline` must pass |
-| `arb_claim_compensation` | 3 | Buyer | Order owner, indemnity > 0 |
+| `arb_claim_compensation` | 3 | Buyer | Order owner, `indemnity ≥ 0` — a 0-indemnity claim succeeds, moves the case to state 5 and lets the arbitrator withdraw the fee immediately |
 | `objection` | 3 | Buyer | Within appeal window |
-| `reset` | 4 | System | Automatic on objection |
+| `reset` | 1 or 4 | Arbitrator | Arbitration permission holder; after a reset only the customer can re-confirm |
 
 ---
 
@@ -1802,7 +1810,7 @@ The WoWok arbitration system is designed with complete transparency - all action
 | Aspect | Transparency Mechanism | Verification Method |
 |--------|------------------------|---------------------|
 | **Dispute Creation** | Arb object created on-chain with all parameters public | Query Arb object by ID |
-| **Evidence Submission** | Evidence hashes recorded in `feedback` field | Cross-reference with Messenger or IPFS |
+| **Evidence Submission** | Evidence travels through Messenger WTS files (verifiable end-to-end encrypted transfer); the objection text cites the WTS file name, messageId and hash | Send the WTS file via Messenger, then `verify_wts` validates it; a Proof object alone holds only a message hash and server signature, no content |
 | **Voting Records** | All votes recorded with voter Guard verification | Query Arb object voting history |
 | **Arbitration Ruling** | Final decision and indemnity amount permanently stored | Query Arb object status and fields |
 | **Fund Movements** | All compensation transfers traceable on-chain | Query transaction effects |
@@ -1813,7 +1821,7 @@ The WoWok Messenger provides an encrypted, verifiable channel for submitting sen
 
 ## Step-by-Step Real Execution
 
-### Step 1: Buyer Creates Dispute (Status: 0 → 1)
+### Step 1: Buyer Creates Dispute (Lands in Status 1)
 
 The buyer creates a dispute for the order, paying the 1 WOW arbitration fee:
 

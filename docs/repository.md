@@ -438,15 +438,15 @@ Add, set, remove, or clear policy rules that define data write permissions and I
 | ------------- | -------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
 | `name`        | string         | Yes      | Policy rule name                                                                                             |
 | `description` | string         | Yes      | Policy rule description                                                                                      |
-| `write_guard` | array          | Conditional | Guard object list for write verification. **Required (non-empty) when `id_from` is 0/None** — the chain aborts with code 22 (E_POLICY_WRITE_GUARD_REQUIRED) otherwise; may be empty only for Clock/Signer. Additionally, `id_from_submission` must not be set for Clock/Signer rules (abort 23). |
+| `write_guard` | array          | Conditional | Guard object list for write verification. **Required (non-empty) when `id_from` is 0/None** — the chain aborts with code 22 (E_POLICY_WRITE_GUARD_REQUIRED) otherwise; may be empty only for Clock/Signer. Additionally, `id_from_submission` must not be set for Clock/Signer rules (abort 23). **⚠️ Empty `write_guard` on a Clock/Signer policy means ANY account can write to this policy** — the Repository's Permission is not consulted for `data_add`/`data_remove` in that case. Attach guards if writes must be restricted. |
 | `quote_guard` | string or null | No       | Guard for on-chain reference verification                                                                    |
 | `id_from`     | enum or number | Yes      | ID source: can be string ("None", "Clock", "Signer", case-insensitive) or number (0=None, 1=Clock, 2=Signer) |
 | `value_type`  | enum           | Yes      | Value type: "string", "number", "boolean", etc.                                                              |
 
 ### Operation Types
 
-- **add**: Add new policies to existing list
-- **set**: Replace entire policy list
+- **add**: Add new policies to the existing list (append new ones or update by name — other policies stay intact). **Prefer this for single-policy changes.**
+- **set**: ⚠️ **Replaces the entire policy list** — every policy not included in the call is deleted, and once the Permission is locked they cannot be restored. Only use it when you intentionally redefine the full list.
 - **remove**: Remove specified policies (by name)
 - **clear**: Clear all policies
 
@@ -767,6 +767,24 @@ Add data items to the repository, following policy rules for ID source and value
 >   must also be non-empty. Violations abort on chain with code 22
 >   (E_POLICY_WRITE_GUARD_REQUIRED). The same rule applies to `data_remove.items[].write_guard`.
 
+> **Submission-derived writes (`id_from_submission` / `data_from_submission`)**:
+> When a policy guard sets these indexes, the record content can come from the
+> passport submission table instead of the call payload. The interaction with
+> `items` is strict:
+> - **BOTH** `id_from_submission` AND `data_from_submission` set: the id AND the
+>   value are read from the passport submission table on-chain. Pass
+>   `items: [{ write_guard: "...", data: [] }]` and send the `submission` in the
+>   same call. Any item-level `id`/`data` are **ignored** for such guards, and one
+>   record is written per guard.
+> - Only **one** of the two set: `items[].data` must still carry the missing side
+>   (`{id, data}` where the submission replaces one of the two).
+> - Neither set: `items[].data` must be non-empty `{id, data}` entries.
+>
+> ⚠️ **No silent no-ops**: calls that would write nothing (empty `items`, entries
+> with empty `data` where no submission pair covers both sides) are **rejected
+> before signing** instead of returning an executed-but-empty transaction. The
+> same protection applies to `data_remove` (empty `items` / empty `id` lists).
+
 ***
 
 ### Examples
@@ -846,6 +864,11 @@ Add data items to the repository, following policy rules for ID source and value
 
 **Prompt**: Add multiple data items to "simple\_repo" for policy "simple\_data": 1) First item with id 100 and value "First data item", 2) Second item with id 200 and value "Second data item".
 
+> **Prerequisite**: the `items` form requires the policy's `id_from` to be
+> **None(0)** (a Clock/Signer policy must use the SignerOrClock form of Example
+> 3.1). With no write guards on the policy, `items[].write_guard` is omitted;
+> with guards, every entry must carry `write_guard`.
+
 ```json
 {
   "tool": "onchain_operations",
@@ -896,6 +919,58 @@ Add data items to the repository, following policy rules for ID source and value
   "schema": null
 }
 ```
+
+#### Example 3.3: Add Data Derived from a Passport Submission (both id_from_submission and data_from_submission)
+
+**Prompt**: Add data to "assign\_repo" for policy "assign": the policy guard "assign\_w" sets both `id_from_submission` and `data_from_submission` — the id and value come from the passport submission table, so pass an empty `data` array and the `submission` payload in the same call.
+
+> **Prerequisite**: the policy guard must set BOTH submission indexes, e.g.
+> `"write_guard": [{"guard": "assign_w", "id_from_submission": 0, "data_from_submission": 1}]`.
+> With only one of the two set, `items[].data` must still carry the missing side.
+
+```json
+{
+  "tool": "onchain_operations",
+  "data": {
+    "operation_type": "repository",
+    "data": {
+      "object": "assign_repo",
+      "data_add": {
+        "name": "assign",
+        "items": [
+          {
+            "write_guard": "assign_w",
+            "data": []
+          }
+        ]
+      }
+    },
+    "env": { "network": "testnet" }
+  },
+  "submission": {
+    "type": "submission",
+    "guard": [
+      { "object": "assign_w", "impack": true }
+    ],
+    "submission": [
+      {
+        "guard": "assign_w",
+        "submission": [
+          { "field": "assignee", "value": "0x<recipient-address>" },
+          { "field": "assigned_value", "value": "assigned-role-value" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+> The written record's id and value are the Guard's submission entries at the
+> guard's `id_from_submission` (0) and `data_from_submission` (1) table indexes —
+> the `field` names must match the Guard table's column definitions.
+> Previously an empty `data:[]` here was silently skipped — the transaction
+> executed and charged gas but the Repository was never modified. It is now
+> written as a proper submission-derived record (see the warning above).
 
 ***
 
