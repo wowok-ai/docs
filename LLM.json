@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-09-29",
+  "lastUpdated": "2026-10-01",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
@@ -63,6 +63,7 @@
       "region": "global",
       "auth": "oauth",
       "models": [
+        "apodex/apodex-1.1-mini:free",
         "stealth/space-bunny-alpha",
         "inclusionai/ling-3.0-flash-sante:free",
         "qwen/qwen3.8-27b:free",
