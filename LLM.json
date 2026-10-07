@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-10-05",
+  "lastUpdated": "2026-10-07",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
@@ -19,7 +19,8 @@
       },
       "models": [
         "Qwen3.5-397B-A17B",
-        "Qwen3-Coder-30B-A3B-Instruct"
+        "gpt-oss-120b",
+        "Qwen2.5-VL-72B-Instruct"
       ],
       "discovery": {
         "kind": "openai-models",
@@ -93,7 +94,9 @@
         "gpt-6-astra",
         "gpt-5.6-sol",
         "gpt-5.6-terra",
-        "gpt-5.6-luna"
+        "gpt-5.6-luna",
+        "gpt-6-sol",
+        "gpt-6-luna"
       ],
       "modelSpecs": {
         "gpt-6-astra": {
@@ -153,13 +156,15 @@
       "name": "Anthropic",
       "type": "anthropic",
       "baseUrl": "https://api.anthropic.com/v1",
-      "defaultModel": "claude-opus-5",
+      "defaultModel": "claude-opus-5-5",
       "region": "global",
       "models": [
         "claude-fable-5-1",
         "claude-opus-5",
         "claude-sonnet-5",
-        "claude-haiku-4-5"
+        "claude-haiku-4-5",
+        "claude-opus-5-5",
+        "claude-sonnet-5-5"
       ],
       "modelSpecs": {
         "claude-fable-5-1": {
@@ -268,12 +273,14 @@
       "name": "xAI Grok",
       "type": "openai",
       "baseUrl": "https://api.x.ai/v1",
-      "defaultModel": "grok-4.6",
+      "defaultModel": "grok-4.7",
       "region": "global",
       "models": [
         "grok-4.6",
         "grok-4.5",
-        "grok-4.3"
+        "grok-4.3",
+        "grok-4.7",
+        "grok-4.20-multi-agent-0309"
       ],
       "modelSpecs": {
         "grok-4.6": {
@@ -362,7 +369,8 @@
       "models": [
         "glm-5.3",
         "glm-5.3-flash",
-        "glm-5.2"
+        "glm-5.2",
+        "glm-5.3-flashx"
       ],
       "modelSpecs": {
         "glm-5.3": {
@@ -409,7 +417,8 @@
       "region": "cn",
       "models": [
         "kimi-k3",
-        "kimi-k2.6"
+        "kimi-k2.6",
+        "kimi-k2.7-code"
       ],
       "modelSpecs": {
         "kimi-k3": {
@@ -529,11 +538,13 @@
       "name": "Xiaomi MiMo",
       "type": "openai",
       "baseUrl": "https://api.xiaomimimo.com/v1",
-      "defaultModel": "mimo-v2.5-pro",
+      "defaultModel": "mimo-v2.6-pro",
       "region": "cn",
       "models": [
         "mimo-v2.5-pro",
-        "mimo-v2.5"
+        "mimo-v2.5",
+        "mimo-v2.6-pro",
+        "mimo-v2.6-flash"
       ],
       "modelSpecs": {
         "mimo-v2.5-pro": {
