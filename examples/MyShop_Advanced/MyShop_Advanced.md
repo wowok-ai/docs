@@ -1634,7 +1634,7 @@ Configure order_allocators to define fund distribution rules, then publish the S
         ]
       },
       "arbitrations": {
-        "op": "add",
+        "op": "set",
         "objects": ["myshop_arbitration_v2"]
       },
       "publish": true
