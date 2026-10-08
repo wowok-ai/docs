@@ -13,14 +13,14 @@ All WoWok MCP responses come from a **single unified tool** named `wowok`. The A
 
 ## Architecture: Single Unified `wowok` Tool
 
-The MCP server registers exactly **one tool** (`wowok`) with MCP clients. The 17 sub-tools (onchain_operations, account_operation, query_toolkit, etc.) live in an internal `TOOL_REGISTRY` and are dispatched by the `wowok` handler.
+The MCP server registers exactly **one tool** (`wowok`) with MCP clients. The 34 sub-tools (onchain_operations, account_operation, query_toolkit, etc.) live in an internal `TOOL_REGISTRY` and are dispatched by the `wowok` handler.
 
 ### Why a Single Tool?
 
 | Problem with Multi-Tool | Solution with Single Tool |
 |-------------------------|---------------------------|
-| 17 tools × full schemas ≈ 2.4 MB in `tools/list` — overflows AI context | One `wowok` tool with a minimal display schema (~2 KB) |
-| AI must choose the right tool from 17 options — frequent mis-selection | Only one tool to call; AI specifies the sub-tool by name in `data.tool` |
+| 34 tools × full schemas (several MB) in `tools/list` — overflows AI context | One `wowok` tool with a minimal display schema (~2 KB) |
+| AI must choose the right tool from 34 options — frequent mis-selection | Only one tool to call; AI specifies the sub-tool by name in `data.tool` |
 | Schema mismatches return cryptic SDK `-32602` errors | Handler returns the correct schema + actionable errors for self-correction |
 
 ### Call Format
@@ -54,7 +54,8 @@ Every `wowok` tool response contains a `structuredContent` object with this shap
 ```json
 {
   "result": {
-    "status": "success | error | schema_mismatch",
+    "status": "success | pending | error | schema_mismatch",
+    "outcome": "executed | pending_input | failed",
     "data": { ... },
     "errors": [ ... ]
   },
@@ -67,13 +68,16 @@ Every `wowok` tool response contains a `structuredContent` object with this shap
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `result` | object | Yes | Wrapper containing `status`, sub-tool payload (`data`), and optional `errors`/`hint` |
-| `result.status` | enum | Yes | `success` \| `error` \| `schema_mismatch` — determines how to process the response |
-| `result.data` | object | Conditional | Sub-tool's structured result; present on `success` (and `error` when the sub-tool returned a structured error) |
+| `result` | object | Yes | Wrapper containing `status`, optional `outcome`, sub-tool payload (`data`), and optional `errors`/`hint` |
+| `result.status` | enum | Yes | `success` \| `pending` \| `error` \| `schema_mismatch` — determines how to process the response. `pending` means the operation was **NOT** executed and needs caller action (never treat it as success) |
+| `result.outcome` | enum | Optional | Transaction-level discriminant surfaced by outcome-discriminated sub-tools (`onchain_operations`, `bridge_operation`): `executed` \| `pending_input` \| `failed`. Always agrees with `status`: `executed` → `success`, `pending_input` → `pending`, `failed` → `error` |
+| `result.data` | object | Conditional | Sub-tool's structured result; present on `success` and `pending` (and `error` when the sub-tool returned a structured error) |
 | `result.errors` | string[] | Conditional | Present on `error` and `schema_mismatch` — specific validation or runtime errors |
-| `result.hint` | string | Optional | Present on `schema_mismatch` — instructions to fix and retry |
+| `result.structured_errors` | object[] | Optional | Present on `schema_mismatch` — machine-readable errors, each with `path`, `code`, `message`, `suggestion`, for programmatic self-correction |
+| `result.hint` | string | Optional | Present on `schema_mismatch` and unknown-sub-tool errors — instructions to fix and retry |
 | `result.suggestions` | string[] | Optional | Present when the sub-tool name was unknown — closest matches |
 | `result.received` | any | Optional | Present on `schema_mismatch` when `tool` was missing — echoes the received input |
+| `result.error_code` \| `result.retryable` \| `result.recovery_hint` | — | Optional | Surfaced at envelope level on `error` when the sub-tool returned a classified error (mirrors the inner error fields — a caller can branch on retryability without unwrapping `data`) |
 | `schema` | object \| null | Yes | Schema payload on mismatch; `null` on success/error |
 
 ---
@@ -82,13 +86,15 @@ Every `wowok` tool response contains a `structuredContent` object with this shap
 
 ### status: "success"
 
-The sub-tool executed successfully. `result.data` contains the sub-tool's structured content (the `CallResult`, query payload, or operation output described in the next section).
+The sub-tool executed successfully. `result.data` contains the sub-tool's structured content (the outcome-discriminated `CallOutput` described in the next section).
 
 ```json
 {
   "result": {
     "status": "success",
+    "outcome": "executed",
     "data": {
+      "outcome": "executed",
       "result": {
         "type": "transaction",
         "digest": "0xabc...",
@@ -96,24 +102,52 @@ The sub-tool executed successfully. `result.data` contains the sub-tool's struct
         "objectChanges": [ ... ]
       },
       "message": "Service published successfully",
-      "semantic": { ... },
-      "harness_report": { ... }
+      "semantic": { ... }
     }
   },
   "schema": null
 }
 ```
 
+### status: "pending"
+
+The operation was **NOT** executed — caller input is required. This is the envelope-level projection of `outcome: "pending_input"`: the operation may be blocked by a Guard that needs submission data (`result.type === "submission"`) or by the ConfirmGate (`result.type === "pending_confirmation"`). **Nothing is on chain yet** — never treat `pending` as success.
+
+```json
+{
+  "result": {
+    "status": "pending",
+    "outcome": "pending_input",
+    "data": {
+      "outcome": "pending_input",
+      "result": {
+        "type": "pending_confirmation",
+        "preview": { ... },
+        "rule_id": "publish_immutable"
+      },
+      "message": "ConfirmGate: publish-level operation requires confirmation"
+    }
+  },
+  "schema": null
+}
+```
+
+**Recommended handling:** read `result.data.result.type` — for `submission`, fill the submission and re-invoke (see [Guard Submission Flow](#guard-submission-flow)); for `pending_confirmation`, present the preview and re-invoke the same call with `env.confirmed = true`.
+
 ### status: "error"
 
-The sub-tool handler returned an error (runtime failure, on-chain rejection, etc.). `result.errors` lists the error messages; `result.data` may also carry the sub-tool's structured error payload.
+The sub-tool handler returned an error (runtime failure, on-chain rejection, etc.). `result.errors` lists the error messages; `result.data` may also carry the sub-tool's structured error payload. Classified errors additionally surface `error_code`, `retryable`, and `recovery_hint` at the envelope level.
 
 ```json
 {
   "result": {
     "status": "error",
+    "outcome": "failed",
     "data": { ... },
-    "errors": ["Insufficient balance for gas"]
+    "errors": ["Insufficient balance for gas"],
+    "error_code": "insufficient_balance",
+    "retryable": true,
+    "recovery_hint": "Claim faucet tokens then retry"
   },
   "schema": null
 }
@@ -152,6 +186,8 @@ The input parameters did not match the sub-tool's Zod schema. The response inclu
 1. Read `schema.input` carefully.
 2. Fix the parameters in your next `wowok` call.
 3. **Cache** the schema in your context for future calls to the same sub-tool.
+
+When `result.structured_errors` is present, prefer it for programmatic fixing — each entry carries a precise `path`, a `code` (e.g. `schema_validation_error`, `duplicate_field`), a human-readable `message`, and a `suggestion` describing the fix.
 
 > **Note:** For `onchain_operations`, the mismatch response automatically returns the operation-type-specific sub-schema (e.g. `onchain_operations_service`) when `operation_type` is present in the input — giving you the exact field requirements for that operation.
 
@@ -194,27 +230,28 @@ If the call omits the `tool` field entirely, the response returns the unified `w
 
 ## Inner Sub-Tool Payload (result.data)
 
-When `result.status === "success"`, `result.data` contains the sub-tool's structured content. For most sub-tools this is an object with the following fields (the shape documented in earlier versions of this reference):
+When `result.status === "success"` or `"pending"`, `result.data` contains the sub-tool's structured content — an **outcome-discriminated** object:
 
 ```json
 {
+  "outcome": "executed",
   "result": { ... },
   "message": "Human-readable summary or hint",
-  "semantic": { ... },
-  "harness_report": { ... },
-  "schema_warning": { ... }
+  "semantic": { ... }
 }
 ```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
+| `outcome` | enum | Yes | `executed` \| `pending_input` \| `failed` — check this **first**. Only `failed` ever carries `recovery` or `diagnosis`; `pending_input` means the operation was not executed (supply the missing submission/confirmation and re-invoke) |
 | `result` | CallResult | Yes | Discriminated union of 6 result types — check `result.type` first |
 | `message` | string | Optional | Human-readable summary; always present for error/transaction results |
 | `semantic` | SemanticSummary | Optional | Business-level semantic summary; prefer this over raw result parsing |
-| `harness_report` | HarnessReport | Optional | Verify + Recover loop report; present only when Harness is enabled |
+| `recovery` | RecoveryAction | Conditional | **Always present when `outcome === "failed"`** — the Recover Loop's chosen strategy; consult it before retrying |
+| `diagnosis` | VerifyReport | Optional | Failure-path verify report; present on `failed` when an expectation was declared — explains **why** the outcome fell short (complements `recovery`, which says **what to do next**) |
 | `schema_warning` | SchemaWarning | Optional | Schema compatibility warning; present only when `client_schema_version` is provided in `env` and a mismatch is detected |
 
-> **Note:** The sub-tool payload shape varies slightly across sub-tools. Query sub-tools (`query_toolkit`, `onchain_table_data`, `schema_query`) return their own structured results inside `result.data`. The `CallResult` union below applies to `onchain_operations`, `account_operation`, `local_mark_operation`, `local_info_operation`, `messenger_operation`, `wip_file`, `guard2file`, `machineNode2file`, and `bridge_operation`.
+> **Note:** The sub-tool payload shape varies slightly across sub-tools. Query sub-tools (`query_toolkit`, `onchain_table_data`, `schema_query`) return their own structured results inside `result.data`. The outcome-discriminated payload above applies to `onchain_operations`, `account_operation`, `local_mark_operation`, `local_info_operation`, `messenger_operation`, `wip_file`, `guard2file`, `machineNode2file`, and `bridge_operation`.
 
 ---
 
@@ -262,7 +299,7 @@ Returned when Guard verification is required before the operation can proceed. F
 | Field | Type | Description |
 |-------|------|-------------|
 | `guard` | array | Guard objects to verify, each with `object` (name/ID) and `impack` (whether result affects final logic) |
-| `submission` | array | User-submitted data for each Guard; fill these and resubmit via `call_with_submission` |
+| `submission` | array | User-submitted data for each Guard. Fill these and re-invoke the **same** `wowok` call with the filled submission placed at the **top level** of the operation input (sibling of `tool`/`data`) — e.g. `{ "tool": "onchain_operations", "data": { ... }, "submission": { "type": "submission", "guard": [ ... ], "submission": [ ... ] } }`. Placing it inside `data` also works, but provide it in exactly ONE place (both triggers a clear error) |
 
 ### type: "error"
 
@@ -498,36 +535,22 @@ A recommended next action with priority and rationale.
 
 ---
 
-## Harness Report (Opt-in)
+## Harness: Verify & Recover Loops (Opt-in)
 
-The Harness Report is an advanced feature that provides automated Verify and Recover loops. It is opt-in via the `WOWOK_HARNESS_ENABLED=1` environment variable.
+The Harness is an advanced feature that provides automated Verify and Recover loops. It is opt-in via the `WOWOK_HARNESS_ENABLED=1` environment variable.
 
 When enabled, the MCP server:
 1. **Expect Loop** — Pre-declares expected results before executing the operation
 2. **Verify Loop** — Compares expected vs actual results across 5 dimensions
 3. **Recover Loop** — Generates a recovery strategy when verification fails
 
-### HarnessReport
+### Where the Results Surface
 
-```json
-{
-  "verify": {
-    "status": "fail",
-    "mismatches": [ ... ],
-    "summary": "2 mismatches found: created dimension failed, event dimension warned",
-    "timestamp": "2026-07-14T10:30:00.000Z"
-  },
-  "recovery": {
-    "strategy": "claim_faucet",
-    "should_retry": true,
-    "adjusted_params": { ... },
-    "user_prompt": "Please switch to an account with provider permission",
-    "max_attempts": 3,
-    "current_attempt": 1,
-    "detail": "Insufficient balance detected; claim faucet tokens then retry"
-  }
-}
-```
+There is **no separate `harness_report` field** — the loop results are folded into the outcome-discriminated payload:
+
+- **`recovery`** (RecoveryAction) — attached by the handler to **every** `outcome: "failed"` payload, regardless of the Harness flag. Consult it before retrying.
+- **`diagnosis`** (VerifyReport) — attached to `outcome: "failed"` payloads when an expectation was declared at dispatch. It is the failure-path Verify output and explains the gap between expectation and outcome. Present only when the Harness is enabled.
+- For legacy `{status}`-shape sub-tools (not outcome-discriminated), the Recover Loop surfaces its guidance as a non-blocking warning in the response text instead of a structured field.
 
 ### VerifyReport
 
@@ -552,7 +575,7 @@ When enabled, the MCP server:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `strategy` | enum | `retry`, `claim_faucet`, `fill_submission`, `recreate`, `switch_account`, `query_and_retry`, `adjust_params`, `escalate_human`, `stop` |
+| `strategy` | enum | `retry`, `claim_faucet`, `fill_submission`, `recreate`, `switch_account`, `query_and_retry`, `adjust_params`, `escalate_human`, `stop`, `wait_and_retry` — 10 strategies matching the `error_code` table |
 | `should_retry` | boolean | Whether to retry the original operation after applying the strategy |
 | `adjusted_params` | object | Suggested parameter adjustments for `adjust_params` strategy |
 | `user_prompt` | string | Prompt to show the user when recovery is semi-automatic or manual |
@@ -566,13 +589,14 @@ When enabled, the MCP server:
 
 ### Recommended Processing Order
 
-1. **Check `result.status`** — Determine the envelope status (`success`, `error`, `schema_mismatch`)
-2. **If `schema_mismatch`** — Read `schema.input`, fix parameters, cache the schema, and retry the `wowok` call
-3. **If `error`** — Read `result.errors`; follow any recovery hint
-4. **If `success`** — Drill into `result.data`:
-   - Read `result.data.semantic` first (if present) for business-level understanding
-   - Check `result.data.result.type` (`transaction`, `submission`, `error`, `data`, `null`)
-   - Check `result.data.harness_report` (if present) when verify status is `fail`
+1. **Check `result.status`** — Determine the envelope status (`success`, `pending`, `error`, `schema_mismatch`). `pending` = the operation was NOT executed and needs caller action
+2. **If `schema_mismatch`** — Read `schema.input` (and `structured_errors` when present), fix parameters, cache the schema, and retry the `wowok` call
+3. **If `error`** — Read `result.errors` and the surfaced `error_code`/`retryable`/`recovery_hint`; follow the recovery guidance
+4. **If `success` or `pending`** — Drill into `result.data`:
+   - Read `result.data.outcome` first when present (`executed`, `pending_input`, `failed`)
+   - Read `result.data.semantic` (if present) for business-level understanding
+   - Check `result.data.result.type` (`transaction`, `submission`, `error`, `data`, `null`, `pending_confirmation`)
+   - On `failed`: consult `result.data.recovery` (always present) and `result.data.diagnosis` (when present)
    - Fall back to `result.data.result` parsing only when `semantic` is absent
 
 ### Schema Mismatch Flow (Self-Correcting)
