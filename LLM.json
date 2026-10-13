@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-10-08",
+  "lastUpdated": "2026-10-13",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
@@ -64,8 +64,6 @@
       "region": "global",
       "auth": "oauth",
       "models": [
-        "inclusionai/ling-3.1-flash",
-        "apodex/apodex-1.1-mini:free",
         "dots-studio/dots-3-note-preview:free",
         "liquid/lfm-2.5-2.6b:free",
         "nvidia/nemotron-3.5-lightning:free",
