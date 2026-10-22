@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-10-21",
+  "lastUpdated": "2026-10-22",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
@@ -65,7 +65,6 @@
       "auth": "oauth",
       "models": [
         "recursive/flint-v1.0:free",
-        "minimax/minimax-m3.1-flash:free",
         "xingchen-agi/xing4.0-29b-a4b:free",
         "nvidia/nemotron-3.5-super-vl:free",
         "dots-studio/dots-3-note-preview:free",
