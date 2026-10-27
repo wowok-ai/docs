@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-10-22",
+  "lastUpdated": "2026-10-27",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash"
   },
@@ -79,7 +79,6 @@
         "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
         "google/gemma-4-26b-a4b-it:free",
         "google/gemma-4-31b-it:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
         "openrouter/free",
         "nvidia/nemotron-3.5-content-safety:free"
       ]
