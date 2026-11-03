@@ -12,6 +12,31 @@
     "mimo-v2.5-pro": "mimo-v2.6-pro",
     "mimo-v2.5": "mimo-v2.6-flash"
   },
+  "retiredModels": {
+    "gpt-4.1": "gpt-6.1-terra",
+    "gpt-4.1-mini": "gpt-5.6-luna",
+    "gpt-5": "gpt-6-astra",
+    "gpt-5-mini": "gpt-6-luna",
+    "deepseek-v3.1": "deepseek-v4-pro",
+    "qwen2.5-vl-72b-instruct": "Qwen3.5-397B-A17B",
+    "thinkingmachines/inkling-small:free": "thinkingmachines/inkling:free",
+    "google/gemma-4-31b-it:free": "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3.5-lightning:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3-super-120b-a12b:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "nvidia/nemotron-3.5-content-safety:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "inclusionai/ling-3.0-flash-sante:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "dots-studio/dots-3-note-preview:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "liquid/lfm-2.5-2.6b:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "poolside/laguna-s-2.1:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "poolside/laguna-xs-2.1:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "openrouter/free": "nvidia/nemotron-3-ultra-550b-a55b:free"
+  },
+  "retiredProviders": {
+    "GitHub Models": "OpenRouter",
+    "models.github.ai": "OpenRouter",
+    "models.inference.ai.azure.com": "OpenRouter"
+  },
   "providers": [
     {
       "name": "OVH Free",
