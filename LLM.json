@@ -84,6 +84,7 @@
       "region": "global",
       "auth": "oauth",
       "models": [
+        "stealth/crouton-alpha",
         "recursive/flint-v1.0:free",
         "xingchen-agi/xing4.0-29b-a4b:free",
         "nvidia/nemotron-3.5-super-vl:free",
