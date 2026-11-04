@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-11-03",
+  "lastUpdated": "2026-11-04",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash",
     "claude-haiku-4-5": "claude-haiku-5-5",
@@ -91,8 +91,6 @@
         "dots-studio/dots-3-note-preview:free",
         "liquid/lfm-2.5-2.6b:free",
         "nvidia/nemotron-3.5-lightning:free",
-        "thinkingmachines/inkling-small:free",
-        "thinkingmachines/inkling:free",
         "cohere/north-mini-code:free",
         "nvidia/nemotron-3-ultra-550b-a55b:free",
         "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
