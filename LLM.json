@@ -84,6 +84,7 @@
       "region": "global",
       "auth": "oauth",
       "models": [
+        "baidu/ernie-5.5-flash-preview:free",
         "thinkingmachines/inkling-2-small:free",
         "liquid/lfm-3-1.7b:free",
         "recursive/flint-v1.0:free",
