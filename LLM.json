@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-11-12",
+  "lastUpdated": "2026-11-13",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash",
     "claude-haiku-4-5": "claude-haiku-5-5",
@@ -87,6 +87,7 @@
         "baidu/ernie-5.5-flash-preview:free",
         "thinkingmachines/inkling-2-small:free",
         "liquid/lfm-3-1.7b:free",
+        "particle-ai/particle-1:free",
         "recursive/flint-v1.0:free",
         "nvidia/nemotron-3.5-super-vl:free",
         "apodex/apodex-1.1-mini:free",
