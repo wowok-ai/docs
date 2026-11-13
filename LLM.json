@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-11-03",
+  "lastUpdated": "2026-11-13",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash",
     "claude-haiku-4-5": "claude-haiku-5-5",
@@ -14,29 +14,34 @@
   },
   "retiredModels": {
     "gpt-4.1": "gpt-6.1-terra",
-    "gpt-4.1-mini": "gpt-5.6-luna",
+    "gpt-4.1-mini": "gpt-6-luna",
     "gpt-5": "gpt-6-astra",
     "gpt-5-mini": "gpt-6-luna",
+    "gpt-5.6-sol": "gpt-6.1-sol",
+    "gpt-5.6-terra": "gpt-6.1-terra",
+    "gpt-5.6-luna": "gpt-6-luna",
+    "gpt-6-sol": "gpt-6.1-sol",
     "deepseek-v3.1": "deepseek-v4-pro",
     "qwen2.5-vl-72b-instruct": "Qwen3.5-397B-A17B",
-    "thinkingmachines/inkling-small:free": "thinkingmachines/inkling:free",
-    "google/gemma-4-31b-it:free": "google/gemma-4-26b-a4b-it:free",
-    "nvidia/nemotron-3.5-lightning:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "thinkingmachines/inkling-small:free": "thinkingmachines/inkling-2-small:free",
     "nvidia/nemotron-3-super-120b-a12b:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "nvidia/nemotron-3.5-content-safety:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "inclusionai/ling-3.0-flash-sante:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "dots-studio/dots-3-note-preview:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "liquid/lfm-2.5-2.6b:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "liquid/lfm-2.5-2.6b:free": "liquid/lfm-3-1.7b:free",
     "poolside/laguna-s-2.1:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "poolside/laguna-xs-2.1:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "openrouter/free": "nvidia/nemotron-3-ultra-550b-a55b:free"
+    "poolside/laguna-xs-2.1:free": "nvidia/nemotron-3-ultra-550b-a55b:free"
   },
   "retiredProviders": {
     "GitHub Models": "OpenRouter",
     "models.github.ai": "OpenRouter",
     "models.inference.ai.azure.com": "OpenRouter"
   },
+  "freeModels": [
+    "Qwen3.5-397B-A17B",
+    "gpt-oss-120b",
+    "Qwen3.8-27B",
+    "Qwen3.6-27B"
+  ],
   "providers": [
     {
       "name": "OVH Free",
@@ -51,10 +56,14 @@
       },
       "models": [
         "Qwen3.5-397B-A17B",
+        "gpt-oss-120b",
         "Qwen3.8-27B",
         "Qwen3.6-27B",
-        "gpt-oss-120b",
-        "Meta-Llama-3.3-70B-Instruct"
+        "Mistral-Small-3.2-24B-Instruct-2506",
+        "Meta-Llama-3_3-70B-Instruct",
+        "Qwen3.5-9B",
+        "gpt-oss-20b",
+        "Qwen2.5-VL-72B-Instruct"
       ],
       "discovery": {
         "kind": "openai-models",
@@ -85,27 +94,32 @@
       "auth": "oauth",
       "models": [
         "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "thinkingmachines/inkling:free",
+        "thinkingmachines/inkling-2-small:free",
+        "particle-ai/particle-1:free",
         "nvidia/nemotron-3.5-super-vl:free",
+        "baidu/ernie-5.5-flash-preview:free",
+        "google/gemma-4-31b-it:free",
+        "google/gemma-4-26b-a4b-it:free",
         "cohere/north-mini-code:free",
-        "google/gemma-4-26b-a4b-it:free"
+        "nvidia/nemotron-3.5-lightning:free",
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "dots-studio/dots-3-note-preview:free",
+        "recursive/flint-v1.0:free",
+        "liquid/lfm-3-1.7b:free",
+        "openrouter/free"
       ]
     },
     {
       "name": "OpenAI",
       "type": "openai",
       "baseUrl": "https://api.openai.com/v1",
-      "defaultModel": "gpt-5.6-terra",
+      "defaultModel": "gpt-6.1-terra",
       "region": "global",
       "models": [
         "gpt-6.1-terra",
         "gpt-6.1-sol",
         "gpt-6-astra",
-        "gpt-6-sol",
-        "gpt-6-luna",
-        "gpt-5.6-sol",
-        "gpt-5.6-terra",
-        "gpt-5.6-luna"
+        "gpt-6-luna"
       ],
       "modelSpecs": {
         "gpt-6.1-terra": {
@@ -114,7 +128,12 @@
           "maxOutput": 128000,
           "toolCalls": true,
           "jsonOutput": true,
-          "reasoning": true
+          "reasoning": true,
+          "pricing": {
+            "inputCacheMiss": 1,
+            "inputCacheHit": 0.05,
+            "output": 5
+          }
         },
         "gpt-6.1-sol": {
           "displayName": "GPT-6.1 Sol",
@@ -122,7 +141,12 @@
           "maxOutput": 128000,
           "toolCalls": true,
           "jsonOutput": true,
-          "reasoning": true
+          "reasoning": true,
+          "pricing": {
+            "inputCacheMiss": 2,
+            "inputCacheHit": 0.1,
+            "output": 10
+          }
         },
         "gpt-6-astra": {
           "displayName": "GPT-6 Astra",
@@ -137,59 +161,17 @@
             "output": 50
           }
         },
-        "gpt-6-sol": {
-          "displayName": "GPT-6 Sol",
-          "contextWindow": 1050000,
-          "maxOutput": 128000,
-          "toolCalls": true,
-          "jsonOutput": true,
-          "reasoning": true
-        },
         "gpt-6-luna": {
           "displayName": "GPT-6 Luna",
           "contextWindow": 1050000,
           "maxOutput": 128000,
           "toolCalls": true,
           "jsonOutput": true,
-          "reasoning": true
-        },
-        "gpt-5.6-sol": {
-          "displayName": "GPT-5.6 Sol",
-          "contextWindow": 1050000,
-          "maxOutput": 128000,
-          "toolCalls": true,
-          "jsonOutput": true,
           "reasoning": true,
           "pricing": {
-            "inputCacheMiss": 4,
-            "inputCacheHit": 0.4,
-            "output": 20
-          }
-        },
-        "gpt-5.6-terra": {
-          "displayName": "GPT-5.6 Terra",
-          "contextWindow": 1050000,
-          "maxOutput": 128000,
-          "toolCalls": true,
-          "jsonOutput": true,
-          "reasoning": true,
-          "pricing": {
-            "inputCacheMiss": 2,
-            "inputCacheHit": 0.2,
-            "output": 12
-          }
-        },
-        "gpt-5.6-luna": {
-          "displayName": "GPT-5.6 Luna",
-          "contextWindow": 1050000,
-          "maxOutput": 128000,
-          "toolCalls": true,
-          "jsonOutput": true,
-          "reasoning": true,
-          "pricing": {
-            "inputCacheMiss": 0.2,
-            "inputCacheHit": 0.02,
-            "output": 1.2
+            "inputCacheMiss": 0.1,
+            "inputCacheHit": 0.01,
+            "output": 0.5
           }
         }
       }
@@ -274,8 +256,8 @@
         },
         "claude-haiku-5-5": {
           "displayName": "Claude Haiku 5.5",
-          "contextWindow": 200000,
-          "maxOutput": 64000,
+          "contextWindow": 1000000,
+          "maxOutput": 128000,
           "toolCalls": true,
           "jsonOutput": true,
           "reasoning": true,
@@ -340,6 +322,8 @@
         "grok-4.6",
         "grok-4.5",
         "grok-4.3",
+        "grok-4.20-reasoning",
+        "grok-4.20-non-reasoning",
         "grok-4.20-multi-agent-0309",
         "grok-build-0.1"
       ],
@@ -401,6 +385,30 @@
           "pricing": {
             "inputCacheMiss": 1,
             "output": 2
+          }
+        },
+        "grok-4.20-reasoning": {
+          "displayName": "Grok 4.20 Reasoning",
+          "contextWindow": 1000000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true,
+          "pricing": {
+            "inputCacheMiss": 1.25,
+            "inputCacheHit": 0.2,
+            "output": 2.5
+          }
+        },
+        "grok-4.20-non-reasoning": {
+          "displayName": "Grok 4.20 Non-Reasoning",
+          "contextWindow": 1000000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": false,
+          "pricing": {
+            "inputCacheMiss": 1.25,
+            "inputCacheHit": 0.2,
+            "output": 2.5
           }
         }
       }
@@ -555,6 +563,7 @@
       "region": "cn",
       "models": [
         "qwen3.8-max",
+        "qwen4-max-preview",
         "qwen3.8-flash",
         "qwen3.7-max",
         "qwen3.7-plus"
@@ -572,6 +581,13 @@
             "inputCacheHit": 0.214,
             "output": 5.14
           }
+        },
+        "qwen4-max-preview": {
+          "displayName": "Qwen 4 Max Preview",
+          "contextWindow": 1000000,
+          "toolCalls": true,
+          "jsonOutput": true,
+          "reasoning": true
         },
         "qwen3.8-flash": {
           "displayName": "Qwen 3.8 Flash",
