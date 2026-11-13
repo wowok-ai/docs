@@ -22,7 +22,6 @@
     "gpt-5.6-luna": "gpt-6-luna",
     "gpt-6-sol": "gpt-6.1-sol",
     "deepseek-v3.1": "deepseek-v4-pro",
-    "qwen2.5-vl-72b-instruct": "Qwen3.5-397B-A17B",
     "thinkingmachines/inkling-small:free": "thinkingmachines/inkling-2-small:free",
     "nvidia/nemotron-3-super-120b-a12b:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
     "nvidia/nemotron-3.5-content-safety:free": "nvidia/nemotron-3-ultra-550b-a55b:free",
