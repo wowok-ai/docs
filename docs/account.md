@@ -43,7 +43,7 @@ The Account component manages local wallets, all operations are stored exclusive
     "rename": { ... },        // Rename account
     "swap_name": { ... },     // Swap account names
     "transfer": { ... },      // Transfer tokens
-    "get": { ... },           // Query account/get coin object
+    "alloc_coin": { ... },           // Allocate coin object
     "signData": { ... },      // Sign data
     "messenger": { ... }      // Enable/disable messenger
   }
@@ -1067,11 +1067,11 @@ Returns transaction block information (WowTransactionBlockSchema).
 
 ---
 
-## Sub-feature 8: Query Account/Get Coin Object (get)
+## Sub-feature 8: Allocate Coin Object (alloc_coin)
 
 ### Feature Description
 
-Query account information and generate a new coin object based on the required balance.
+Generate a new coin object based on the required balance.
 
 ### Parameter Description
 
@@ -1092,7 +1092,7 @@ Query account information and generate a new coin object based on the required b
       "result": {
         "status": "success",
         "data": {
-          "get": {
+          "alloc_coin": {
             "coin_address": "0x...",
             "name_or_address": "my_account",
             "balance_required": "1000000000",
@@ -1111,7 +1111,7 @@ Query account information and generate a new coin object based on the required b
 
 ### Examples
 
-#### Example 8.1: Query Default Account (Get Default Token)
+#### Example 8.1: Allocate for Default Account
 
 **Prompt**: Query the default account and generate a coin object with 100000000 WOW balance using the default token type on testnet. This will return a new coin object ID with the specified balance.
 
@@ -1119,7 +1119,7 @@ Query account information and generate a new coin object based on the required b
 {
   "tool": "account_operation",
   "data": {
-    "get": { "balance_required": 100000000, "network": "testnet" }
+    "alloc_coin": { "balance_required": 100000000, "network": "testnet" }
   }
 }
 ```
@@ -1133,7 +1133,7 @@ Query account information and generate a new coin object based on the required b
       "result": {
         "status": "success",
         "data": {
-          "get": {
+          "alloc_coin": {
             "balance_required": 100000000,
             "network": "testnet",
             "coin_address": "0x890e...182e"
@@ -1146,7 +1146,7 @@ Query account information and generate a new coin object based on the required b
 }
 ```
 
-#### Example 8.2: Query Named Account
+#### Example 8.2: Allocate for Named Account
 
 **Prompt**: Query the account named "bob" and generate a coin object with 100000000 WOW balance on testnet. This specifies which account to use by name rather than using the default.
 
@@ -1154,7 +1154,7 @@ Query account information and generate a new coin object based on the required b
 {
   "tool": "account_operation",
   "data": {
-    "get": { "name_or_address": "bob", "balance_required": 100000000, "network": "testnet" }
+    "alloc_coin": { "name_or_address": "bob", "balance_required": 100000000, "network": "testnet" }
   }
 }
 ```
@@ -1168,7 +1168,7 @@ Query account information and generate a new coin object based on the required b
       "result": {
         "status": "success",
         "data": {
-          "get": {
+          "alloc_coin": {
             "name_or_address": "bob",
             "balance_required": 100000000,
             "network": "testnet",
