@@ -1,7 +1,7 @@
 {
   "version": "2.0",
   "description": "LLM Config",
-  "lastUpdated": "2026-11-24",
+  "lastUpdated": "2026-11-27",
   "modelAliases": {
     "deepseek-v4-flash": "deepseek-flash",
     "claude-haiku-4-5": "claude-haiku-5-5",
@@ -92,7 +92,6 @@
       "region": "global",
       "auth": "oauth",
       "models": [
-        "inclusionai/ling-3.2-flash:free",
         "baidu/ernie-5.5-flash-preview:free",
         "liquid/lfm-3-1.7b:free",
         "particle-ai/particle-1:free",
